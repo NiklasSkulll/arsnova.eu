@@ -52,11 +52,26 @@ Niklas' Fork mit kqc-real abgleichen: auf GitHub „Sync fork“ oder
 - **Pre-Commit-Hook:** Führt Typecheck und die komplette Testsuite aus. Ein
   einzelner Timeout unter Last (z. B. PDF-Test) ist meist Flakiness; Test
   einzeln wiederholen.
-- **Actions im Fork:** Müssen in den Repo-Einstellungen eingeschaltet sein.
-  Test-PR: [NiklasSkulll/arsnova.eu#1](https://github.com/NiklasSkulll/arsnova.eu/pull/1).
+- **CI im Fork:** Am 2026-10-16 mit Test-PR
+  [NiklasSkulll/arsnova.eu#1](https://github.com/NiklasSkulll/arsnova.eu/pull/1)
+  vollständig grün geprüft. Dafür waren drei Einstellungen nötig:
+  1. Actions im Repo einschalten (Actions-Tab bzw. Settings → Actions →
+     General).
+  2. Workflows mit Zeitplan einzeln aktivieren. GitHub setzt sie in Forks auf
+     `disabled_fork` (betroffen: CI und CodeQL):
+     `gh workflow enable <id> -R NiklasSkulll/arsnova.eu`. Mit
+     `gh workflow list --all` prüfen.
+  3. Settings → Code security → **Dependency graph** einschalten, sonst
+     scheitert der Job „Dependency Review“.
+- **Übersprungene Jobs:** Lasttests (Artillery, k6), Image-Publish und Deploy
+  laufen nur nachts, manuell oder bei Push auf `main`. Bei PRs ist „skipped“
+  normal.
+- **Codex-Review:** Ist eine GitHub-App, kein CI-Job. Im Fork nur aktiv, wenn
+  sie dort eigens eingerichtet wird.
 
 ## Status
 
+- [x] CI im Fork lauffähig und grün (2026-10-16)
 - [ ] Fragen aus [00-rahmen-und-pruefung.md](./00-rahmen-und-pruefung.md) beim
       Prüfer geklärt
 - [ ] 1.3-Release-Commit und Referenzmanifest festgehalten
