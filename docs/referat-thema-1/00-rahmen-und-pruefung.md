@@ -130,8 +130,18 @@ Baselinelauf geklärt sein. Die Dossiers zitieren Zeilen auf HEAD.
    der dritte Auftrag zugeordnet und bewertet?
 2. Was genau gehört in die PR an kqc-real (Tests, Messskripte,
    Instrumentierung, Evidenzordner, Code-Verbesserung)?
-3. Welcher 1.3-Release-Tag/Commit und welches Referenzmanifest gelten: der Tag
-   `v1.3.0` (`87c39334`) oder ein späterer produktiver Stand?
-4. Zugang zur Laborinstanz und zum zweiten Host (Hardware, Netz, Zugangsweg)?
+3. **Baseline:** Dürfen wir den aktuellen `main` statt `v1.3.0` (`87c39334`)
+   als Baseline nehmen? Gründe:
+   - In `v1.3.0` fehlen die späteren Fixes. Die Test-Suite läuft deutlich
+     länger, Setup-Fixes fehlen, und einige Tests sind dort noch flaky.
+   - Die zentralen Werte unterscheiden sich (siehe Tabelle oben).
+   - Die Wahl ändert nichts an der Qualität der Arbeit, vereinfacht sie aber
+     deutlich.
+   - Die Ergebnisse lassen sich direkt auf den aktuellen Stand des Repos
+     anwenden.
+4. **Zweiter Host:** In der Vorlesung wurde ein bereitgestellter Server erwähnt,
+   vermutlich bei Hetzner oder Hostinger (nicht sicher mitgeschrieben). Was
+   genau steht dort bereit (Hardware, Netz, Zugangsweg)? Wie bekommen wir
+   Zugang zur Laborinstanz?
 5. Gilt die 48-Stunden-Frist der Folien oder der Vortag der Repo-Fassung?
 6. Wo ist der geheimnisfreie Evidenzort (Repo-Ordner, Branch, eigener Speicher)?
