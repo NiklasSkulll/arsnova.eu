@@ -62,7 +62,7 @@ _Abb. 2: Zeitlicher Ablauf der Zusammenfassung (UML-Sequenzdiagramm, vereinfacht
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="diagrams/1c-context-path-map.dark.svg">
-  <img alt="Full flow in six bands. Band 1: host browser. Band 2: tRPC router; rejected or conflicting requests fail with a TRPCError, and a failed runtime read makes the result disappear. Band 3: prepare, with eight authorization fences, the analysis built from PostgreSQL and Redis, packing into the token budget, snapshotHash and a strict assembly. Band 4: the global queue (gates in code order, pending result with a copied host token, prepare 2). Band 5: the inference run inside the queue timeout, with the remote llama-server. Band 6: prepare 3 and the hash comparison. Outcomes: a model summary re-bound to prepare 3, a stored result returned unchanged, or a fallback grouped by origin." src="diagrams/1c-context-path-map.light.svg">
+  <img alt="Full flow in six bands. Band 1: host browser. Band 2: tRPC router; rejected or conflicting requests fail with a TRPCError, and a failed runtime read makes the result disappear. Band 3: prepare, with eight authorization fences, the analysis built from PostgreSQL and Redis, packing into the token budget, snapshotHash and a strict assembly. Band 4: the global queue (gates in code order, pending result with a copied host token, prepare 2). Band 5: the inference run inside the queue timeout, with the remote llama-server. Band 6: prepare 3 and the hash comparison. Outcomes: a model summary re-checked against prepare 3, a stored result returned unchanged, or a fallback grouped by origin." src="diagrams/1c-context-path-map.light.svg">
 </picture>
 
 <picture>
@@ -76,7 +76,7 @@ _A1: Working map of the context path. `main` `248029dc`. Own figure (Jonas Weira
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="diagrams/1c-context-path-sequence.dark.svg">
-  <img alt="Numbered UML sequence with teacher, participants, router, prepare, queue, adapter and client, data stores and llama-server. The router rejects disallowed requests. If a job is inflight, its pending result is returned. Otherwise prepare 1 runs while participants keep voting; any session change ends it in CONFLICT. The gates in code order return a stored result, a fallback or pending. In parallel the teacher polls while the job waits for the pump, runs prepare 2, the adapter and client branches (no open-weight call, gate failure, or GET /slots and the chat completion) and prepare 3, and then decides source_changed, timeout or the bound result. The next runtime read runs prepare 4; if it fails, the result disappears from the UI." src="diagrams/1c-context-path-sequence.light.svg">
+  <img alt="Numbered UML sequence with teacher, participants, router, prepare, queue, adapter and client, data stores and llama-server. The router rejects disallowed requests. If a job is inflight, its pending result is returned. Otherwise prepare 1 runs while participants keep voting; a change to a fenced field ends it in CONFLICT. The gates in code order return a stored result, a fallback or pending. In parallel the teacher polls while the job waits for the pump, runs prepare 2, the adapter and client branches (no open-weight call, gate failure, or GET /slots and the chat completion) and prepare 3, and then decides source_changed, timeout or the bound result. The next runtime read runs prepare 4; if it fails, the result disappears from the UI." src="diagrams/1c-context-path-sequence.light.svg">
 </picture>
 
 _A2: Timing of the context path (UML sequence diagram). `main` `248029dc`. Own figure (Jonas Weirauch, assignment 1C), based on the source code._
@@ -111,7 +111,7 @@ _A3: Contract layers and validation points. `main` `248029dc`. Own figure (Jonas
 | Learning objectives       | Postgres `SessionLearningObjective`, `Question`, Q&A catalogue; RepeatableRead                         | `projectLearningContext` `MPC:234-416`                                           | schema version 1; `learning-context-v1`                                       | `MPC:557`, `MPC:585`; `assertLearningSnapshotStillCurrent` `MPC:443-457` |
 | Assembly                  | —                                                                                                      | `buildModerationPromptContext` `MPC:534-651`                                     | `moderation-analysis-context-v1`                                              | first fence `MPC:547`                                                    |
 
-There are 8 fences on the Q&A-enabled path. With Q&A disabled, there is one more (`MQC:1015`).
+Every prepare passes 8 fences. With Q&A disabled, `MQC:1015` replaces `MQC:1067` (still 8). On the request path this case cannot occur, because `qa.requestSummary` rejects Q&A-disabled sessions (`QR:1698-1703`); it occurs only through preview or runtime reads.
 
 ## Preview vs. packed payload
 
@@ -121,9 +121,9 @@ There are 8 fences on the Q&A-enabled path. With Q&A disabled, there is one more
 
 ## Missing context area
 
-- **States:** every section has a `state`: `available`, `unavailable`, `disabled`, `not-applicable` or `not-released`. All except `available` carry a reason, and the strict schemas never drop a section (`libs/shared-types/src/moderation-prompt-context.ts`).
+- **States:** every section has a `state`: `available`, `unavailable`, `disabled`, `not-applicable`, `not-released`, `failed` or `pending`. All except `available` carry a reason, and the strict schemas never drop a section (`libs/shared-types/src/moderation-prompt-context.ts`).
 - **What the model is told:** the definition text says "omitted data is unknown" (`MSC:49`).
-- **Example:** with the semantic topics switched off, `topics.state` is `disabled` with the limitation `module-disabled` (`MQC:633-653`).
+- **Example:** with the semantic topics switched off, `topics.state` is `disabled` with the limitation `module-disabled` (`MQC:633-653`). With more than 500 topic members it is `failed` (`MQC:674-690`).
 
 ## Evidence per station
 
@@ -175,7 +175,7 @@ Line numbers are 1-based and valid for `248029dc`. Short names:
 | 5      | GET /slots                                                               | slot probe                                                                                                                                                                | `CL:506-520`                                                                                                         |
 | 5      | POST /v1/chat/completions                                                | `buildChatCompletionBody`, wire schema                                                                                                                                    | `CL:368-405`, `CL:532-540`; wire schema `CL:316-365`; `max_tokens` `CF:231`                                          |
 | 5      | client task timeout (GET and POST)                                       | `AbortSignal.timeout`                                                                                                                                                     | `CL:486-497`; default `CF:5`                                                                                         |
-| 5      | parseCompletion, reference check                                         | output schema, `hasOnlyAllowedOpenWeightLlmReferences`                                                                                                                    | `CL:407-459`                                                                                                         |
+| 5      | parseCompletion, reference check                                         | output schema, `hasOnlyAllowedOpenWeightLlmReferences`                                                                                                                    | `CL:407-459` (check `CL:446-447`); `libs/shared-types/src/open-weight-llm.ts:300-345`; V2 variant `ST:130-138`       |
 | remote | llama-server, model, ctx, slot                                           | entry point, pinned model                                                                                                                                                 | `docker/open-weight-llm/entrypoint.sh:7, 38-39`; `CF:12-13`                                                          |
 | 6      | prepare (3), token cleared                                               | `processJob`, `clearEphemeralAccess`                                                                                                                                      | `Q:333-338`, `Q:101-103`, `Q:398`                                                                                    |
 | 6      | hash (2) = hash (3)?                                                     | order: source_changed, then timeout, then bind                                                                                                                            | `Q:340-353`                                                                                                          |
@@ -213,7 +213,7 @@ Not shown in the diagrams:
 ## Key findings
 
 1. **Decoupled from the model, not from the context build.** `qa.requestSummary` returns `pending` before any model call (`Q:524-539`). It does wait for prepare (1).
-   - Any session change during that build ends the request with CONFLICT, and a schema violation with INTERNAL_SERVER_ERROR. The frontend swallows the error (`FE:13557-13559`).
+   - A change to a fenced field during that build ends the request with CONFLICT. The fenced fields are the 23 session-row fields, such as Q&A revision, participants, quiz progress, Q&A and Blitzlicht flags, sort mode and learning context, plus the released-results and Blitzlicht fingerprints. A quiz vote on the still-running question does not trigger it, and a schema violation with INTERNAL_SERVER_ERROR. The frontend swallows the error (`FE:13557-13559`).
    - A failing runtime read sets the runtime to `null`, so a finished summary disappears from the UI (`FE:13525-13527`).
 2. **Prepare runs often.** It runs three times per job: (1) on request, (2) before inference and (3) after it. It runs once more on every runtime read of a finished result (page load, dialog open, poll) and once per preview. The 30 s packing cache saves only the packing step.
 3. **Almost any session activity changes the hash.** These all bump revisions that end up in `snapshotHash` (see the band 3 table):
@@ -222,10 +222,10 @@ Not shown in the diagrams:
    - joins and leaves;
    - question edits, status changes and deletions.
 
-   The CONFLICT fence additionally compares quiz progress, Blitzlicht and sort mode (`MQC:943-966`). During active Q&A a model answer therefore usually ends as `source_changed` (`Q:341-345`, `Q:427-438`). A force-fit pack keeps `meta` constant, but corpus counts and the top-N selection can still change the hash (`MSC:531-575`).
+   The CONFLICT fence additionally compares quiz progress, the Blitzlicht enabled/open flags and sort mode (`MQC:943-966`). During active Q&A a model answer therefore usually ends as `source_changed` (`Q:341-345`, `Q:427-438`). A force-fit pack keeps `meta` constant, but corpus counts and the top-N selection can still change the hash (`MSC:531-575`).
 
 4. **Client failures do not skip the consistency check.** A busy, unavailable or invalid run still goes through prepare (3), and `source_changed` takes precedence over the client reason (`Q:340-353`).
-5. **Sources are checked again at bind time.** Statements may only cite sources packed by prepare (3). Unknown IDs are dropped, a dropped statement adds a limitation, and no remaining statement means `uncertain` (`V2:26-35`, `V2:50-125`).
+5. **Sources are checked again at bind time.** Statements may only cite sources packed by prepare (3). Unknown IDs are dropped, a dropped statement adds a limitation, and no remaining statement means `uncertain` (`V2:26-35`, `V2:50-125`). For full-context answers this is a defensive second check. `parseCompletion` already rejects any answer with an unknown source ID as `invalid_response` (`CL:446-447`), and bind only runs when hash (2) = hash (3). In practice the drop path is reachable only for legacy-text output.
 6. **The output contract has four different limits.**
 
    | Layer            | Statements | Next steps | Limitations          | Other                                 |
