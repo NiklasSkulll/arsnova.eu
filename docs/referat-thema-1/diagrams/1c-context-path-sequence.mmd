@@ -28,8 +28,9 @@ sequenceDiagram
   else no job inflight
   Q->>P: prepare (1)
   P->>DB: 8 authorization fences + data reads (RepeatableRead)
-  S-)DB: meanwhile: vote · new question · join · quiz step
-  alt any session change during the build, or a schema violation
+  S-)DB: meanwhile: Q&A vote · new question · join
+  Note over UI,S: the host may also advance the quiz meanwhile
+  alt fenced field changed during the build (e.g. Q&A vote, new question, join, quiz step), or a schema violation
     P-->>R: CONFLICT or INTERNAL_SERVER_ERROR
     R-->>UI: TRPCError · frontend shows no result
   else build ok
@@ -73,7 +74,8 @@ sequenceDiagram
       Note over C: parseCompletion: schema + known source IDs<br/>failure → invalid_response · client timeout → timeout
       C-->>Q: model output or failure status
     end
-    S-)DB: meanwhile: vote · new question · join · deletion
+    S-)DB: meanwhile: Q&A vote · new question · join
+    Note over UI,S: or the host deletes or moderates a question
     Q->>P: prepare (3) · re-authorize · re-reads all data
     P-->>Q: hash (3)
     alt hash (2) ≠ hash (3)

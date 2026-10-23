@@ -32,7 +32,8 @@ flowchart TB
     miss["`**Missing context area**
     every section keeps a state + reason
     unavailable · disabled · not-applicable
-    not-released · never silently dropped`"]
+    not-released · failed · pending
+    never silently dropped`"]
     pvw["`**Preview DTO** · its own prepare
     qa-summary-context-preview-v1
     full promptContext incl. budget,
@@ -69,9 +70,9 @@ flowchart TB
     contract qa-summary-model-output-v3
     and a reference check of all source IDs`"}}
     bind{{"`**3 · bind to prepare (3)**
-    unknown source IDs dropped · caps 6 / 4 / 6
-    dropped statement → limitation
-    none left → uncertain`"}}
+    defensive re-check: unknown IDs dropped
+    (full-context answers with unknown IDs
+    already fail in step 2) · caps 6 / 4 / 6`"}}
     res["`**QaSummaryResultV2**
     qa-summary-result-v2 · fallback qa-summary-fallback-v1`"]
     n2["`**invalid_response**
