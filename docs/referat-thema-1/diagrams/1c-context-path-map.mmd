@@ -1,0 +1,192 @@
+---
+config:
+  look: neo
+  flowchart:
+    curve: basis
+    nodeSpacing: 36
+    rankSpacing: 44
+    wrappingWidth: 360
+    subGraphTitleMargin:
+      top: 14
+      bottom: 10
+---
+flowchart TB
+  subgraph HOST["1 · Host browser · session-host.component.ts"]
+    ui["`**Compass dialog**
+    Summary button
+    gate: 3+ visible questions`"]
+    pvb["`**Preview button**`"]
+    poll["`**Runtime reads**
+    poll every 750 ms while pending
+    also on page load and dialog open`"]
+  end
+
+  subgraph API["2 · tRPC · routers/qa.ts · host token + post-session window on every call"]
+    rq["`**qa.requestSummary**
+    also: Q&A enabled · QA_SUMMARY_ENABLED
+    job inflight → current pending result`"]
+    pv["`**qa.summaryContextPreview**
+    one prepare · returns the preview DTO
+    never enqueues a job`"]
+    fresh{{"`**qa.summaryRuntime**
+    finished result: prepare (4) on every read
+    hash still equal?`"}}
+  end
+
+  herr["`**Request fails** · TRPCError
+  NOT_FOUND · UNAUTHORIZED · FORBIDDEN
+  CONFLICT · INTERNAL_SERVER_ERROR
+  request: no result shown
+  runtime read: result disappears`"]
+
+  subgraph PREP["3 · prepare"]
+    auth["`**authorize** · 8 fences in the build
+    loadAuthorizedModerationState
+    any session change meanwhile → CONFLICT
+    e.g. vote, new question, join, quiz step`"]
+    build["`**build analysis**
+    buildModerationPromptContext
+    Q&A ranking · topics · compass signals
+    quiz results · Blitzlicht · objectives`"]
+    subgraph DB["read only"]
+      direction LR
+      pg[("`**PostgreSQL**
+      Q&A · votes · quiz
+      RepeatableRead`")]
+      rd[("`**Redis**
+      topics · Blitzlicht`")]
+    end
+    pack["`**pack into token budget** · cache 30 s
+    about 4 ranked candidates + protected IDs
+    13 lanes · truncate · force-fit`"]
+    hash["`**snapshotHash** (sha256)
+    meta · revisions · packed context · texts
+    changes on any vote, new question,
+    join or leave, edit, status change, delete`"]
+    asm["`**assemble** · strict Zod parse
+    QaSummaryInferenceRequestV2
+    preview DTO · adapter plan
+    prepare runs (1)–(3) per job,
+    plus one per runtime read and preview`"]
+  end
+
+  subgraph QA["4 · qaSummaryQueue.ts · before inference⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀"]
+    gate{{"`**enqueue gates** (in this order)
+    inflight · too few questions
+    cooldown 30 s · queue full 8
+    defaults · shared by all sessions`"}}
+    pend["`**pending result + job**
+    host token copied into the job
+    request returns here, model not awaited`"]
+    p2["`**prepare (2)** · rebuild before inference
+    re-authorizes · too few again → rule-based`"]
+  end
+
+  subgraph RUN["5 · Inference run · queue timeout 90 s, max 300 s⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀"]
+    adp["`**runPreparedQaSummary** · plan
+    full-context → open-weight client
+    legacy-text → legacy URL
+    none · no packed Q&A → no model call`"]
+    cli{{"`**client gates**
+    config · circuit 3 fails / 30 s
+    in-process slot shared with
+    topic labels and learning objectives`"}}
+    slots["`**GET /slots**
+    503 → busy · 401/403/501 → misconfigured`"]
+    post["`**POST /v1/chat/completions**
+    Bearer · 2 system + 1 user message
+    JSON schema of allowed IDs
+    max_tokens 640
+    client timeout 90 s covers GET and POST`"]
+    subgraph LLMH["remote host⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀"]
+      llm[["`**llama-server** · second private host
+      Qwen3-4B-Instruct-2507 Q4_K_M
+      ctx 8192 · 1 slot · API key`"]]
+    end
+    parse["`**parseCompletion**
+    output schema · known source IDs
+    failure → status, not exception`"]
+  end
+
+
+  subgraph QB["6 · qaSummaryQueue.ts · after inference⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀"]
+    p3["`**prepare (3)** · rebuild after inference
+    re-authorizes · host token cleared after`"]
+    cmp{{"`**hash (2) = hash (3)?**
+    then: timed out? then: run result`"}}
+  end
+
+  ok["`**Model summary**
+  effectiveMode full-context
+  sources re-bound to prepare (3)
+  unknown source IDs dropped
+  ready · uncertain if nothing is left`"]
+  stored["`**Stored result returned**
+  unchanged · model summary or fallback`"]
+  fb["`**Fallback**
+  effectiveMode extractive or rule-based
+  status is a separate field
+  **gate** queue_full · context_unavailable
+  **plan** no_packed_sources · misconfigured
+  **client** busy · unavailable · timeout
+  circuit_open · invalid_response
+  misconfigured
+  **after the run** source_changed · timeout
+  **prepare error** context_unavailable
+  permission_changed`"]
+
+  ui e1@==> rq
+  pvb e2@-.-> pv
+  poll e3@==> fresh
+  rq e4@==>|"prepare (1)"| auth
+  pv e5@-.->|prepare| auth
+  rq e40@-.->|rejected| herr
+  auth e41@-.->|"CONFLICT at request time"| herr
+  auth e6@==> build
+  build e36@-.-|reads| DB
+  build e7@==> pack
+  pack e8@==> hash
+  hash e9@==> asm
+  asm e12@==> gate
+  gate e13@==>|accepted| pend
+  pend e14@==>|"pump: waits while another job runs"| p2
+  p2 e15@==>|"timer starts"| adp
+  adp e35@==> cli
+  cli e17@==> slots
+  slots e18@==> post
+  post e19@==>|"private network"| llm
+  llm e20@==> parse
+  parse e21@==>|"run settles: output or failure status"| p3
+  adp e42@-->|"no open-weight call"| p3
+  cli e43@-.->|"gate failed, no network call"| p3
+  p3 e22@==> cmp
+  cmp e23@==>|"equal · output valid"| ok
+  fresh e24@-->|equal| stored
+  gate e44@-->|"cooldown hit · too few, same hash"| stored
+  fresh e45@-.->|"prepare error"| herr
+  gate e25@-.->|"queue full · too few"| fb
+  cmp e27@-.->|"hash changed · timeout · run failed"| fb
+  p2 e29@-.->|"prepare error"| fb
+  p3 e30@-.->|"prepare error"| fb
+  fresh e28@-.->|"hash changed"| fb
+
+  class ui,pvb,poll host
+  class rq,pv,auth,build,pack,asm app
+  class hash contract
+  class pg,rd store
+  class gate,cmp,cli,fresh decision
+  class pend,p2,p3 queue
+  class adp,slots,post,parse,llm runtime
+  class ok result
+  class stored decision
+  class fb,herr fallback
+  class HOST hostGroup
+  class API,PREP appGroup
+  class DB storeGroup
+  class QA,QB queueGroup
+  class RUN,LLMH runtimeGroup
+  class e1,e3,e4,e6,e7,e8,e9,e12,e13,e14,e15,e35,e17,e18,e19,e20,e21,e22 emph
+  class e23 ok
+  class e25,e27,e28,e29,e30,e40,e41,e45,e43 fail
+  class e2,e5,e36 muted
+%% palette
