@@ -4,6 +4,19 @@ Stand: 2026-10-23. Grundlage: [CLOUD-COMPUTING-REFERAT-PRUEFUNG.md](../didaktik/
 Abschnitte 4.1.2, 4.1.3 und 4.3 sowie die Lückenlisten der Dossiers 1A, 1B
 und 1C. Die Aufwandsschätzungen sind eigene Einschätzungen, keine Vorgabe.
 
+## Entscheidung (2026-10-23)
+
+Wir haben uns für **Option 1** entschieden:
+
+| Person     | Rolle                       | Umfang                          |
+| ---------- | --------------------------- | ------------------------------- |
+| **Niklas** | X: Ressourcen und Isolation | 1A vollständig, 1B Schritte 3–4 |
+| **Jonas**  | Y: Pfad und Verträge        | 1C vollständig, 1B Schritte 1–2 |
+
+Die gemeinsamen Artefakte sind wie in der Tabelle
+[unten](#gemeinsame-artefakte-gleichmäßig-verteilen-und-kennzeichnen) verteilt.
+**Offen:** Die Aufteilung muss noch mit dem Prüfer abgestimmt werden.
+
 ## Feste Regeln für jede Variante
 
 Laut Repo-Fassung gilt (4.1.2, 4.1.3):
