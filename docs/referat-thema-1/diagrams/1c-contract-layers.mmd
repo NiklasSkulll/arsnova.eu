@@ -1,0 +1,113 @@
+---
+config:
+  look: neo
+  layout: elk
+  flowchart:
+    curve: basis
+    nodeSpacing: 36
+    rankSpacing: 44
+    wrappingWidth: 380
+    subGraphTitleMargin:
+      top: 14
+      bottom: 10
+---
+flowchart TB
+  subgraph L1["Layer 1 · authorized internal state · never sent to the model"]
+    st["`**AuthorizedModerationState**
+    session row · host access · participant count
+    qaRankingRevision · participantRevision
+    host token stays in the access object`"]
+  end
+
+  subgraph L2["Layer 2 · domain context⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀"]
+    ana["`**ModerationAnalysisContextV1**
+    moderation-analysis-context-v1 · strict
+    domain moderation-domain-context-v1
+    sourceRevision over the whole analysis`"]
+    pc["`**ModerationPromptContextV1**
+    moderation-prompt-context-v1 · schemaVersion 1
+    budget moderation-prompt-budget-v1
+    definitions moderation-prompt-definitions-v1
+    snapshotHash · hash material v1`"]
+    miss["`**Missing context area**
+    every section keeps a state + reason
+    unavailable · disabled · not-applicable
+    not-released · failed · pending
+    never silently dropped`"]
+    pvw["`**Preview DTO** · its own prepare
+    qa-summary-context-preview-v1
+    full promptContext incl. budget,
+    snapshotHash, packedAt`"]
+  end
+
+  subgraph L3["Layer 3 · model request⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀"]
+    req["`**QaSummaryInferenceRequestV2** · strict
+    schemaVersion 2 · requestContract qa-summary-context-v2
+    instruction qa-summary-technical-handoff-v2
+    byte counts must equal the budget`"]
+    wire["`**Wire body** to llama-server
+    no envelope versions (schemaVersion,
+    requestContract, instruction/output versions)
+    user message: context JSON only, keeps
+    moderation-domain-context-v1
+    and definitionsVersion
+    drops budget, snapshotHash, packedAt
+    2 system messages · JSON schema (grammar)`"]
+    n1["`**incompatible version or field**
+    strict parse throws a ZodError
+    request: INTERNAL_SERVER_ERROR
+    job: rule-based context_unavailable`"]
+  end
+
+  subgraph L4["⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀Output · validated three times"]
+    gram{{"`**1 · grammar at generation**
+    ≤ 3 statements · ≤ 1 next step
+    0 limitations · ≤ 180 characters
+    1–2 IDs from the packed sources`"}}
+    zod{{"`**2 · client checks**
+    QaSummaryModelOutputV2Schema
+    ≤ 4 · ≤ 2 · ≤ 2
+    contract qa-summary-model-output-v3
+    and a reference check of all source IDs`"}}
+    bind{{"`**3 · bind to prepare (3)**
+    defensive re-check: unknown IDs dropped
+    (full-context answers with unknown IDs
+    already fail in step 2) · caps 6 / 4 / 6`"}}
+    res["`**QaSummaryResultV2**
+    qa-summary-result-v2 · fallback qa-summary-fallback-v1`"]
+    n2["`**invalid_response**
+    request or answer fails validation
+    extractive fallback`"]
+  end
+
+
+  st e1@==>|"projection: no tokens, IPs or nicknames"| ana
+  ana e2@==>|"pack into budget + hash"| pc
+  pc e3@-.->|"same object within one prepare"| pvw
+  pvw e13@-.->|"equals the job payload only if snapshotHash matches"| req
+  ana e14@-.-|"every area"| miss
+  pc e4@==> req
+  req e5@==>|"client re-validates, then serializes"| wire
+  wire e6@==>|"llama-server generates"| gram
+  gram e7@==> zod
+  zod e8@==> bind
+  bind e9@==> res
+  req e10@-.->|"assemble: .parse fails"| n1
+  req e11@-.->|"client safeParse fails"| n2
+  zod e12@-.->|"output or references fail"| n2
+
+  class st app
+  class ana,pc app
+  class pvw,miss app
+  class req,wire contract
+  class gram,zod,bind decision
+  class res result
+  class n1,n2 fallback
+  class L1 queueGroup
+  class L2 appGroup
+  class L3 contractGroup
+  class L4 appGroup
+  class e1,e2,e4,e5,e6,e7,e8,e9 emph
+  class e10,e11,e12 fail
+  class e3,e13,e14 muted
+%% palette

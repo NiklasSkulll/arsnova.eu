@@ -9,13 +9,15 @@ Evidenzmaterial. Er gehört **nicht** in die PR an kqc-real.
 
 ## Inhalt
 
-| Datei                                                                        | Inhalt                                                                         |
-| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| [00-rahmen-und-pruefung.md](./00-rahmen-und-pruefung.md)                     | Generalthema, Bewertung, Nachweiskette, KI-Regeln, Widersprüche, offene Fragen |
-| [01-aufteilung.md](./01-aufteilung.md)                                       | Aufteilung: Niklas = X (1A, 1B 3–4), Jonas = Y (1C, 1B 1–2); Optionen, Aufwand |
-| [1A-ressourcenisolation-app-host.md](./1A-ressourcenisolation-app-host.md)   | Code-Landkarte, Messwerkzeuge, Versuchsvorschlag, Lücken für 1A                |
-| [1B-private-inferenz-zweiter-host.md](./1B-private-inferenz-zweiter-host.md) | Zwei-Host-Deployment, LLM-Client, Messbarkeit, Lücken für 1B                   |
-| [1C-kontext-und-adapterpfad.md](./1C-kontext-und-adapterpfad.md)             | #456-Kontext, Verträge, Snapshot/Hash, Async-Pfad, Testlücken für 1C           |
+| Datei                                                                        | Inhalt                                                                                  |
+| ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| [00-rahmen-und-pruefung.md](./00-rahmen-und-pruefung.md)                     | Generalthema, Bewertung, Nachweiskette, KI-Regeln, Widersprüche, offene Fragen          |
+| [01-aufteilung.md](./01-aufteilung.md)                                       | Aufteilung: Niklas = X (1A, 1B 3–4), Jonas = Y (1C, 1B 1–2); Optionen, Aufwand          |
+| [1C-diagrams.md](./1C-diagrams.md)                                           | Diagramme zu 1C (Handout DE, Arbeitskarte und Vertragsschichten EN) mit Belegtabelle    |
+| [eigenanteil/](./eigenanteil/)                                               | Ergebnisse von `final-prompt-for-git-diff.md` je PR: Eigenanteil, Belege, offene Punkte |
+| [1A-ressourcenisolation-app-host.md](./1A-ressourcenisolation-app-host.md)   | Code-Landkarte, Messwerkzeuge, Versuchsvorschlag, Lücken für 1A                         |
+| [1B-private-inferenz-zweiter-host.md](./1B-private-inferenz-zweiter-host.md) | Zwei-Host-Deployment, LLM-Client, Messbarkeit, Lücken für 1B                            |
+| [1C-kontext-und-adapterpfad.md](./1C-kontext-und-adapterpfad.md)             | #456-Kontext, Verträge, Snapshot/Hash, Async-Pfad, Testlücken für 1C                    |
 
 Geplant: `evidenz/` für Rohdaten, Skripte und Messprotokolle je Auftrag (ohne
 Secrets, nur synthetische Daten).

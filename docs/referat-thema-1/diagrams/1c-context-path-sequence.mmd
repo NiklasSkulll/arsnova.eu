@@ -1,0 +1,105 @@
+sequenceDiagram
+  autonumber
+  box rgba(37, 99, 235, 0.10) Browsers
+    participant UI as Teacher · compass dialog<br/>session-host
+    participant S as Participants
+  end
+  box rgba(217, 119, 6, 0.10) App server · backend
+    participant R as tRPC qa router
+    participant P as prepare<br/>context build
+    participant Q as qaSummaryQueue
+    participant C as Adapter + LLM client
+  end
+  box rgba(100, 116, 139, 0.10) Data
+    participant DB as PostgreSQL / Redis
+  end
+  box rgba(13, 148, 136, 0.10) Second private host
+    participant L as llama-server
+  end
+
+  UI->>R: qa.requestSummary(sessionId, locale)
+  alt no session · bad token · post-session window over · Q&A or summary disabled
+    R-->>UI: TRPCError NOT_FOUND / UNAUTHORIZED / FORBIDDEN
+  else allowed
+  R->>Q: requestQaSummary
+  alt job already inflight
+    Q-->>R: current pending result, no prepare
+    R-->>UI: runtime DTO
+  else no job inflight
+  Q->>P: prepare (1)
+  P->>DB: 8 authorization fences + data reads (RepeatableRead)
+  S-)DB: meanwhile: Q&A vote · new question · join
+  Note over UI,S: the host may also advance the quiz meanwhile
+  alt fenced field changed during the build (e.g. Q&A vote, new question, join, quiz step), or a schema violation
+    P-->>R: CONFLICT or INTERNAL_SERVER_ERROR
+    R-->>UI: TRPCError · frontend shows no result
+  else build ok
+    Note over P: pack into budget · snapshotHash ·<br/>strict parse QaSummaryInferenceRequestV2
+    P-->>Q: prepared context · hash (1)
+    alt too few questions
+      Q-->>R: stored result (same hash) or rule-based context_unavailable
+    else cooldown hit (same hash, not failed)
+      Q-->>R: stored result
+    else queue full (default 8, all sessions)
+      Q-->>R: extractive fallback queue_full
+    else accepted
+      Note over Q: pending result + job · copy host token
+      Q-->>R: status pending
+    end
+    R-->>UI: runtime DTO · request did not wait for the model
+  end
+  end
+  end
+
+  par teacher polls while the job runs
+    loop every 750 ms while pending
+      UI->>R: qa.summaryRuntime
+      R-->>UI: pending (no prepare while pending)
+    end
+  and asynchronous job
+    Note over Q: pump: the job starts when no other job runs<br/>(default concurrency 1, all sessions)
+    Q->>P: prepare (2) · re-authorize with the copied token
+    P-->>Q: prepared · hash (2)
+    Note over Q,C: queue timeout starts (default 90 s)
+    Q->>C: runPreparedQaSummary(prepared)
+    alt plan none · no packed Q&A text · legacy-text
+      C-->>Q: no open-weight call (fallback reason or legacy run)
+    else gates fail: misconfigured · circuit open · slot busy in process
+      C-->>Q: failure status, no network call
+    else gates pass
+      C->>L: GET /slots?fail_on_no_slot=1 (Bearer)
+      L-->>C: 200 · 503 busy · 401/403/501 misconfigured
+      C->>L: POST /v1/chat/completions<br/>instruction · definition · context JSON · JSON schema
+      L-->>C: JSON answer
+      Note over C: parseCompletion: schema + known source IDs<br/>failure → invalid_response · client timeout → timeout
+      C-->>Q: model output or failure status
+    end
+    S-)DB: meanwhile: Q&A vote · new question · join
+    Note over UI,S: or the host deletes or moderates a question
+    Q->>P: prepare (3) · re-authorize · re-reads all data
+    P-->>Q: hash (3)
+    alt hash (2) ≠ hash (3)
+      Note over Q: extractive fallback source_changed
+    else queue timeout fired
+      Note over Q: extractive fallback timeout
+    else run result
+      Note over Q: bind to prepare (3): drop unknown source IDs<br/>no statement left → uncertain
+    end
+    Note over Q: clear the copied host token
+  end
+
+  UI->>R: qa.summaryRuntime (also on page load and dialog open)
+  R->>Q: getQaSummaryRuntimeFresh
+  Q->>P: prepare (4)
+  alt prepare (4) fails, e.g. CONFLICT
+    P-->>R: TRPCError
+    R-->>UI: error · frontend sets the runtime to null, result disappears
+  else hash unchanged
+    P-->>Q: current hash
+    Q-->>R: stored result (model summary or fallback)
+    R-->>UI: final runtime DTO · polling stops
+  else hash changed since the result
+    P-->>Q: current hash
+    Q-->>R: replaced by extractive source_changed
+    R-->>UI: final runtime DTO · polling stops
+  end
