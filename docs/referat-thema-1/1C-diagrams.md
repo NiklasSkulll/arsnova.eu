@@ -213,7 +213,7 @@ Not shown in the diagrams:
 ## Key findings
 
 1. **Decoupled from the model, not from the context build.** `qa.requestSummary` returns `pending` before any model call (`Q:524-539`). It does wait for prepare (1).
-   - A change to a fenced field during that build ends the request with CONFLICT. The fenced fields are the 23 session-row fields, such as Q&A revision, participants, quiz progress, Q&A and Blitzlicht flags, sort mode and learning context, plus the released-results and Blitzlicht fingerprints. A quiz vote on the still-running question does not trigger it, and a schema violation with INTERNAL_SERVER_ERROR. The frontend swallows the error (`FE:13557-13559`).
+   - A change to a fenced field during that build ends the request with CONFLICT. The fenced fields are the 23 session-row fields, such as Q&A revision, participants, quiz progress, Q&A and Blitzlicht flags, sort mode and learning context, plus the released-results and Blitzlicht fingerprints. A quiz vote on the still-running question does not trigger it. A schema violation ends the request with INTERNAL_SERVER_ERROR. The frontend swallows the error (`FE:13557-13559`).
    - A failing runtime read sets the runtime to `null`, so a finished summary disappears from the UI (`FE:13525-13527`).
 2. **Prepare runs often.** It runs three times per job: (1) on request, (2) before inference and (3) after it. It runs once more on every runtime read of a finished result (page load, dialog open, poll) and once per preview. The 30 s packing cache saves only the packing step.
 3. **Almost any session activity changes the hash.** These all bump revisions that end up in `snapshotHash` (see the band 3 table):
