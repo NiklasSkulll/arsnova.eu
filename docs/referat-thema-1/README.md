@@ -12,7 +12,7 @@ Evidenzmaterial. Er gehört **nicht** in die PR an kqc-real.
 | Datei                                                                        | Inhalt                                                                         |
 | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | [00-rahmen-und-pruefung.md](./00-rahmen-und-pruefung.md)                     | Generalthema, Bewertung, Nachweiskette, KI-Regeln, Widersprüche, offene Fragen |
-| [01-aufteilung.md](./01-aufteilung.md)                                       | Optionen zur Aufteilung von 1A/1B/1C auf zwei Personen, mit Aufwandsschätzung  |
+| [01-aufteilung.md](./01-aufteilung.md)                                       | Aufteilung: Niklas = X (1A, 1B 3–4), Jonas = Y (1C, 1B 1–2); Optionen, Aufwand |
 | [1A-ressourcenisolation-app-host.md](./1A-ressourcenisolation-app-host.md)   | Code-Landkarte, Messwerkzeuge, Versuchsvorschlag, Lücken für 1A                |
 | [1B-private-inferenz-zweiter-host.md](./1B-private-inferenz-zweiter-host.md) | Zwei-Host-Deployment, LLM-Client, Messbarkeit, Lücken für 1B                   |
 | [1C-kontext-und-adapterpfad.md](./1C-kontext-und-adapterpfad.md)             | #456-Kontext, Verträge, Snapshot/Hash, Async-Pfad, Testlücken für 1C           |
@@ -74,9 +74,10 @@ Alle Dossiers enthalten Code-Stellen (Datei:Zeile), Versuchsideen und Lücken.
   vor allem diese:
   - Darf der aktuelle `main` die Baseline sein statt `v1.3.0`?
   - Was ist beim zweiten Host bereitgestellt, und wie bekommen wir Zugang?
-- **Aufteilung 1A/1B/1C:** Jeder braucht eine klar erkennbare Eigenleistung,
-  und der Aufwand sollte trotzdem gleichmäßig verteilt sein. Optionen stehen
-  in [01-aufteilung.md](./01-aufteilung.md).
+- **Aufteilung 1A/1B/1C:** Am 2026-10-23 festgelegt (Option 1). Niklas ist X
+  (1A und 1B Schritte 3–4), Jonas ist Y (1C und 1B Schritte 1–2). Die
+  Abstimmung mit dem Prüfer steht noch aus. Details in
+  [01-aufteilung.md](./01-aufteilung.md#entscheidung-2026-10-23).
 
 ## Hinweis zur Entstehung
 
