@@ -1,0 +1,47 @@
+---
+config:
+  sequence:
+    actorMargin: 24
+    boxMargin: 6
+    messageMargin: 28
+    width: 130
+    actorFontSize: 19
+    messageFontSize: 19
+    noteFontSize: 18
+---
+sequenceDiagram
+  autonumber
+  box rgba(37, 99, 235, 0.10) Browser
+    participant T as Lehrperson
+  end
+  box rgba(217, 119, 6, 0.10) App-Server
+    participant A as API
+    participant Q as Warteschlange
+  end
+  box rgba(13, 148, 136, 0.10) Privater Host
+    participant L as LLM
+  end
+
+  T->>A: Zusammenfassung anfordern
+  Note over A: Rechte prüfen, Kontext aufbauen,<br/>Snapshot-Hash, Schema V2
+  alt Daten ändern sich beim Aufbau
+    A-->>T: Fehler (CONFLICT)
+  else Aufbau erfolgreich
+    A-)Q: Job einreihen
+    A-->>T: »ausstehend«
+  end
+  Note over T,A: wartet nicht auf das Modell
+
+  Q->>A: Kontext neu aufbauen (Hash vorher)
+  Q->>L: Anfrage
+  L-->>Q: Antwort oder Fehler
+  Q->>A: Kontext neu aufbauen (Hash nachher)
+  alt Hash gleich und Antwort gültig
+    Note over Q: Modell-Zusammenfassung<br/>(nur bekannte Quellen)
+  else sonst
+    Note over Q: Fallback mit Grund
+  end
+
+  T->>A: Status abrufen
+  Note over A: fertiges Ergebnis erneut<br/>gegen aktuelle Daten prüfen
+  A-->>T: Zusammenfassung oder Fallback

@@ -1,0 +1,45 @@
+---
+config:
+  look: neo
+  flowchart:
+    curve: basis
+    nodeSpacing: 14
+    rankSpacing: 20
+    wrappingWidth: 200
+    subGraphTitleMargin:
+      top: 10
+      bottom: 14
+---
+flowchart TB
+  subgraph SHAPES["Colours and shapes"]
+    direction LR
+    h["`**Host · browser**`"] ~~~ a["`**App server step**`"] ~~~ c["`**Contract · hash**`"] ~~~ q["`**Queue job**`"]
+    r["`**Inference path**`"] ~~~ x[["`**External server**`"]] ~~~ s[("`**Data store**`")] ~~~ d{{"`**Check · branch**`"}}
+    ok["`**Successful result**`"] ~~~ n["`**Returned unchanged**`"] ~~~ fb["`**Fallback · error**`"] ~~~ fr["`**Frame** = process step or host · dashed = read only`"]
+  end
+  subgraph EDGES["Lines"]
+    direction LR
+    m1[" "] e1@==> m2[" "] ~~~ t1["main path"]
+    t1 ~~~ o1[" "] e2@==> o2[" "] ~~~ t2["success"]
+    t2 ~~~ f1[" "] e3@-.-> f2[" "] ~~~ t3["failure · fallback"]
+    t3 ~~~ s1[" "] e4@-.-> s2[" "] ~~~ t4["secondary"]
+  end
+  SHAPES ~~~ EDGES
+  class h host
+  class a app
+  class c contract
+  class q queue
+  class r,x runtime
+  class s store
+  class d,n decision
+  class ok result
+  class fb fallback
+  class fr plain
+  class m1,m2,o1,o2,f1,f2,s1,s2 dot
+  class t1,t2,t3,t4 plain
+  class SHAPES,EDGES storeGroup
+  class e1 emph
+  class e2 ok
+  class e3 fail
+  class e4 muted
+%% palette
