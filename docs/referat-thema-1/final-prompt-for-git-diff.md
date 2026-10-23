@@ -7,6 +7,7 @@ Create a clear overview of my work in Markdown bullet points. It should serve as
 **Documentation:**
 - _Task 1A:_ `docs/referat-thema-1/1A-ressourcenisolation-app-host.md`
 - _Task 1B 1-2:_ `docs/referat-thema-1/1B-private-inferenz-zweiter-host.md`
+- _Task 1B 3-4:_ `docs/referat-thema-1/1B-private-inferenz-zweiter-host.md`
 - _Task 1C:_ `docs/referat-thema-1/1C-kontext-und-adapterpfad.md`
 
 **Workflow:**
