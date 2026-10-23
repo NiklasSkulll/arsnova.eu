@@ -12,12 +12,25 @@ Evidenzmaterial. Er gehört **nicht** in die PR an kqc-real.
 | Datei                                                                        | Inhalt                                                                         |
 | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | [00-rahmen-und-pruefung.md](./00-rahmen-und-pruefung.md)                     | Generalthema, Bewertung, Nachweiskette, KI-Regeln, Widersprüche, offene Fragen |
+| [01-aufteilung.md](./01-aufteilung.md)                                       | Optionen zur Aufteilung von 1A/1B/1C auf zwei Personen, mit Aufwandsschätzung  |
 | [1A-ressourcenisolation-app-host.md](./1A-ressourcenisolation-app-host.md)   | Code-Landkarte, Messwerkzeuge, Versuchsvorschlag, Lücken für 1A                |
 | [1B-private-inferenz-zweiter-host.md](./1B-private-inferenz-zweiter-host.md) | Zwei-Host-Deployment, LLM-Client, Messbarkeit, Lücken für 1B                   |
 | [1C-kontext-und-adapterpfad.md](./1C-kontext-und-adapterpfad.md)             | #456-Kontext, Verträge, Snapshot/Hash, Async-Pfad, Testlücken für 1C           |
 
 Geplant: `evidenz/` für Rohdaten, Skripte und Messprotokolle je Auftrag (ohne
 Secrets, nur synthetische Daten).
+
+## Arbeitsweise im Fork
+
+Wegen des knappen Zeitrahmens gilt:
+
+- **Kein `dev`-Branch:** Entwickelt wird in `feature-<featurename>`-Branches,
+  die direkt in `main` gemergt werden.
+- **Kein Branch-Schutz auf `main`:** So lässt sich auch vor Abschluss aller
+  Checks schnell mergen. Die CI läuft trotzdem auf jeder PR. Vor der PR an
+  kqc-real muss sie vollständig grün sein.
+- **PR an kqc-real:** Dafür einen Branch von `upstream/main` abzweigen, nicht
+  vom Fork-`main`. Sonst landet dieser Ordner mit in der PR.
 
 ## Was recherchiert wurde
 
@@ -62,7 +75,8 @@ Alle Dossiers enthalten Code-Stellen (Datei:Zeile), Versuchsideen und Lücken.
   - Darf der aktuelle `main` die Baseline sein statt `v1.3.0`?
   - Was ist beim zweiten Host bereitgestellt, und wie bekommen wir Zugang?
 - **Aufteilung 1A/1B/1C:** Jeder braucht eine klar erkennbare Eigenleistung,
-  und der Aufwand sollte trotzdem gleichmäßig verteilt sein.
+  und der Aufwand sollte trotzdem gleichmäßig verteilt sein. Optionen stehen
+  in [01-aufteilung.md](./01-aufteilung.md).
 
 ## Hinweis zur Entstehung
 
