@@ -1,6 +1,6 @@
 # 1C diagrams: context path from host request to private inference
 
-Diagrams for assignment 1C ([issue #10](https://github.com/NiklasSkulll/arsnova.eu/issues/10)). Author: Jonas [surname], Matrikelnummer [to be added], role Y. As of 2026-10-23.
+Diagrams for assignment 1C ([issue #10](https://github.com/NiklasSkulll/arsnova.eu/issues/10)). Author: Jonas Weirauch, role Y. The Matrikelnummer goes only into the handout PDF and the slides, not into this public repository. As of 2026-10-23.
 
 > **Code state:** written against `main` at commit
 > [`248029dc`](https://github.com/NiklasSkulll/arsnova.eu/tree/248029dc) (2026-10-23), which is
@@ -45,7 +45,7 @@ Notation and print sizes:
   <img alt="Legende zu Abb. 1: Farben für Lehrperson und Anzeige, Schritt im App-Server, Vertrag und Hash, Job in der Warteschlange, externen Server, Prüfung, erfolgreiches Ergebnis und Fallback; Rahmen stehen für Rechner oder Abschnitte; Linien für Hauptpfad, Erfolg und Fehler." src="diagrams/1c-legende.light.svg">
 </picture>
 
-_Abb. 1: Kontextpfad der Moderationszusammenfassung (vereinfacht). Stand `main` `248029dc` (v1.3.0 + 228 Commits). Eigene Darstellung (Jonas [Nachname], Auftrag 1C) auf Basis des Quellcodes._
+_Abb. 1: Kontextpfad der Moderationszusammenfassung (vereinfacht). Stand `main` `248029dc` (v1.3.0 + 228 Commits). Eigene Darstellung (Jonas Weirauch, Auftrag 1C) auf Basis des Quellcodes._
 
 ### Abb. 2: timing
 
@@ -54,7 +54,7 @@ _Abb. 1: Kontextpfad der Moderationszusammenfassung (vereinfacht). Stand `main` 
   <img alt="Ablauf: Die Lehrperson fordert eine Zusammenfassung an. Die API prüft die Rechte und baut den Kontext auf; ändern sich die Daten dabei, scheitert die Anfrage, sonst reiht die API asynchron einen Job ein und meldet »ausstehend«, ohne auf das Modell zu warten. Die Warteschlange baut den Kontext vor und nach der LLM-Anfrage neu auf und speichert die Modell-Zusammenfassung nur bei gleichem Hash und gültiger Antwort, sonst einen Fallback mit Grund. Der Statusabruf prüft das fertige Ergebnis erneut gegen die aktuellen Daten." src="diagrams/1c-context-path-overview-sequence.light.svg">
 </picture>
 
-_Abb. 2: Zeitlicher Ablauf der Zusammenfassung (UML-Sequenzdiagramm, vereinfacht). Stand `main` `248029dc` (v1.3.0 + 228 Commits). Eigene Darstellung (Jonas [Nachname], Auftrag 1C) auf Basis des Quellcodes._
+_Abb. 2: Zeitlicher Ablauf der Zusammenfassung (UML-Sequenzdiagramm, vereinfacht). Stand `main` `248029dc` (v1.3.0 + 228 Commits). Eigene Darstellung (Jonas Weirauch, Auftrag 1C) auf Basis des Quellcodes._
 
 ## Appendix figures (English)
 
@@ -70,7 +70,7 @@ _Abb. 2: Zeitlicher Ablauf der Zusammenfassung (UML-Sequenzdiagramm, vereinfacht
   <img alt="Legend for A1 and A3: colours and shapes for host, app server, contract and hash, queue, inference path, external server, data store, check, successful result, returned unchanged and fallback; frames are process steps or hosts, dashed frames are read-only; lines for main path, success, failure and secondary links." src="diagrams/1c-legend.light.svg">
 </picture>
 
-_A1: Working map of the context path. `main` `248029dc`. Own figure (Jonas [surname], assignment 1C), based on the source code._
+_A1: Working map of the context path. `main` `248029dc`. Own figure (Jonas Weirauch, assignment 1C), based on the source code._
 
 ### A2: working map, timing
 
@@ -79,7 +79,7 @@ _A1: Working map of the context path. `main` `248029dc`. Own figure (Jonas [surn
   <img alt="Numbered UML sequence with teacher, participants, router, prepare, queue, adapter and client, data stores and llama-server. The router rejects disallowed requests. If a job is inflight, its pending result is returned. Otherwise prepare 1 runs while participants keep voting; any session change ends it in CONFLICT. The gates in code order return a stored result, a fallback or pending. In parallel the teacher polls while the job waits for the pump, runs prepare 2, the adapter and client branches (no open-weight call, gate failure, or GET /slots and the chat completion) and prepare 3, and then decides source_changed, timeout or the bound result. The next runtime read runs prepare 4; if it fails, the result disappears from the UI." src="diagrams/1c-context-path-sequence.light.svg">
 </picture>
 
-_A2: Timing of the context path (UML sequence diagram). `main` `248029dc`. Own figure (Jonas [surname], assignment 1C), based on the source code._
+_A2: Timing of the context path (UML sequence diagram). `main` `248029dc`. Own figure (Jonas Weirauch, assignment 1C), based on the source code._
 
 ### A3: contract layers
 
@@ -88,7 +88,7 @@ _A2: Timing of the context path (UML sequence diagram). `main` `248029dc`. Own f
   <img alt="Three layers plus the output. Layer 1, the authorized internal state, is never sent to the model. Layer 2, the domain context: ModerationAnalysisContextV1 packed into ModerationPromptContextV1; every context area keeps a state and reason; the preview DTO comes from its own prepare and equals the job payload only if the snapshotHash matches. Layer 3, the model request: QaSummaryInferenceRequestV2 (strict) and the wire body, which drops the envelope versions, budget and hash but keeps the domain context version. The output is validated three times: by the grammar at generation, by the client checks (Zod schema and references) and by binding to prepare 3. Negative paths: an incompatible version throws in the strict parse; failed client or output validation gives invalid_response." src="diagrams/1c-contract-layers.light.svg">
 </picture>
 
-_A3: Contract layers and validation points. `main` `248029dc`. Own figure (Jonas [surname], assignment 1C), based on the source code._
+_A3: Contract layers and validation points. `main` `248029dc`. Own figure (Jonas Weirauch, assignment 1C), based on the source code._
 
 ## Task coverage (exam document 4.3, 1C)
 
