@@ -95,7 +95,7 @@ async function revisions(
   });
 }
 
-describe.skipIf(!RUN_PG)('Q&A summary snapshot hash (PostgreSQL)', () => {
+describe.skipIf(!RUN_PG)('Q&A summary snapshot hash (PostgreSQL + Redis)', () => {
   const registry = createFixtureRegistry();
   let platformBefore: PlatformStatisticSnapshot | null = null;
 
@@ -156,7 +156,7 @@ describe.skipIf(!RUN_PG)('Q&A summary snapshot hash (PostgreSQL)', () => {
     await restorePlatformStatistic(platformBefore);
   });
 
-  it('T5.0: liefert ohne Änderung denselben Hash, auch beim direkten Packen am Cache vorbei', async () => {
+  it('liefert ohne Änderung denselben Hash, auch beim direkten Packen am Cache vorbei', async () => {
     const corpus = await createCorpus();
 
     const first = await prepared(corpus.sessionId);
@@ -181,7 +181,7 @@ describe.skipIf(!RUN_PG)('Q&A summary snapshot hash (PostgreSQL)', () => {
     expect(directA.snapshotHash).toBe(first.snapshotHash);
   });
 
-  it('T5.1: ändert den Hash nach einer Q&A-Stimme und führt die neue Ranking-Revision', async () => {
+  it('ändert den Hash nach einer Q&A-Stimme und führt die neue Ranking-Revision', async () => {
     const corpus = await createCorpus();
     const before = await snapshotHash(corpus.sessionId);
     const revisionBefore = await revisions(corpus.sessionId);
@@ -196,7 +196,7 @@ describe.skipIf(!RUN_PG)('Q&A summary snapshot hash (PostgreSQL)', () => {
     );
   });
 
-  it('T5.2: ändert den Hash nach einer neuen Frage und führt sie als Quelle', async () => {
+  it('ändert den Hash nach einer neuen Frage und führt sie als Quelle', async () => {
     const corpus = await createCorpus();
     const before = await snapshotHash(corpus.sessionId);
     const revisionBefore = await revisions(corpus.sessionId);
@@ -216,7 +216,7 @@ describe.skipIf(!RUN_PG)('Q&A summary snapshot hash (PostgreSQL)', () => {
     expect(await sourceIds(corpus.sessionId)).toContain(`qa-question:${newQuestionId}`);
   });
 
-  it('T5.3: ändert den Hash nach einem Beitritt und führt Teilnehmer-Revision und -Anzahl', async () => {
+  it('ändert den Hash nach einem Beitritt und führt Teilnehmer-Revision und -Anzahl', async () => {
     const corpus = await createCorpus();
     const before = await snapshotHash(corpus.sessionId);
     const revisionBefore = await revisions(corpus.sessionId);
@@ -233,7 +233,7 @@ describe.skipIf(!RUN_PG)('Q&A summary snapshot hash (PostgreSQL)', () => {
     );
   });
 
-  it('T5.4a: ändert den Hash, wenn der Host eine Frage über qa.moderate löscht', async () => {
+  it('ändert den Hash, wenn der Host eine Frage über qa.moderate löscht', async () => {
     const corpus = await createCorpus();
     const target = corpus.questionIds[0]!;
     const before = await prepared(corpus.sessionId);
@@ -245,7 +245,7 @@ describe.skipIf(!RUN_PG)('Q&A summary snapshot hash (PostgreSQL)', () => {
     expect(await sourceIds(corpus.sessionId)).not.toContain(`qa-question:${target}`);
   });
 
-  it('T5.4b: ändert den Hash, wenn Teilnehmende ihre eigene Frage über qa.deleteOwn löschen', async () => {
+  it('ändert den Hash, wenn Teilnehmende ihre eigene Frage über qa.deleteOwn löschen', async () => {
     const corpus = await createCorpus();
     const target = corpus.questionIds[1]!;
     const author = corpus.participants[1]!;
@@ -270,7 +270,7 @@ describe.skipIf(!RUN_PG)('Q&A summary snapshot hash (PostgreSQL)', () => {
     return { corpus, completed, running };
   }
 
-  it('T5.5: Gegenprobe: lässt den Hash bei einer Quizstimme auf eine laufende Frage unverändert', async () => {
+  it('Gegenprobe: lässt den Hash bei einer Quizstimme auf eine laufende Frage unverändert', async () => {
     const { corpus, completed, running } = await releasedQuizCorpus();
     const before = await prepared(corpus.sessionId);
     expect(before.context.releasedResults).toMatchObject({ state: 'available' });
@@ -290,7 +290,7 @@ describe.skipIf(!RUN_PG)('Q&A summary snapshot hash (PostgreSQL)', () => {
     expect(await snapshotHash(corpus.sessionId)).toBe(before.snapshotHash);
   });
 
-  it('T5.5 (Kontrolle): ändert den Hash bei einer Quizstimme auf eine freigegebene Frage', async () => {
+  it('Kontrolle: ändert den Hash bei einer Quizstimme auf eine freigegebene Frage', async () => {
     const { corpus, completed } = await releasedQuizCorpus();
     const before = await snapshotHash(corpus.sessionId);
 
