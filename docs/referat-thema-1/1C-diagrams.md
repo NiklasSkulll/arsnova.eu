@@ -123,7 +123,8 @@ Every prepare passes 8 fences. With Q&A disabled, `MQC:1015` replaces `MQC:1067`
 
 - **States:** every section has a `state`: `available`, `unavailable`, `disabled`, `not-applicable`, `not-released`, `failed` or `pending`. All except `available` carry a reason, and the strict schemas never drop a section (`libs/shared-types/src/moderation-prompt-context.ts`).
 - **What the model is told:** the definition text says "omitted data is unknown" (`MSC:49`).
-- **Example:** with the semantic topics switched off, `topics.state` is `disabled` with the limitation `module-disabled` (`MQC:633-653`). With more than 500 topic members it is `failed` (`MQC:674-690`).
+- **Example:** with the semantic topics switched off, `topics.state` is `disabled` with the limitation `module-disabled` (`MQC:633-653`). With more than 500 topic members it is `failed` (`MQC:674-690`). Both are confirmed by tests T2.1 and T2.2 ([protocol](evidenz/1C/2026-10-24-tests.md#t21--deaktivierte-themen-behalten-zustand-grund-und-limitation)).
+- **Exception (test T2.3, finding):** a structurally valid topic snapshot in Redis with a different `version` is silently read as `null` (`wordCloudAnalysisCache.ts:623-624`). The context then reports `unavailable`/`no-data`, exactly as if no analysis existed. The section is kept, but the version conflict itself is lost ([protocol](evidenz/1C/2026-10-24-tests.md#t23--veralteter-themen-snapshot-in-redis-prozesskonflikt)).
 
 ## Evidence per station
 
@@ -212,7 +213,7 @@ Not shown in the diagrams:
 
 ## Key findings
 
-1. **Decoupled from the model, not from the context build.** `qa.requestSummary` returns `pending` before any model call (`Q:524-539`). It does wait for prepare (1).
+1. **Decoupled from the model, not from the context build.** `qa.requestSummary` returns `pending` before any model call (`Q:524-539`). It does wait for prepare (1). Test T4.1 confirms that the request returns `pending` before the processor starts and stays `pending` while it runs; T1.4 confirms the INTERNAL_SERVER_ERROR without a job.
    - A change to a fenced field during that build ends the request with CONFLICT. The fenced fields are the 23 session-row fields, such as Q&A revision, participants, quiz progress, Q&A and Blitzlicht flags, sort mode and learning context, plus the released-results and Blitzlicht fingerprints. A quiz vote on the still-running question does not trigger it, and a schema violation with INTERNAL_SERVER_ERROR. The frontend swallows the error (`FE:13557-13559`).
    - A failing runtime read sets the runtime to `null`, so a finished summary disappears from the UI (`FE:13525-13527`).
 2. **Prepare runs often.** It runs three times per job: (1) on request, (2) before inference and (3) after it. It runs once more on every runtime read of a finished result (page load, dialog open, poll) and once per preview. The 30 s packing cache saves only the packing step.
@@ -224,7 +225,9 @@ Not shown in the diagrams:
 
    The CONFLICT fence additionally compares quiz progress, the Blitzlicht enabled/open flags and sort mode (`MQC:943-966`). During active Q&A a model answer therefore usually ends as `source_changed` (`Q:341-345`, `Q:427-438`). A force-fit pack keeps `meta` constant, but corpus counts and the top-N selection can still change the hash (`MSC:531-575`).
 
-4. **Client failures do not skip the consistency check.** A busy, unavailable or invalid run still goes through prepare (3), and `source_changed` takes precedence over the client reason (`Q:340-353`).
+   PostgreSQL tests T5.1–T5.4b confirm the chain trigger → revision → hash for a vote, a new question, a join, a host delete and a participant's own delete. Limits found by the tests: a quiz vote on a still-running question does not change the hash, a vote on a released question does (T5.5). Votes and joins reach the hash on two independent paths, the revisions in `meta` and the content (vote counts, `participantBasis`), so a fault in one path does not disable the detection ([protocol](evidenz/1C/2026-10-24-tests.md#t5--echte-datenbankänderungen-ändern-den-snapshot-hash-postgresql)).
+
+4. **Client failures do not skip the consistency check.** A busy, unavailable or invalid run still goes through prepare (3), and `source_changed` takes precedence over the client reason (`Q:340-353`). Tests T3.1–T3.3 confirm this for a queue timeout and a reported client failure, with T3.3 as control. Limit (T3.4): if the processor throws instead of returning a run, the job ends rule-based with `context_unavailable` and prepare (3) is skipped. The real adapter does not throw on client failures, so this needs a code defect.
 5. **Sources are checked again at bind time.** Statements may only cite sources packed by prepare (3). Unknown IDs are dropped, a dropped statement adds a limitation, and no remaining statement means `uncertain` (`V2:26-35`, `V2:50-125`). For full-context answers this is a defensive second check. `parseCompletion` already rejects any answer with an unknown source ID as `invalid_response` (`CL:446-447`), and bind only runs when hash (2) = hash (3). In practice the drop path is reachable only for legacy-text output.
 6. **The output contract has four different limits.**
 
