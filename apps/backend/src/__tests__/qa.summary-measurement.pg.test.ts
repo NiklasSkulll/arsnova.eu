@@ -1,9 +1,9 @@
 /**
- * Opt-in lokale Messreihe zur Q&A-Zusammenfassung (Design Teil 2, Abschnitte 5,
- * 6 und 10): Rückkehrzeit und Gesamtdauer (M1/M2), Kosten der
- * Kontextbereitstellung (M3) und der Validierung (M4), Zahl der Kontextaufbauten
- * und Nutzlastgröße (M5) sowie die Gegenvariante V1 („keine Nachprüfung nach der
- * Inferenz“) gegen die Baseline B.
+ * Opt-in lokale Messreihe zur Q&A-Zusammenfassung: Rückkehrzeit von
+ * `qa.requestSummary` und Gesamtdauer bis zum Endstatus, Kosten eines
+ * Kontextaufbaus und der Validierung, Zahl der Kontextaufbauten je Auftrag und
+ * Nutzlastgröße sowie eine Variante der Queue ohne erneuten Kontextaufbau nach
+ * der Inferenz im Vergleich zur unveränderten Queue.
  *
  * Opt-in über `RUN_QA_SUMMARY_MEASUREMENT=1`; braucht `DATABASE_URL`, `REDIS_URL`
  * und `QA_SUMMARY_MEASUREMENT_OUT` (Zielpfad der JSON-Datei). Läuft nicht in der
@@ -86,7 +86,7 @@ const HOST_TOKEN = `host-token-${randomUUID()}`;
 const ACCESS = { hostToken: HOST_TOKEN } as const;
 const hostCaller = qaRouter.createCaller({ req: {} as never });
 
-/** Vorab festgelegt (Design 5 und 6). */
+/** Vorab festgelegte Laufzahlen und Runtime-Verzögerung. */
 const WARMUP_RUNS = 3;
 const MEASURED_RUNS = 20;
 const VALIDATION_RUNS = 200;
@@ -96,9 +96,11 @@ const TERMINAL_WAIT_MS = 30_000;
 /** Packing-Cache-TTL (`MODERATION_PROMPT_PACKING_CACHE_TTL_MS` = 30 s) plus Abstand. */
 const PACKING_CACHE_EXPIRY_STEP_MS = 31_000;
 /**
- * `sequential` (Standard, Primärlauf): je Variante und Szenario alle Läufe am
- * Stück, B zuerst. `alternating` (Robustheitslauf): B- und V1-Läufe je Iteration
- * verschränkt, Reihenfolge B/V1 wechselt von Iteration zu Iteration.
+ * Reihenfolge des Variantenvergleichs. `sequential` (Standard): je Variante und
+ * Szenario alle Läufe am Stück, unveränderte Queue zuerst. `alternating`: je
+ * Iteration ein Lauf jeder Variante, die Reihenfolge wechselt von Iteration zu
+ * Iteration. Konstanten-, Env- und JSON-Namen mit `V1` bleiben aus Kompatibilität
+ * mit den aufgezeichneten Rohdaten und der Auswertung unverändert.
  */
 const V1_MODE =
   process.env['QA_SUMMARY_MEASUREMENT_V1_MODE'] === 'alternating' ? 'alternating' : 'sequential';
@@ -111,7 +113,7 @@ type CountedCall = { readonly phase: Phase; readonly real: boolean };
 type RunTrace = {
   calls: CountedCall[];
   phase: Phase;
-  /** V1: Ergebnis von prepare (2) dieses Auftrags. */
+  /** Variante ohne Nachprüfung: Ergebnis des zweiten Kontextaufbaus dieses Auftrags. */
   secondPrepare: PreparedModerationSummaryContext | null;
 };
 
@@ -141,7 +143,7 @@ function resultSummary(result: QaSummaryResultV2 | null) {
 
 /**
  * Zählender Wrapper um den echten Queue-Hook `prepare`. Ruft
- * `prepareFreshModerationSummaryContext` unverändert auf. Mit `skipThird` (V1)
+ * `prepareFreshModerationSummaryContext` unverändert auf. Mit `skipThird`
  * liefert der dritte Aufruf je Auftrag das Ergebnis des zweiten zurück, statt
  * neu aufzubauen.
  */
@@ -396,7 +398,7 @@ describe.skipIf(!RUN)(
         vi.useRealTimers();
       }
 
-      // M4: isolierte Validierung auf dem promptContext aus M3.
+      // Isolierte Validierung auf dem promptContext des Kontextaufbaus oben.
       const prepared = await prepareOnce();
       const plan = resolveQaSummaryAdapterPlan();
       const promptContext = prepared.request.promptContext;
@@ -454,8 +456,10 @@ describe.skipIf(!RUN)(
       testsCompleted.push('m3m4');
     });
 
-    it('Gegenvariante ohne Nachprüfung nach der Inferenz gegen Baseline B', async () => {
+    it('Variante ohne erneuten Kontextaufbau nach der Inferenz gegen die unveränderte Queue', async () => {
       const variants = [
+        // JSON-Schlüssel: `B` = unveränderte Queue, `V1` = ohne erneuten Kontextaufbau
+        // nach der Inferenz (der dritte Aufruf liefert das Ergebnis des zweiten).
         { name: 'B', skipThird: false },
         { name: 'V1', skipThird: true },
       ] as const;
@@ -511,9 +515,9 @@ describe.skipIf(!RUN)(
           });
           const freshHash = fresh.promptContext.snapshotHash;
           const staleBy = (summary: ReturnType<typeof resultSummary>) => ({
-            // Abschnitt 6: ready, dessen Hash nicht dem Stand bei Auslieferung entspricht.
+            // Definition 1: ready, dessen Hash nicht dem Stand bei Auslieferung entspricht.
             section6: summary.status === 'ready' && summary.snapshotHash !== freshHash,
-            // Abschnitt 10: ready mit Modellaussage, obwohl sich der Stand geändert hat.
+            // Definition 2: ready mit Modellaussage, obwohl sich der Stand geändert hat.
             section10: summary.status === 'ready' && summary.hasRuntimeStatement && voted,
           });
           cell.runs.push({
@@ -550,7 +554,7 @@ describe.skipIf(!RUN)(
         for (const kind of scenarios) {
           const cells = [await createCell(variants[0], kind), await createCell(variants[1], kind)];
           for (let index = 0; index < WARMUP_RUNS + V1_RUNS; index += 1) {
-            // Gerade Iterationen B zuerst, ungerade V1 zuerst.
+            // Gerade Iterationen unveränderte Queue zuerst, ungerade die Variante zuerst.
             const ordered = index % 2 === 0 ? cells : [cells[1]!, cells[0]!];
             for (const [order, cell] of ordered.entries()) await runCell(cell, index, order);
           }
