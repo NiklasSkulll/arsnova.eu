@@ -18,6 +18,7 @@
 // T = Ende prepare (2) bis Beginn prepare (3) (primär) bzw. Beginn (2) bis Ende (3).
 // M7b (Nachtrag im Protokoll Teil 3): zusätzlich Klasse (b) = source_changed oder
 // failed/context_unavailable nach CONFLICT in prepare (2)/(3), mit Kriterium K_b.
+// M7c: Diagnose `scheduleDiagnostic` (Zeitpläne mit Ankunft im Fenster), kein Kriterium.
 import { readFileSync } from 'node:fs';
 
 const SEED = 20261024;
@@ -273,6 +274,23 @@ function classifyVote(vote, second, third) {
   return 'unklar';
 }
 
+/** Ziehungsfolge wie im Messcode: je Stimme Zwischenankunftszeit, dann Fragenwahl. */
+function scheduleHitsWindow(run, rate) {
+  const second = run.prepares.find((p) => p.role === 'before');
+  const third = run.prepares.find((p) => p.role === 'after');
+  if (!second || !third) return false;
+  const from = second.endedAt - run.processStartedAt;
+  const to = third.startedAt - run.processStartedAt;
+  const random = mulberry32(run.seed);
+  let offset = 0;
+  for (;;) {
+    offset += (-Math.log(1 - random()) / rate) * 1000;
+    random();
+    if (offset > to) return false;
+    if (offset >= from) return true;
+  }
+}
+
 function evaluateM7(m7, out) {
   for (const [key, rate] of Object.entries(m7.rates)) {
     const r = rate.ratePerSecond;
@@ -384,6 +402,16 @@ function evaluateM7(m7, out) {
         failedWithoutConflict,
       },
       runsWithoutT: n - withT.length,
+      // Diagnose (M7c-Nachtrag, kein Kriterium): Läufe, deren Zeitplan laut Seed mindestens eine
+      // Ankunft in das gemessene Fenster [Ende (2); Beginn (3)] legt, neben der Vorhersage.
+      scheduleDiagnostic:
+        r === 0
+          ? null
+          : {
+              schedulesWithArrivalInWindow: withT.filter((x) => scheduleHitsWindow(x, r)).length,
+              runsWithT: withT.length,
+              expected: +withT.reduce((sum, x) => sum + predict(x.windowInnerMs), 0).toFixed(1),
+            },
       modelOutputDiscarded: {
         k: discarded,
         share: +(discarded / n).toFixed(3),
