@@ -6,7 +6,8 @@
  * `GET /slots?fail_on_no_slot=1` und `POST /v1/chat/completions`. Er speichert
  * Methode, Pfad, Header und die **rohen Bytes** des Bodys, so wie sie über den
  * Socket ankommen. Die Runtime ist kein Modell; sie antwortet mit einer festen,
- * vertragsgültigen Ausgabe (Fault-Injection und Gegenvarianten nach 4.1.3).
+ * vertragsgültigen Ausgabe und dient nur der Fehlereinspeisung und kontrollierten
+ * Varianten.
  */
 import { createServer, type IncomingHttpHeaders, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
