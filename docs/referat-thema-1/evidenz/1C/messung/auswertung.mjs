@@ -8,6 +8,14 @@
 // das Maximum). Bootstrap: Perzentil-Intervall 95 % für Median(B) − Median(V1),
 // beide Gruppen unabhängig mit Zurücklegen gezogen, 10 000 Wiederholungen,
 // fester Seed 20261024 (mulberry32), damit das Ergebnis reproduzierbar ist.
+//
+// Teil 3 (Design Teil 3, Abschnitt 5): M6 mit denselben Kennzahlen, dazu
+// Bootstrap-Perzentil-Intervalle (95 %, 10 000 Wiederholungen, Seed 20261024,
+// je Größe ein eigener Generator) für Mediane und Verhältnisse von Medianen.
+// Werden Dateien aus Teil 2 mit übergeben, folgt der Faktor gegen deren M3/M4.
+// M7: Anteil `source_changed` (gespeicherter Endstatus des Jobs) je Rate mit
+// 95-%-Wilson-Intervall (z = 1,959964) und mittlerer Vorhersage 1 − e^(−r·T),
+// T = Ende prepare (2) bis Beginn prepare (3) (primär) bzw. Beginn (2) bis Ende (3).
 import { readFileSync } from 'node:fs';
 
 const SEED = 20261024;
@@ -54,6 +62,52 @@ function bootstrapMedianDiff(a, b, random) {
     seed: SEED,
   };
 }
+function bootstrapMedianCi(values) {
+  const random = mulberry32(SEED);
+  const draws = [];
+  for (let i = 0; i < RESAMPLES; i += 1) {
+    draws.push(median(values.map(() => values[Math.floor(random() * values.length)])));
+  }
+  const s = sorted(draws);
+  return [
+    +s[Math.floor(0.025 * RESAMPLES)].toFixed(1),
+    +s[Math.ceil(0.975 * RESAMPLES) - 1].toFixed(1),
+  ];
+}
+function bootstrapMedianRatio(a, b) {
+  const random = mulberry32(SEED);
+  const draw = (values) => values.map(() => values[Math.floor(random() * values.length)]);
+  const ratios = [];
+  for (let i = 0; i < RESAMPLES; i += 1) ratios.push(median(draw(a)) / median(draw(b)));
+  const s = sorted(ratios);
+  return {
+    factor: +(median(a) / median(b)).toFixed(2),
+    ci95: [
+      +s[Math.floor(0.025 * RESAMPLES)].toFixed(2),
+      +s[Math.ceil(0.975 * RESAMPLES) - 1].toFixed(2),
+    ],
+    resamples: RESAMPLES,
+    seed: SEED,
+  };
+}
+function wilson(k, n, z = 1.959963984540054) {
+  if (n === 0) return null;
+  const p = k / n;
+  const denominator = 1 + (z * z) / n;
+  const centre = (p + (z * z) / (2 * n)) / denominator;
+  const half = (z / denominator) * Math.sqrt((p * (1 - p)) / n + (z * z) / (4 * n * n));
+  return [+(centre - half).toFixed(3), +(centre + half).toFixed(3)];
+}
+function binomialCdf(k, n, p) {
+  let total = 0;
+  let coefficient = 1;
+  for (let i = 0; i <= Math.min(k, n); i += 1) {
+    if (i > 0) coefficient = (coefficient * (n - i + 1)) / i;
+    total += coefficient * p ** i * (1 - p) ** (n - i);
+  }
+  return k < 0 ? 0 : total;
+}
+const mean = (values) => values.reduce((sum, value) => sum + value, 0) / values.length;
 const measured = (runs) => runs.filter((run) => run.warmup === false);
 const distinct = (values) => [...new Set(values)];
 const outcome = (summary) => `${summary.status}/${summary.effectiveMode}/${summary.fallbackReason}`;
@@ -127,10 +181,224 @@ function evaluate(data) {
       quietB
     ).toFixed(4);
   }
+  if (data.m6) evaluateM6(data.m6, out);
+  if (data.m7calibration) out['M7 Kalibrierung'] = data.m7calibration.steps;
+  if (data.m7) evaluateM7(data.m7, out);
   return out;
 }
 
-for (const path of process.argv.slice(2)) {
+const ms = (runs) => measured(runs).map((x) => x.ms);
+
+function evaluateM6(m6, out) {
+  for (const [name, c] of Object.entries(m6.conditions)) {
+    const warm = measured(c.warm);
+    const cold = measured(c.cold);
+    const validation = measured(c.validation.runs);
+    const row = {
+      role: c.role,
+      env: c.env,
+      warm: { ...stats(ms(c.warm)), medianCi95: bootstrapMedianCi(ms(c.warm)) },
+      cold: { ...stats(ms(c.cold)), medianCi95: bootstrapMedianCi(ms(c.cold)) },
+      cache: { warm: distinct(warm.map((x) => x.cache)), cold: distinct(cold.map((x) => x.cache)) },
+      coldDeletedRedisKeys: distinct(c.cold.map((x) => x.deletedRedisKeys)),
+      distinctSnapshotHashes: {
+        warm: distinct(warm.map((x) => x.snapshotHash)).length,
+        cold: distinct(cold.map((x) => x.snapshotHash)).length,
+      },
+      promptContextBytes: distinct([...warm, ...cold].map((x) => x.promptContextBytes)),
+      dataTokens: distinct([...warm, ...cold].map((x) => x.dataTokens)),
+      truncations: distinct([...warm, ...cold].map((x) => JSON.stringify(x.truncations))),
+      areas: distinct([...warm, ...cold].map((x) => JSON.stringify(x.areas))),
+      validationPromptContextBytes: c.validation.promptContextBytes,
+      jobs: c.jobs.map((job) => ({
+        completionRequests: job.completionRequests,
+        requestBodyBytes: job.requestBodyBytes,
+        userMessageBytes: job.userMessageBytes,
+        stored: outcome(job.stored),
+      })),
+    };
+    for (const field of [
+      'assembleMs',
+      'requestParseMs',
+      'clientOutputParseMs',
+      'modelOutputParseMs',
+      'totalMs',
+    ]) {
+      row[`validation ${field}`] = stats(validation.map((x) => x[field]));
+    }
+    row['validation share (median total / median warm)'] = +(
+      row['validation totalMs'].median / row.warm.median
+    ).toFixed(4);
+    row['validation share (median total / median cold)'] = +(
+      row['validation totalMs'].median / row.cold.median
+    ).toFixed(4);
+    out[`M6 ${name}`] = row;
+  }
+  const primary = m6.conditions['full/YESNO'];
+  if (primary) {
+    const h = out['M6 full/YESNO'];
+    out['M6 H (median cold < 500 ms, share < 20 %)'] = {
+      coldMedian: h.cold.median,
+      coldBelow500: h.cold.median < 500,
+      share: h['validation share (median total / median warm)'],
+      shareBelow20: h['validation share (median total / median warm)'] < 0.2,
+    };
+    for (const baseline of ['reference/m3-env', 'reference/m6-env']) {
+      const b = m6.conditions[baseline];
+      if (!b) continue;
+      out[`M6 Faktor full/YESNO ÷ ${baseline} (gleicher Lauf)`] = {
+        warm: bootstrapMedianRatio(ms(primary.warm), ms(b.warm)),
+        cold: bootstrapMedianRatio(ms(primary.cold), ms(b.cold)),
+        validationTotal: bootstrapMedianRatio(
+          measured(primary.validation.runs).map((x) => x.totalMs),
+          measured(b.validation.runs).map((x) => x.totalMs),
+        ),
+      };
+    }
+  }
+}
+
+/** Lage einer Stimme (Commit zwischen issuedAt und resolvedAt) zu prepare (2) und (3). */
+function classifyVote(vote, second, third) {
+  const overlaps = (p) =>
+    p && vote.issuedAt < (p.endedAt ?? Infinity) && vote.resolvedAt > p.startedAt;
+  if (second && vote.resolvedAt <= second.startedAt) return 'vor (2)';
+  if (overlaps(second)) return 'während (2)';
+  if (!third) return 'nach Abbruch';
+  if (vote.issuedAt >= second.endedAt && vote.resolvedAt <= third.startedAt) return 'Fenster';
+  if (overlaps(third)) return 'während (3)';
+  if (vote.issuedAt >= third.endedAt) return 'nach (3)';
+  return 'unklar';
+}
+
+function evaluateM7(m7, out) {
+  for (const [key, rate] of Object.entries(m7.rates)) {
+    const r = rate.ratePerSecond;
+    const runs = measured(rate.runs);
+    const n = runs.length;
+    const k = runs.filter((x) => x.stored.fallbackReason === 'source_changed').length;
+    const withT = runs.filter((x) => x.windowInnerMs !== null);
+    const predict = (t) => 1 - Math.exp((-r * t) / 1000);
+    const meanInner = withT.length ? mean(withT.map((x) => predict(x.windowInnerMs))) : null;
+    const meanOuter = withT.length ? mean(withT.map((x) => predict(x.windowOuterMs))) : null;
+    const ci = wilson(k, n);
+    const voteClasses = {};
+    let runsWithVoteInWindow = 0;
+    let consistent = 0;
+    for (const run of runs) {
+      const second = run.prepares.find((p) => p.role === 'before');
+      const third = run.prepares.find((p) => p.role === 'after');
+      const classes = run.votes.map((vote) => classifyVote(vote, second, third));
+      for (const c of classes) voteClasses[c] = (voteClasses[c] ?? 0) + 1;
+      const inWindow = classes.includes('Fenster');
+      if (inWindow) runsWithVoteInWindow += 1;
+      if (run.hashChanged !== null && run.hashChanged === inWindow) consistent += 1;
+    }
+    const discarded = runs.filter((x) => x.stored.fallbackReason !== null).length;
+    out[`M7 ${key}`] = {
+      n,
+      storedOutcomes: Object.fromEntries(
+        distinct(runs.map((x) => outcome(x.stored))).map((o) => [
+          o,
+          runs.filter((x) => outcome(x.stored) === o).length,
+        ]),
+      ),
+      sourceChanged: k,
+      share: +(k / n).toFixed(3),
+      wilson95: ci,
+      runsWithT: withT.length,
+      meanPredictionInner: meanInner === null ? null : +meanInner.toFixed(3),
+      meanPredictionOuter: meanOuter === null ? null : +meanOuter.toFixed(3),
+      K:
+        r === 0
+          ? k === 0
+          : meanInner !== null && ci !== null && meanInner >= ci[0] && meanInner <= ci[1],
+      K_outer_sensitivity:
+        r === 0
+          ? k === 0
+          : meanOuter !== null && ci !== null && meanOuter >= ci[0] && meanOuter <= ci[1],
+      windowInnerMs: withT.length ? stats(withT.map((x) => x.windowInnerMs)) : null,
+      windowOuterMs: withT.length ? stats(withT.map((x) => x.windowOuterMs)) : null,
+      votesPerRun: {
+        mean: +mean(runs.map((x) => x.votes.length)).toFixed(2),
+        total: runs.reduce((s, x) => s + x.votes.length, 0),
+      },
+      voteErrors: runs.reduce((s, x) => s + x.votes.filter((v) => v.error).length, 0),
+      voteLagMs: (() => {
+        const lags = runs.flatMap((x) => x.votes.map((v) => v.issuedAt - v.scheduledAt));
+        return lags.length
+          ? { median: +median(lags).toFixed(2), max: +Math.max(...lags).toFixed(2) }
+          : null;
+      })(),
+      voteDurationMs: (() => {
+        const d = runs.flatMap((x) => x.votes.map((v) => v.resolvedAt - v.issuedAt));
+        return d.length ? { median: +median(d).toFixed(2), max: +Math.max(...d).toFixed(2) } : null;
+      })(),
+      voteClasses,
+      runsWithVoteInWindow,
+      hashChangedEqualsVoteInWindow: `${consistent}/${runs.filter((x) => x.hashChanged !== null).length}`,
+      prepareErrors: runs.flatMap((x) =>
+        x.prepares.filter((p) => p.error).map((p) => `${p.role}: ${p.error.split(':')[0]}`),
+      ),
+      prepareRoles: distinct(runs.map((x) => x.prepares.map((p) => p.role).join(','))),
+      // Ergänzend (nicht Teil von K): Binomialwahrscheinlichkeit, unter der mittleren Vorhersage
+      // höchstens bzw. mindestens k von n Läufen mit source_changed zu sehen.
+      binomialUnderPrediction:
+        meanInner === null
+          ? null
+          : {
+              pAtMostK: +binomialCdf(k, n, meanInner).toFixed(4),
+              pAtLeastK: +(1 - binomialCdf(k - 1, n, meanInner)).toFixed(4),
+            },
+      modelOutputDiscarded: {
+        k: discarded,
+        share: +(discarded / n).toFixed(3),
+        wilson95: wilson(discarded, n),
+      },
+      hostOutcomes: Object.fromEntries(
+        distinct(runs.map((x) => outcome(x.host))).map((o) => [
+          o,
+          runs.filter((x) => outcome(x.host) === o).length,
+        ]),
+      ),
+      completionRequests: distinct(runs.map((x) => x.completionRequests)),
+      votersRemaining: rate.remainingVotersByKey,
+    };
+  }
+}
+
+const files = process.argv
+  .slice(2)
+  .map((path) => ({ path, data: JSON.parse(readFileSync(path, 'utf8')) }));
+for (const { path, data } of files) {
   console.log(`# ${path}`);
-  console.log(JSON.stringify(evaluate(JSON.parse(readFileSync(path, 'utf8'))), null, 1));
+  console.log(JSON.stringify(evaluate(data), null, 1));
+}
+// Faktor M6 (voller Kontext) gegen M3/M4 aus Teil 2, je übergebener Datei aus Teil 2.
+for (const { path, data } of files.filter((file) => file.data.m6?.conditions['full/YESNO'])) {
+  const full = data.m6.conditions['full/YESNO'];
+  for (const base of files.filter((file) => file.data.m3 && file.data.m4)) {
+    console.log(`# Faktor ${path} M6 full/YESNO ÷ ${base.path} M3/M4`);
+    console.log(
+      JSON.stringify(
+        {
+          warm: bootstrapMedianRatio(ms(full.warm), ms(base.data.m3.warm)),
+          cold: bootstrapMedianRatio(ms(full.cold), ms(base.data.m3.cold)),
+          validationTotal: bootstrapMedianRatio(
+            measured(full.validation.runs).map((x) => x.totalMs),
+            measured(base.data.m4.runs).map((x) => x.totalMs),
+          ),
+          promptContextBytes: {
+            m6: full.validation.promptContextBytes,
+            m4: base.data.m4.promptContextBytes,
+            factor: +(full.validation.promptContextBytes / base.data.m4.promptContextBytes).toFixed(
+              2,
+            ),
+          },
+        },
+        null,
+        1,
+      ),
+    );
+  }
 }
