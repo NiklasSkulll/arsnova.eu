@@ -51,6 +51,7 @@ import {
   waitForQaSummaryIdleForTests,
 } from '../lib/qaSummaryQueue';
 import { prisma } from '../db';
+import { getRedis } from '../redis';
 import { qaRouter } from '../routers/qa';
 import {
   TEST_RUNTIME_MODEL_VERSION,
@@ -86,6 +87,14 @@ const HOST_TOKEN = `host-token-${randomUUID()}`;
 const hostCaller = qaRouter.createCaller({ req: {} as never });
 /** Obergrenze für das Warten auf einen Endstatus; der Normalfall liegt weit darunter. */
 const TERMINAL_WAIT_MS = 15_000;
+/**
+ * Erkennungsmarke des Lua-Skripts, mit dem `loadQuickFeedbackModerationSnapshot`
+ * (`apps/backend/src/lib/quickFeedbackModerationSnapshot.ts`) die Blitzlicht-Runde liest.
+ */
+const QUICK_FEEDBACK_READ_SCRIPT_MARKER = 'QUICK_FEEDBACK_READ_MODERATION_SNAPSHOT';
+/** Meldung von `assertModerationStateStillCurrent` (`moderationQaContext.ts`). */
+const MODERATION_STATE_CONFLICT_MESSAGE =
+  'Der autorisierte Q&A-Kontext hat sich während des Aufbaus geändert.';
 /** Packing-Cache-TTL (`MODERATION_PROMPT_PACKING_CACHE_TTL_MS` = 30 s) plus Abstand. */
 const PACKING_CACHE_EXPIRY_STEP_MS = 31_000;
 
@@ -272,6 +281,33 @@ describe.skipIf(!RUN_PG)(
       );
       expect(packedSource).toMatchObject({ kind: 'qa-question', content: { state: 'included' } });
       expect(result.sources.map((source) => source.id)).toEqual([citedId]);
+    }
+
+    /**
+     * Durchreichender Wrapper um `eval` des Redis-Singletons (Systemgrenze). Er reagiert
+     * nur auf den Blitzlicht-Lesezugriff des Lehrsignal-Aufbaus dieser Session
+     * (`loadQuickFeedbackModerationSnapshot`), nur solange `armed` gilt und nur einmal:
+     * Dann läuft `onSeam`, danach die echte Redis-Operation mit unveränderten Argumenten.
+     * Ihr Ergebnis geht unverändert zurück; der Wrapper ändert kein Ergebnis.
+     */
+    function wrapQuickFeedbackRead(sessionCode: string, onSeam: () => Promise<void>) {
+      const redis = getRedis();
+      const originalEval = redis.eval.bind(redis) as (...args: unknown[]) => Promise<unknown>;
+      const seam = { armed: false, hits: 0 };
+      const spy = vi.spyOn(redis, 'eval').mockImplementation((async (...args: unknown[]) => {
+        if (
+          seam.armed &&
+          typeof args[0] === 'string' &&
+          args[0].includes(QUICK_FEEDBACK_READ_SCRIPT_MARKER) &&
+          args[2] === `qf:${sessionCode.toUpperCase()}`
+        ) {
+          seam.armed = false;
+          seam.hits += 1;
+          await onSeam();
+        }
+        return originalEval(...args);
+      }) as never);
+      return { seam, restore: () => spy.mockRestore() };
     }
 
     beforeEach(async () => {
@@ -674,6 +710,176 @@ describe.skipIf(!RUN_PG)(
       expect(final.result!.statements.map((statement) => statement.text)).toEqual([
         TEST_RUNTIME_STATEMENT_TEXT,
       ]);
+    });
+
+    it('meldet bei belegtem Inferenz-Slot erst pending und dann einen Fallback mit Grund busy, ohne die Completion aufzurufen', async () => {
+      const room = await scenario();
+      const runtime = await runtimeWith({ slotsStatus: 503 });
+
+      const requested = await requestSummary(room.sessionId);
+      expect(requested.result?.status).toBe('pending');
+      const final = await waitForTerminal(room.sessionId);
+
+      expect(final.result!.execution).toMatchObject({
+        attemptedMode: 'full-context',
+        effectiveMode: 'extractive',
+        fallback: { mode: 'extractive', reason: 'busy' },
+      });
+      expectNoRuntimeStatement(final.result!, [TEST_RUNTIME_STATEMENT_TEXT]);
+      // Die Runtime hat nur die Slot-Abfrage gesehen, keinen POST.
+      expect(runtime.requests.map((request) => `${request.method} ${request.path}`)).toEqual([
+        'GET /slots?fail_on_no_slot=1',
+      ]);
+      expect(completionRequests(runtime)).toHaveLength(0);
+    });
+
+    it('weist bei voller Queue einen dritten Auftrag sofort mit queue_full ab und arbeitet die beiden angenommenen Aufträge danach normal ab', async () => {
+      const rooms = [await scenario(), await scenario(), await scenario()] as const;
+      let release: () => void = () => undefined;
+      const hold = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      // Die Grenze in `requestQaSummary` zählt laufende und wartende Jobs
+      // (`queue.length + running >= queueLimit`). Ein laufender und ein wartender Job
+      // brauchen deshalb QA_SUMMARY_QUEUE_LIMIT=2 (siehe Protokoll, Abweichungen).
+      const runtime = await runtimeWith(
+        { hold },
+        { QA_SUMMARY_QUEUE_LIMIT: '2', QA_SUMMARY_CONCURRENCY: '1' },
+      );
+      // Zählt Kontextaufbauten je Session; ruft die echte Funktion unverändert auf.
+      const prepares = new Map<string, number>();
+      resetQaSummaryQueueForTests({
+        prepare: async (input) => {
+          prepares.set(input.sessionId, (prepares.get(input.sessionId) ?? 0) + 1);
+          return prepareFreshModerationSummaryContext(input);
+        },
+      });
+
+      let third: QaSummaryRuntimeV2DTO;
+      try {
+        // Job 1 läuft und hängt in der Runtime.
+        const first = await requestSummary(rooms[0].sessionId);
+        expect(first.result?.status).toBe('pending');
+        await withTimeout(runtime.received, 5_000, 'Job 1 hat die Runtime nicht erreicht');
+        // Job 2 wartet in der Queue.
+        const second = await requestSummary(rooms[1].sessionId);
+        expect(second.result?.status).toBe('pending');
+        expect(getQaSummaryQueueMetrics()).toMatchObject({ queueLength: 1, running: 1 });
+
+        // Job 3: sofortiges Ergebnis, während Job 1 noch hängt.
+        third = await withTimeout(
+          requestSummary(rooms[2].sessionId),
+          5_000,
+          'requestSummary für Job 3 kehrte bei voller Queue nicht zurück',
+        );
+        expect(completionRequests(runtime)).toHaveLength(1);
+        expect(getQaSummaryQueueMetrics()).toMatchObject({
+          queueLength: 1,
+          running: 1,
+          queueRejected: 1,
+        });
+      } finally {
+        release();
+      }
+
+      // (1) Job 3 endet sofort mit queue_full, ohne Job: nur der Kontextaufbau des Auftrags selbst.
+      expect(third.result?.status).not.toBe('pending');
+      expect(third.result?.execution).toMatchObject({
+        attemptedMode: 'full-context',
+        effectiveMode: 'extractive',
+        fallback: { mode: 'extractive', reason: 'queue_full' },
+      });
+      expectNoRuntimeStatement(third.result!, [TEST_RUNTIME_STATEMENT_TEXT]);
+
+      // (3) Jobs 1 und 2 enden ready über die Runtime.
+      for (const room of rooms.slice(0, 2)) {
+        const final = await waitForTerminal(room.sessionId);
+        expect(final.result!.status).toBe('ready');
+        expect(final.result!.execution).toEqual({
+          attemptedMode: 'full-context',
+          effectiveMode: 'full-context',
+          fallback: null,
+        });
+      }
+      await waitForQaSummaryIdleForTests(TERMINAL_WAIT_MS);
+
+      // (2) Genau zwei POSTs, je einer für Job 1 und Job 2, in dieser Reihenfolge.
+      const completions = completionRequests(runtime);
+      expect(completions).toHaveLength(2);
+      const sentQuestionIds = completions.map((request) =>
+        firstQaQuestionSourceId(request.rawBody).slice('qa-question:'.length),
+      );
+      const owner = await prisma.qaQuestion.findMany({
+        where: { id: { in: sentQuestionIds } },
+        select: { id: true, sessionId: true },
+      });
+      expect(sentQuestionIds.map((id) => owner.find((row) => row.id === id)?.sessionId)).toEqual([
+        rooms[0].sessionId,
+        rooms[1].sessionId,
+      ]);
+
+      // Danach ist nichts liegen geblieben, und für Session 3 lief kein Job-Kontextaufbau.
+      expect(getQaSummaryQueueMetrics()).toMatchObject({ queueLength: 0, running: 0 });
+      expect(prepares.get(rooms[2].sessionId)).toBe(1);
+      expect(getQaSummaryRuntime(rooms[2].sessionId).result?.execution.fallback?.reason).toBe(
+        'queue_full',
+      );
+    }, 120_000);
+
+    it('lehnt den Auftrag mit CONFLICT ab und legt keinen Job an, wenn während des Kontextaufbaus eine Q&A-Stimme eingeht', async () => {
+      const room = await scenario({ quickFeedbackEnabled: true });
+      const runtime = await runtimeWith();
+      // Frage C ist PINNED und damit abstimmbar; der letzte Teilnehmende hat noch nicht abgestimmt.
+      const questionId = room.questionIdsByKey.C;
+      const voterId = room.participants.at(-1)!.id;
+      const { seam, restore } = wrapQuickFeedbackRead(room.code, () =>
+        changeVote(questionId, voterId, 'UP'),
+      );
+
+      try {
+        seam.armed = true;
+        await expect(requestSummary(room.sessionId)).rejects.toMatchObject({
+          code: 'CONFLICT',
+          message: MODERATION_STATE_CONFLICT_MESSAGE,
+        });
+      } finally {
+        seam.armed = false;
+        restore();
+      }
+
+      // Die Stimme ist genau einmal während des Aufbaus über die DB-Funktion gespeichert worden.
+      expect(seam.hits).toBe(1);
+      await expect(
+        prisma.qaUpvote.count({ where: { qaQuestionId: questionId, participantId: voterId } }),
+      ).resolves.toBe(1);
+      // Kein Job, keine Runtime-Anfrage, summaryRuntime ohne laufenden Job.
+      expect(getQaSummaryQueueMetrics()).toMatchObject({ queueLength: 0, running: 0 });
+      const after = asV2Runtime(await hostCaller.summaryRuntime({ sessionId: room.sessionId }));
+      expect(after.result).toBeNull();
+      await waitForQaSummaryIdleForTests(TERMINAL_WAIT_MS);
+      expect(runtime.requests).toHaveLength(0);
+    });
+
+    it('Kontrolle: nimmt den Auftrag ohne Stimme im selben Kontextaufbau an und meldet pending', async () => {
+      const room = await scenario({ quickFeedbackEnabled: true });
+      const runtime = await runtimeWith();
+      // Gleicher Wrapper an derselben Stelle, aber ohne Stimme.
+      const { seam, restore } = wrapQuickFeedbackRead(room.code, async () => undefined);
+
+      let requested: QaSummaryRuntimeV2DTO;
+      try {
+        seam.armed = true;
+        requested = await requestSummary(room.sessionId);
+      } finally {
+        seam.armed = false;
+        restore();
+      }
+
+      expect(seam.hits).toBe(1);
+      expect(requested.result?.status).toBe('pending');
+      const final = await waitForTerminal(room.sessionId);
+      expect(final.result!.status).toBe('ready');
+      expect(completionRequests(runtime)).toHaveLength(1);
     });
   },
 );

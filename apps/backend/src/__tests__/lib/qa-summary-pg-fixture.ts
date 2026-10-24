@@ -95,6 +95,8 @@ export type SessionOptions = {
   readonly quizId?: string;
   readonly currentQuestion?: number;
   readonly questionProgress?: Record<string, unknown>;
+  /** Blitzlicht-Kanal der Session aktiviert und geöffnet (Standard: aus). */
+  readonly quickFeedbackEnabled?: boolean;
 };
 
 export async function createSession(
@@ -113,6 +115,8 @@ export async function createSession(
       qaEnabled: true,
       qaOpen: true,
       qaModerationMode: false,
+      quickFeedbackEnabled: options.quickFeedbackEnabled ?? false,
+      quickFeedbackOpen: options.quickFeedbackEnabled ?? false,
       qaClosesAt: new Date(now.getTime() + 3_600_000),
       expiresAt: new Date(now.getTime() + 7_200_000),
     },

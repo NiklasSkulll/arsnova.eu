@@ -32,6 +32,8 @@ export type RecordedRuntimeRequest = {
 };
 
 export type TestRuntimeOptions = {
+  /** HTTP-Status für `GET /slots?fail_on_no_slot=1` (Standard 200; 503 = Slot belegt). */
+  readonly slotsStatus?: number;
   /** Verzögerung vor der Antwort auf `POST /v1/chat/completions`. */
   readonly delayMs?: number;
   /** Latch: die Completion-Antwort wartet, bis dieses Promise erfüllt ist. */
@@ -116,8 +118,13 @@ export async function startTestRuntime(options: TestRuntimeOptions = {}): Promis
       requests.push({ method: req.method ?? '', path, headers: req.headers, rawBody });
       void (async () => {
         if (req.method === 'GET' && path === '/slots?fail_on_no_slot=1') {
-          res.writeHead(200, { 'content-type': 'application/json' });
-          res.end('[]');
+          const slotsStatus = options.slotsStatus ?? 200;
+          res.writeHead(slotsStatus, { 'content-type': 'application/json' });
+          res.end(
+            slotsStatus === 200
+              ? '[]'
+              : '{"error":{"code":503,"message":"no slot available","type":"unavailable_error"}}',
+          );
           return;
         }
         if (req.method !== 'POST' || path !== '/v1/chat/completions') {
