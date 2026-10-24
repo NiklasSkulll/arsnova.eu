@@ -33,6 +33,7 @@ vi.mock('../lib/hostAuth', async () => {
 import {
   MODERATION_PROMPT_DEFINITION_SET_VERSION,
   QA_SUMMARY_TECHNICAL_INSTRUCTION_VERSION,
+  QaSummaryInferenceRequestSchema,
   type QaSummaryContextPreviewDTO,
   type QaSummaryResultV2,
   type QaSummaryRuntimeV2DTO,
@@ -925,6 +926,11 @@ describe.skipIf(!RUN_PG)(
           JSON.stringify(projectLegacyQaSummaryRequest(shown.promptContext)),
         ),
       ).toBeNull();
+      // Der rohe Body erfüllt den Legacy-Vertrag; das Schema entfernt dabei kein Feld.
+      const legacyBody: unknown = JSON.parse(sent!.rawBody);
+      const parsedLegacy = QaSummaryInferenceRequestSchema.parse(legacyBody);
+      expect(parsedLegacy).toEqual(legacyBody);
+      expect(parsedLegacy.snapshotHash).toBe(shown.promptContext.snapshotHash);
 
       // Modus und Status wie H.
       const result = final.result!;
@@ -952,7 +958,7 @@ describe.skipIf(!RUN_PG)(
       expect(result.sources.map((source) => source.id)).toEqual([...new Set(citedIds)]);
     });
 
-    it('verwirft im Legacy-Text-Pfad eine Aussage mit unbekannter Quellen-ID beim Binden und vermerkt das als Einschränkung', async () => {
+    it('verwirft im Legacy-Text-Pfad eine Aussage mit unbekannter Quellen-ID bei der Übernahme des Legacy-Ergebnisses und vermerkt das als Einschränkung', async () => {
       const room = await scenario();
       const unknownId = `qa-question:${randomUUID()}`;
       const unknownText = 'Legacy-Aussage mit unbekannter Quelle.';
