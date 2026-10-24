@@ -16,6 +16,8 @@
 // M7: Anteil `source_changed` (gespeicherter Endstatus des Jobs) je Rate mit
 // 95-%-Wilson-Intervall (z = 1,959964) und mittlerer Vorhersage 1 − e^(−r·T),
 // T = Ende prepare (2) bis Beginn prepare (3) (primär) bzw. Beginn (2) bis Ende (3).
+// M7b (Nachtrag im Protokoll Teil 3): zusätzlich Klasse (b) = source_changed oder
+// failed/context_unavailable nach CONFLICT in prepare (2)/(3), mit Kriterium K_b.
 import { readFileSync } from 'node:fs';
 
 const SEED = 20261024;
@@ -295,6 +297,23 @@ function evaluateM7(m7, out) {
       if (run.hashChanged !== null && run.hashChanged === inWindow) consistent += 1;
     }
     const discarded = runs.filter((x) => x.stored.fallbackReason !== null).length;
+    // Klasse (b) laut Nachtrag M7b: source_changed oder failed/context_unavailable nach CONFLICT
+    // in einem der beiden Job-Aufbauten (prepare (2) oder (3)).
+    const conflictInJob = (x) =>
+      x.prepares.some(
+        (p) => (p.role === 'before' || p.role === 'after') && (p.error ?? '').includes('CONFLICT'),
+      );
+    const classB = runs.filter(
+      (x) =>
+        x.stored.fallbackReason === 'source_changed' ||
+        (x.stored.status === 'failed' &&
+          x.stored.fallbackReason === 'context_unavailable' &&
+          conflictInJob(x)),
+    ).length;
+    const ciB = wilson(classB, n);
+    const failedWithoutConflict = runs.filter(
+      (x) => x.stored.status === 'failed' && !conflictInJob(x),
+    ).length;
     out[`M7 ${key}`] = {
       n,
       storedOutcomes: Object.fromEntries(
@@ -350,6 +369,21 @@ function evaluateM7(m7, out) {
               pAtMostK: +binomialCdf(k, n, meanInner).toFixed(4),
               pAtLeastK: +(1 - binomialCdf(k - 1, n, meanInner)).toFixed(4),
             },
+      classB: {
+        k: classB,
+        share: +(classB / n).toFixed(3),
+        wilson95: ciB,
+        K_b:
+          r === 0
+            ? classB === 0
+            : meanInner !== null && ciB !== null && meanInner >= ciB[0] && meanInner <= ciB[1],
+        K_b_outer_sensitivity:
+          r === 0
+            ? classB === 0
+            : meanOuter !== null && ciB !== null && meanOuter >= ciB[0] && meanOuter <= ciB[1],
+        failedWithoutConflict,
+      },
+      runsWithoutT: n - withT.length,
       modelOutputDiscarded: {
         k: discarded,
         share: +(discarded / n).toFixed(3),
