@@ -15,7 +15,9 @@ Wir haben uns für **Option 1** entschieden:
 
 Die gemeinsamen Artefakte sind wie in der Tabelle
 [unten](#gemeinsame-artefakte-gleichmäßig-verteilen-und-kennzeichnen) verteilt.
-**Offen:** Die Aufteilung muss noch mit dem Prüfer abgestimmt werden.
+**Geklärt:** Eine Abstimmung der Aufteilung mit dem Prüfer ist nicht nötig
+(mündliche Ansage in der Vorlesung, notiert 2026-10-24; siehe
+[00-rahmen](./00-rahmen-und-pruefung.md#offene-fragen-an-den-prüfer)).
 
 ## Feste Regeln für jede Variante
 
@@ -131,6 +133,14 @@ erledigen. Bei zwei Personen ließe sich beantragen:
 | Last- und Messskript für Liveaktionen (p95 für Vote, `qa.submit`, Blitzlicht; L-02) | beide                | X                  |
 | Fake-`llama-server` für Latenz und Ausfall (1B Lücke 4)                             | X, optional Y für G3 | X                  |
 | Gruppensynthese (eine Seite)                                                        | beide                | gemeinsam          |
+
+Stand 2026-10-24: Für die 1C-Tests hat Jonas (Y) die Sechs-Fragen-Fixture als
+Datenbank-Helfer selbst gebaut
+(`apps/backend/src/__tests__/lib/qa-summary-pg-fixture.ts`), ebenso eine
+Test-Runtime für Latenz und Ausfall
+(`apps/backend/src/__tests__/lib/open-weight-test-runtime.ts`). Beides weicht
+von der vorgeschlagenen Zuordnung ab; ob X die Helfer für 1A/1B übernimmt, ist
+mit Niklas abzustimmen.
 
 ## Wer übernimmt was
 
