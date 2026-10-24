@@ -6,10 +6,11 @@
  * Opt-in über `RUN_PG_QA_SUMMARY_HASH_TESTS=1`; braucht `DATABASE_URL` und
  * `REDIS_URL`. Gemockt ist nur die Host-Tokenprüfung; Fragen, Stimmen,
  * Teilnehmer-Capabilities, Trigger und Kontextaufbau laufen echt.
- * Testdesign: docs/referat-thema-1/specs/2026-10-24-1c-tests-design.md (T5).
+ * Semantische Themen sind per Env abgeschaltet, damit der Hash nicht von
+ * Redis-Themensnapshots abhängt.
  */
 import { createHash, randomUUID } from 'node:crypto';
-import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { hostAuthMocks } = vi.hoisted(() => ({
   hostAuthMocks: {
@@ -115,6 +116,15 @@ async function sourceIds(sessionId: string): Promise<string[]> {
   return (await prepared(sessionId)).context.sources.map((source) => source.id);
 }
 
+async function revisions(
+  sessionId: string,
+): Promise<{ qaRankingRevision: number; participantRevision: number }> {
+  return prisma.session.findUniqueOrThrow({
+    where: { id: sessionId },
+    select: { qaRankingRevision: true, participantRevision: true },
+  });
+}
+
 describe.skipIf(!RUN_PG)('Q&A summary snapshot hash (PostgreSQL)', () => {
   const sessionIds: string[] = [];
   const sessionCodes: string[] = [];
@@ -155,6 +165,7 @@ describe.skipIf(!RUN_PG)('Q&A summary snapshot hash (PostgreSQL)', () => {
       readonly status?: 'ACTIVE' | 'QUESTION_OPEN';
       readonly quizId?: string;
       readonly currentQuestion?: number;
+      readonly questionProgress?: Record<string, unknown>;
     } = {},
   ): Promise<Corpus> {
     if (!platformCaptured) {
@@ -180,6 +191,7 @@ describe.skipIf(!RUN_PG)('Q&A summary snapshot hash (PostgreSQL)', () => {
         status: options.status ?? 'ACTIVE',
         quizId: options.quizId,
         currentQuestion: options.currentQuestion,
+        questionProgress: options.questionProgress as never,
         qaEnabled: true,
         qaOpen: true,
         qaModerationMode: false,
@@ -226,10 +238,15 @@ describe.skipIf(!RUN_PG)('Q&A summary snapshot hash (PostgreSQL)', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    vi.stubEnv('WORD_CLOUD_SEMANTIC_ENABLED', 'false');
     hostAuthMocks.extractHostTokenMock.mockReturnValue('host-token');
     hostAuthMocks.extractHostTokenFromConnectionParamsMock.mockReturnValue(null);
     hostAuthMocks.isHostSessionTokenValidMock.mockResolvedValue(true);
     await deleteRedisKeys();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   afterAll(async () => {
@@ -290,13 +307,12 @@ describe.skipIf(!RUN_PG)('Q&A summary snapshot hash (PostgreSQL)', () => {
   it('T5.1: ändert den Hash nach einer Q&A-Stimme und führt die neue Ranking-Revision', async () => {
     const corpus = await createCorpus();
     const before = await snapshotHash(corpus.sessionId);
+    const revisionBefore = await revisions(corpus.sessionId);
 
     await changeVote(corpus.questionIds[0]!, corpus.participants[1]!.id, 'UP');
 
-    const session = await prisma.session.findUniqueOrThrow({
-      where: { id: corpus.sessionId },
-      select: { qaRankingRevision: true },
-    });
+    const session = await revisions(corpus.sessionId);
+    expect(session.qaRankingRevision).toBeGreaterThan(revisionBefore.qaRankingRevision);
     expect(await snapshotHash(corpus.sessionId)).not.toBe(before);
     expect(await questionVotesRevision(corpus.sessionId)).toContain(
       `qa-ranking-v1:${session.qaRankingRevision}:`,
@@ -306,6 +322,7 @@ describe.skipIf(!RUN_PG)('Q&A summary snapshot hash (PostgreSQL)', () => {
   it('T5.2: ändert den Hash nach einer neuen Frage und führt sie als Quelle', async () => {
     const corpus = await createCorpus();
     const before = await snapshotHash(corpus.sessionId);
+    const revisionBefore = await revisions(corpus.sessionId);
 
     const newQuestionId = await createQuestion({
       sessionId: corpus.sessionId,
@@ -313,20 +330,24 @@ describe.skipIf(!RUN_PG)('Q&A summary snapshot hash (PostgreSQL)', () => {
       text: 'Welche Rolle spielt die Snapshot-Revision?',
     });
 
+    const revisionAfter = await revisions(corpus.sessionId);
+    expect(revisionAfter.qaRankingRevision).toBeGreaterThan(revisionBefore.qaRankingRevision);
     expect(await snapshotHash(corpus.sessionId)).not.toBe(before);
+    expect(await questionVotesRevision(corpus.sessionId)).toContain(
+      `qa-ranking-v1:${revisionAfter.qaRankingRevision}:`,
+    );
     expect(await sourceIds(corpus.sessionId)).toContain(`qa-question:${newQuestionId}`);
   });
 
   it('T5.3: ändert den Hash nach einem Beitritt und führt Teilnehmer-Revision und -Anzahl', async () => {
     const corpus = await createCorpus();
     const before = await snapshotHash(corpus.sessionId);
+    const revisionBefore = await revisions(corpus.sessionId);
 
     await addParticipant(corpus.sessionId, 'Margaret');
 
-    const session = await prisma.session.findUniqueOrThrow({
-      where: { id: corpus.sessionId },
-      select: { participantRevision: true },
-    });
+    const session = await revisions(corpus.sessionId);
+    expect(session.participantRevision).toBeGreaterThan(revisionBefore.participantRevision);
     const count = await participantCount(corpus.sessionId);
     expect(count).toBe(4);
     expect(await snapshotHash(corpus.sessionId)).not.toBe(before);
@@ -365,44 +386,92 @@ describe.skipIf(!RUN_PG)('Q&A summary snapshot hash (PostgreSQL)', () => {
     expect(await sourceIds(corpus.sessionId)).not.toContain(`qa-question:${target}`);
   });
 
-  it('T5.5: Gegenprobe: lässt den Hash bei einer Quizstimme auf eine laufende Frage unverändert', async () => {
+  async function releasedQuizCorpus() {
     const quiz = await prisma.quiz.create({
       data: {
         name: `qa-summary-hash-${randomUUID()}`,
         readingPhaseEnabled: false,
         questions: {
-          create: [{ text: 'Was ist ein Snapshot-Hash?', type: 'FREETEXT', order: 0 }],
+          create: [0, 1].map((order) => ({
+            text:
+              order === 0 ? 'Was ist ein Snapshot-Hash?' : 'Wann gilt eine Quelle als veraltet?',
+            type: 'SINGLE_CHOICE' as const,
+            order,
+            answers: {
+              create: [
+                { text: 'Eine Prüfsumme über den Kontext', isCorrect: true, order: 0 },
+                { text: 'Ein Zeitstempel', isCorrect: false, order: 1 },
+              ],
+            },
+          })),
         },
       },
-      include: { questions: true },
+      include: { questions: { include: { answers: true }, orderBy: { order: 'asc' } } },
     });
     quizIds.push(quiz.id);
+    const [completed, running] = quiz.questions;
     const corpus = await createCorpus({
       type: 'QUIZ',
       status: 'ACTIVE',
       quizId: quiz.id,
-      currentQuestion: 0,
-    });
-    const before = await prepared(corpus.sessionId);
-    const rankingBefore = await prisma.session.findUniqueOrThrow({
-      where: { id: corpus.sessionId },
-      select: { qaRankingRevision: true },
-    });
-
-    await prisma.vote.create({
-      data: {
-        sessionId: corpus.sessionId,
-        participantId: corpus.participants[0]!.id,
-        questionId: quiz.questions[0]!.id,
-        freeText: 'Eine Prüfsumme über den Kontext',
+      currentQuestion: 1,
+      questionProgress: {
+        [completed!.id]: {
+          state: 'COMPLETED',
+          openedAt: '2026-01-15T10:00:00.000Z',
+          completedAt: '2026-01-15T10:02:00.000Z',
+        },
+        [running!.id]: { state: 'OPENED', openedAt: '2026-01-15T10:03:00.000Z' },
       },
     });
+    return { corpus, completed: completed!, running: running! };
+  }
 
-    const rankingAfter = await prisma.session.findUniqueOrThrow({
-      where: { id: corpus.sessionId },
-      select: { qaRankingRevision: true },
+  async function quizVote(input: {
+    sessionId: string;
+    participantId: string;
+    question: { id: string; answers: { id: string }[] };
+  }): Promise<void> {
+    await prisma.vote.create({
+      data: {
+        sessionId: input.sessionId,
+        participantId: input.participantId,
+        questionId: input.question.id,
+        selectedAnswers: { create: [{ answerOptionId: input.question.answers[0]!.id }] },
+      },
     });
-    expect(rankingAfter.qaRankingRevision).toBe(rankingBefore.qaRankingRevision);
+  }
+
+  it('T5.5: Gegenprobe: lässt den Hash bei einer Quizstimme auf eine laufende Frage unverändert', async () => {
+    const { corpus, completed, running } = await releasedQuizCorpus();
+    const before = await prepared(corpus.sessionId);
+    expect(before.context.releasedResults).toMatchObject({ state: 'available' });
+    expect(before.context.sources.map((source) => source.id)).toContain(
+      `quiz-question:${completed.id}`,
+    );
+    const revisionBefore = await revisions(corpus.sessionId);
+
+    await quizVote({
+      sessionId: corpus.sessionId,
+      participantId: corpus.participants[0]!.id,
+      question: running,
+    });
+
+    const revisionAfter = await revisions(corpus.sessionId);
+    expect(revisionAfter.qaRankingRevision).toBe(revisionBefore.qaRankingRevision);
     expect(await snapshotHash(corpus.sessionId)).toBe(before.snapshotHash);
+  });
+
+  it('T5.5 (Kontrolle): ändert den Hash bei einer Quizstimme auf eine freigegebene Frage', async () => {
+    const { corpus, completed } = await releasedQuizCorpus();
+    const before = await snapshotHash(corpus.sessionId);
+
+    await quizVote({
+      sessionId: corpus.sessionId,
+      participantId: corpus.participants[0]!.id,
+      question: completed,
+    });
+
+    expect(await snapshotHash(corpus.sessionId)).not.toBe(before);
   });
 });

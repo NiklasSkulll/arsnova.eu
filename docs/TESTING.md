@@ -136,8 +136,9 @@ Die Suite prüft zuerst die Stabilität des Hashs ohne Änderung, auch beim
 direkten Packen am Packing-Cache vorbei. Danach prüft sie, dass sich der Hash
 nach einer Q&A-Stimme, einer neuen Frage, einem Beitritt, einer Löschung durch
 den Host (`qa.moderate`) und einer eigenen Löschung durch Teilnehmende
-(`qa.deleteOwn`) ändert. Als Gegenprobe darf eine Quizstimme auf eine laufende
-Frage den Hash nicht ändern. Gemockt ist nur die Host-Tokenprüfung; Fragen,
+(`qa.deleteOwn`) ändert und dass die Trigger die zugehörigen Revisionen
+erhöhen. Als Gegenprobe darf eine Quizstimme auf eine laufende Frage den Hash
+nicht ändern, während eine Stimme auf eine freigegebene Frage ihn ändert. Gemockt ist nur die Host-Tokenprüfung; Fragen,
 Stimmen, Teilnahme-Capabilities und Trigger laufen gegen die migrierte
 Datenbank.
 
