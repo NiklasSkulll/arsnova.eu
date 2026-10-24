@@ -142,6 +142,32 @@ nicht ändern, während eine Stimme auf eine freigegebene Frage ihn ändert.
 Gemockt ist nur die Host-Tokenprüfung; Fragen, Stimmen,
 Teilnahme-Capabilities und Trigger laufen gegen die migrierte Datenbank.
 
+### Ende-zu-Ende-Pfad der Q&A-Zusammenfassung (PostgreSQL + Redis)
+
+Der Migration-Job prüft den Auftrag zur Moderationszusammenfassung vom
+tRPC-Router bis zur Runtime-Schnittstelle: `qa.summaryContextPreview`,
+`qa.requestSummary`, `qa.summaryRuntime` und `qa.moderate` → Summary-Queue →
+`prepareFreshModerationSummaryContext` → Open-Weight-Client → echtes HTTP →
+eine Test-Runtime im Testprozess auf `127.0.0.1`:
+
+```bash
+RUN_PG_QA_SUMMARY_E2E_TESTS=1 REDIS_URL=redis://localhost:6379 \
+  npm run test -w @arsnova/backend -- \
+  --run src/__tests__/qa.summary-e2e.pg.test.ts
+```
+
+Grundlage ist das Sechs-Fragen-Referenzszenario aus #456 mit 200
+Teilnehmenden; Fragen und Stimmen entstehen über die echten DB-Funktionen
+(`src/__tests__/lib/qa-summary-pg-fixture.ts`, gemeinsam mit der Hash-Suite).
+Die Suite prüft, dass die User-Nachricht im rohen Runtime-Body bytegleich dem
+Kontext der Host-Vorschau ist, dass Host-Token, Sitzungs- und
+Teilnehmendenkennungen sowie Hüllenfelder (`snapshotHash`, `packedAt`, Budget)
+den Server nicht verlassen und dass eine Stimme zwischen Vorschau und Auftrag
+den neuen Stand sendet. Die Test-Runtime
+(`src/__tests__/lib/open-weight-test-runtime.ts`) ist kein Modell: Sie
+speichert den rohen Body und antwortet mit einer festen, vertragsgültigen
+Ausgabe. Gemockt ist nur die Host-Tokenprüfung.
+
 ### tRPC-DoD-Non-Regression-Gate
 
 Für jede neue Query/Mutation und jede Query/Mutation mit geändertem
