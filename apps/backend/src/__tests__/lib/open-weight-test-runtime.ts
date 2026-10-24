@@ -8,12 +8,17 @@
  * Socket ankommen. Die Runtime ist kein Modell; sie antwortet mit einer festen,
  * vertragsgültigen Ausgabe und dient nur der Fehlereinspeisung und kontrollierten
  * Varianten.
+ *
+ * Zusätzlich bildet sie den Legacy-Text-Vertrag nach (`QA_SUMMARY_INFERENCE_URL`,
+ * `qaSummaryAdapter.ts`): `POST` auf {@link TEST_RUNTIME_LEGACY_PATH} mit einem
+ * `QaSummaryInferenceRequest` als Body, Antwort ist direkt eine `QaSummaryModelOutput`.
  */
 import { createServer, type IncomingHttpHeaders, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import {
   QA_SUMMARY_MODEL_OUTPUT_V2_CONTRACT_VERSION,
   QA_SUMMARY_V2_SCHEMA_VERSION,
+  type QaSummaryModelOutput,
 } from '@arsnova/shared-types';
 import { vi } from 'vitest';
 
@@ -22,6 +27,11 @@ export const TEST_RUNTIME_TOKEN = 'e2e-test-runtime-token-0123456789abcdef';
 /** Erkennungszeichen der Modellaussage der Test-Runtime. */
 export const TEST_RUNTIME_STATEMENT_TEXT = 'Aussage der Test-Runtime zur ersten gepackten Frage.';
 export const TEST_RUNTIME_MODEL_VERSION = 'e2e-test-runtime';
+/** Pfad des Legacy-Text-Endpunkts; die volle URL kommt nach `QA_SUMMARY_INFERENCE_URL`. */
+export const TEST_RUNTIME_LEGACY_PATH = '/legacy/qa-summary';
+/** Erkennungszeichen der Legacy-Aussage der Test-Runtime. */
+export const TEST_RUNTIME_LEGACY_STATEMENT_TEXT =
+  'Legacy-Aussage der Test-Runtime zur ersten gesendeten Quelle.';
 
 export type RecordedRuntimeRequest = {
   readonly method: string;
@@ -42,12 +52,20 @@ export type TestRuntimeOptions = {
   readonly beforeRespond?: (body: string) => Promise<void>;
   /** Ersetzt die Standardantwort der Completion. */
   readonly respond?: (body: string) => { status: number; body: string };
+  /**
+   * Ersetzt die Standardantwort des Legacy-Endpunkts (Status 200, Body = JSON dieser
+   * `QaSummaryModelOutput`). Standard: {@link defaultLegacyOutput}.
+   */
+  readonly legacyOutput?: (body: string) => QaSummaryModelOutput;
 };
 
 export type TestRuntime = {
   readonly baseUrl: string;
   readonly requests: RecordedRuntimeRequest[];
-  /** Erfüllt, sobald der erste `POST /v1/chat/completions` vollständig empfangen ist. */
+  /**
+   * Erfüllt, sobald der erste `POST /v1/chat/completions` (bzw. Legacy-`POST`)
+   * vollständig empfangen ist.
+   */
   readonly received: Promise<void>;
   close(): Promise<void>;
 };
@@ -91,6 +109,29 @@ export function defaultCompletionBody(rawBody: string): string {
   return completionEnvelope(JSON.stringify(content));
 }
 
+/** Quellen-IDs eines rohen Legacy-Bodys (`QaSummaryInferenceRequest`) in Sendereihenfolge. */
+export function legacySourceIdsOf(rawBody: string): string[] {
+  const parsed = JSON.parse(rawBody) as { sources?: { id?: string }[] };
+  const ids = (parsed.sources ?? []).map((source) => source.id);
+  if (ids.length === 0 || ids.some((id) => typeof id !== 'string')) {
+    throw new Error('Legacy-Body enthält keine Quellen');
+  }
+  return ids as string[];
+}
+
+/** Gültige Legacy-`QaSummaryModelOutput` (Status `ready`), die die erste gesendete Quelle zitiert. */
+export function defaultLegacyOutput(rawBody: string): QaSummaryModelOutput {
+  return {
+    status: 'ready',
+    statements: [
+      { text: TEST_RUNTIME_LEGACY_STATEMENT_TEXT, sourceIds: [legacySourceIdsOf(rawBody)[0]!] },
+    ],
+    suggestedNextSteps: [],
+    limitations: [],
+    modelVersion: TEST_RUNTIME_MODEL_VERSION,
+  };
+}
+
 export function completionEnvelope(content: string): string {
   return JSON.stringify({
     model: TEST_RUNTIME_MODEL_VERSION,
@@ -125,6 +166,16 @@ export async function startTestRuntime(options: TestRuntimeOptions = {}): Promis
               ? '[]'
               : '{"error":{"code":503,"message":"no slot available","type":"unavailable_error"}}',
           );
+          return;
+        }
+        if (req.method === 'POST' && path === TEST_RUNTIME_LEGACY_PATH) {
+          markReceived();
+          if (options.hold) await options.hold;
+          if (options.beforeRespond) await options.beforeRespond(rawBody);
+          const output = (options.legacyOutput ?? defaultLegacyOutput)(rawBody);
+          if (res.destroyed) return;
+          res.writeHead(200, { 'content-type': 'application/json' });
+          res.end(JSON.stringify(output));
           return;
         }
         if (req.method !== 'POST' || path !== '/v1/chat/completions') {
@@ -185,5 +236,24 @@ export function useTestRuntimeEnv(
   // eigenem Timeout nicht von der Entwicklerumgebung abhängen.
   vi.stubEnv('QA_SUMMARY_TIMEOUT_MS', '90000');
   vi.stubEnv('OPEN_WEIGHT_LLM_SUMMARY_TIMEOUT_MS', '90000');
+  for (const [key, value] of Object.entries(overrides)) vi.stubEnv(key, value);
+}
+
+/**
+ * Env für den Legacy-Text-Pfad gegen die Test-Runtime: Open-Weight aus,
+ * `QA_SUMMARY_INFERENCE_URL` auf den Legacy-Endpunkt (per `vi.stubEnv`).
+ */
+export function useLegacyTestRuntimeEnv(
+  runtime: Pick<TestRuntime, 'baseUrl'>,
+  overrides: Readonly<Record<string, string>> = {},
+): void {
+  vi.stubEnv('OPEN_WEIGHT_LLM_ENABLED', 'false');
+  vi.stubEnv('OPEN_WEIGHT_LLM_URL', '');
+  vi.stubEnv('OPEN_WEIGHT_LLM_TOKEN', '');
+  vi.stubEnv('QA_SUMMARY_ENABLED', 'true');
+  vi.stubEnv('QA_SUMMARY_INFERENCE_URL', `${runtime.baseUrl}${TEST_RUNTIME_LEGACY_PATH}`);
+  vi.stubEnv('QA_SUMMARY_INFERENCE_TOKEN', TEST_RUNTIME_TOKEN);
+  vi.stubEnv('WORD_CLOUD_SEMANTIC_ENABLED', 'false');
+  vi.stubEnv('QA_SUMMARY_TIMEOUT_MS', '90000');
   for (const [key, value] of Object.entries(overrides)) vi.stubEnv(key, value);
 }

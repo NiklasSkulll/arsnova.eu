@@ -38,10 +38,12 @@ import {
   type QaSummaryRuntimeV2DTO,
 } from '@arsnova/shared-types';
 import { canonicalModerationPromptJson } from '../lib/moderationPromptContextPacking';
+import { DROPPED_UNSOURCED_QA_SUMMARY_LIMITATION } from '../lib/qaSummaryValidateV2';
 import {
   QA_SUMMARY_TECHNICAL_DEFINITION_TEXT,
   QA_SUMMARY_TECHNICAL_INSTRUCTION_TEXT,
   prepareFreshModerationSummaryContext,
+  projectLegacyQaSummaryRequest,
 } from '../lib/moderationSummaryContext';
 import { resetOpenWeightLlmClientForTests } from '../lib/openWeightLlmClient';
 import {
@@ -54,13 +56,17 @@ import { prisma } from '../db';
 import { getRedis } from '../redis';
 import { qaRouter } from '../routers/qa';
 import {
+  TEST_RUNTIME_LEGACY_PATH,
+  TEST_RUNTIME_LEGACY_STATEMENT_TEXT,
   TEST_RUNTIME_MODEL_VERSION,
   TEST_RUNTIME_STATEMENT_TEXT,
   TEST_RUNTIME_TOKEN,
   closedLoopbackUrl,
   completionEnvelope,
   firstQaQuestionSourceId,
+  legacySourceIdsOf,
   startTestRuntime,
+  useLegacyTestRuntimeEnv,
   useTestRuntimeEnv,
   userMessageOf,
   type RecordedRuntimeRequest,
@@ -182,6 +188,19 @@ describe.skipIf(!RUN_PG)(
     ): Promise<ReferenceScenario> {
       if (!platformBefore) platformBefore = await capturePlatformStatistic();
       return createReferenceScenario({ registry, session });
+    }
+
+    async function legacyRuntimeWith(options: TestRuntimeOptions = {}): Promise<TestRuntime> {
+      const runtime = await startTestRuntime(options);
+      runtimes.push(runtime);
+      useLegacyTestRuntimeEnv(runtime);
+      return runtime;
+    }
+
+    function legacyRequests(runtime: TestRuntime): RecordedRuntimeRequest[] {
+      return runtime.requests.filter(
+        (request) => request.method === 'POST' && request.path === TEST_RUNTIME_LEGACY_PATH,
+      );
     }
 
     async function runtimeWith(
@@ -880,6 +899,120 @@ describe.skipIf(!RUN_PG)(
       const final = await waitForTerminal(room.sessionId);
       expect(final.result!.status).toBe('ready');
       expect(completionRequests(runtime)).toHaveLength(1);
+    });
+    it('nutzt bei abgeschaltetem Open-Weight-Pfad den Legacy-Text-Vertrag und bindet die Aussage an eine gepackte Quelle', async () => {
+      const room = await scenario();
+      const runtime = await legacyRuntimeWith();
+
+      const shown = await preview(room.sessionId);
+      expect(shown.selectedMode).toBe('legacy-text');
+      const requested = await requestSummary(room.sessionId);
+      expect(requested.result?.status).toBe('pending');
+      const final = await waitForTerminal(room.sessionId);
+
+      // Der Legacy-Vertrag ging raus: genau ein POST auf den Legacy-Endpunkt, kein
+      // Open-Weight-Aufruf, Body bytegleich der Legacy-Projektion des Vorschaukontexts.
+      expect(runtime.requests.map((request) => `${request.method} ${request.path}`)).toEqual([
+        `POST ${TEST_RUNTIME_LEGACY_PATH}`,
+      ]);
+      const [sent] = legacyRequests(runtime);
+      expect(sent!.headers['authorization']).toBe(`Bearer ${TEST_RUNTIME_TOKEN}`);
+      expect(sent!.headers['content-type']).toBe('application/json');
+      expect(final.result!.snapshotHash).toBe(shown.promptContext.snapshotHash);
+      expect(
+        firstByteDifference(
+          sent!.rawBody,
+          JSON.stringify(projectLegacyQaSummaryRequest(shown.promptContext)),
+        ),
+      ).toBeNull();
+
+      // Modus und Status wie H.
+      const result = final.result!;
+      expect(result.status).toBe('ready');
+      expect(result.execution).toMatchObject({
+        attemptedMode: 'legacy-text',
+        effectiveMode: 'legacy-text',
+        fallback: { mode: 'legacy-text', reason: 'adapter_incompatible' },
+      });
+      expect(result.modelVersion).toBe(TEST_RUNTIME_MODEL_VERSION);
+      expect(result.statements.map((statement) => statement.text)).toEqual([
+        TEST_RUNTIME_LEGACY_STATEMENT_TEXT,
+      ]);
+      // Jede Quellen-ID einer Aussage ist eine gepackte (und gesendete) Quelle.
+      const packedIds = new Set(shown.promptContext.context.sources.map((source) => source.id));
+      const sentIds = new Set(legacySourceIdsOf(sent!.rawBody));
+      const citedIds = [...result.statements, ...result.suggestedNextSteps].flatMap(
+        (statement) => statement.sourceIds,
+      );
+      expect(citedIds.length).toBeGreaterThan(0);
+      for (const id of citedIds) {
+        expect(packedIds.has(id)).toBe(true);
+        expect(sentIds.has(id)).toBe(true);
+      }
+      expect(result.sources.map((source) => source.id)).toEqual([...new Set(citedIds)]);
+    });
+
+    it('verwirft im Legacy-Text-Pfad eine Aussage mit unbekannter Quellen-ID beim Binden und vermerkt das als Einschränkung', async () => {
+      const room = await scenario();
+      const unknownId = `qa-question:${randomUUID()}`;
+      const unknownText = 'Legacy-Aussage mit unbekannter Quelle.';
+      const runtime = await legacyRuntimeWith({
+        legacyOutput: (body) => ({
+          status: 'ready',
+          statements: [
+            { text: TEST_RUNTIME_LEGACY_STATEMENT_TEXT, sourceIds: [legacySourceIdsOf(body)[0]!] },
+            { text: unknownText, sourceIds: [unknownId] },
+          ],
+          suggestedNextSteps: [],
+          limitations: [],
+          modelVersion: TEST_RUNTIME_MODEL_VERSION,
+        }),
+      });
+
+      await requestSummary(room.sessionId);
+      const final = await waitForTerminal(room.sessionId);
+
+      expect(legacyRequests(runtime)).toHaveLength(1);
+      expect(legacyRequests(runtime)[0]!.rawBody).not.toContain(unknownId);
+      const result = final.result!;
+      expect(result.status).toBe('ready');
+      expect(result.execution.effectiveMode).toBe('legacy-text');
+      expect(result.statements.map((statement) => statement.text)).toEqual([
+        TEST_RUNTIME_LEGACY_STATEMENT_TEXT,
+      ]);
+      expect(result.limitations).toContain(DROPPED_UNSOURCED_QA_SUMMARY_LIMITATION);
+      // Die unbekannte ID fehlt überall im Ergebnis, ebenso der Text ihrer Aussage.
+      expect(JSON.stringify(result)).not.toContain(unknownId);
+      expect(JSON.stringify(result)).not.toContain(unknownText);
+    });
+
+    it('meldet im Legacy-Text-Pfad uncertain, wenn alle Aussagen nur unbekannte Quellen-IDs nennen', async () => {
+      const room = await scenario();
+      const unknownIds = [`qa-question:${randomUUID()}`, `qa-question:${randomUUID()}`];
+      const runtime = await legacyRuntimeWith({
+        legacyOutput: () => ({
+          status: 'ready',
+          statements: unknownIds.map((id, index) => ({
+            text: `Legacy-Aussage ${index + 1} mit unbekannter Quelle.`,
+            sourceIds: [id],
+          })),
+          suggestedNextSteps: [],
+          limitations: [],
+          modelVersion: TEST_RUNTIME_MODEL_VERSION,
+        }),
+      });
+
+      await requestSummary(room.sessionId);
+      const final = await waitForTerminal(room.sessionId);
+
+      expect(legacyRequests(runtime)).toHaveLength(1);
+      const result = final.result!;
+      expect(result.status).toBe('uncertain');
+      expect(result.execution.effectiveMode).toBe('legacy-text');
+      expect(result.statements).toEqual([]);
+      expect(result.sources).toEqual([]);
+      expect(result.limitations).toContain(DROPPED_UNSOURCED_QA_SUMMARY_LIMITATION);
+      for (const id of unknownIds) expect(JSON.stringify(result)).not.toContain(id);
     });
   },
 );

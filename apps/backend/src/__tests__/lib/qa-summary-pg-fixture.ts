@@ -10,10 +10,20 @@ import { createHash, randomUUID } from 'node:crypto';
 import {
   MODERATION_PROMPT_REFERENCE_RANKING_FIXTURE_V1,
   MODERATION_PROMPT_REFERENCE_TEXT_FIXTURE_V1,
+  YesNoValueEnum,
 } from '@arsnova/shared-types';
 import { prisma } from '../../db';
 import { getRedis } from '../../redis';
 import { hashCapability } from '../../lib/capabilityCrypto';
+import { moderationQaContextInternals } from '../../lib/moderationQaContext';
+import { resolveQaPresenterSortMode } from '../../lib/qaPresenterSortMode';
+import {
+  QA_SEMANTIC_TOPIC_SNAPSHOT_VERSION,
+  QaSemanticTopicSnapshotSchema,
+  hashQaSemanticTopicMemberText,
+} from '../../lib/qaSemanticTopicSnapshot';
+import { saveSessionLearningObjectives } from '../../lib/sessionLearningObjectives';
+import { createRedisWordCloudAnalysisCache } from '../../lib/wordCloudAnalysisCache';
 
 export type ReferenceQuestionKey = 'A' | 'B' | 'C' | 'D' | 'E' | 'F';
 
@@ -186,13 +196,17 @@ export async function quizVote(input: {
   sessionId: string;
   participantId: string;
   question: ReleasedQuizQuestion;
+  /** Index der gewählten Antwort (Standard 0 = richtige Antwort). */
+  answerIndex?: number;
 }): Promise<void> {
+  const answer = input.question.answers[input.answerIndex ?? 0];
+  if (!answer) throw new Error(`Antwort ${input.answerIndex} existiert nicht`);
   await prisma.vote.create({
     data: {
       sessionId: input.sessionId,
       participantId: input.participantId,
       questionId: input.question.id,
-      selectedAnswers: { create: [{ answerOptionId: input.question.answers[0]!.id }] },
+      selectedAnswers: { create: [{ answerOptionId: answer.id }] },
     },
   });
 }
@@ -281,6 +295,166 @@ export async function createReferenceScenario(options: {
   }
 
   return { sessionId: session.id, code: session.code, participants, questionIdsByKey };
+}
+
+export type FullContextScenario = ReferenceScenario & {
+  /** Quiz mit freigegebener (abgeschlossener) und laufender Frage. */
+  readonly quiz: {
+    readonly completed: ReleasedQuizQuestion;
+    readonly running: ReleasedQuizQuestion;
+  };
+  /** Fragen des einen semantischen Themas im Redis-Snapshot. */
+  readonly topicQuestionKeys: readonly ReferenceQuestionKey[];
+  /** ID des bestätigten Lernziels (`learning-objective:<id>` im Kontext). */
+  readonly learningObjectiveId: string;
+  /** Stimmen der Blitzlicht-Runde (Typ `YESNO`) und der freigegebenen Quizfrage. */
+  readonly quickFeedbackVotes: number;
+  readonly releasedQuizVotes: number;
+};
+
+/** Themenmitglieder: nur `ACTIVE`/`PINNED` sind laut `loadQaTopicMemberRows` zulässig (B, C, E). */
+export const FULL_CONTEXT_TOPIC_QUESTION_KEYS = ['B', 'C', 'E'] as const;
+const FULL_CONTEXT_QUICK_FEEDBACK_VOTES = 12;
+const FULL_CONTEXT_RELEASED_QUIZ_VOTES = 12;
+
+/**
+ * Referenzszenario (#456 Abschnitt 12) mit allen #456-Bereichen, über die Funktionen,
+ * die auch die Anwendung zum Schreiben nutzt:
+ *
+ * - **Freigegebene Quizergebnisse:** Quiz-Session mit Q&A (`createReleasedQuiz`), 12 Stimmen
+ *   auf die abgeschlossene Frage (8 richtig, 4 falsch), dazu die laufende Frage ohne Stimmen.
+ * - **Blitzlicht:** `quickFeedbackEnabled`/`quickFeedbackOpen`, Runde `YESNO` über
+ *   `quickFeedback.create` (Host) und 12 Stimmen über `quickFeedback.vote` mit der
+ *   Teilnahme-Capability (echter Router, session-gebunden, Redis `qf:<CODE>`).
+ * - **Lernziel:** ein manuelles, sessionweites, bestätigtes Lernziel über
+ *   `saveSessionLearningObjectives`.
+ * - **Semantische Themen:** ein gültiger `QaSemanticTopicSnapshot` mit den Fragen B, C, E als
+ *   ein Thema (Label-Quelle B), geschrieben mit `createRedisWordCloudAnalysisCache()
+ *   .setLatestQaSemanticTopicSnapshot` (Schlüssel `buildLatestQaSemanticTopicSnapshotCacheKey`).
+ *   `corpusRevision` und `metric` entsprechen dem aktuellen
+ *   Stand, damit der Themenstand `current` ist. Der Snapshot ist synthetisch (kein Encoderlauf).
+ * - **Kompass:** wird nicht geschrieben, sondern vom Kontextaufbau aus den übrigen Bereichen
+ *   abgeleitet.
+ *
+ * Voraussetzungen beim Aufrufer: Die Suite mockt die Host-Tokenprüfung (`../lib/hostAuth`) so,
+ * dass ein Host-Token als gültig gilt (für `quickFeedback.create`). Zum Lesen der Themen braucht
+ * der Kontextaufbau `WORD_CLOUD_SEMANTIC_ENABLED=true` und einen echten Redis-Cache; den liefert
+ * `getWordCloudAnalysisCache()` nur, wenn `NODE_ENV` nicht `test` ist.
+ */
+export async function createFullContextScenario(options: {
+  readonly registry: FixtureRegistry;
+  readonly participants?: number;
+}): Promise<FullContextScenario> {
+  const quiz = await createReleasedQuiz(options.registry);
+  const room = await createReferenceScenario({
+    registry: options.registry,
+    participants: options.participants,
+    session: { ...quiz.sessionOptions, codePrefix: 'V', quickFeedbackEnabled: true },
+  });
+  // Stimmberechtigte ohne eigene Frage (Index 0–5 sind die Autorinnen und Autoren von A–F).
+  const voters = room.participants.slice(6);
+
+  // Freigegebene Quizergebnisse.
+  for (let index = 0; index < FULL_CONTEXT_RELEASED_QUIZ_VOTES; index += 1) {
+    await quizVote({
+      sessionId: room.sessionId,
+      participantId: voters[index]!.id,
+      question: quiz.completed,
+      answerIndex: index < 8 ? 0 : 1,
+    });
+  }
+
+  // Blitzlicht über den echten Router.
+  const { quickFeedbackRouter } = await import('../../routers/quickFeedback');
+  const host = quickFeedbackRouter.createCaller({ req: {} as never });
+  await host.create({ type: 'YESNO', sessionCode: room.code });
+  const values = YesNoValueEnum.options;
+  for (let index = 0; index < FULL_CONTEXT_QUICK_FEEDBACK_VOTES; index += 1) {
+    const voter = voters[index]!;
+    const caller = quickFeedbackRouter.createCaller({
+      req: { headers: { 'x-participant-capability': voter.capability } } as never,
+    });
+    await caller.vote({
+      sessionCode: room.code,
+      voterId: voter.id,
+      value: values[index % values.length]!,
+    });
+  }
+
+  // Bestätigtes Lernziel.
+  const learningObjectiveId = randomUUID();
+  const { learningContextRevision } = await prisma.session.findUniqueOrThrow({
+    where: { id: room.sessionId },
+    select: { learningContextRevision: true },
+  });
+  await saveSessionLearningObjectives({
+    code: room.code,
+    expectedLearningContextRevision: learningContextRevision,
+    mutations: [
+      {
+        action: 'upsert',
+        objectiveId: learningObjectiveId,
+        expectedRevision: null,
+        text: 'Die Studierenden können erklären, wann eine Zusammenfassung als veraltet gilt.',
+        scope: { kind: 'session' },
+        confirmationState: 'confirmed',
+      },
+    ],
+  });
+
+  // Semantischer Themen-Snapshot, zuletzt: seine Korpusrevision folgt dem aktuellen Q&A-Stand.
+  const topicQuestions = await prisma.qaQuestion.findMany({
+    where: {
+      id: { in: FULL_CONTEXT_TOPIC_QUESTION_KEYS.map((key) => room.questionIdsByKey[key]) },
+    },
+    select: { id: true, text: true },
+    orderBy: { id: 'asc' },
+  });
+  const { qaRankingRevision } = await prisma.session.findUniqueOrThrow({
+    where: { id: room.sessionId },
+    select: { qaRankingRevision: true },
+  });
+  const participantCount = await prisma.participant.count({ where: { sessionId: room.sessionId } });
+  const metric = resolveQaPresenterSortMode(room.sessionId);
+  const members = topicQuestions.map((question) => ({
+    questionId: question.id,
+    textDigest: hashQaSemanticTopicMemberText(question.text),
+  }));
+  const snapshot = QaSemanticTopicSnapshotSchema.parse({
+    version: QA_SEMANTIC_TOPIC_SNAPSHOT_VERSION,
+    status: 'ready',
+    metric,
+    corpusRevision: moderationQaContextInternals.buildCurrentQaSemanticCorpusRevision({
+      state: { qaRankingRevision } as never,
+      participantCount,
+      metric,
+    }),
+    analyzedAt: new Date().toISOString(),
+    analysisVersion: 'e2e-fixture-topics-v1',
+    model: { id: 'e2e-fixture-encoder', version: 'fixture' },
+    eligibleQuestionCount: topicQuestions.length,
+    analyzedQuestionCount: topicQuestions.length,
+    topics: [
+      {
+        topicId: keyHash(`topic:${members.map((member) => member.questionId).join(',')}`),
+        confidence: 0.8,
+        labelSourceQuestionId: room.questionIdsByKey.B,
+        members,
+      },
+    ],
+  });
+  await createRedisWordCloudAnalysisCache().setLatestQaSemanticTopicSnapshot(snapshot, {
+    sessionId: room.sessionId,
+  });
+
+  return {
+    ...room,
+    quiz: { completed: quiz.completed, running: quiz.running },
+    topicQuestionKeys: FULL_CONTEXT_TOPIC_QUESTION_KEYS,
+    learningObjectiveId,
+    quickFeedbackVotes: FULL_CONTEXT_QUICK_FEEDBACK_VOTES,
+    releasedQuizVotes: FULL_CONTEXT_RELEASED_QUIZ_VOTES,
+  };
 }
 
 export type PlatformStatisticSnapshot = {
