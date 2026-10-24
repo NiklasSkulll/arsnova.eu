@@ -56,6 +56,7 @@ import {
 import { prisma } from '../db';
 import { getRedis } from '../redis';
 import { qaRouter } from '../routers/qa';
+import { quickFeedbackRouter } from '../routers/quickFeedback';
 import {
   TEST_RUNTIME_LEGACY_PATH,
   TEST_RUNTIME_LEGACY_STATEMENT_TEXT,
@@ -168,6 +169,35 @@ function expectNoRuntimeStatement(result: QaSummaryResultV2, runtimeTexts: reado
 
 function messagesOf(rawBody: string): ChatMessage[] {
   return (JSON.parse(rawBody) as { messages: ChatMessage[] }).messages;
+}
+
+type PackedPromptContext = QaSummaryContextPreviewDTO['promptContext']['context'];
+
+/** Ende des Zeitfensters der Blitzlicht-Quelle im gepackten Kontext, sonst `null`. */
+function feedbackWindowEnd(context: PackedPromptContext): string | null {
+  for (const source of context.sources) {
+    if (source.kind === 'feedback-aggregate' && source.scope.timeWindow.kind === 'interval') {
+      return source.scope.timeWindow.to;
+    }
+  }
+  return null;
+}
+
+/** Gepackter Kontext ohne `meta.sourceRevision` und ohne Ende des Blitzlicht-Zeitfensters. */
+function withoutBuildTimeFields(context: PackedPromptContext) {
+  const { sourceRevision: _sourceRevision, ...meta } = context.meta;
+  return {
+    ...context,
+    meta,
+    sources: context.sources.map((source) =>
+      source.kind === 'feedback-aggregate' && source.scope.timeWindow.kind === 'interval'
+        ? {
+            ...source,
+            scope: { ...source.scope, timeWindow: { ...source.scope.timeWindow, to: null } },
+          }
+        : source,
+    ),
+  };
 }
 
 /**
@@ -328,6 +358,22 @@ describe.skipIf(!RUN_PG)(
         return originalEval(...args);
       }) as never);
       return { seam, restore: () => spy.mockRestore() };
+    }
+
+    /** Startet über den echten Router eine session-gebundene Blitzlicht-Runde ohne Stimmen. */
+    async function startQuickFeedbackRound(sessionCode: string, type: 'YESNO' | 'TEMPO') {
+      await quickFeedbackRouter.createCaller({}).create({ type, sessionCode });
+    }
+
+    /** Datenstand, den ein Kontextaufbau liest: Session-Zeile, Blitzlicht-Runde, Q&A-Stimmen. */
+    async function dataState(room: ReferenceScenario) {
+      return {
+        session: await prisma.session.findUniqueOrThrow({ where: { id: room.sessionId } }),
+        quickFeedback: await getRedis().get(`qf:${room.code}`),
+        qaUpvotes: await prisma.qaUpvote.count({
+          where: { qaQuestion: { sessionId: room.sessionId } },
+        }),
+      };
     }
 
     beforeEach(async () => {
@@ -901,6 +947,7 @@ describe.skipIf(!RUN_PG)(
       expect(final.result!.status).toBe('ready');
       expect(completionRequests(runtime)).toHaveLength(1);
     });
+
     it('nutzt bei abgeschaltetem Open-Weight-Pfad den Legacy-Text-Vertrag und bindet die Aussage an eine gepackte Quelle', async () => {
       const room = await scenario();
       const runtime = await legacyRuntimeWith();
@@ -1019,6 +1066,122 @@ describe.skipIf(!RUN_PG)(
       expect(result.sources).toEqual([]);
       expect(result.limitations).toContain(DROPPED_UNSOURCED_QA_SUMMARY_LIMITATION);
       for (const id of unknownIds) expect(JSON.stringify(result)).not.toContain(id);
+    });
+
+    // Exploratorisch, nicht vorregistriert: Die beiden folgenden Tests charakterisieren den
+    // Befund „zeitabhängige sourceRevision“ (Protokoll Teil 3, nach E15). Sie halten das
+    // heutige Verhalten fest, nicht ein Sollverhalten. Ursache laut Code: Die Blitzlicht-Quelle
+    // trägt als Ende ihres Zeitfensters den Zeitpunkt des Aufbaus
+    // (`loadQuickFeedbackModerationSnapshot`), und `meta.sourceRevision` sowie `snapshotHash`
+    // schließen dieses Ende ein.
+    it('Negativprobe: liefert bei einer Blitzlicht-Runde vom Typ YESNO ohne Stimmen und ohne Datenänderung bei jedem Kontextaufbau einen neuen snapshotHash und verwirft die Modellaussage als source_changed', async () => {
+      const room = await scenario({ quickFeedbackEnabled: true });
+      const runtime = await runtimeWith();
+      await startQuickFeedbackRound(room.code, 'YESNO');
+      const before = await dataState(room);
+      expect(before.quickFeedback).not.toBeNull();
+
+      const first = await preview(room.sessionId);
+      const second = await preview(room.sessionId);
+
+      // Die Blitzlicht-Quelle ist gepackt und enthält keine Stimme.
+      const feedbackSource = first.promptContext.context.sources.find(
+        (source) => source.kind === 'feedback-aggregate',
+      );
+      expect(feedbackSource).toMatchObject({ population: { included: 0 } });
+      // Zwei Aufbauten ohne Datenänderung: anderer Hash, andere Revision, anderes Fensterende …
+      expect(second.promptContext.snapshotHash).not.toBe(first.promptContext.snapshotHash);
+      expect(second.promptContext.context.meta.sourceRevision).not.toBe(
+        first.promptContext.context.meta.sourceRevision,
+      );
+      expect(feedbackWindowEnd(second.promptContext.context)).not.toBe(
+        feedbackWindowEnd(first.promptContext.context),
+      );
+      // … sonst ist der gepackte Kontext gleich. Der Packing-Cache trifft nicht.
+      expect(withoutBuildTimeFields(second.promptContext.context)).toEqual(
+        withoutBuildTimeFields(first.promptContext.context),
+      );
+      expect(second.cache).toBe('miss');
+
+      // Der Job ruft die Runtime auf und verwirft ihre Aussage als source_changed.
+      const requested = await requestSummary(room.sessionId);
+      expect(requested.result?.status).toBe('pending');
+      const stored = await waitForStoredJobResult(room.sessionId);
+      expect(completionRequests(runtime)).toHaveLength(1);
+      expect(stored.execution).toMatchObject({
+        attemptedMode: 'full-context',
+        effectiveMode: 'extractive',
+        fallback: { reason: 'source_changed' },
+      });
+      expectNoRuntimeStatement(stored, [TEST_RUNTIME_STATEMENT_TEXT]);
+
+      // Jeder Abruf von qa.summaryRuntime baut neu und bindet das Ergebnis mit neuem Hash.
+      const polledOnce = await waitForTerminal(room.sessionId);
+      const polledTwice = asV2Runtime(
+        await hostCaller.summaryRuntime({ sessionId: room.sessionId }),
+      );
+      expect(polledOnce.result!.execution.fallback?.reason).toBe('source_changed');
+      expect(polledOnce.result!.snapshotHash).not.toBe(stored.snapshotHash);
+      expect(polledTwice.result!.execution.fallback?.reason).toBe('source_changed');
+      expect(polledTwice.result!.snapshotHash).not.toBe(polledOnce.result!.snapshotHash);
+
+      // Ein erneuter Auftrag ist kein Cache-Treffer und ruft die Runtime noch einmal auf.
+      const again = await requestSummary(room.sessionId);
+      expect(again.result?.status).toBe('pending');
+      await waitForStoredJobResult(room.sessionId);
+      expect(completionRequests(runtime)).toHaveLength(2);
+      expect(getQaSummaryQueueMetrics().cacheHits).toBe(0);
+
+      // Zwischen allen Aufbauten hat sich nichts geändert.
+      expect(await dataState(room)).toEqual(before);
+    });
+
+    it('Kontrolle: liefert bei einer Blitzlicht-Runde vom Typ TEMPO ohne Datenänderung denselben snapshotHash, endet ready und beantwortet einen erneuten Auftrag aus dem Cache', async () => {
+      const room = await scenario({ quickFeedbackEnabled: true });
+      const runtime = await runtimeWith();
+      await startQuickFeedbackRound(room.code, 'TEMPO');
+      const before = await dataState(room);
+      expect(before.quickFeedback).not.toBeNull();
+
+      const first = await preview(room.sessionId);
+      const second = await preview(room.sessionId);
+
+      // Gleicher Lesepfad, aber für TEMPO entsteht keine Blitzlicht-Quelle mit Zeitfenster.
+      expect(feedbackWindowEnd(first.promptContext.context)).toBeNull();
+      expect(second.promptContext.snapshotHash).toBe(first.promptContext.snapshotHash);
+      expect(second.promptContext.context.meta.sourceRevision).toBe(
+        first.promptContext.context.meta.sourceRevision,
+      );
+      expect(second.cache).toBe('hit');
+
+      const requested = await requestSummary(room.sessionId);
+      expect(requested.result?.status).toBe('pending');
+      const stored = await waitForStoredJobResult(room.sessionId);
+      expect(completionRequests(runtime)).toHaveLength(1);
+      expect(stored.status).toBe('ready');
+      expect(stored.execution).toEqual({
+        attemptedMode: 'full-context',
+        effectiveMode: 'full-context',
+        fallback: null,
+      });
+      expect(stored.snapshotHash).toBe(first.promptContext.snapshotHash);
+
+      const polledOnce = await waitForTerminal(room.sessionId);
+      const polledTwice = asV2Runtime(
+        await hostCaller.summaryRuntime({ sessionId: room.sessionId }),
+      );
+      expect(polledOnce.result!.snapshotHash).toBe(stored.snapshotHash);
+      expect(polledTwice.result!.snapshotHash).toBe(stored.snapshotHash);
+      expect(polledTwice.result!.status).toBe('ready');
+
+      // Ein erneuter Auftrag innerhalb des Cooldowns ist ein Cache-Treffer ohne Runtime-Aufruf.
+      const again = await requestSummary(room.sessionId);
+      expect(again.result?.status).toBe('ready');
+      expect(getQaSummaryQueueMetrics().cacheHits).toBe(1);
+      await waitForQaSummaryIdleForTests(TERMINAL_WAIT_MS);
+      expect(completionRequests(runtime)).toHaveLength(1);
+
+      expect(await dataState(room)).toEqual(before);
     });
   },
 );
