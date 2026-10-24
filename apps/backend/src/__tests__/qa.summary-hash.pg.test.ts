@@ -9,7 +9,6 @@
  * Semantische Themen sind per Env abgeschaltet, damit der Hash nicht von
  * Redis-Themensnapshots abhängt.
  */
-import { createHash, randomUUID } from 'node:crypto';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { hostAuthMocks } = vi.hoisted(() => ({
@@ -30,14 +29,26 @@ vi.mock('../lib/hostAuth', async () => {
 });
 
 import { prisma } from '../db';
-import { getRedis } from '../redis';
-import { hashCapability } from '../lib/capabilityCrypto';
 import { buildModerationPromptContext } from '../lib/moderationPromptContext';
 import {
   packSummaryModerationPromptContext,
   prepareFreshModerationSummaryContext,
 } from '../lib/moderationSummaryContext';
 import { qaRouter } from '../routers/qa';
+import {
+  addParticipant,
+  capturePlatformStatistic,
+  changeVote,
+  cleanupFixtures,
+  createFixtureRegistry,
+  createQuestion,
+  createReleasedQuiz,
+  createSession,
+  deleteFixtureRedisKeys,
+  quizVote,
+  restorePlatformStatistic,
+  type PlatformStatisticSnapshot,
+} from './lib/qa-summary-pg-fixture';
 
 const RUN_PG = process.env['RUN_PG_QA_SUMMARY_HASH_TESTS'] === '1';
 const ACCESS = { hostToken: 'host-token' } as const;
@@ -50,47 +61,6 @@ type Corpus = {
   readonly participants: readonly { readonly id: string; readonly capability: string }[];
   readonly questionIds: readonly string[];
 };
-
-function keyHash(value: string): string {
-  return createHash('sha256').update(value).digest('hex');
-}
-
-function code(prefix: string): string {
-  return `${prefix}${randomUUID().replaceAll('-', '').slice(0, 5)}`.toUpperCase();
-}
-
-async function createQuestion(input: {
-  sessionId: string;
-  participantId: string;
-  text: string;
-}): Promise<string> {
-  const rows = await prisma.$queryRaw<{ id: string }[]>`
-    SELECT id
-    FROM arsnova_create_qa_question(
-      ${input.sessionId},
-      ${input.participantId},
-      ${input.text},
-      ${keyHash(randomUUID())}::CHAR(64),
-      'DISABLED'::"QaNlpStatus"
-    )
-  `;
-  return rows[0]!.id;
-}
-
-async function changeVote(
-  questionId: string,
-  participantId: string,
-  direction: 'UP' | 'DOWN',
-): Promise<void> {
-  await prisma.$queryRaw`
-    SELECT *
-    FROM arsnova_change_qa_vote(
-      ${questionId},
-      ${participantId},
-      ${direction}::"QaVoteDirection"
-    )
-  `;
-}
 
 async function prepared(sessionId: string) {
   const result = await prepareFreshModerationSummaryContext({
@@ -126,37 +96,11 @@ async function revisions(
 }
 
 describe.skipIf(!RUN_PG)('Q&A summary snapshot hash (PostgreSQL)', () => {
-  const sessionIds: string[] = [];
-  const sessionCodes: string[] = [];
-  const quizIds: string[] = [];
-  let platformBefore: {
-    qaQuestionsTotal: bigint;
-    maxQaQuestionsSingleSession: number;
-    maxQaQuestionsStatisticUpdatedAt: Date | null;
-    qaStatisticsTrackingStartedAt: Date | null;
-    qaStatisticsProjectedAt: Date | null;
-    updatedAt: Date;
-  } | null = null;
-  let platformCaptured = false;
+  const registry = createFixtureRegistry();
+  let platformBefore: PlatformStatisticSnapshot | null = null;
 
   async function participantCount(sessionId: string): Promise<number> {
     return prisma.participant.count({ where: { sessionId } });
-  }
-
-  async function addParticipant(
-    sessionId: string,
-    nickname: string,
-  ): Promise<{ id: string; capability: string }> {
-    const capability = `participant-capability-${randomUUID()}`;
-    const participant = await prisma.participant.create({
-      data: {
-        id: randomUUID(),
-        sessionId,
-        nickname,
-        rejoinCapabilityHash: hashCapability(capability),
-      },
-    });
-    return { id: participant.id, capability };
   }
 
   async function createCorpus(
@@ -168,39 +112,8 @@ describe.skipIf(!RUN_PG)('Q&A summary snapshot hash (PostgreSQL)', () => {
       readonly questionProgress?: Record<string, unknown>;
     } = {},
   ): Promise<Corpus> {
-    if (!platformCaptured) {
-      platformBefore = await prisma.platformStatistic.findUnique({
-        where: { id: 'default' },
-        select: {
-          qaQuestionsTotal: true,
-          maxQaQuestionsSingleSession: true,
-          maxQaQuestionsStatisticUpdatedAt: true,
-          qaStatisticsTrackingStartedAt: true,
-          qaStatisticsProjectedAt: true,
-          updatedAt: true,
-        },
-      });
-      platformCaptured = true;
-    }
-    const now = new Date();
-    const session = await prisma.session.create({
-      data: {
-        id: randomUUID(),
-        code: code('H'),
-        type: options.type ?? 'Q_AND_A',
-        status: options.status ?? 'ACTIVE',
-        quizId: options.quizId,
-        currentQuestion: options.currentQuestion,
-        questionProgress: options.questionProgress as never,
-        qaEnabled: true,
-        qaOpen: true,
-        qaModerationMode: false,
-        qaClosesAt: new Date(now.getTime() + 3_600_000),
-        expiresAt: new Date(now.getTime() + 7_200_000),
-      },
-    });
-    sessionIds.push(session.id);
-    sessionCodes.push(session.code);
+    if (!platformBefore) platformBefore = await capturePlatformStatistic();
+    const session = await createSession({ ...options, registry, codePrefix: 'H' });
     const participants = [
       await addParticipant(session.id, 'Ada'),
       await addParticipant(session.id, 'Grace'),
@@ -224,25 +137,13 @@ describe.skipIf(!RUN_PG)('Q&A summary snapshot hash (PostgreSQL)', () => {
     return { sessionId: session.id, code: session.code, participants, questionIds };
   }
 
-  async function deleteRedisKeys(): Promise<void> {
-    const redis = getRedis();
-    const patterns = [
-      ...sessionIds.map((id) => `*${id}*`),
-      ...sessionCodes.map((sessionCode) => `qf:*${sessionCode}*`),
-    ];
-    for (const pattern of patterns) {
-      const keys = await redis.keys(pattern);
-      if (keys.length > 0) await redis.del(...keys);
-    }
-  }
-
   beforeEach(async () => {
     vi.clearAllMocks();
     vi.stubEnv('WORD_CLOUD_SEMANTIC_ENABLED', 'false');
     hostAuthMocks.extractHostTokenMock.mockReturnValue('host-token');
     hostAuthMocks.extractHostTokenFromConnectionParamsMock.mockReturnValue(null);
     hostAuthMocks.isHostSessionTokenValidMock.mockResolvedValue(true);
-    await deleteRedisKeys();
+    await deleteFixtureRedisKeys(registry);
   });
 
   afterEach(() => {
@@ -250,33 +151,9 @@ describe.skipIf(!RUN_PG)('Q&A summary snapshot hash (PostgreSQL)', () => {
   });
 
   afterAll(async () => {
-    if (!platformCaptured) return;
-    await deleteRedisKeys();
-    if (sessionIds.length > 0) {
-      await prisma.session.deleteMany({ where: { id: { in: sessionIds } } });
-      await prisma.qaSessionStatisticProjection.deleteMany({
-        where: { sessionId: { in: sessionIds } },
-      });
-    }
-    if (quizIds.length > 0) {
-      await prisma.quiz.deleteMany({ where: { id: { in: quizIds } } });
-    }
-    if (platformBefore) {
-      await prisma.$executeRaw`
-        UPDATE "PlatformStatistic"
-        SET
-          "qaQuestionsTotal" = ${platformBefore.qaQuestionsTotal},
-          "maxQaQuestionsSingleSession" = ${platformBefore.maxQaQuestionsSingleSession},
-          "maxQaQuestionsStatisticUpdatedAt" =
-            ${platformBefore.maxQaQuestionsStatisticUpdatedAt},
-          "qaStatisticsTrackingStartedAt" = ${platformBefore.qaStatisticsTrackingStartedAt},
-          "qaStatisticsProjectedAt" = ${platformBefore.qaStatisticsProjectedAt},
-          "updatedAt" = ${platformBefore.updatedAt}
-        WHERE "id" = 'default'
-      `;
-    } else {
-      await prisma.platformStatistic.deleteMany({ where: { id: 'default' } });
-    }
+    if (!platformBefore) return;
+    await cleanupFixtures(registry);
+    await restorePlatformStatistic(platformBefore);
   });
 
   it('T5.0: liefert ohne Änderung denselben Hash, auch beim direkten Packen am Cache vorbei', async () => {
@@ -387,59 +264,10 @@ describe.skipIf(!RUN_PG)('Q&A summary snapshot hash (PostgreSQL)', () => {
   });
 
   async function releasedQuizCorpus() {
-    const quiz = await prisma.quiz.create({
-      data: {
-        name: `qa-summary-hash-${randomUUID()}`,
-        readingPhaseEnabled: false,
-        questions: {
-          create: [0, 1].map((order) => ({
-            text:
-              order === 0 ? 'Was ist ein Snapshot-Hash?' : 'Wann gilt eine Quelle als veraltet?',
-            type: 'SINGLE_CHOICE' as const,
-            order,
-            answers: {
-              create: [
-                { text: 'Eine Prüfsumme über den Kontext', isCorrect: true, order: 0 },
-                { text: 'Ein Zeitstempel', isCorrect: false, order: 1 },
-              ],
-            },
-          })),
-        },
-      },
-      include: { questions: { include: { answers: true }, orderBy: { order: 'asc' } } },
-    });
-    quizIds.push(quiz.id);
-    const [completed, running] = quiz.questions;
-    const corpus = await createCorpus({
-      type: 'QUIZ',
-      status: 'ACTIVE',
-      quizId: quiz.id,
-      currentQuestion: 1,
-      questionProgress: {
-        [completed!.id]: {
-          state: 'COMPLETED',
-          openedAt: '2026-01-15T10:00:00.000Z',
-          completedAt: '2026-01-15T10:02:00.000Z',
-        },
-        [running!.id]: { state: 'OPENED', openedAt: '2026-01-15T10:03:00.000Z' },
-      },
-    });
-    return { corpus, completed: completed!, running: running! };
-  }
-
-  async function quizVote(input: {
-    sessionId: string;
-    participantId: string;
-    question: { id: string; answers: { id: string }[] };
-  }): Promise<void> {
-    await prisma.vote.create({
-      data: {
-        sessionId: input.sessionId,
-        participantId: input.participantId,
-        questionId: input.question.id,
-        selectedAnswers: { create: [{ answerOptionId: input.question.answers[0]!.id }] },
-      },
-    });
+    if (!platformBefore) platformBefore = await capturePlatformStatistic();
+    const { completed, running, sessionOptions } = await createReleasedQuiz(registry);
+    const corpus = await createCorpus(sessionOptions);
+    return { corpus, completed, running };
   }
 
   it('T5.5: Gegenprobe: lässt den Hash bei einer Quizstimme auf eine laufende Frage unverändert', async () => {
