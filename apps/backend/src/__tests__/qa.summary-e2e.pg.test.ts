@@ -45,6 +45,7 @@ import {
 import { resetOpenWeightLlmClientForTests } from '../lib/openWeightLlmClient';
 import {
   getQaSummaryQueueMetrics,
+  getQaSummaryRuntime,
   resetQaSummaryQueueForTests,
   waitForQaSummaryIdleForTests,
 } from '../lib/qaSummaryQueue';
@@ -204,6 +205,25 @@ describe.skipIf(!RUN_PG)(
       }
     }
 
+    /**
+     * Wartet ohne Kontextaufbau auf das Ende des Jobs und liefert den gespeicherten
+     * Queue-Zustand (`getQaSummaryRuntime`), bevor der Lesepfad ihn korrigieren kann.
+     */
+    async function waitForStoredJobResult(sessionId: string): Promise<QaSummaryResultV2> {
+      const started = Date.now();
+      for (;;) {
+        const stored = getQaSummaryRuntime(sessionId).result;
+        if (stored && stored.status !== 'pending') {
+          await waitForQaSummaryIdleForTests(TERMINAL_WAIT_MS);
+          return getQaSummaryRuntime(sessionId).result!;
+        }
+        if (Date.now() - started > TERMINAL_WAIT_MS) {
+          throw new Error(`Job blieb ${TERMINAL_WAIT_MS} ms lang ${stored?.status ?? 'leer'}`);
+        }
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+    }
+
     beforeEach(async () => {
       vi.clearAllMocks();
       hostAuthMocks.extractHostTokenMock.mockReturnValue(HOST_TOKEN);
@@ -291,6 +311,10 @@ describe.skipIf(!RUN_PG)(
       await requestSummary(room.sessionId);
       const final = await waitForTerminal(room.sessionId);
       expect(final.result!.status).toBe('ready');
+      expect(final.result!.execution).toMatchObject({
+        effectiveMode: 'full-context',
+        fallback: null,
+      });
 
       const completions = completionRequests(runtime);
       expect(completions).toHaveLength(1);
@@ -325,6 +349,10 @@ describe.skipIf(!RUN_PG)(
       await requestSummary(room.sessionId);
       const final = await waitForTerminal(room.sessionId);
       expect(final.result!.status).toBe('ready');
+      expect(final.result!.execution).toMatchObject({
+        effectiveMode: 'full-context',
+        fallback: null,
+      });
 
       const completions = completionRequests(runtime);
       expect(completions).toHaveLength(1);
@@ -339,6 +367,7 @@ describe.skipIf(!RUN_PG)(
       expect(sentUser).toBe(canonicalModerationPromptJson(fresh.promptContext.context));
       expect(final.result!.snapshotHash).toBe(fresh.promptContext.snapshotHash);
     });
+
     it('übernimmt keine Modellantwort mit fremder Ausgabe-Version und fällt mit invalid_response zurück', async () => {
       const room = await scenario();
       const foreignText = 'Aussage einer fremden Ausgabe-Version.';
@@ -383,13 +412,9 @@ describe.skipIf(!RUN_PG)(
 
     it('lässt den Host nicht auf die Runtime warten: requestSummary kehrt pending zurück, solange die Runtime die Antwort hält', async () => {
       const room = await scenario();
-      let latchOpen = true;
       let release: () => void = () => undefined;
       const hold = new Promise<void>((resolve) => {
-        release = () => {
-          latchOpen = false;
-          resolve();
-        };
+        release = resolve;
       });
       const runtime = await runtimeWith({ hold });
 
@@ -410,11 +435,10 @@ describe.skipIf(!RUN_PG)(
         // (1) Mutation aufgelöst und pending, Request empfangen, Latch offen.
         expect(requested.result?.status).toBe('pending');
         expect(completionRequests(runtime)).toHaveLength(1);
-        expect(latchOpen).toBe(true);
-        // (2) summaryRuntime meldet weiter pending.
+        // (2) summaryRuntime meldet weiter pending. Der Latch ist hier noch offen:
+        // `release` wird erst im `finally` unten aufgerufen.
         const during = asV2Runtime(await hostCaller.summaryRuntime({ sessionId: room.sessionId }));
         expect(during.result?.status).toBe('pending');
-        expect(latchOpen).toBe(true);
       } finally {
         release();
       }
@@ -481,8 +505,20 @@ describe.skipIf(!RUN_PG)(
       });
 
       await requestSummary(room.sessionId);
+      // Erst der gespeicherte Job-Zustand (ohne erneuten Kontextaufbau), dann der Host-Pfad,
+      // der ein veraltetes Ergebnis beim Lesen selbst korrigieren könnte.
+      const stored = await waitForStoredJobResult(room.sessionId);
       const final = await waitForTerminal(room.sessionId);
       const fresh = await preview(room.sessionId);
+
+      // Job-Ebene: an prepare (3) gebunden.
+      expect(stored.execution).toMatchObject({
+        attemptedMode: 'full-context',
+        effectiveMode: 'extractive',
+        fallback: { reason: 'source_changed' },
+      });
+      expectNoRuntimeStatement(stored, [TEST_RUNTIME_STATEMENT_TEXT]);
+      expect(stored.snapshotHash).toBe(fresh.promptContext.snapshotHash);
 
       const completions = completionRequests(runtime);
       expect(completions).toHaveLength(1);
@@ -519,7 +555,10 @@ describe.skipIf(!RUN_PG)(
       });
 
       await requestSummary(room.sessionId);
+      // Erst der gespeicherte Job-Zustand (ohne erneuten Kontextaufbau), dann der Host-Pfad.
+      const stored = await waitForStoredJobResult(room.sessionId);
       const final = await waitForTerminal(room.sessionId);
+      const fresh = await preview(room.sessionId);
 
       expect(completionRequests(runtime)).toHaveLength(1);
       expect(deleted).not.toBeNull();
@@ -527,16 +566,26 @@ describe.skipIf(!RUN_PG)(
       // qa.moderate DELETE entfernt die Frage physisch.
       await expect(prisma.qaQuestion.count({ where: { id: questionId } })).resolves.toBe(0);
 
-      const result = final.result!;
-      expect(result.execution.fallback?.reason).toBe('source_changed');
-      expectNoRuntimeStatement(result, [TEST_RUNTIME_STATEMENT_TEXT]);
-      expect(result.sources.map((source) => source.id)).not.toContain(deletedId);
-      for (const statement of [...result.statements, ...result.suggestedNextSteps]) {
-        expect(statement.sourceIds).not.toContain(deletedId);
-        expect(statement.text).not.toContain(deletedText);
-      }
-      expect(JSON.stringify(result)).not.toContain(deletedId);
-      expect(JSON.stringify(result)).not.toContain(deletedText);
+      const expectWithoutDeletedSource = (result: QaSummaryResultV2) => {
+        expect(result.execution).toMatchObject({
+          attemptedMode: 'full-context',
+          effectiveMode: 'extractive',
+          fallback: { reason: 'source_changed' },
+        });
+        expectNoRuntimeStatement(result, [TEST_RUNTIME_STATEMENT_TEXT]);
+        expect(result.sources.map((source) => source.id)).not.toContain(deletedId);
+        for (const statement of [...result.statements, ...result.suggestedNextSteps]) {
+          expect(statement.sourceIds).not.toContain(deletedId);
+          expect(statement.text).not.toContain(deletedText);
+        }
+        expect(JSON.stringify(result)).not.toContain(deletedId);
+        expect(JSON.stringify(result)).not.toContain(deletedText);
+      };
+      // Job-Ebene: an prepare (3) gebunden.
+      expectWithoutDeletedSource(stored);
+      expect(stored.snapshotHash).toBe(fresh.promptContext.snapshotHash);
+      // Host-Pfad.
+      expectWithoutDeletedSource(final.result!);
     });
 
     it('Kontrolle: bleibt bei einer Quizstimme auf eine laufende Frage während der Inferenz ready', async () => {
