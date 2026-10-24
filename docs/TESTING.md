@@ -120,6 +120,27 @@ persistente Plattformprojektion und konkurrierende Richtungsstimmen. Der
 Migrations-Backfill läuft in einer kurzlebigen Datenbank und entfernt sie
 anschließend wieder.
 
+### Snapshot-Hash der Q&A-Zusammenfassung (PostgreSQL + Redis)
+
+Der Migration-Job prüft außerdem, dass echte Datenbankänderungen den
+`snapshotHash` aus `prepareFreshModerationSummaryContext` ändern. Nur so kann
+die Summary-Queue eine veraltete Modellantwort als `source_changed` verwerfen:
+
+```bash
+RUN_PG_QA_SUMMARY_HASH_TESTS=1 REDIS_URL=redis://localhost:6379 \
+  npm run test -w @arsnova/backend -- \
+  --run src/__tests__/qa.summary-hash.pg.test.ts
+```
+
+Die Suite prüft zuerst die Stabilität des Hashs ohne Änderung, auch beim
+direkten Packen am Packing-Cache vorbei. Danach prüft sie, dass sich der Hash
+nach einer Q&A-Stimme, einer neuen Frage, einem Beitritt, einer Löschung durch
+den Host (`qa.moderate`) und einer eigenen Löschung durch Teilnehmende
+(`qa.deleteOwn`) ändert. Als Gegenprobe darf eine Quizstimme auf eine laufende
+Frage den Hash nicht ändern. Gemockt ist nur die Host-Tokenprüfung; Fragen,
+Stimmen, Teilnahme-Capabilities und Trigger laufen gegen die migrierte
+Datenbank.
+
 ### tRPC-DoD-Non-Regression-Gate
 
 Für jede neue Query/Mutation und jede Query/Mutation mit geändertem
