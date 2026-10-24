@@ -10,6 +10,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import {
   MODERATION_PROMPT_REFERENCE_RANKING_FIXTURE_V1,
   MODERATION_PROMPT_REFERENCE_TEXT_FIXTURE_V1,
+  TempoValueEnum,
   YesNoValueEnum,
 } from '@arsnova/shared-types';
 import { prisma } from '../../db';
@@ -309,7 +310,9 @@ export type FullContextScenario = ReferenceScenario & {
   readonly topicQuestionKeys: readonly ReferenceQuestionKey[];
   /** ID des bestätigten Lernziels (`learning-objective:<id>` im Kontext). */
   readonly learningObjectiveId: string;
-  /** Stimmen der Blitzlicht-Runde (Typ `YESNO`) und der freigegebenen Quizfrage. */
+  /** Typ der Blitzlicht-Runde (Standard `YESNO`). */
+  readonly quickFeedbackType: 'YESNO' | 'TEMPO';
+  /** Stimmen der Blitzlicht-Runde und der freigegebenen Quizfrage. */
   readonly quickFeedbackVotes: number;
   readonly releasedQuizVotes: number;
 };
@@ -325,9 +328,11 @@ const FULL_CONTEXT_RELEASED_QUIZ_VOTES = 12;
  *
  * - **Freigegebene Quizergebnisse:** Quiz-Session mit Q&A (`createReleasedQuiz`), 12 Stimmen
  *   auf die abgeschlossene Frage (8 richtig, 4 falsch), dazu die laufende Frage ohne Stimmen.
- * - **Blitzlicht:** `quickFeedbackEnabled`/`quickFeedbackOpen`, Runde `YESNO` über
+ * - **Blitzlicht:** `quickFeedbackEnabled`/`quickFeedbackOpen`, Runde `YESNO` (Standard) über
  *   `quickFeedback.create` (Host) und 12 Stimmen über `quickFeedback.vote` mit der
- *   Teilnahme-Capability (echter Router, session-gebunden, Redis `qf:<CODE>`).
+ *   Teilnahme-Capability (echter Router, session-gebunden, Redis `qf:<CODE>`). Mit
+ *   `quickFeedbackType: 'TEMPO'` entsteht eine TEMPO-Runde; für sie bildet der Kontextaufbau
+ *   keine Blitzlicht-Quelle (Protokoll Teil 3, Befund T3.1, Kontrolle).
  * - **Lernziel:** ein manuelles, sessionweites, bestätigtes Lernziel über
  *   `saveSessionLearningObjectives`.
  * - **Semantische Themen:** ein gültiger `QaSemanticTopicSnapshot` mit den Fragen B, C, E als
@@ -346,7 +351,9 @@ const FULL_CONTEXT_RELEASED_QUIZ_VOTES = 12;
 export async function createFullContextScenario(options: {
   readonly registry: FixtureRegistry;
   readonly participants?: number;
+  readonly quickFeedbackType?: 'YESNO' | 'TEMPO';
 }): Promise<FullContextScenario> {
+  const quickFeedbackType = options.quickFeedbackType ?? 'YESNO';
   const quiz = await createReleasedQuiz(options.registry);
   const room = await createReferenceScenario({
     registry: options.registry,
@@ -369,8 +376,9 @@ export async function createFullContextScenario(options: {
   // Blitzlicht über den echten Router.
   const { quickFeedbackRouter } = await import('../../routers/quickFeedback');
   const host = quickFeedbackRouter.createCaller({});
-  await host.create({ type: 'YESNO', sessionCode: room.code });
-  const values = YesNoValueEnum.options;
+  await host.create({ type: quickFeedbackType, sessionCode: room.code });
+  const values: readonly string[] =
+    quickFeedbackType === 'TEMPO' ? TempoValueEnum.options : YesNoValueEnum.options;
   for (let index = 0; index < FULL_CONTEXT_QUICK_FEEDBACK_VOTES; index += 1) {
     const voter = voters[index]!;
     // Teilnahme-Capability wie beim WebSocket-Transport (`extractParticipantCapability`).
@@ -452,6 +460,7 @@ export async function createFullContextScenario(options: {
     quiz: { completed: quiz.completed, running: quiz.running },
     topicQuestionKeys: FULL_CONTEXT_TOPIC_QUESTION_KEYS,
     learningObjectiveId,
+    quickFeedbackType,
     quickFeedbackVotes: FULL_CONTEXT_QUICK_FEEDBACK_VOTES,
     releasedQuizVotes: FULL_CONTEXT_RELEASED_QUIZ_VOTES,
   };
