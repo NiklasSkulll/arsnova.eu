@@ -41,6 +41,7 @@ import { canonicalModerationPromptJson } from '../lib/moderationPromptContextPac
 import {
   QA_SUMMARY_TECHNICAL_DEFINITION_TEXT,
   QA_SUMMARY_TECHNICAL_INSTRUCTION_TEXT,
+  prepareFreshModerationSummaryContext,
 } from '../lib/moderationSummaryContext';
 import { resetOpenWeightLlmClientForTests } from '../lib/openWeightLlmClient';
 import {
@@ -85,6 +86,8 @@ const HOST_TOKEN = `host-token-${randomUUID()}`;
 const hostCaller = qaRouter.createCaller({ req: {} as never });
 /** Obergrenze für das Warten auf einen Endstatus; der Normalfall liegt weit darunter. */
 const TERMINAL_WAIT_MS = 15_000;
+/** Packing-Cache-TTL (`MODERATION_PROMPT_PACKING_CACHE_TTL_MS` = 30 s) plus Abstand. */
+const PACKING_CACHE_EXPIRY_STEP_MS = 31_000;
 
 /**
  * Oberste Schlüssel des Bodys, wie `buildChatCompletionBody` in
@@ -192,11 +195,11 @@ describe.skipIf(!RUN_PG)(
 
     /** Fragt `qa.summaryRuntime` ab, bis der Status nicht mehr `pending` ist (begrenzt). */
     async function waitForTerminal(sessionId: string): Promise<QaSummaryRuntimeV2DTO> {
-      const started = Date.now();
+      const started = performance.now();
       for (;;) {
         const runtime = asV2Runtime(await hostCaller.summaryRuntime({ sessionId }));
         if (runtime.result && runtime.result.status !== 'pending') return runtime;
-        if (Date.now() - started > TERMINAL_WAIT_MS) {
+        if (performance.now() - started > TERMINAL_WAIT_MS) {
           throw new Error(
             `summaryRuntime blieb ${TERMINAL_WAIT_MS} ms lang ${runtime.result?.status ?? 'leer'}`,
           );
@@ -210,18 +213,65 @@ describe.skipIf(!RUN_PG)(
      * Queue-Zustand (`getQaSummaryRuntime`), bevor der Lesepfad ihn korrigieren kann.
      */
     async function waitForStoredJobResult(sessionId: string): Promise<QaSummaryResultV2> {
-      const started = Date.now();
+      const started = performance.now();
       for (;;) {
         const stored = getQaSummaryRuntime(sessionId).result;
         if (stored && stored.status !== 'pending') {
           await waitForQaSummaryIdleForTests(TERMINAL_WAIT_MS);
           return getQaSummaryRuntime(sessionId).result!;
         }
-        if (Date.now() - started > TERMINAL_WAIT_MS) {
+        if (performance.now() - started > TERMINAL_WAIT_MS) {
           throw new Error(`Job blieb ${TERMINAL_WAIT_MS} ms lang ${stored?.status ?? 'leer'}`);
         }
         await new Promise((resolve) => setTimeout(resolve, 10));
       }
+    }
+
+    /** K (1)–(4) des Falls „Vorschau = Nutzlast“ auf dem rohen Runtime-Body. */
+    function expectPayloadEqualsPreview(
+      runtime: TestRuntime,
+      shown: QaSummaryContextPreviewDTO,
+      final: QaSummaryRuntimeV2DTO,
+    ): void {
+      const completions = completionRequests(runtime);
+      expect(completions).toHaveLength(1);
+      const rawBody = completions[0]!.rawBody;
+      expect(completions[0]!.headers['authorization']).toBe(`Bearer ${TEST_RUNTIME_TOKEN}`);
+
+      // (1) Gleicher Revisionsstand.
+      expect(final.result!.snapshotHash).toBe(shown.promptContext.snapshotHash);
+
+      // (2) User-Nachricht bytegleich mit dem kanonischen Kontext der Vorschau.
+      const expectedUser = canonicalModerationPromptJson(shown.promptContext.context);
+      const messages = messagesOf(rawBody);
+      expect(messages.map((message) => message.role)).toEqual(['system', 'system', 'user']);
+      expect(firstByteDifference(userMessageOf(rawBody), expectedUser)).toBeNull();
+      // Auch auf Ebene der rohen Bytes: der JSON-kodierte Kontext steht so im Body.
+      expect(rawBody).toContain(JSON.stringify(expectedUser));
+
+      // (3) System-Nachrichten = Instruktion und Definition der von der Vorschau genannten Versionen.
+      expect(shown.instructionVersion).toBe(QA_SUMMARY_TECHNICAL_INSTRUCTION_VERSION);
+      expect(shown.definitionVersion).toBe(MODERATION_PROMPT_DEFINITION_SET_VERSION);
+      expect(messages[0]!.content).toBe(QA_SUMMARY_TECHNICAL_INSTRUCTION_TEXT);
+      expect(messages[1]!.content).toBe(QA_SUMMARY_TECHNICAL_DEFINITION_TEXT);
+      expect(messages[1]!.content).toContain(shown.definitionVersion);
+
+      // (4) ready, full-context, Aussage an eine gepackte Q&A-Quelle gebunden.
+      const result = final.result!;
+      expect(result.status).toBe('ready');
+      expect(result.execution).toEqual({
+        attemptedMode: 'full-context',
+        effectiveMode: 'full-context',
+        fallback: null,
+      });
+      expect(result.statements).toHaveLength(1);
+      expect(result.statements[0]!.text).toBe(TEST_RUNTIME_STATEMENT_TEXT);
+      const [citedId] = result.statements[0]!.sourceIds;
+      const packedSource = shown.promptContext.context.sources.find(
+        (source) => source.id === citedId,
+      );
+      expect(packedSource).toMatchObject({ kind: 'qa-question', content: { state: 'included' } });
+      expect(result.sources.map((source) => source.id)).toEqual([citedId]);
     }
 
     beforeEach(async () => {
@@ -262,45 +312,43 @@ describe.skipIf(!RUN_PG)(
       expect(requested.result?.status).toBe('pending');
       const final = await waitForTerminal(room.sessionId);
 
-      const completions = completionRequests(runtime);
-      expect(completions).toHaveLength(1);
-      const rawBody = completions[0]!.rawBody;
-      expect(completions[0]!.headers['authorization']).toBe(`Bearer ${TEST_RUNTIME_TOKEN}`);
+      expectPayloadEqualsPreview(runtime, shown, final);
+    });
 
-      // (1) Gleicher Revisionsstand.
-      expect(final.result!.snapshotHash).toBe(shown.promptContext.snapshotHash);
+    it('sendet auch nach abgelaufenem Packing-Cache genau den fachlichen Kontext der Host-Vorschau, obwohl jeder Kontextaufbau neu packt', async () => {
+      const room = await scenario();
+      const runtime = await runtimeWith();
+      const cacheStates: string[] = [];
+      // Ohne diesen Schritt stammen Vorschau und Nutzlast aus demselben Eintrag des
+      // Packing-Caches (TTL 30 s). Hier wird nur `Date` vor jedem Kontextaufbau über
+      // die TTL hinaus verschoben; Timer, `setImmediate`, `AbortSignal` und
+      // `performance.now()` bleiben echt. Der Hook ruft die echte Funktion unverändert auf.
+      vi.useFakeTimers({ toFake: ['Date'], now: Date.now() });
+      try {
+        resetQaSummaryQueueForTests({
+          prepare: async (input) => {
+            vi.setSystemTime(Date.now() + PACKING_CACHE_EXPIRY_STEP_MS);
+            const prepared = await prepareFreshModerationSummaryContext(input);
+            cacheStates.push(prepared.preview.cache);
+            return prepared;
+          },
+        });
 
-      // (2) User-Nachricht bytegleich mit dem kanonischen Kontext der Vorschau.
-      const expectedUser = canonicalModerationPromptJson(shown.promptContext.context);
-      const messages = messagesOf(rawBody);
-      expect(messages.map((message) => message.role)).toEqual(['system', 'system', 'user']);
-      expect(firstByteDifference(userMessageOf(rawBody), expectedUser)).toBeNull();
-      // Auch auf Ebene der rohen Bytes: der JSON-kodierte Kontext steht so im Body.
-      expect(rawBody).toContain(JSON.stringify(expectedUser));
+        const shown = await preview(room.sessionId);
+        expect(shown.cache).toBe('miss');
+        expect(shown.selectedMode).toBe('full-context');
 
-      // (3) System-Nachrichten = Instruktion und Definition der von der Vorschau genannten Versionen.
-      expect(shown.instructionVersion).toBe(QA_SUMMARY_TECHNICAL_INSTRUCTION_VERSION);
-      expect(shown.definitionVersion).toBe(MODERATION_PROMPT_DEFINITION_SET_VERSION);
-      expect(messages[0]!.content).toBe(QA_SUMMARY_TECHNICAL_INSTRUCTION_TEXT);
-      expect(messages[1]!.content).toBe(QA_SUMMARY_TECHNICAL_DEFINITION_TEXT);
-      expect(messages[1]!.content).toContain(shown.definitionVersion);
+        const requested = await requestSummary(room.sessionId);
+        expect(requested.result?.status).toBe('pending');
+        const final = await waitForTerminal(room.sessionId);
 
-      // (4) ready, full-context, Aussage an eine gepackte Q&A-Quelle gebunden.
-      const result = final.result!;
-      expect(result.status).toBe('ready');
-      expect(result.execution).toEqual({
-        attemptedMode: 'full-context',
-        effectiveMode: 'full-context',
-        fallback: null,
-      });
-      expect(result.statements).toHaveLength(1);
-      expect(result.statements[0]!.text).toBe(TEST_RUNTIME_STATEMENT_TEXT);
-      const [citedId] = result.statements[0]!.sourceIds;
-      const packedSource = shown.promptContext.context.sources.find(
-        (source) => source.id === citedId,
-      );
-      expect(packedSource).toMatchObject({ kind: 'qa-question', content: { state: 'included' } });
-      expect(result.sources.map((source) => source.id)).toEqual([citedId]);
+        // Vorschau, Auftrag, Job vor und nach der Inferenz, erster Lesepfad-Abruf:
+        // jeder Aufbau hat neu gepackt.
+        expect(cacheStates).toEqual(['miss', 'miss', 'miss', 'miss', 'miss']);
+        expectPayloadEqualsPreview(runtime, shown, final);
+      } finally {
+        vi.useRealTimers();
+      }
     });
 
     it('lässt Host-Token, Sitzungs- und Teilnehmendenkennungen sowie Hüllenfelder nicht in den Runtime-Body', async () => {
@@ -325,6 +373,14 @@ describe.skipIf(!RUN_PG)(
       expect(rawBody).not.toContain(room.code);
       for (const participant of room.participants) {
         expect(rawBody).not.toContain(participant.id);
+      }
+      const nicknames = await prisma.participant.findMany({
+        where: { sessionId: room.sessionId },
+        select: { nickname: true },
+      });
+      expect(nicknames).toHaveLength(room.participants.length);
+      for (const { nickname } of nicknames) {
+        expect(rawBody).not.toContain(nickname);
       }
       expect(rawBody).not.toContain(shown.promptContext.snapshotHash);
       expect(rawBody).not.toContain(shown.promptContext.packedAt);
