@@ -68,11 +68,16 @@ sequenceDiagram
       C-->>Q: failure status, no network call
     else gates pass
       C->>L: GET /slots?fail_on_no_slot=1 (Bearer)
-      L-->>C: 200 · 503 busy · 401/403/501 misconfigured
-      C->>L: POST /v1/chat/completions<br/>instruction · definition · context JSON · JSON schema
-      L-->>C: JSON answer
-      Note over C: parseCompletion: schema + known source IDs<br/>failure → invalid_response · client timeout → timeout
-      C-->>Q: model output or failure status
+      alt 503 busy · 401/403/501 misconfigured · other unavailable
+        L-->>C: status
+        C-->>Q: failure status, no POST
+      else 200
+        L-->>C: slot free
+        C->>L: POST /v1/chat/completions<br/>instruction · definition · context JSON · JSON schema
+        L-->>C: JSON answer
+        Note over C: parseCompletion: schema + known source IDs<br/>failure → invalid_response · client timeout → timeout
+        C-->>Q: model output or failure status
+      end
     end
     S-)DB: meanwhile: Q&A vote · new question · join
     Note over UI,S: or the host deletes or moderates a question

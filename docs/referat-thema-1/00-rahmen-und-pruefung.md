@@ -127,8 +127,8 @@ Baselinelauf geklärt sein. Die Dossiers zitieren Zeilen auf HEAD.
 ## Offene Fragen an den Prüfer
 
 1. ~~Wir sind zu zweit und bearbeiten alle drei Aufträge 1A, 1B und 1C. Wie
-   wird der dritte Auftrag zugeordnet und bewertet?~~ **Geklärt (2026-10-24):**
-   Die Aufteilung aus [01-aufteilung](./01-aufteilung.md) passt so und muss
+   wird der dritte Auftrag zugeordnet und bewertet?~~ **Geklärt (mündliche
+   Ansage des Prüfers in der Vorlesung, notiert 2026-10-24):** Die Aufteilung aus [01-aufteilung](./01-aufteilung.md) passt so und muss
    nicht mit dem Prüfer abgestimmt werden.
 2. Was genau gehört in die PR an kqc-real (Tests, Messskripte,
    Instrumentierung, Evidenzordner, Code-Verbesserung)?
@@ -158,8 +158,11 @@ Baselinelauf geklärt sein. Die Dossiers zitieren Zeilen auf HEAD.
    - Wie hoch ist die Kostenobergrenze, und dürfen wir eigene Cloud-Server
      anlegen?
 5. ~~Gilt die 48-Stunden-Frist der Folien oder der Vortag der Repo-Fassung?~~
-   **Geklärt (2026-10-24):** Handout und Präsentation sind 48 Stunden (zwei
-   Tage) vor der Prüfung abzugeben.
+   **Geklärt (mündliche Ansage des Prüfers in der Vorlesung, notiert
+   2026-10-24):** Handout und Präsentation sind 48 Stunden (zwei Tage) vor der
+   Prüfung abzugeben. Das ist strenger als die Repo-Fassung („spätestens am
+   Vortag“, `CLOUD-COMPUTING-REFERAT-PRUEFUNG.md` Abschnitt 4 Punkt 4); wir
+   richten uns nach der strengeren Frist.
 6. Wo ist der geheimnisfreie Evidenzort (Repo-Ordner, Branch, eigener Speicher)?
 
 ## Laborinstanz und zweiter Host: Recherche (2026-10-24)

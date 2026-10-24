@@ -83,7 +83,7 @@ flowchart TB
     re-authorizes · too few again → rule-based`"]
   end
 
-  subgraph RUN["5 · Inference run · queue timeout 90 s, max 300 s⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀"]
+  subgraph RUN["5 · Inference run · queue timeout 90 s; full-context: max(queue, client), ≤ 300 s⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀"]
     adp["`**runPreparedQaSummary** · plan
     full-context → open-weight client
     legacy-text → legacy URL
@@ -131,7 +131,7 @@ flowchart TB
   misconfigured · disabled
   **client** busy · unavailable · timeout
   circuit_open · invalid_response
-  misconfigured
+  misconfigured · disabled
   **after the run** source_changed · timeout
   **prepare error** context_unavailable
   permission_changed`"]
@@ -169,7 +169,7 @@ flowchart TB
   cmp e27@-.->|"hash changed · timeout · run failed"| fb
   p2 e29@-.->|"prepare error"| fb
   p3 e30@-.->|"prepare error"| fb
-  fresh e28@-.->|"hash changed"| fb
+  fresh e28@-.->|"hash changed, no job inflight"| fb
 
   class ui,pvb,poll host
   class rq,pv,auth,build,pack,asm app

@@ -33,7 +33,8 @@ flowchart TB
     every section keeps a state + reason
     unavailable · disabled · not-applicable
     not-released · failed · pending
-    never silently dropped`"]
+    exception: a stale topic snapshot in Redis
+    reads as no data (finding T2.3)`"]
     pvw["`**Preview DTO** · its own prepare
     qa-summary-context-preview-v1
     full promptContext incl. budget,

@@ -1,6 +1,6 @@
 # 1C diagrams: context path from host request to private inference
 
-Diagrams for assignment 1C ([issue #10](https://github.com/NiklasSkulll/arsnova.eu/issues/10)). Author: Jonas Weirauch, role Y. The Matrikelnummer goes only into the handout PDF and the slides, not into this public repository. As of 2026-10-23.
+Diagrams for assignment 1C ([issue #10](https://github.com/NiklasSkulll/arsnova.eu/issues/10)). Author: Jonas Weirauch, role Y. The Matrikelnummer goes only into the handout PDF and the slides, not into this public repository. Diagrams as of 2026-10-23, tests and measurements 2026-10-24.
 
 > **Code state:** written against `main` at commit
 > [`248029dc`](https://github.com/NiklasSkulll/arsnova.eu/tree/248029dc) (2026-10-23), which is
@@ -45,7 +45,7 @@ Notation and print sizes:
   <img alt="Legende zu Abb. 1: Farben für Lehrperson und Anzeige, Schritt im App-Server, Vertrag und Hash, Job in der Warteschlange, externen Server, Prüfung, erfolgreiches Ergebnis und Fallback; Rahmen stehen für Rechner oder Abschnitte; Linien für Hauptpfad, Erfolg und Fehler." src="diagrams/1c-legende.light.svg">
 </picture>
 
-_Abb. 1: Kontextpfad der Moderationszusammenfassung (vereinfacht). Stand `main` `248029dc` (v1.3.0 + 228 Commits). Eigene Darstellung (Jonas Weirauch, Auftrag 1C) auf Basis des Quellcodes._
+_Abb. 1: Kontextpfad der Moderationszusammenfassung (vereinfacht). Stand `main` `248029dc` (v1.3.0 + 228 Commits). Eigene Darstellung (Jonas Weirauch, Auftrag 1C) auf Basis des Quellcodes, KI-gestützt erstellt (Claude Code, siehe [KI-Nutzung](#method-verification-and-ai-use))._
 
 ### Abb. 2: timing
 
@@ -54,7 +54,7 @@ _Abb. 1: Kontextpfad der Moderationszusammenfassung (vereinfacht). Stand `main` 
   <img alt="Ablauf: Die Lehrperson fordert eine Zusammenfassung an. Die API prüft die Rechte und baut den Kontext auf; ändern sich die Daten dabei, scheitert die Anfrage, sonst reiht die API asynchron einen Job ein und meldet »ausstehend«, ohne auf das Modell zu warten. Die Warteschlange baut den Kontext vor und nach der LLM-Anfrage neu auf und speichert die Modell-Zusammenfassung nur bei gleichem Hash und gültiger Antwort, sonst einen Fallback mit Grund. Der Statusabruf prüft das fertige Ergebnis erneut gegen die aktuellen Daten." src="diagrams/1c-context-path-overview-sequence.light.svg">
 </picture>
 
-_Abb. 2: Zeitlicher Ablauf der Zusammenfassung (UML-Sequenzdiagramm, vereinfacht). Stand `main` `248029dc` (v1.3.0 + 228 Commits). Eigene Darstellung (Jonas Weirauch, Auftrag 1C) auf Basis des Quellcodes._
+_Abb. 2: Zeitlicher Ablauf der Zusammenfassung (UML-Sequenzdiagramm, vereinfacht). Stand `main` `248029dc` (v1.3.0 + 228 Commits). Eigene Darstellung (Jonas Weirauch, Auftrag 1C) auf Basis des Quellcodes, KI-gestützt erstellt (Claude Code, siehe [KI-Nutzung](#method-verification-and-ai-use))._
 
 ## Appendix figures (English)
 
@@ -70,7 +70,7 @@ _Abb. 2: Zeitlicher Ablauf der Zusammenfassung (UML-Sequenzdiagramm, vereinfacht
   <img alt="Legend for A1 and A3: colours and shapes for host, app server, contract and hash, queue, inference path, external server, data store, check, successful result, returned unchanged and fallback; frames are process steps or hosts, dashed frames are read-only; lines for main path, success, failure and secondary links." src="diagrams/1c-legend.light.svg">
 </picture>
 
-_A1: Working map of the context path. `main` `248029dc`. Own figure (Jonas Weirauch, assignment 1C), based on the source code._
+_A1: Working map of the context path. `main` `248029dc`. Own figure (Jonas Weirauch, assignment 1C), based on the source code, AI-assisted (Claude Code, see [AI use](#method-verification-and-ai-use))._
 
 ### A2: working map, timing
 
@@ -79,7 +79,7 @@ _A1: Working map of the context path. `main` `248029dc`. Own figure (Jonas Weira
   <img alt="Numbered UML sequence with teacher, participants, router, prepare, queue, adapter and client, data stores and llama-server. The router rejects disallowed requests. If a job is inflight, its pending result is returned. Otherwise prepare 1 runs while participants keep voting; a change to a fenced field ends it in CONFLICT. The gates in code order return a stored result, a fallback or pending. In parallel the teacher polls while the job waits for the pump, runs prepare 2, the adapter and client branches (no open-weight call, gate failure, or GET /slots and the chat completion) and prepare 3, and then decides source_changed, timeout or the bound result. The next runtime read runs prepare 4; if it fails, the result disappears from the UI." src="diagrams/1c-context-path-sequence.light.svg">
 </picture>
 
-_A2: Timing of the context path (UML sequence diagram). `main` `248029dc`. Own figure (Jonas Weirauch, assignment 1C), based on the source code._
+_A2: Timing of the context path (UML sequence diagram). `main` `248029dc`. Own figure (Jonas Weirauch, assignment 1C), based on the source code, AI-assisted (Claude Code, see [AI use](#method-verification-and-ai-use))._
 
 ### A3: contract layers
 
@@ -88,7 +88,7 @@ _A2: Timing of the context path (UML sequence diagram). `main` `248029dc`. Own f
   <img alt="Three layers plus the output. Layer 1, the authorized internal state, is never sent to the model. Layer 2, the domain context: ModerationAnalysisContextV1 packed into ModerationPromptContextV1; every context area keeps a state and reason; the preview DTO comes from its own prepare and equals the job payload only if the snapshotHash matches. Layer 3, the model request: QaSummaryInferenceRequestV2 (strict) and the wire body, which drops the envelope versions, budget and hash but keeps the domain context version. The output is validated three times: by the grammar at generation, by the client checks (Zod schema and references) and by binding to prepare 3. Negative paths: an incompatible version throws in the strict parse; failed client or output validation gives invalid_response." src="diagrams/1c-contract-layers.light.svg">
 </picture>
 
-_A3: Contract layers and validation points. `main` `248029dc`. Own figure (Jonas Weirauch, assignment 1C), based on the source code._
+_A3: Contract layers and validation points. `main` `248029dc`. Own figure (Jonas Weirauch, assignment 1C), based on the source code, AI-assisted (Claude Code, see [AI use](#method-verification-and-ai-use))._
 
 ## Task coverage (exam document 4.3, 1C)
 
@@ -170,7 +170,7 @@ Line numbers are 1-based and valid for `248029dc`. Short names:
 | 4      | pending result, host token copied                                        | `createPendingQaSummaryResultV2`, `cloneMinimalHostAccess`                                                                                                                | `Q:524-537`, `Q:105-111`; `V2:127-143`                                                                               |
 | 4      | pump, default concurrency 1                                              | `pump`, `hooks.schedule`                                                                                                                                                  | `Q:404-412`, `Q:88-95`                                                                                               |
 | 4      | prepare (2), too few again                                               | `processJob`                                                                                                                                                              | `Q:297-317`                                                                                                          |
-| 5      | queue timeout around the run                                             | `runWithQueueTimeout`; `max(QA_SUMMARY_TIMEOUT_MS, OPEN_WEIGHT_LLM_SUMMARY_TIMEOUT_MS) ≤ 300 s`                                                                           | `Q:259-285`, `Q:326-330`; `QC:166-180`, `QC:249`                                                                     |
+| 5      | queue timeout around the run                                             | `runWithQueueTimeout`; `QA_SUMMARY_TIMEOUT_MS`, on the active full-context path `max(QA_SUMMARY_TIMEOUT_MS, OPEN_WEIGHT_LLM_SUMMARY_TIMEOUT_MS) ≤ 300 s`                  | `Q:259-285`, `Q:326-330`; `QC:166-180`, `QC:249`                                                                     |
 | 5      | adapter plan: full-context, legacy-text, none                            | `runPreparedQaSummary`, `resolveQaSummaryAdapterPlan`                                                                                                                     | `AD:113-170` (legacy `AD:145-156`, none `AD:165-169`); `MSC:97-138`                                                  |
 | 5      | client gates, shared in-process slot                                     | `runOpenWeightLlm`                                                                                                                                                        | `CL:472-482`; circuit `CL:156-176`, `CF:9-10`; private target `CL:189-214`                                           |
 | 5      | GET /slots                                                               | slot probe                                                                                                                                                                | `CL:506-520`                                                                                                         |
@@ -214,7 +214,7 @@ Not shown in the diagrams:
 ## Key findings
 
 1. **Decoupled from the model, not from the context build.** `qa.requestSummary` returns `pending` before any model call (`Q:524-539`). It does wait for prepare (1). Test T4.1 confirms that the request returns `pending` before the processor starts and stays `pending` while it runs; T1.4 confirms the INTERNAL_SERVER_ERROR without a job.
-   - A change to a fenced field during that build ends the request with CONFLICT. The fenced fields are the 23 session-row fields, such as Q&A revision, participants, quiz progress, Q&A and Blitzlicht flags, sort mode and learning context, plus the released-results and Blitzlicht fingerprints. A quiz vote on the still-running question does not trigger it, and a schema violation with INTERNAL_SERVER_ERROR. The frontend swallows the error (`FE:13557-13559`).
+   - A change to a fenced field during that build ends the request with CONFLICT. The fenced fields are the 23 session-row fields, such as Q&A revision, participants, quiz progress, Q&A and Blitzlicht flags, sort mode and learning context, plus the released-results and Blitzlicht fingerprints. A quiz vote on the still-running question changes no fenced field: T5.5 shows that the Q&A ranking revision and the hash stay unchanged (vote inserted directly in the database, so the CONFLICT check itself was not exercised). A schema violation during the build ends the request with INTERNAL_SERVER_ERROR instead (T1.4). The frontend swallows the error (`FE:13557-13559`).
    - A failing runtime read sets the runtime to `null`, so a finished summary disappears from the UI (`FE:13525-13527`).
 2. **Prepare runs often.** It runs three times per job: (1) on request, (2) before inference and (3) after it. It runs once more on every runtime read of a finished result (page load, dialog open, poll) and once per preview. The 30 s packing cache saves only the packing step.
 3. **Almost any session activity changes the hash.** These all bump revisions that end up in `snapshotHash` (see the band 3 table):
@@ -223,7 +223,7 @@ Not shown in the diagrams:
    - joins and leaves;
    - question edits, status changes and deletions.
 
-   The CONFLICT fence additionally compares quiz progress, the Blitzlicht enabled/open flags and sort mode (`MQC:943-966`). During active Q&A a model answer therefore usually ends as `source_changed` (`Q:341-345`, `Q:427-438`). A force-fit pack keeps `meta` constant, but corpus counts and the top-N selection can still change the hash (`MSC:531-575`).
+   The CONFLICT fence additionally compares quiz progress, the Blitzlicht enabled/open flags and sort mode (`MQC:943-966`). During active Q&A a model answer can therefore end as `source_changed` (`Q:341-345`, `Q:427-438`); how often depends on the activity during the run and was not measured. A force-fit pack keeps `meta` constant, but corpus counts and the top-N selection can still change the hash (`MSC:531-575`).
 
    PostgreSQL tests T5.1–T5.3 confirm that the triggers raise the revisions, and T5.1–T5.4b confirm that each change (a vote, a new question, a join, a host delete, a participant's own delete) alters the hash. Whether the revision or the content drives the hash cannot be separated: votes and joins reach it on two independent paths, the revisions in `meta` and the content (vote counts, `participantBasis`), and each path alone is enough (mutations 1–3 and 6). A fault in one path therefore does not disable the detection. A limit found by the tests: a quiz vote on a still-running question does not change the hash, a vote on a released question does (T5.5; votes inserted directly in the database) ([protocol](evidenz/1C/2026-10-24-tests.md#t5--echte-datenbankänderungen-ändern-den-snapshot-hash-postgresql)).
 

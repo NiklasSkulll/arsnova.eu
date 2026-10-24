@@ -4,8 +4,8 @@ Arbeitsordner von Jonas und Niklas für **Thema 1: KI-Inferenz für den
 Moderationskompass – Systemgrenzen und entkoppelte Architektur**. Wir
 bearbeiten alle drei Aufträge 1A, 1B und 1C.
 
-Der Ordner liegt auf dem Branch `referat/thema-1-notes` und ist Arbeits- und
-Evidenzmaterial. Er gehört **nicht** in die PR an kqc-real.
+Der Ordner liegt im Fork-`main` und ist Arbeits- und Evidenzmaterial. Er
+gehört **nicht** in die PR an kqc-real.
 
 ## Inhalt
 
@@ -14,12 +14,14 @@ Evidenzmaterial. Er gehört **nicht** in die PR an kqc-real.
 | [00-rahmen-und-pruefung.md](./00-rahmen-und-pruefung.md)                     | Generalthema, Bewertung, Nachweiskette, KI-Regeln, Widersprüche, offene Fragen       |
 | [01-aufteilung.md](./01-aufteilung.md)                                       | Aufteilung: Niklas = X (1A, 1B 3–4), Jonas = Y (1C, 1B 1–2); Optionen, Aufwand       |
 | [1C-diagrams.md](./1C-diagrams.md)                                           | Diagramme zu 1C (Handout DE, Arbeitskarte und Vertragsschichten EN) mit Belegtabelle |
+| [specs/](./specs/)                                                           | Vorab festgelegte Designs und Pläne der 1C-Tests und -Messungen (Teil 1 und 2)       |
+| [evidenz/1C/](./evidenz/1C/)                                                 | Testprotokolle, Mutationsproben, Messrohdaten und Auswertung zu 1C                   |
 | [1A-ressourcenisolation-app-host.md](./1A-ressourcenisolation-app-host.md)   | Code-Landkarte, Messwerkzeuge, Versuchsvorschlag, Lücken für 1A                      |
 | [1B-private-inferenz-zweiter-host.md](./1B-private-inferenz-zweiter-host.md) | Zwei-Host-Deployment, LLM-Client, Messbarkeit, Lücken für 1B                         |
 | [1C-kontext-und-adapterpfad.md](./1C-kontext-und-adapterpfad.md)             | #456-Kontext, Verträge, Snapshot/Hash, Async-Pfad, Testlücken für 1C                 |
 
-Geplant: `evidenz/` für Rohdaten, Skripte und Messprotokolle je Auftrag (ohne
-Secrets, nur synthetische Daten).
+`evidenz/` enthält Rohdaten und Protokolle je Auftrag (ohne Secrets, nur
+synthetische Daten).
 
 ## Arbeitsweise im Fork
 
@@ -76,8 +78,9 @@ Alle Dossiers enthalten Code-Stellen (Datei:Zeile), Versuchsideen und Lücken.
   - Darf der aktuelle `main` die Baseline sein statt `v1.3.0`?
   - Was ist beim zweiten Host bereitgestellt, und wie bekommen wir Zugang?
 - **Aufteilung 1A/1B/1C:** Am 2026-10-23 festgelegt (Option 1). Niklas ist X
-  (1A und 1B Schritte 3–4), Jonas ist Y (1C und 1B Schritte 1–2). Die
-  Abstimmung mit dem Prüfer steht noch aus. Details in
+  (1A und 1B Schritte 3–4), Jonas ist Y (1C und 1B Schritte 1–2). Eine
+  Abstimmung mit dem Prüfer ist nicht nötig (mündliche Ansage in der
+  Vorlesung, notiert 2026-10-24). Details in
   [01-aufteilung.md](./01-aufteilung.md#entscheidung-2026-10-23).
 
 ## Hinweis zur Entstehung
