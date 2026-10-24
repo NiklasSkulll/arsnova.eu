@@ -233,6 +233,10 @@ describe('qa summary V2 (issue #456 slice 7)', () => {
     },
   );
 
+  // Charakterisierung des Ist-Verhaltens, kein gewünschter Vertrag: Ein Codefehler im
+  // Kontextaufbau erreicht den Host als INTERNAL_SERVER_ERROR, ohne Job. Der
+  // errorFormatter (trpc.ts) reicht die ZodError-Meldung dabei unmaskiert weiter; der
+  // Test legt bewusst nur Code und fehlenden Job fest, nicht die Meldung.
   trpcDodIt(
     {
       procedure: 'qa.requestSummary',
