@@ -34,6 +34,7 @@ import {
   MODERATION_PROMPT_DEFINITION_SET_VERSION,
   QA_SUMMARY_TECHNICAL_INSTRUCTION_VERSION,
   type QaSummaryContextPreviewDTO,
+  type QaSummaryResultV2,
   type QaSummaryRuntimeV2DTO,
 } from '@arsnova/shared-types';
 import { canonicalModerationPromptJson } from '../lib/moderationPromptContextPacking';
@@ -42,11 +43,20 @@ import {
   QA_SUMMARY_TECHNICAL_INSTRUCTION_TEXT,
 } from '../lib/moderationSummaryContext';
 import { resetOpenWeightLlmClientForTests } from '../lib/openWeightLlmClient';
-import { resetQaSummaryQueueForTests, waitForQaSummaryIdleForTests } from '../lib/qaSummaryQueue';
+import {
+  getQaSummaryQueueMetrics,
+  resetQaSummaryQueueForTests,
+  waitForQaSummaryIdleForTests,
+} from '../lib/qaSummaryQueue';
+import { prisma } from '../db';
 import { qaRouter } from '../routers/qa';
 import {
+  TEST_RUNTIME_MODEL_VERSION,
   TEST_RUNTIME_STATEMENT_TEXT,
   TEST_RUNTIME_TOKEN,
+  closedLoopbackUrl,
+  completionEnvelope,
+  firstQaQuestionSourceId,
   startTestRuntime,
   useTestRuntimeEnv,
   userMessageOf,
@@ -60,8 +70,11 @@ import {
   cleanupFixtures,
   createFixtureRegistry,
   createReferenceScenario,
+  createReleasedQuiz,
   deleteFixtureRedisKeys,
+  quizVote,
   restorePlatformStatistic,
+  type SessionOptions,
   type PlatformStatisticSnapshot,
   type ReferenceScenario,
 } from './lib/qa-summary-pg-fixture';
@@ -113,6 +126,26 @@ function firstByteDifference(actual: string, expected: string): string | null {
   return `Byte ${index} (Länge ${a.length} statt ${b.length}): gesendet …${excerpt(a)}… erwartet …${excerpt(b)}…`;
 }
 
+/** Bricht mit klarer Meldung ab, statt auf den globalen Test-Timeout zu warten. */
+async function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(message)), ms);
+  });
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Kein Aussagetext und keine Modellversion der Test-Runtime im Ergebnis. */
+function expectNoRuntimeStatement(result: QaSummaryResultV2, runtimeTexts: readonly string[]) {
+  const texts = [...result.statements, ...result.suggestedNextSteps].map((item) => item.text);
+  for (const runtimeText of runtimeTexts) expect(texts).not.toContain(runtimeText);
+  expect(result.modelVersion).not.toBe(TEST_RUNTIME_MODEL_VERSION);
+}
+
 function messagesOf(rawBody: string): ChatMessage[] {
   return (JSON.parse(rawBody) as { messages: ChatMessage[] }).messages;
 }
@@ -131,15 +164,20 @@ describe.skipIf(!RUN_PG)(
     const runtimes: TestRuntime[] = [];
     let platformBefore: PlatformStatisticSnapshot | null = null;
 
-    async function scenario(): Promise<ReferenceScenario> {
+    async function scenario(
+      session?: Omit<SessionOptions, 'registry'>,
+    ): Promise<ReferenceScenario> {
       if (!platformBefore) platformBefore = await capturePlatformStatistic();
-      return createReferenceScenario({ registry });
+      return createReferenceScenario({ registry, session });
     }
 
-    async function runtimeWith(options: TestRuntimeOptions = {}): Promise<TestRuntime> {
+    async function runtimeWith(
+      options: TestRuntimeOptions = {},
+      env: Readonly<Record<string, string>> = {},
+    ): Promise<TestRuntime> {
       const runtime = await startTestRuntime(options);
       runtimes.push(runtime);
-      useTestRuntimeEnv(runtime);
+      useTestRuntimeEnv(runtime, env);
       return runtime;
     }
 
@@ -300,6 +338,237 @@ describe.skipIf(!RUN_PG)(
       const fresh = await preview(room.sessionId);
       expect(sentUser).toBe(canonicalModerationPromptJson(fresh.promptContext.context));
       expect(final.result!.snapshotHash).toBe(fresh.promptContext.snapshotHash);
+    });
+    it('übernimmt keine Modellantwort mit fremder Ausgabe-Version und fällt mit invalid_response zurück', async () => {
+      const room = await scenario();
+      const foreignText = 'Aussage einer fremden Ausgabe-Version.';
+      const runtime = await runtimeWith({
+        // Gekennzeichnete Negativprobe: sonst gültige Ausgabe der Version 1
+        // (`result` statt `output`), deren Quelle aus der V2-Anfrage stammt.
+        respond: (body) => ({
+          status: 200,
+          body: completionEnvelope(
+            JSON.stringify({
+              schemaVersion: 1,
+              taskType: 'qa_summary',
+              result: {
+                status: 'ready',
+                statements: [{ text: foreignText, sourceIds: [firstQaQuestionSourceId(body)] }],
+                suggestedNextSteps: [],
+                limitations: [],
+                modelVersion: TEST_RUNTIME_MODEL_VERSION,
+              },
+            }),
+          ),
+        }),
+      });
+
+      const requested = await requestSummary(room.sessionId);
+      expect(requested.result?.status).toBe('pending');
+      const final = await waitForTerminal(room.sessionId);
+
+      expect(completionRequests(runtime)).toHaveLength(1);
+      const result = final.result!;
+      // „Regelbasiert“ heißt im Code: deterministischer extraktiver Fallback ohne Modell.
+      expect(result.execution).toMatchObject({
+        attemptedMode: 'full-context',
+        effectiveMode: 'extractive',
+        fallback: { mode: 'extractive', reason: 'invalid_response' },
+      });
+      expectNoRuntimeStatement(result, [foreignText, TEST_RUNTIME_STATEMENT_TEXT]);
+      // Queue danach frei.
+      await waitForQaSummaryIdleForTests(TERMINAL_WAIT_MS);
+      expect(getQaSummaryQueueMetrics()).toMatchObject({ queueLength: 0, running: 0, failed: 0 });
+    });
+
+    it('lässt den Host nicht auf die Runtime warten: requestSummary kehrt pending zurück, solange die Runtime die Antwort hält', async () => {
+      const room = await scenario();
+      let latchOpen = true;
+      let release: () => void = () => undefined;
+      const hold = new Promise<void>((resolve) => {
+        release = () => {
+          latchOpen = false;
+          resolve();
+        };
+      });
+      const runtime = await runtimeWith({ hold });
+
+      try {
+        // Ein synchroner Job würde hier bis zur Runtime-Antwort blockieren; die kommt
+        // erst nach dem Lösen des Latches unten. Deshalb begrenzt warten.
+        const requested = await withTimeout(
+          requestSummary(room.sessionId),
+          5_000,
+          'requestSummary kehrte nicht zurück, solange die Runtime die Antwort hielt',
+        );
+        await withTimeout(
+          runtime.received,
+          5_000,
+          'Runtime hat den Completion-Request nicht empfangen',
+        );
+
+        // (1) Mutation aufgelöst und pending, Request empfangen, Latch offen.
+        expect(requested.result?.status).toBe('pending');
+        expect(completionRequests(runtime)).toHaveLength(1);
+        expect(latchOpen).toBe(true);
+        // (2) summaryRuntime meldet weiter pending.
+        const during = asV2Runtime(await hostCaller.summaryRuntime({ sessionId: room.sessionId }));
+        expect(during.result?.status).toBe('pending');
+        expect(latchOpen).toBe(true);
+      } finally {
+        release();
+      }
+
+      // (3) Nach dem Lösen wird ready erreicht.
+      const final = await waitForTerminal(room.sessionId);
+      expect(final.result!.status).toBe('ready');
+      expect(final.result!.execution.effectiveMode).toBe('full-context');
+    });
+
+    it('meldet bei nicht erreichbarer Runtime erst pending und dann einen Fallback mit Grund unavailable', async () => {
+      const room = await scenario();
+      useTestRuntimeEnv({ baseUrl: await closedLoopbackUrl() });
+
+      const requested = await requestSummary(room.sessionId);
+      expect(requested.result?.status).toBe('pending');
+      const final = await waitForTerminal(room.sessionId);
+
+      expect(final.result!.execution).toMatchObject({
+        attemptedMode: 'full-context',
+        effectiveMode: 'extractive',
+        fallback: { mode: 'extractive', reason: 'unavailable' },
+      });
+      expectNoRuntimeStatement(final.result!, [TEST_RUNTIME_STATEMENT_TEXT]);
+    });
+
+    it('bricht eine zu langsame Runtime nach dem Client-Timeout ab und meldet den Grund timeout', async () => {
+      const room = await scenario();
+      // Client-Timeout 1 s (kleinster erlaubter Wert). Das Queue-Wall-Clock ist laut
+      // `resolveEffectiveQaSummaryTimeoutMs` (qaSummaryConfig.ts) max(QA_SUMMARY_TIMEOUT_MS,
+      // OPEN_WEIGHT_LLM_SUMMARY_TIMEOUT_MS) = max(90 000, 1 000) = 90 000 ms. Es greift
+      // also der Client-Timeout (`classifyCaughtError` → `timeout`), nicht die Queue.
+      const timeoutMs = 1_000;
+      const runtime = await runtimeWith(
+        { delayMs: 2_500 },
+        { OPEN_WEIGHT_LLM_SUMMARY_TIMEOUT_MS: String(timeoutMs) },
+      );
+
+      const started = performance.now();
+      const requested = await requestSummary(room.sessionId);
+      expect(requested.result?.status).toBe('pending');
+      const final = await waitForTerminal(room.sessionId);
+      const totalMs = performance.now() - started;
+
+      expect(completionRequests(runtime)).toHaveLength(1);
+      expect(final.result!.execution).toMatchObject({
+        attemptedMode: 'full-context',
+        effectiveMode: 'extractive',
+        fallback: { mode: 'extractive', reason: 'timeout' },
+      });
+      expectNoRuntimeStatement(final.result!, [TEST_RUNTIME_STATEMENT_TEXT]);
+      // Der Queue-Timeout hat nicht gegriffen.
+      expect(getQaSummaryQueueMetrics().timeouts).toBe(0);
+      expect(totalMs).toBeLessThan(timeoutMs + 2_000);
+    });
+
+    it('verwirft die Modellaussage als source_changed, wenn sich während der Inferenz eine Stimme ändert', async () => {
+      const room = await scenario();
+      const runtime = await runtimeWith({
+        // Während des Runtime-Aufrufs, vor der Antwort: echte Stimme über die DB-Funktion.
+        beforeRespond: async () => {
+          await changeVote(room.questionIdsByKey.C, room.participants.at(-1)!.id, 'UP');
+        },
+      });
+
+      await requestSummary(room.sessionId);
+      const final = await waitForTerminal(room.sessionId);
+      const fresh = await preview(room.sessionId);
+
+      const completions = completionRequests(runtime);
+      expect(completions).toHaveLength(1);
+      // Gesendet wurde der Stand vor der Stimme.
+      expect(userMessageOf(completions[0]!.rawBody)).not.toBe(
+        canonicalModerationPromptJson(fresh.promptContext.context),
+      );
+
+      const result = final.result!;
+      expect(result.execution).toMatchObject({
+        attemptedMode: 'full-context',
+        effectiveMode: 'extractive',
+        fallback: { reason: 'source_changed' },
+      });
+      expectNoRuntimeStatement(result, [TEST_RUNTIME_STATEMENT_TEXT]);
+      expect(result.snapshotHash).toBe(fresh.promptContext.snapshotHash);
+    });
+
+    it('verwirft die Modellaussage als source_changed und entfernt die Quelle, wenn der Host die zitierte Frage während der Inferenz löscht', async () => {
+      const room = await scenario();
+      let deleted: { sourceId: string; questionId: string; text: string } | null = null;
+      const runtime = await runtimeWith({
+        // Löscht genau die Frage, die die Antwort der Runtime zitiert.
+        beforeRespond: async (body) => {
+          const sourceId = firstQaQuestionSourceId(body);
+          const questionId = sourceId.slice('qa-question:'.length);
+          const { text } = await prisma.qaQuestion.findUniqueOrThrow({
+            where: { id: questionId },
+            select: { text: true },
+          });
+          deleted = { sourceId, questionId, text };
+          await hostCaller.moderate({ sessionCode: room.code, questionId, action: 'DELETE' });
+        },
+      });
+
+      await requestSummary(room.sessionId);
+      const final = await waitForTerminal(room.sessionId);
+
+      expect(completionRequests(runtime)).toHaveLength(1);
+      expect(deleted).not.toBeNull();
+      const { sourceId: deletedId, questionId, text: deletedText } = deleted!;
+      // qa.moderate DELETE entfernt die Frage physisch.
+      await expect(prisma.qaQuestion.count({ where: { id: questionId } })).resolves.toBe(0);
+
+      const result = final.result!;
+      expect(result.execution.fallback?.reason).toBe('source_changed');
+      expectNoRuntimeStatement(result, [TEST_RUNTIME_STATEMENT_TEXT]);
+      expect(result.sources.map((source) => source.id)).not.toContain(deletedId);
+      for (const statement of [...result.statements, ...result.suggestedNextSteps]) {
+        expect(statement.sourceIds).not.toContain(deletedId);
+        expect(statement.text).not.toContain(deletedText);
+      }
+      expect(JSON.stringify(result)).not.toContain(deletedId);
+      expect(JSON.stringify(result)).not.toContain(deletedText);
+    });
+
+    it('Kontrolle: bleibt bei einer Quizstimme auf eine laufende Frage während der Inferenz ready', async () => {
+      const quiz = await createReleasedQuiz(registry);
+      const room = await scenario(quiz.sessionOptions);
+      const runtime = await runtimeWith({
+        beforeRespond: async () => {
+          await quizVote({
+            sessionId: room.sessionId,
+            participantId: room.participants[0]!.id,
+            question: quiz.running,
+          });
+        },
+      });
+
+      await requestSummary(room.sessionId);
+      const final = await waitForTerminal(room.sessionId);
+
+      expect(completionRequests(runtime)).toHaveLength(1);
+      // Die Quizstimme ist tatsächlich während der Inferenz gespeichert worden.
+      await expect(
+        prisma.vote.count({ where: { sessionId: room.sessionId, questionId: quiz.running.id } }),
+      ).resolves.toBe(1);
+      expect(final.result!.status).toBe('ready');
+      expect(final.result!.execution).toEqual({
+        attemptedMode: 'full-context',
+        effectiveMode: 'full-context',
+        fallback: null,
+      });
+      expect(final.result!.statements.map((statement) => statement.text)).toEqual([
+        TEST_RUNTIME_STATEMENT_TEXT,
+      ]);
     });
   },
 );

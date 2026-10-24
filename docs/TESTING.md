@@ -163,7 +163,13 @@ Die Suite prüft, dass die User-Nachricht im rohen Runtime-Body bytegleich dem
 Kontext der Host-Vorschau ist, dass Host-Token, Sitzungs- und
 Teilnehmendenkennungen sowie Hüllenfelder (`snapshotHash`, `packedAt`, Budget)
 den Server nicht verlassen und dass eine Stimme zwischen Vorschau und Auftrag
-den neuen Stand sendet. Die Test-Runtime
+den neuen Stand sendet. Außerdem prüft sie die Fallbacks bei einer Antwort mit
+fremder Ausgabe-Version (`invalid_response`), bei nicht erreichbarer Runtime
+(`unavailable`) und bei Überschreitung des Client-Timeouts (`timeout`), dass
+`qa.requestSummary` `pending` liefert, während die Runtime die Antwort noch
+hält, und dass eine Stimme oder eine Löschung durch den Host während der
+Inferenz die Modellaussage als `source_changed` verwirft, eine Quizstimme auf
+eine laufende Frage dagegen nicht. Die Test-Runtime
 (`src/__tests__/lib/open-weight-test-runtime.ts`) ist kein Modell: Sie
 speichert den rohen Body und antwortet mit einer festen, vertragsgültigen
 Ausgabe. Gemockt ist nur die Host-Tokenprüfung.
