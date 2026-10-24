@@ -7,6 +7,7 @@ import {
   type ModerationAnalysisContextV1,
 } from '@arsnova/shared-types';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ZodError } from 'zod';
 import {
   QA_SUMMARY_ADAPTER_CAPABILITIES,
   assemblePreparedModerationSummaryContext,
@@ -225,6 +226,28 @@ describe('qaSummaryQueue V2', () => {
         effectiveMode: 'rule-based',
         fallback: { reason: 'permission_changed' },
       },
+    });
+  });
+
+  it('Negativprobe: beendet den Job regelbasiert mit context_unavailable, wenn der Kontext nicht schemakonform gebaut werden kann', async () => {
+    const prepared = preparedReference();
+    const prepare = vi.fn().mockResolvedValueOnce(prepared).mockRejectedValueOnce(new ZodError([]));
+    const processor = vi.fn(async () => completedRun(prepared));
+    resetQaSummaryQueueForTests({
+      config: () => testConfig(),
+      plan: () => fullContextPlan,
+      prepare,
+      processor,
+    });
+
+    await requestQaSummary(SESSION_ID, 'de', ACCESS);
+    await expect(waitForQaSummaryIdleForTests()).resolves.toBeUndefined();
+
+    expect(processor).not.toHaveBeenCalled();
+    const result = getQaSummaryRuntime(SESSION_ID).result;
+    expect(result?.status).toBe('failed');
+    expect(result).toMatchObject({
+      execution: { effectiveMode: 'rule-based', fallback: { reason: 'context_unavailable' } },
     });
   });
 
