@@ -14,7 +14,7 @@
  * Messinstrumente rufen die echten Funktionen unverändert auf. Gemockt ist nur
  * die Host-Tokenprüfung. Die Test-Runtime ist kein Modell (keine Modellzeit).
  */
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { cpus, loadavg, totalmem } from 'node:os';
 import { dirname } from 'node:path';
@@ -610,6 +610,21 @@ const M7_DELAY_MS = 2_000;
 /** Seed je Lauf: Basis + 1000 · Index der Rate + Iteration (Aufwärmläufe zuerst). */
 const M7_SEED_BASE = m7Number('QA_SUMMARY_MEASUREMENT_M7_SEED_BASE') ?? 20_261_024;
 /**
+ * Seed-Ableitung. Standard (M7, M7b): Basis + 1000 · Index der Rate + Iteration.
+ * `QA_SUMMARY_MEASUREMENT_M7_SEED_MODE=sha256-m7c` (M7c, Nachtrag im Protokoll Teil 3): erste
+ * 4 Bytes (uint32, Big-Endian) von SHA-256("M7c|<Rate>|<Iteration>").
+ */
+const M7_SEED_MODE =
+  process.env['QA_SUMMARY_MEASUREMENT_M7_SEED_MODE'] === 'sha256-m7c'
+    ? 'sha256-m7c'
+    : 'base-offset';
+function m7Seed(rateIndex: number, rate: number, iteration: number): number {
+  if (M7_SEED_MODE === 'sha256-m7c') {
+    return createHash('sha256').update(`M7c|${rate}|${iteration}`).digest().readUInt32BE(0);
+  }
+  return M7_SEED_BASE + 1000 * rateIndex + iteration;
+}
+/**
  * Abstimmbare Fixturefragen: `arsnova_change_qa_vote` lehnt `PENDING` ab
  * (`ARSNOVA_QA_QUESTION_NOT_VOTABLE`); A, D und F sind in der Referenzfixture `PENDING`.
  */
@@ -731,7 +746,11 @@ describe.skipIf(!RUN_M6 && !RUN_M7)(
           m7MeasuredRuns: M7_MEASURED_RUNS,
           m7DelayMs: M7_DELAY_MS,
           m7SeedBase: M7_SEED_BASE,
-          m7SeedRule: 'seed = m7SeedBase + 1000 * rateIndex + iteration',
+          m7SeedMode: M7_SEED_MODE,
+          m7SeedRule:
+            M7_SEED_MODE === 'sha256-m7c'
+              ? 'seed = uint32 big-endian of the first 4 bytes of sha256("M7c|<rate>|<iteration>")'
+              : 'seed = m7SeedBase + 1000 * rateIndex + iteration',
           m7VotableKeys: M7_VOTABLE_KEYS,
           timer: 'performance.now()',
         },
@@ -1106,7 +1125,7 @@ describe.skipIf(!RUN_M6 && !RUN_M7)(
           const pool = await createVoterPool(room);
           const runs: unknown[] = [];
           for (let iteration = 0; iteration < WARMUP_RUNS + M7_MEASURED_RUNS; iteration += 1) {
-            const seed = M7_SEED_BASE + 1000 * rateIndex + iteration;
+            const seed = m7Seed(rateIndex, rate, iteration);
             const prepares: PrepareRecord[] = [];
             resetQaSummaryQueueForTests({
               prepare: async (input) => {
