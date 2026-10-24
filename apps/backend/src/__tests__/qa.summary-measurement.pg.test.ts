@@ -95,6 +95,14 @@ const V1_DELAY_MS = 2_000;
 const TERMINAL_WAIT_MS = 30_000;
 /** Packing-Cache-TTL (`MODERATION_PROMPT_PACKING_CACHE_TTL_MS` = 30 s) plus Abstand. */
 const PACKING_CACHE_EXPIRY_STEP_MS = 31_000;
+/**
+ * `sequential` (Standard, Primärlauf): je Variante und Szenario alle Läufe am
+ * Stück, B zuerst. `alternating` (Robustheitslauf): B- und V1-Läufe je Iteration
+ * verschränkt, Reihenfolge B/V1 wechselt von Iteration zu Iteration.
+ */
+const V1_MODE =
+  process.env['QA_SUMMARY_MEASUREMENT_V1_MODE'] === 'alternating' ? 'alternating' : 'sequential';
+const MEASUREMENT_TESTS = ['m1m2m5', 'm3m4', 'v1'] as const;
 
 type Phase = 'request' | 'job' | 'read' | 'other';
 
@@ -160,11 +168,19 @@ describe.skipIf(!RUN)(
   () => {
     const registry = createFixtureRegistry();
     let platformBefore: PlatformStatisticSnapshot | null = null;
-    const output: Record<string, unknown> = {};
+    /** `completed` wird erst gesetzt, wenn alle Messblöcke durchgelaufen sind. */
+    const output: Record<string, unknown> = { completed: false };
+    const testsCompleted: string[] = [];
+    const scenarioQaVotes: number[] = [];
 
     async function scenario(): Promise<ReferenceScenario> {
       if (!platformBefore) platformBefore = await capturePlatformStatistic();
-      return createReferenceScenario({ registry });
+      const room = await createReferenceScenario({ registry });
+      // Tatsächlich gespeicherte Q&A-Stimmen (statt eines festen Werts).
+      scenarioQaVotes.push(
+        await prisma.qaUpvote.count({ where: { qaQuestion: { sessionId: room.sessionId } } }),
+      );
+      return room;
     }
 
     async function deleteSessionRedisKeys(sessionId: string): Promise<number> {
@@ -230,6 +246,11 @@ describe.skipIf(!RUN)(
       output['environment'] = {
         startedAt: new Date().toISOString(),
         gitSha: process.env['QA_SUMMARY_MEASUREMENT_GIT_SHA'] ?? null,
+        // `true`, wenn `git status --porcelain` beim Start nicht leer war.
+        gitDirty:
+          process.env['QA_SUMMARY_MEASUREMENT_GIT_DIRTY'] === undefined
+            ? null
+            : process.env['QA_SUMMARY_MEASUREMENT_GIT_DIRTY'] === 'true',
         cpuModel: cpus()[0]?.model ?? null,
         logicalCores: cpus().length,
         totalMemoryBytes: totalmem(),
@@ -240,7 +261,7 @@ describe.skipIf(!RUN)(
           name: 'MODERATION_PROMPT_REFERENCE_*_FIXTURE_V1 (#456 Abschnitt 12)',
           participants: REFERENCE_SCENARIO_PARTICIPANTS,
           questions: 6,
-          qaVotes: 282,
+          qaVotesPerScenario: scenarioQaVotes,
           locale: 'de',
         },
         settings: {
@@ -250,6 +271,7 @@ describe.skipIf(!RUN)(
           v1Runs: V1_RUNS,
           v1DelayMs: V1_DELAY_MS,
           timer: 'performance.now()',
+          v1Mode: V1_MODE,
         },
       };
     });
@@ -268,13 +290,15 @@ describe.skipIf(!RUN)(
         const target = process.env['QA_SUMMARY_MEASUREMENT_OUT'];
         if (target && output['environment']) {
           (output['environment'] as Record<string, unknown>)['endedAt'] = new Date().toISOString();
+          output['testsCompleted'] = testsCompleted;
+          output['completed'] = MEASUREMENT_TESTS.every((name) => testsCompleted.includes(name));
           mkdirSync(dirname(target), { recursive: true });
           writeFileSync(target, `${JSON.stringify(output, null, 2)}\n`);
         }
       }
     });
 
-    it('M1/M2/M5: Rückkehrzeit, Gesamtdauer, Kontextaufbauten und Nutzlastgröße je Runtime-Bedingung', async () => {
+    it('Rückkehrzeit, Gesamtdauer, Kontextaufbauten und Nutzlastgröße je Runtime-Bedingung', async () => {
       const room = await scenario();
       const trace: RunTrace = { calls: [], phase: 'other', secondPrepare: null };
       const conditions = [
@@ -322,9 +346,10 @@ describe.skipIf(!RUN)(
         note: 'requestMs = Aufruf qa.requestSummary bis Antwort; totalMs = Aufruf bis Antwort des ersten qa.summaryRuntime nach Jobende (Jobende über getQaSummaryRuntime im 5-ms-Takt, ohne Kontextaufbau). Gleiches Szenario je Bedingung; zwischen den Läufen Queue und Client zurückgesetzt, Packing-Cache warm. prepareHookCalls zählt den Queue-Hook inkl. erstem Lesepfad-Abruf.',
         conditions: results,
       };
+      testsCompleted.push('m1m2m5');
     });
 
-    it('M3/M4: Kosten eines Kontextaufbaus (warm und kalt) und der Validierung', async () => {
+    it('Kosten eines Kontextaufbaus (warm und kalt) und der Validierung', async () => {
       const room = await scenario();
       useTestRuntimeEnv({ baseUrl: 'http://127.0.0.1:9' });
       const prepareOnce = () =>
@@ -426,76 +451,118 @@ describe.skipIf(!RUN)(
         promptContextBytes: Buffer.byteLength(JSON.stringify(promptContext), 'utf8'),
         runs: validation,
       };
+      testsCompleted.push('m3m4');
     });
 
-    it('V1: Gegenvariante ohne Nachprüfung nach der Inferenz gegen Baseline B', async () => {
+    it('Gegenvariante ohne Nachprüfung nach der Inferenz gegen Baseline B', async () => {
       const variants = [
         { name: 'B', skipThird: false },
         { name: 'V1', skipThird: true },
       ] as const;
+      type Variant = (typeof variants)[number];
       const scenarios = ['change', 'quiet'] as const;
+      type Kind = (typeof scenarios)[number];
+      type Cell = {
+        readonly variant: Variant;
+        readonly kind: Kind;
+        readonly room: ReferenceScenario;
+        readonly trace: RunTrace;
+        readonly runs: unknown[];
+        voter: number;
+      };
+
+      async function createCell(variant: Variant, kind: Kind): Promise<Cell> {
+        const room = await scenario();
+        // Frage C (PINNED) ist abstimmbar; Stimmen kommen von Teilnehmenden, die
+        // C noch nicht bewertet haben (von hinten, je Lauf ein neuer).
+        return {
+          variant,
+          kind,
+          room,
+          trace: { calls: [], phase: 'other', secondPrepare: null },
+          runs: [],
+          voter: room.participants.length - 1,
+        };
+      }
+
+      async function runCell(cell: Cell, index: number, order: number): Promise<void> {
+        const { room, trace } = cell;
+        resetForRun(trace, cell.variant.skipThird);
+        const voterId = room.participants[cell.voter]!.id;
+        cell.voter -= 1;
+        let voted = false;
+        const runtime = await startTestRuntime({
+          delayMs: V1_DELAY_MS,
+          beforeRespond:
+            cell.kind === 'change'
+              ? async () => {
+                  await changeVote(room.questionIdsByKey.C, voterId, 'UP');
+                  voted = true;
+                }
+              : undefined,
+        });
+        useTestRuntimeEnv(runtime);
+        try {
+          const run = await runJob({ room, trace });
+          const counted = [...trace.calls];
+          const fresh = await hostCaller.summaryContextPreview({
+            sessionId: room.sessionId,
+            locale: 'de',
+          });
+          const freshHash = fresh.promptContext.snapshotHash;
+          const staleBy = (summary: ReturnType<typeof resultSummary>) => ({
+            // Abschnitt 6: ready, dessen Hash nicht dem Stand bei Auslieferung entspricht.
+            section6: summary.status === 'ready' && summary.snapshotHash !== freshHash,
+            // Abschnitt 10: ready mit Modellaussage, obwohl sich der Stand geändert hat.
+            section10: summary.status === 'ready' && summary.hasRuntimeStatement && voted,
+          });
+          cell.runs.push({
+            warmup: index < WARMUP_RUNS,
+            iteration: index,
+            orderInIteration: order,
+            ...run,
+            dataChanged: voted,
+            freshPreviewHash: freshHash,
+            prepareHookCalls: counted.length,
+            realPrepares: counted.filter((call) => call.real).length,
+            prepareCallsByPhase: counted.map((call) => call.phase),
+            stalePrimary: staleBy(run.primary),
+            staleSecondary: staleBy(run.internal),
+          });
+        } finally {
+          await runtime.close();
+          vi.unstubAllEnvs();
+        }
+      }
+
       const results: Record<string, unknown> = {};
-      for (const variant of variants) {
-        for (const kind of scenarios) {
-          const room = await scenario();
-          const trace: RunTrace = { calls: [], phase: 'other', secondPrepare: null };
-          const runs: unknown[] = [];
-          // Frage C (PINNED) ist abstimmbar; Stimmen kommen von Teilnehmenden, die
-          // C noch nicht bewertet haben (von hinten, je Lauf ein neuer).
-          let voter = room.participants.length - 1;
-          for (let index = 0; index < WARMUP_RUNS + V1_RUNS; index += 1) {
-            resetForRun(trace, variant.skipThird);
-            const voterId = room.participants[voter]!.id;
-            voter -= 1;
-            let voted = false;
-            const runtime = await startTestRuntime({
-              delayMs: V1_DELAY_MS,
-              beforeRespond:
-                kind === 'change'
-                  ? async () => {
-                      await changeVote(room.questionIdsByKey.C, voterId, 'UP');
-                      voted = true;
-                    }
-                  : undefined,
-            });
-            useTestRuntimeEnv(runtime);
-            try {
-              const run = await runJob({ room, trace });
-              const counted = [...trace.calls];
-              const fresh = await hostCaller.summaryContextPreview({
-                sessionId: room.sessionId,
-                locale: 'de',
-              });
-              const freshHash = fresh.promptContext.snapshotHash;
-              const staleBy = (summary: ReturnType<typeof resultSummary>) => ({
-                // Abschnitt 6: ready, dessen Hash nicht dem Stand bei Auslieferung entspricht.
-                section6: summary.status === 'ready' && summary.snapshotHash !== freshHash,
-                // Abschnitt 10: ready mit Modellaussage, obwohl sich der Stand geändert hat.
-                section10: summary.status === 'ready' && summary.hasRuntimeStatement && voted,
-              });
-              runs.push({
-                warmup: index < WARMUP_RUNS,
-                ...run,
-                dataChanged: voted,
-                freshPreviewHash: freshHash,
-                prepareHookCalls: counted.length,
-                realPrepares: counted.filter((call) => call.real).length,
-                prepareCallsByPhase: counted.map((call) => call.phase),
-                stalePrimary: staleBy(run.primary),
-                staleSecondary: staleBy(run.internal),
-              });
-            } finally {
-              await runtime.close();
-              vi.unstubAllEnvs();
+      if (V1_MODE === 'sequential') {
+        for (const variant of variants) {
+          for (const kind of scenarios) {
+            const cell = await createCell(variant, kind);
+            for (let index = 0; index < WARMUP_RUNS + V1_RUNS; index += 1) {
+              await runCell(cell, index, 0);
             }
+            results[`${variant.name}/${kind}`] = cell.runs;
           }
-          results[`${variant.name}/${kind}`] = runs;
+        }
+      } else {
+        for (const kind of scenarios) {
+          const cells = [await createCell(variants[0], kind), await createCell(variants[1], kind)];
+          for (let index = 0; index < WARMUP_RUNS + V1_RUNS; index += 1) {
+            // Gerade Iterationen B zuerst, ungerade V1 zuerst.
+            const ordered = index % 2 === 0 ? cells : [cells[1]!, cells[0]!];
+            for (const [order, cell] of ordered.entries()) await runCell(cell, index, order);
+          }
+          for (const cell of cells) results[`${cell.variant.name}/${kind}`] = cell.runs;
         }
       }
       output['v1'] = {
+        mode: V1_MODE,
         note: 'D = 2000 ms. change: Stimme in beforeRespond (nach der Verzögerung, vor der Antwort). primary = erster qa.summaryRuntime-Abruf nach Jobende; secondary = interner Queue-Zustand (getQaSummaryRuntime, ohne Kontextaufbau) direkt nach Jobende. freshPreviewHash = qa.summaryContextPreview direkt nach dem primären Abruf (nicht mitgezählt).',
         runs: results,
       };
+      testsCompleted.push('v1');
     });
   },
 );
