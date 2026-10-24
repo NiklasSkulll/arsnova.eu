@@ -233,3 +233,7 @@ Alle Kriterien stehen damit vor der ersten Ausführung fest. Spätere Änderunge
 - T5: ob sich der Kontext deterministisch mit Redis aus der CI aufbauen lässt, oder ob Themen-Snapshot und Blitzlicht im Test bewusst leer bleiben (dann mit Vermerk).
 - T1.4: ob der vorhandene `trpcDodIt`-Katalog den neuen Fehlerfall braucht und welcher `case`- bzw. `contract`-Wert passt.
 - T2.2: wie ein gültiger Snapshot mit mehr als 500 Mitgliedern minimal gebaut wird (mindestens zwei Topics, eindeutige IDs, `analyzedQuestionCount ≥ 501`).
+
+## Nachtrag: KI-Nutzung (2026-10-24, nach der Ausführung)
+
+Dieses Design wurde mit Claude Code (Anthropic, Modell Claude Opus 5.5) entworfen und vom Autor vor der Ausführung freigegeben. Der übrige Inhalt ist seit der Freigabe unverändert; dieser Abschnitt ist der einzige Nachtrag. Einzelheiten zur KI-Nutzung: [`1C-diagrams.md`](../1C-diagrams.md#method-verification-and-ai-use).

@@ -441,3 +441,7 @@ In `1C-diagrams.md`, link findings 3 and 4 to their test names, and correct any 
 - Push.
 - Open a draft PR into the fork's `main` with the full template, `Refs #10` (point 2 is still open) and the protocol linked under "Nachweise".
 - After CI finishes, record the run ID in the protocol (follow-up commit).
+
+## Nachtrag: KI-Nutzung (2026-10-24, nach der Ausführung)
+
+Dieser Plan wurde mit Claude Code (Anthropic, Modell Claude Opus 5.5) entworfen und vom Autor vor der Ausführung freigegeben. Der übrige Inhalt ist seit der Freigabe unverändert; dieser Abschnitt ist der einzige Nachtrag. Einzelheiten zur KI-Nutzung: [`1C-diagrams.md`](../1C-diagrams.md#method-verification-and-ai-use). Der Hinweis „For agentic workers: REQUIRED SUB-SKILL …“ am Anfang ist eine Steueranweisung für den ausführenden KI-Agenten.

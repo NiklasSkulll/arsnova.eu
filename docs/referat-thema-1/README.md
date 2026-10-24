@@ -37,6 +37,8 @@ Wegen des knappen Zeitrahmens gilt:
 
 ## Was recherchiert wurde
 
+Stand der Recherche: 2026-10-16. Spätere Ergebnisse stehen in `evidenz/`.
+
 - **Rahmen:**
   - Bewertung: 30 % Handout, 30 % Vortrag, 40 % Diskussion. Jede Person wird
     einzeln bewertet.
@@ -52,12 +54,14 @@ Wegen des knappen Zeitrahmens gilt:
   - Wie das Zwei-Host-Deployment und der LLM-Client aufgebaut sind.
   - Gemessen wird bisher nur die Gesamtzeit. Die Detailzeiten von llama.cpp
     werden zwar ausgelesen, aber nicht verwendet.
-  - Es gibt keinen Fake-Server für Tests.
+  - Es gab keinen Fake-Server für Tests (inzwischen: Test-Runtime für 1C, siehe unten).
 - **1C, Kontextpfad bis zur Inferenz:**
-  - Snapshot und Hash. Wahrscheinlich ändert jede Stimme den Hash.
+  - Snapshot und Hash. Vermutung damals: Jede Stimme ändert den Hash; inzwischen
+    durch Tests belegt und eingegrenzt ([evidenz/1C](./evidenz/1C/)).
   - Der Async-Pfad.
   - Testlücken: Quelle mitten im Job gelöscht, langsamer Empfänger, volle
-    Queue.
+    Queue. Die ersten beiden sind inzwischen durch E8, E5 und E6b abgedeckt;
+    eine volle Queue ist weiterhin nur statisch belegt.
 
 Alle Dossiers enthalten Code-Stellen (Datei:Zeile), Versuchsideen und Lücken.
 

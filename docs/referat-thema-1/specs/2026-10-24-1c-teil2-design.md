@@ -202,3 +202,7 @@ Die E-Tests haben gezeigt, dass `source_changed` an **zwei** Stellen entsteht: n
 - **Sekundär (nur berichtet):** der interne Queue-Zustand direkt nach dem Job (`getQaSummaryRuntime`, ohne erneuten Kontextaufbau), gleiche Definition.
 - **Zusätzlich erhoben:** prepares je Auftrag **einschließlich** des ersten Lesepfad-Abrufs, für B und V1.
 - **Ergänzung der Entscheidungsregel:** Liefert V1 primär kein veraltetes Ergebnis, sekundär aber schon, gilt Zeile 2 von Abschnitt 6 mit der Erklärung „die Nachprüfung beim Lesen fängt den Fall auf“. Die Empfehlung muss dann begründen, ob prepare (3) neben dem Lesepfad nötig bleibt. Entscheidend sind Kosten (ein prepare je Auftrag) gegen Risiko: Ein Zwischenzustand ist intern veraltet, bis der erste Abruf erfolgt; Abrufe ohne erneuten Kontextaufbau, z. B. andere Leser des Zustands, würden ihn sehen.
+
+## 11. Nachtrag zur KI-Nutzung (2026-10-24, nach der Ausführung)
+
+Abschnitt 9 wurde vor der Ausführung geschrieben; die Formulierung „die Ergebnisse geprüft“ beschreibt deshalb ein Vorhaben, keinen erledigten Schritt. Den Stand der Prüfung durch den Autor vermerken die Protokolle. Der Entwurf dieses Designs einschließlich der Schwellen (5 %, n, D) stammt von der KI; der Autor hat ihn vor der Ausführung freigegeben.
