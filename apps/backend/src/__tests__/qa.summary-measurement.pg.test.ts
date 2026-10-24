@@ -586,10 +586,29 @@ const RUN_M7 = process.env['RUN_QA_SUMMARY_MEASUREMENT_M7'] === '1';
 const NO_RUNTIME_URL = 'http://127.0.0.1:9';
 const M6_PAYLOAD_JOBS = 3;
 /** Vorab festgelegte Raten (Stimmen je Sekunde) und Runtime-Verzögerung von M7. */
-const M7_RATES_PER_SECOND = [0, 0.1, 0.5, 2] as const;
+/**
+ * Bestätigungsmessung M7b (Nachtrag im Protokoll Teil 3): Raten, n und Seed-Basis sind über
+ * `QA_SUMMARY_MEASUREMENT_M7_RATES` (kommagetrennt), `QA_SUMMARY_MEASUREMENT_M7_RUNS` und
+ * `QA_SUMMARY_MEASUREMENT_M7_SEED_BASE` überschreibbar; ohne sie gelten die Werte von M7.
+ */
+function m7Number(name: string): number | null {
+  const raw = process.env[name];
+  if (raw === undefined || raw.trim() === '') return null;
+  const value = Number(raw);
+  if (!Number.isFinite(value) || value < 0) throw new Error(`${name} ist keine Zahl ≥ 0`);
+  return value;
+}
+const M7_RATES_PER_SECOND: readonly number[] = process.env['QA_SUMMARY_MEASUREMENT_M7_RATES']
+  ? process.env['QA_SUMMARY_MEASUREMENT_M7_RATES'].split(',').map((rate) => {
+      const value = Number(rate);
+      if (!Number.isFinite(value) || value < 0) throw new Error(`Ungültige Rate: ${rate}`);
+      return value;
+    })
+  : [0, 0.1, 0.5, 2];
+const M7_MEASURED_RUNS = m7Number('QA_SUMMARY_MEASUREMENT_M7_RUNS') ?? MEASURED_RUNS;
 const M7_DELAY_MS = 2_000;
 /** Seed je Lauf: Basis + 1000 · Index der Rate + Iteration (Aufwärmläufe zuerst). */
-const M7_SEED_BASE = 20_261_024;
+const M7_SEED_BASE = m7Number('QA_SUMMARY_MEASUREMENT_M7_SEED_BASE') ?? 20_261_024;
 /**
  * Abstimmbare Fixturefragen: `arsnova_change_qa_vote` lehnt `PENDING` ab
  * (`ARSNOVA_QA_QUESTION_NOT_VOTABLE`); A, D und F sind in der Referenzfixture `PENDING`.
@@ -709,6 +728,7 @@ describe.skipIf(!RUN_M6 && !RUN_M7)(
           validationRuns: VALIDATION_RUNS,
           m6PayloadJobs: M6_PAYLOAD_JOBS,
           m7RatesPerSecond: M7_RATES_PER_SECOND,
+          m7MeasuredRuns: M7_MEASURED_RUNS,
           m7DelayMs: M7_DELAY_MS,
           m7SeedBase: M7_SEED_BASE,
           m7SeedRule: 'seed = m7SeedBase + 1000 * rateIndex + iteration',
@@ -1085,7 +1105,7 @@ describe.skipIf(!RUN_M6 && !RUN_M7)(
           const qaVotesBefore = await qaVoteCount(room.sessionId);
           const pool = await createVoterPool(room);
           const runs: unknown[] = [];
-          for (let iteration = 0; iteration < WARMUP_RUNS + MEASURED_RUNS; iteration += 1) {
+          for (let iteration = 0; iteration < WARMUP_RUNS + M7_MEASURED_RUNS; iteration += 1) {
             const seed = M7_SEED_BASE + 1000 * rateIndex + iteration;
             const prepares: PrepareRecord[] = [];
             resetQaSummaryQueueForTests({
