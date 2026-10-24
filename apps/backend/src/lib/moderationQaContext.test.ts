@@ -6,6 +6,7 @@ import {
   calculateModerationQaBestScoreV1,
   calculateModerationQaControversyScoreV1,
 } from '@arsnova/shared-types';
+import { createHash } from 'node:crypto';
 import { describe, expect, it, vi } from 'vitest';
 import {
   assertModerationStateStillCurrent,
@@ -122,6 +123,36 @@ function topicSnapshot(input: {
         })),
       },
     ],
+  });
+}
+
+function oversizedTopicSnapshot(memberCount: number): QaSemanticTopicSnapshot {
+  const topicCount = Math.ceil(memberCount / 500);
+  const topics = Array.from({ length: topicCount }, (_, topicIndex) => {
+    const first = topicIndex * 500;
+    const size = Math.min(500, memberCount - first);
+    const members = Array.from({ length: size }, (_, offset) => {
+      const questionId = `oversized-question-${first + offset}`;
+      return { questionId, textDigest: hashQaSemanticTopicMemberText(questionId) };
+    });
+    return {
+      topicId: createHash('sha256').update(`oversized-topic-${topicIndex}`).digest('hex'),
+      confidence: 0.9,
+      labelSourceQuestionId: members[0]!.questionId,
+      members,
+    };
+  });
+  return QaSemanticTopicSnapshotSchema.parse({
+    version: 'qa-semantic-topic-snapshot-v1',
+    status: 'ready',
+    metric: 'BEST',
+    corpusRevision: '17:',
+    analyzedAt: '2026-10-04T10:00:00.000Z',
+    analysisVersion: '1.14c.4',
+    model: { id: 'intfloat/multilingual-e5-small', version: 'sha256:test-model' },
+    eligibleQuestionCount: memberCount,
+    analyzedQuestionCount: memberCount,
+    topics,
   });
 }
 
@@ -523,9 +554,49 @@ describe('moderationQaContext N7', () => {
       semanticEnabled: true,
     });
 
-    expect(disabled.topics.state).toBe('disabled');
+    expect(disabled.topics).toEqual({ state: 'disabled', reason: expect.any(String) });
+    expect(disabled.revision.state).toBe('not-applicable');
+    expect(disabled.limitations).toContainEqual(
+      expect.objectContaining({ code: 'module-disabled', section: 'topics' }),
+    );
+    expect(disabled.sources).toEqual(candidateProjection.sources);
     expect(absent.topics).toEqual({ state: 'unavailable', reason: 'no-data' });
     expect(tx.qaQuestion.findMany).not.toHaveBeenCalled();
+  });
+
+  it('keeps the topic section as failed with a reason when the snapshot exceeds 500 members', async () => {
+    const candidateProjection = await candidates();
+    const snapshot = oversizedTopicSnapshot(501);
+    expect(QaSemanticTopicSnapshotSchema.safeParse(snapshot).success).toBe(true);
+    expect(snapshot.topics).toHaveLength(2);
+    const tx = txWithTopicRows([], []);
+    const projection = await collectQaTopicContext({
+      tx,
+      state: state(),
+      participantCount: 200,
+      candidates: candidateProjection,
+      snapshot,
+      semanticEnabled: true,
+    });
+
+    expect(projection.topics).toEqual({ state: 'failed', reason: expect.any(String) });
+    expect(projection.limitations).toContainEqual(
+      expect.objectContaining({ code: 'analysis-failed', section: 'topics' }),
+    );
+    expect(tx.qaQuestion.findMany).not.toHaveBeenCalled();
+
+    // Control: exactly 500 members is schema-valid and is not rejected by the limit.
+    const atLimitTx = txWithTopicRows([], []);
+    const atLimit = await collectQaTopicContext({
+      tx: atLimitTx,
+      state: state(),
+      participantCount: 200,
+      candidates: candidateProjection,
+      snapshot: oversizedTopicSnapshot(500),
+      semanticEnabled: true,
+    });
+    expect(atLimit.topics.state).not.toBe('failed');
+    expect(atLimitTx.qaQuestion.findMany).toHaveBeenCalledOnce();
   });
 });
 
