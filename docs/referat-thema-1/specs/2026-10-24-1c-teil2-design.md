@@ -193,3 +193,12 @@ Diese Punkte korrigieren den Nachweis von Teil 1. Sie ändern keine Kriterien vo
 ## 9. KI-Nutzung
 
 Design, Plan, Testcode und Protokoll wurden mit Claude Code (Anthropic, Modelle der Claude-Familie) erstellt. Der Autor hat Umfang, Entscheidungen und Freigaben bestimmt und die Ergebnisse geprüft. Reviews wurden von separaten KI-Agenten durchgeführt. Sie sind keine unabhängigen menschlichen Gutachten. Einzelheiten stehen im Protokoll im Abschnitt „KI-Nutzung“.
+
+## 10. Präzisierung vor der Messung (2026-10-24, vor dem ersten M- und V1-Lauf)
+
+Die E-Tests haben gezeigt, dass `source_changed` an **zwei** Stellen entsteht: nach der Inferenz (prepare (3), `processJob`) und beim Lesen eines fertigen Ergebnisses (`getQaSummaryRuntimeFresh`, prepare (4)). Erst wenn beide Stellen ausgeschaltet sind, werden E7 und E8 rot (Mutationsprobe im Protokoll Teil 2). Abschnitt 6 lässt offen, wo „veraltet“ gemessen wird. Festlegung, bevor Messdaten vorliegen:
+
+- **Primär (für die Entscheidungsregel):** das Ergebnis, das der Host sieht, also der erste Abruf über `qa.summaryRuntime` nach Ende des Jobs. „Veraltet“ heißt: Status `ready` mit Modellaussage, obwohl sich der Datenstand während der Inferenz geändert hat.
+- **Sekundär (nur berichtet):** der interne Queue-Zustand direkt nach dem Job (`getQaSummaryRuntime`, ohne erneuten Kontextaufbau), gleiche Definition.
+- **Zusätzlich erhoben:** prepares je Auftrag **einschließlich** des ersten Lesepfad-Abrufs, für B und V1.
+- **Ergänzung der Entscheidungsregel:** Liefert V1 primär kein veraltetes Ergebnis, sekundär aber schon, gilt Zeile 2 von Abschnitt 6 mit der Erklärung „die Nachprüfung beim Lesen fängt den Fall auf“. Die Empfehlung muss dann begründen, ob prepare (3) neben dem Lesepfad nötig bleibt. Entscheidend sind Kosten (ein prepare je Auftrag) gegen Risiko: Ein Zwischenzustand ist intern veraltet, bis der erste Abruf erfolgt; Abrufe ohne erneuten Kontextaufbau, z. B. andere Leser des Zustands, würden ihn sehen.
