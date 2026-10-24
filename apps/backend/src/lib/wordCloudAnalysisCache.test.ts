@@ -541,6 +541,8 @@ describe('createRedisWordCloudAnalysisCache', () => {
     await expect(cache.getLatestQaSemanticTopicSnapshot(scope)).resolves.toBeNull();
   });
 
+  // Charakterisiert das Ist-Verhalten (bekannte Lücke, siehe it.todo in
+  // moderationQaContext.test.ts), keinen gewünschten Vertrag; bei einer Behebung umstellen.
   it('Negativprobe: liefert für einen strukturell gültigen Latest-Snapshot mit fremder Version still null wie bei fehlenden Daten', async () => {
     vi.stubEnv('WORD_CLOUD_SEMANTIC_ENABLED', 'true');
     const cache = createRedisWordCloudAnalysisCache(90);

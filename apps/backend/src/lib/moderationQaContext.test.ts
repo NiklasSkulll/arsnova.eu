@@ -648,6 +648,7 @@ describe('moderationQaContext N7', () => {
       return JSON.stringify({ ...validSnapshot(), version: 'qa-semantic-topic-snapshot-v2' });
     }
 
+    // Characterizes current behaviour (known gap, see the todo below), not a desired contract.
     it('negative probe: projects a structurally valid snapshot with a foreign version exactly like no data', async () => {
       // Control: the same snapshot with the current version reaches the projection.
       const current = await projectFromRedis(JSON.stringify(validSnapshot()));
@@ -669,26 +670,11 @@ describe('moderationQaContext N7', () => {
       expect(stale.tx.qaQuestion.findMany).not.toHaveBeenCalled();
     });
 
-    // TODO(kqc-real issue): a topic snapshot with an incompatible version in Redis is dropped by
+    // Known gap: a topic snapshot with an incompatible version in Redis is dropped by
     // getLatestQaSemanticTopicSnapshot (safeParse -> null, no log) and the context reports
-    // "no-data". The context should expose a distinguishable state, reason or limitation.
-    it.fails(
-      'stale snapshot is distinguishable from no data (finding: version conflict is silent)',
-      async () => {
-        const noData = await projectFromRedis(null);
-        const stale = await projectFromRedis(staleRaw());
-
-        expect({
-          topics: stale.projection.topics,
-          revision: stale.projection.revision,
-          limitations: stale.projection.limitations,
-        }).not.toEqual({
-          topics: noData.projection.topics,
-          revision: noData.projection.revision,
-          limitations: noData.projection.limitations,
-        });
-      },
-    );
+    // "no-data". The test above characterizes this; turn this todo into a test and flip the
+    // assertions above once the context exposes a distinguishable state, reason or limitation.
+    it.todo('distinguishes a stale snapshot from no data');
   });
 });
 
