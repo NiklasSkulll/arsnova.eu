@@ -173,5 +173,9 @@ export function useTestRuntimeEnv(
   vi.stubEnv('OPEN_WEIGHT_LLM_TOKEN', TEST_RUNTIME_TOKEN);
   vi.stubEnv('QA_SUMMARY_ENABLED', 'true');
   vi.stubEnv('WORD_CLOUD_SEMANTIC_ENABLED', 'false');
+  // Zeitgrenzen explizit auf die Code-Standardwerte (90 s), damit Fälle mit
+  // eigenem Timeout nicht von der Entwicklerumgebung abhängen.
+  vi.stubEnv('QA_SUMMARY_TIMEOUT_MS', '90000');
+  vi.stubEnv('OPEN_WEIGHT_LLM_SUMMARY_TIMEOUT_MS', '90000');
   for (const [key, value] of Object.entries(overrides)) vi.stubEnv(key, value);
 }

@@ -246,7 +246,9 @@ export async function createReferenceScenario(options: {
   });
 
   const questionIdsByKey = {} as Record<ReferenceQuestionKey, string>;
+  const authorIndexByKey = {} as Record<ReferenceQuestionKey, number>;
   for (const [index, reference] of MODERATION_PROMPT_REFERENCE_TEXT_FIXTURE_V1.entries()) {
+    authorIndexByKey[reference.key] = index;
     questionIdsByKey[reference.key] = await createQuestion({
       sessionId: session.id,
       participantId: participants[index]!.id,
@@ -256,9 +258,11 @@ export async function createReferenceScenario(options: {
 
   // Streng nacheinander: Die DB-Funktion sperrt die Session ohnehin, Parallelität
   // bringt keinen Zeitgewinn und machte nur die Reihenfolge nichtdeterministisch.
-  for (const [index, ranking] of MODERATION_PROMPT_REFERENCE_RANKING_FIXTURE_V1.entries()) {
+  for (const ranking of MODERATION_PROMPT_REFERENCE_RANKING_FIXTURE_V1) {
     const questionId = questionIdsByKey[ranking.key];
-    const voters = participants.filter((_, voterIndex) => voterIndex !== index);
+    // Eigene Fragen sind nicht abstimmbar: Autor über den Schlüssel ausschließen.
+    const authorIndex = authorIndexByKey[ranking.key];
+    const voters = participants.filter((_, voterIndex) => voterIndex !== authorIndex);
     for (let vote = 0; vote < ranking.positive + ranking.negative; vote += 1) {
       await changeVote(questionId, voters[vote]!.id, vote < ranking.positive ? 'UP' : 'DOWN');
     }
