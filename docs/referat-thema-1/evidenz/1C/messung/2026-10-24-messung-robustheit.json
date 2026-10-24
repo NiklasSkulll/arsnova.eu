@@ -1,0 +1,5544 @@
+{
+  "completed": true,
+  "environment": {
+    "startedAt": "2026-10-24T18:24:58.373Z",
+    "gitSha": "57a36b3d2f3b8ca9f7b771e69ee32bfacf986d27",
+    "gitDirty": true,
+    "cpuModel": "Intel(R) Core(TM) i7-6820HQ CPU @ 2.70GHz",
+    "logicalCores": 8,
+    "totalMemoryBytes": 33329217536,
+    "node": "v24.18.0",
+    "postgres": "PostgreSQL 16.15 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
+    "redis": "7.4.11",
+    "fixture": {
+      "name": "MODERATION_PROMPT_REFERENCE_*_FIXTURE_V1 (#456 Abschnitt 12)",
+      "participants": 200,
+      "questions": 6,
+      "qaVotesPerScenario": [282, 282, 282, 282, 282, 282],
+      "locale": "de"
+    },
+    "settings": {
+      "warmupRuns": 3,
+      "measuredRuns": 20,
+      "validationRuns": 200,
+      "v1Runs": 10,
+      "v1DelayMs": 2000,
+      "timer": "performance.now()",
+      "v1Mode": "alternating"
+    },
+    "endedAt": "2026-10-24T18:28:44.359Z"
+  },
+  "m1m2m5": {
+    "note": "requestMs = Aufruf qa.requestSummary bis Antwort; totalMs = Aufruf bis Antwort des ersten qa.summaryRuntime nach Jobende (Jobende über getQaSummaryRuntime im 5-ms-Takt, ohne Kontextaufbau). Gleiches Szenario je Bedingung; zwischen den Läufen Queue und Client zurückgesetzt, Packing-Cache warm. prepareHookCalls zählt den Queue-Hook inkl. erstem Lesepfad-Abruf.",
+    "conditions": {
+      "D=0": [
+        {
+          "warmup": true,
+          "requestMs": 412.449,
+          "jobDoneMs": 699.571,
+          "totalMs": 797.971,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": true,
+          "requestMs": 92.794,
+          "jobDoneMs": 304.661,
+          "totalMs": 405.967,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": true,
+          "requestMs": 101.516,
+          "jobDoneMs": 327.878,
+          "totalMs": 413.502,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 88.398,
+          "jobDoneMs": 259.777,
+          "totalMs": 345.761,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 90.622,
+          "jobDoneMs": 271.636,
+          "totalMs": 353.043,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 88.44,
+          "jobDoneMs": 255.306,
+          "totalMs": 335.085,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 81.844,
+          "jobDoneMs": 261.953,
+          "totalMs": 341.963,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 81.297,
+          "jobDoneMs": 249.922,
+          "totalMs": 337.036,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 77.317,
+          "jobDoneMs": 264.47,
+          "totalMs": 356.807,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 98.028,
+          "jobDoneMs": 282.376,
+          "totalMs": 363.206,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 84.692,
+          "jobDoneMs": 262.12,
+          "totalMs": 356.574,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 91.688,
+          "jobDoneMs": 253.34,
+          "totalMs": 344.713,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 84.495,
+          "jobDoneMs": 244.607,
+          "totalMs": 333.986,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 89.731,
+          "jobDoneMs": 273.849,
+          "totalMs": 366.587,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 94.478,
+          "jobDoneMs": 283.355,
+          "totalMs": 360.273,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 73.877,
+          "jobDoneMs": 249.499,
+          "totalMs": 326.116,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 92.216,
+          "jobDoneMs": 253.573,
+          "totalMs": 332.566,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 84.507,
+          "jobDoneMs": 245.393,
+          "totalMs": 327.909,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 76.917,
+          "jobDoneMs": 257.371,
+          "totalMs": 345.331,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 74.23,
+          "jobDoneMs": 251.618,
+          "totalMs": 337.206,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 85.642,
+          "jobDoneMs": 252.184,
+          "totalMs": 326.433,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 71.203,
+          "jobDoneMs": 250.166,
+          "totalMs": 327.622,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 73.226,
+          "jobDoneMs": 227.894,
+          "totalMs": 301.887,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        }
+      ],
+      "D=2000": [
+        {
+          "warmup": true,
+          "requestMs": 74.229,
+          "jobDoneMs": 2238.919,
+          "totalMs": 2316.615,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": true,
+          "requestMs": 73.948,
+          "jobDoneMs": 2233.409,
+          "totalMs": 2313.702,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": true,
+          "requestMs": 86.432,
+          "jobDoneMs": 2260.043,
+          "totalMs": 2332.586,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 74.014,
+          "jobDoneMs": 2224.802,
+          "totalMs": 2297.805,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 82.165,
+          "jobDoneMs": 2234.538,
+          "totalMs": 2315.625,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 74.512,
+          "jobDoneMs": 2237.205,
+          "totalMs": 2316.895,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 79.487,
+          "jobDoneMs": 2240.268,
+          "totalMs": 2319.435,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 73.459,
+          "jobDoneMs": 2224.066,
+          "totalMs": 2301.834,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 81.437,
+          "jobDoneMs": 2244.068,
+          "totalMs": 2321.726,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 70.998,
+          "jobDoneMs": 2263.664,
+          "totalMs": 2351.37,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 93.391,
+          "jobDoneMs": 2278.306,
+          "totalMs": 2359.173,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 75.921,
+          "jobDoneMs": 2250.976,
+          "totalMs": 2329.412,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 84.833,
+          "jobDoneMs": 2274.435,
+          "totalMs": 2346.65,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 69.313,
+          "jobDoneMs": 2220.879,
+          "totalMs": 2299.08,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 75.073,
+          "jobDoneMs": 2253.757,
+          "totalMs": 2330.147,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 78.817,
+          "jobDoneMs": 2243.88,
+          "totalMs": 2326.596,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 74.992,
+          "jobDoneMs": 2221.914,
+          "totalMs": 2295.253,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 73.632,
+          "jobDoneMs": 2229.202,
+          "totalMs": 2304.695,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 79.298,
+          "jobDoneMs": 2226.87,
+          "totalMs": 2295.358,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 86.938,
+          "jobDoneMs": 2240.701,
+          "totalMs": 2336.939,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 97.936,
+          "jobDoneMs": 2279.913,
+          "totalMs": 2365.129,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 86.451,
+          "jobDoneMs": 2285.98,
+          "totalMs": 2363.195,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        },
+        {
+          "warmup": false,
+          "requestMs": 79.419,
+          "jobDoneMs": 2251.717,
+          "totalMs": 2336.972,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": true
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": 9671,
+          "userMessageBytes": 6338
+        }
+      ],
+      "unreachable": [
+        {
+          "warmup": true,
+          "requestMs": 87.323,
+          "jobDoneMs": 275.665,
+          "totalMs": 358.143,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": null,
+          "userMessageBytes": null
+        },
+        {
+          "warmup": true,
+          "requestMs": 100.913,
+          "jobDoneMs": 278.921,
+          "totalMs": 358.158,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": null,
+          "userMessageBytes": null
+        },
+        {
+          "warmup": true,
+          "requestMs": 69.111,
+          "jobDoneMs": 232.904,
+          "totalMs": 317.257,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": null,
+          "userMessageBytes": null
+        },
+        {
+          "warmup": false,
+          "requestMs": 86.054,
+          "jobDoneMs": 233.353,
+          "totalMs": 305.8,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": null,
+          "userMessageBytes": null
+        },
+        {
+          "warmup": false,
+          "requestMs": 71.818,
+          "jobDoneMs": 212.621,
+          "totalMs": 291.728,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": null,
+          "userMessageBytes": null
+        },
+        {
+          "warmup": false,
+          "requestMs": 75.842,
+          "jobDoneMs": 228.675,
+          "totalMs": 307.848,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": null,
+          "userMessageBytes": null
+        },
+        {
+          "warmup": false,
+          "requestMs": 69.966,
+          "jobDoneMs": 211.444,
+          "totalMs": 284.965,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": null,
+          "userMessageBytes": null
+        },
+        {
+          "warmup": false,
+          "requestMs": 72.508,
+          "jobDoneMs": 231.398,
+          "totalMs": 309.549,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": null,
+          "userMessageBytes": null
+        },
+        {
+          "warmup": false,
+          "requestMs": 71.25,
+          "jobDoneMs": 211.929,
+          "totalMs": 288.857,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": null,
+          "userMessageBytes": null
+        },
+        {
+          "warmup": false,
+          "requestMs": 70.296,
+          "jobDoneMs": 223.845,
+          "totalMs": 315.444,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": null,
+          "userMessageBytes": null
+        },
+        {
+          "warmup": false,
+          "requestMs": 81.038,
+          "jobDoneMs": 271.807,
+          "totalMs": 347.027,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": null,
+          "userMessageBytes": null
+        },
+        {
+          "warmup": false,
+          "requestMs": 74.01,
+          "jobDoneMs": 216.542,
+          "totalMs": 295.154,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": null,
+          "userMessageBytes": null
+        },
+        {
+          "warmup": false,
+          "requestMs": 71.688,
+          "jobDoneMs": 210.183,
+          "totalMs": 281.073,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": null,
+          "userMessageBytes": null
+        },
+        {
+          "warmup": false,
+          "requestMs": 70.338,
+          "jobDoneMs": 209.868,
+          "totalMs": 281.1,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": null,
+          "userMessageBytes": null
+        },
+        {
+          "warmup": false,
+          "requestMs": 74.188,
+          "jobDoneMs": 211.718,
+          "totalMs": 298.844,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": null,
+          "userMessageBytes": null
+        },
+        {
+          "warmup": false,
+          "requestMs": 75.574,
+          "jobDoneMs": 218.759,
+          "totalMs": 289.043,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": null,
+          "userMessageBytes": null
+        },
+        {
+          "warmup": false,
+          "requestMs": 70.567,
+          "jobDoneMs": 210.443,
+          "totalMs": 288.35,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": null,
+          "userMessageBytes": null
+        },
+        {
+          "warmup": false,
+          "requestMs": 68.707,
+          "jobDoneMs": 215.517,
+          "totalMs": 314.256,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": null,
+          "userMessageBytes": null
+        },
+        {
+          "warmup": false,
+          "requestMs": 102.532,
+          "jobDoneMs": 273.243,
+          "totalMs": 363.598,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": null,
+          "userMessageBytes": null
+        },
+        {
+          "warmup": false,
+          "requestMs": 94.863,
+          "jobDoneMs": 252.831,
+          "totalMs": 321.499,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": null,
+          "userMessageBytes": null
+        },
+        {
+          "warmup": false,
+          "requestMs": 73.707,
+          "jobDoneMs": 209.569,
+          "totalMs": 285.825,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": null,
+          "userMessageBytes": null
+        },
+        {
+          "warmup": false,
+          "requestMs": 82.494,
+          "jobDoneMs": 223.17,
+          "totalMs": 294.729,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": null,
+          "userMessageBytes": null
+        },
+        {
+          "warmup": false,
+          "requestMs": 73.481,
+          "jobDoneMs": 211.803,
+          "totalMs": 284.435,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "unavailable",
+            "snapshotHash": "4ed01d3a65098058711168684d8dd691272146c1b1bc1d892e4a453e182c515b",
+            "hasRuntimeStatement": false
+          },
+          "prepareHookCalls": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "requestBodyBytes": null,
+          "userMessageBytes": null
+        }
+      ]
+    }
+  },
+  "m3": {
+    "note": "prepareFreshModerationSummaryContext direkt. warm: Packing-Cache gefüllt. kalt: Cache-Eintrag per TTL abgelaufen (Date um je 31 s verschoben) und Redis-Schlüssel der Session gelöscht.",
+    "warm": [
+      {
+        "warmup": true,
+        "ms": 84.748,
+        "cache": "hit"
+      },
+      {
+        "warmup": true,
+        "ms": 73.642,
+        "cache": "hit"
+      },
+      {
+        "warmup": true,
+        "ms": 65.977,
+        "cache": "hit"
+      },
+      {
+        "warmup": false,
+        "ms": 65.587,
+        "cache": "hit"
+      },
+      {
+        "warmup": false,
+        "ms": 67.585,
+        "cache": "hit"
+      },
+      {
+        "warmup": false,
+        "ms": 67.852,
+        "cache": "hit"
+      },
+      {
+        "warmup": false,
+        "ms": 71.505,
+        "cache": "hit"
+      },
+      {
+        "warmup": false,
+        "ms": 64.388,
+        "cache": "hit"
+      },
+      {
+        "warmup": false,
+        "ms": 65.818,
+        "cache": "hit"
+      },
+      {
+        "warmup": false,
+        "ms": 72.318,
+        "cache": "hit"
+      },
+      {
+        "warmup": false,
+        "ms": 74.236,
+        "cache": "hit"
+      },
+      {
+        "warmup": false,
+        "ms": 64.98,
+        "cache": "hit"
+      },
+      {
+        "warmup": false,
+        "ms": 68.592,
+        "cache": "hit"
+      },
+      {
+        "warmup": false,
+        "ms": 67.207,
+        "cache": "hit"
+      },
+      {
+        "warmup": false,
+        "ms": 68.283,
+        "cache": "hit"
+      },
+      {
+        "warmup": false,
+        "ms": 65.688,
+        "cache": "hit"
+      },
+      {
+        "warmup": false,
+        "ms": 68.613,
+        "cache": "hit"
+      },
+      {
+        "warmup": false,
+        "ms": 69.084,
+        "cache": "hit"
+      },
+      {
+        "warmup": false,
+        "ms": 67.942,
+        "cache": "hit"
+      },
+      {
+        "warmup": false,
+        "ms": 74.278,
+        "cache": "hit"
+      },
+      {
+        "warmup": false,
+        "ms": 76.545,
+        "cache": "hit"
+      },
+      {
+        "warmup": false,
+        "ms": 67.418,
+        "cache": "hit"
+      },
+      {
+        "warmup": false,
+        "ms": 62.701,
+        "cache": "hit"
+      }
+    ],
+    "cold": [
+      {
+        "warmup": true,
+        "ms": 82.144,
+        "cache": "miss",
+        "deletedRedisKeys": 0
+      },
+      {
+        "warmup": true,
+        "ms": 79.211,
+        "cache": "miss",
+        "deletedRedisKeys": 0
+      },
+      {
+        "warmup": true,
+        "ms": 82.915,
+        "cache": "miss",
+        "deletedRedisKeys": 0
+      },
+      {
+        "warmup": false,
+        "ms": 83.792,
+        "cache": "miss",
+        "deletedRedisKeys": 0
+      },
+      {
+        "warmup": false,
+        "ms": 80.664,
+        "cache": "miss",
+        "deletedRedisKeys": 0
+      },
+      {
+        "warmup": false,
+        "ms": 85.494,
+        "cache": "miss",
+        "deletedRedisKeys": 0
+      },
+      {
+        "warmup": false,
+        "ms": 81.275,
+        "cache": "miss",
+        "deletedRedisKeys": 0
+      },
+      {
+        "warmup": false,
+        "ms": 91.202,
+        "cache": "miss",
+        "deletedRedisKeys": 0
+      },
+      {
+        "warmup": false,
+        "ms": 89.302,
+        "cache": "miss",
+        "deletedRedisKeys": 0
+      },
+      {
+        "warmup": false,
+        "ms": 86.984,
+        "cache": "miss",
+        "deletedRedisKeys": 0
+      },
+      {
+        "warmup": false,
+        "ms": 84.407,
+        "cache": "miss",
+        "deletedRedisKeys": 0
+      },
+      {
+        "warmup": false,
+        "ms": 82.25,
+        "cache": "miss",
+        "deletedRedisKeys": 0
+      },
+      {
+        "warmup": false,
+        "ms": 86.254,
+        "cache": "miss",
+        "deletedRedisKeys": 0
+      },
+      {
+        "warmup": false,
+        "ms": 94.565,
+        "cache": "miss",
+        "deletedRedisKeys": 0
+      },
+      {
+        "warmup": false,
+        "ms": 78.231,
+        "cache": "miss",
+        "deletedRedisKeys": 0
+      },
+      {
+        "warmup": false,
+        "ms": 85.135,
+        "cache": "miss",
+        "deletedRedisKeys": 0
+      },
+      {
+        "warmup": false,
+        "ms": 93.173,
+        "cache": "miss",
+        "deletedRedisKeys": 0
+      },
+      {
+        "warmup": false,
+        "ms": 79.092,
+        "cache": "miss",
+        "deletedRedisKeys": 0
+      },
+      {
+        "warmup": false,
+        "ms": 82.505,
+        "cache": "miss",
+        "deletedRedisKeys": 0
+      },
+      {
+        "warmup": false,
+        "ms": 80.776,
+        "cache": "miss",
+        "deletedRedisKeys": 0
+      },
+      {
+        "warmup": false,
+        "ms": 79.914,
+        "cache": "miss",
+        "deletedRedisKeys": 0
+      },
+      {
+        "warmup": false,
+        "ms": 79.698,
+        "cache": "miss",
+        "deletedRedisKeys": 0
+      },
+      {
+        "warmup": false,
+        "ms": 81.385,
+        "cache": "miss",
+        "deletedRedisKeys": 0
+      }
+    ]
+  },
+  "m4": {
+    "note": "assembleMs = assemblePreparedModerationSummaryContext (strikte Parses von Anfrage und Vorschau sowie Legacy-Projektion). requestParseMs = OpenWeightLlmRequestSchema.safeParse. clientOutputParseMs = OpenWeightLlmOutputSchema.safeParse (wie parseCompletion). modelOutputParseMs = QaSummaryModelOutputV2Schema.safeParse (Teilmenge der Client-Prüfung, nur berichtet). totalMs = assemble + request + clientOutput.",
+    "promptContextBytes": 7144,
+    "runs": [
+      {
+        "warmup": true,
+        "assembleMs": 0.913,
+        "requestParseMs": 0.433,
+        "clientOutputParseMs": 0.102,
+        "modelOutputParseMs": 0.085,
+        "totalMs": 1.448
+      },
+      {
+        "warmup": true,
+        "assembleMs": 0.888,
+        "requestParseMs": 0.424,
+        "clientOutputParseMs": 0.078,
+        "modelOutputParseMs": 0.019,
+        "totalMs": 1.389
+      },
+      {
+        "warmup": true,
+        "assembleMs": 0.782,
+        "requestParseMs": 0.384,
+        "clientOutputParseMs": 0.063,
+        "modelOutputParseMs": 0.018,
+        "totalMs": 1.229
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.73,
+        "requestParseMs": 0.425,
+        "clientOutputParseMs": 0.061,
+        "modelOutputParseMs": 0.018,
+        "totalMs": 1.216
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.751,
+        "requestParseMs": 0.382,
+        "clientOutputParseMs": 0.061,
+        "modelOutputParseMs": 0.018,
+        "totalMs": 1.194
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.928,
+        "requestParseMs": 0.433,
+        "clientOutputParseMs": 0.065,
+        "modelOutputParseMs": 0.019,
+        "totalMs": 1.425
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.776,
+        "requestParseMs": 0.415,
+        "clientOutputParseMs": 0.073,
+        "modelOutputParseMs": 0.024,
+        "totalMs": 1.263
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.882,
+        "requestParseMs": 0.744,
+        "clientOutputParseMs": 0.115,
+        "modelOutputParseMs": 0.034,
+        "totalMs": 1.741
+      },
+      {
+        "warmup": false,
+        "assembleMs": 1.528,
+        "requestParseMs": 0.498,
+        "clientOutputParseMs": 0.1,
+        "modelOutputParseMs": 0.022,
+        "totalMs": 2.126
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.976,
+        "requestParseMs": 0.631,
+        "clientOutputParseMs": 0.098,
+        "modelOutputParseMs": 0.03,
+        "totalMs": 1.705
+      },
+      {
+        "warmup": false,
+        "assembleMs": 1.31,
+        "requestParseMs": 0.666,
+        "clientOutputParseMs": 0.098,
+        "modelOutputParseMs": 0.031,
+        "totalMs": 2.075
+      },
+      {
+        "warmup": false,
+        "assembleMs": 1.247,
+        "requestParseMs": 0.692,
+        "clientOutputParseMs": 0.096,
+        "modelOutputParseMs": 0.029,
+        "totalMs": 2.035
+      },
+      {
+        "warmup": false,
+        "assembleMs": 1.291,
+        "requestParseMs": 0.65,
+        "clientOutputParseMs": 0.1,
+        "modelOutputParseMs": 0.031,
+        "totalMs": 2.042
+      },
+      {
+        "warmup": false,
+        "assembleMs": 1.364,
+        "requestParseMs": 0.644,
+        "clientOutputParseMs": 0.099,
+        "modelOutputParseMs": 0.096,
+        "totalMs": 2.107
+      },
+      {
+        "warmup": false,
+        "assembleMs": 1.275,
+        "requestParseMs": 0.761,
+        "clientOutputParseMs": 0.101,
+        "modelOutputParseMs": 0.03,
+        "totalMs": 2.137
+      },
+      {
+        "warmup": false,
+        "assembleMs": 1.666,
+        "requestParseMs": 0.639,
+        "clientOutputParseMs": 0.13,
+        "modelOutputParseMs": 0.034,
+        "totalMs": 2.435
+      },
+      {
+        "warmup": false,
+        "assembleMs": 1.263,
+        "requestParseMs": 0.679,
+        "clientOutputParseMs": 0.1,
+        "modelOutputParseMs": 0.032,
+        "totalMs": 2.042
+      },
+      {
+        "warmup": false,
+        "assembleMs": 1.262,
+        "requestParseMs": 0.744,
+        "clientOutputParseMs": 0.102,
+        "modelOutputParseMs": 0.033,
+        "totalMs": 2.109
+      },
+      {
+        "warmup": false,
+        "assembleMs": 1.303,
+        "requestParseMs": 0.453,
+        "clientOutputParseMs": 0.082,
+        "modelOutputParseMs": 0.021,
+        "totalMs": 1.838
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.78,
+        "requestParseMs": 0.671,
+        "clientOutputParseMs": 0.079,
+        "modelOutputParseMs": 0.02,
+        "totalMs": 1.53
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.862,
+        "requestParseMs": 0.444,
+        "clientOutputParseMs": 0.096,
+        "modelOutputParseMs": 0.027,
+        "totalMs": 1.402
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.757,
+        "requestParseMs": 0.413,
+        "clientOutputParseMs": 0.066,
+        "modelOutputParseMs": 0.018,
+        "totalMs": 1.237
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.982,
+        "requestParseMs": 0.396,
+        "clientOutputParseMs": 0.066,
+        "modelOutputParseMs": 0.018,
+        "totalMs": 1.445
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.721,
+        "requestParseMs": 0.44,
+        "clientOutputParseMs": 0.064,
+        "modelOutputParseMs": 0.018,
+        "totalMs": 1.225
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.736,
+        "requestParseMs": 0.369,
+        "clientOutputParseMs": 0.064,
+        "modelOutputParseMs": 0.018,
+        "totalMs": 1.168
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.756,
+        "requestParseMs": 0.369,
+        "clientOutputParseMs": 0.061,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.186
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.7,
+        "requestParseMs": 0.399,
+        "clientOutputParseMs": 0.06,
+        "modelOutputParseMs": 0.018,
+        "totalMs": 1.159
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.76,
+        "requestParseMs": 0.371,
+        "clientOutputParseMs": 0.06,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.191
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.74,
+        "requestParseMs": 0.362,
+        "clientOutputParseMs": 0.059,
+        "modelOutputParseMs": 0.018,
+        "totalMs": 1.161
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.75,
+        "requestParseMs": 0.388,
+        "clientOutputParseMs": 0.062,
+        "modelOutputParseMs": 0.018,
+        "totalMs": 1.199
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.704,
+        "requestParseMs": 0.514,
+        "clientOutputParseMs": 0.085,
+        "modelOutputParseMs": 0.019,
+        "totalMs": 1.304
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.753,
+        "requestParseMs": 0.393,
+        "clientOutputParseMs": 0.093,
+        "modelOutputParseMs": 0.02,
+        "totalMs": 1.238
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.881,
+        "requestParseMs": 0.429,
+        "clientOutputParseMs": 0.065,
+        "modelOutputParseMs": 0.018,
+        "totalMs": 1.375
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.805,
+        "requestParseMs": 0.373,
+        "clientOutputParseMs": 0.064,
+        "modelOutputParseMs": 0.019,
+        "totalMs": 1.243
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.77,
+        "requestParseMs": 0.658,
+        "clientOutputParseMs": 0.067,
+        "modelOutputParseMs": 0.019,
+        "totalMs": 1.494
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.75,
+        "requestParseMs": 0.397,
+        "clientOutputParseMs": 0.111,
+        "modelOutputParseMs": 0.019,
+        "totalMs": 1.258
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.757,
+        "requestParseMs": 0.401,
+        "clientOutputParseMs": 0.062,
+        "modelOutputParseMs": 0.018,
+        "totalMs": 1.22
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.745,
+        "requestParseMs": 0.374,
+        "clientOutputParseMs": 0.059,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.178
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.716,
+        "requestParseMs": 0.365,
+        "clientOutputParseMs": 0.058,
+        "modelOutputParseMs": 0.018,
+        "totalMs": 1.138
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.706,
+        "requestParseMs": 0.38,
+        "clientOutputParseMs": 0.057,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.143
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.681,
+        "requestParseMs": 0.377,
+        "clientOutputParseMs": 0.062,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.12
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.724,
+        "requestParseMs": 0.356,
+        "clientOutputParseMs": 0.056,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.136
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.712,
+        "requestParseMs": 0.371,
+        "clientOutputParseMs": 0.373,
+        "modelOutputParseMs": 0.019,
+        "totalMs": 1.456
+      },
+      {
+        "warmup": false,
+        "assembleMs": 1.038,
+        "requestParseMs": 0.625,
+        "clientOutputParseMs": 0.099,
+        "modelOutputParseMs": 0.02,
+        "totalMs": 1.762
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.832,
+        "requestParseMs": 0.402,
+        "clientOutputParseMs": 0.103,
+        "modelOutputParseMs": 0.04,
+        "totalMs": 1.337
+      },
+      {
+        "warmup": false,
+        "assembleMs": 1.34,
+        "requestParseMs": 0.603,
+        "clientOutputParseMs": 0.087,
+        "modelOutputParseMs": 0.026,
+        "totalMs": 2.029
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.845,
+        "requestParseMs": 0.415,
+        "clientOutputParseMs": 0.065,
+        "modelOutputParseMs": 0.018,
+        "totalMs": 1.325
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.804,
+        "requestParseMs": 0.388,
+        "clientOutputParseMs": 0.107,
+        "modelOutputParseMs": 0.025,
+        "totalMs": 1.299
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.757,
+        "requestParseMs": 0.401,
+        "clientOutputParseMs": 0.109,
+        "modelOutputParseMs": 0.02,
+        "totalMs": 1.267
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.815,
+        "requestParseMs": 0.365,
+        "clientOutputParseMs": 0.06,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.24
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.731,
+        "requestParseMs": 0.426,
+        "clientOutputParseMs": 0.062,
+        "modelOutputParseMs": 0.018,
+        "totalMs": 1.22
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.728,
+        "requestParseMs": 0.402,
+        "clientOutputParseMs": 0.061,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.191
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.789,
+        "requestParseMs": 0.394,
+        "clientOutputParseMs": 0.06,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.242
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.721,
+        "requestParseMs": 0.391,
+        "clientOutputParseMs": 0.061,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.174
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.702,
+        "requestParseMs": 0.55,
+        "clientOutputParseMs": 0.075,
+        "modelOutputParseMs": 0.018,
+        "totalMs": 1.326
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.74,
+        "requestParseMs": 0.365,
+        "clientOutputParseMs": 0.059,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.164
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.753,
+        "requestParseMs": 0.379,
+        "clientOutputParseMs": 0.062,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.193
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.683,
+        "requestParseMs": 0.379,
+        "clientOutputParseMs": 0.057,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.119
+      },
+      {
+        "warmup": false,
+        "assembleMs": 1.066,
+        "requestParseMs": 0.596,
+        "clientOutputParseMs": 0.071,
+        "modelOutputParseMs": 0.019,
+        "totalMs": 1.732
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.78,
+        "requestParseMs": 0.405,
+        "clientOutputParseMs": 0.065,
+        "modelOutputParseMs": 0.018,
+        "totalMs": 1.25
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.831,
+        "requestParseMs": 0.362,
+        "clientOutputParseMs": 0.06,
+        "modelOutputParseMs": 0.04,
+        "totalMs": 1.253
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.721,
+        "requestParseMs": 0.384,
+        "clientOutputParseMs": 0.059,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.164
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.704,
+        "requestParseMs": 0.356,
+        "clientOutputParseMs": 0.056,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.117
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.729,
+        "requestParseMs": 0.352,
+        "clientOutputParseMs": 0.055,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.136
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.708,
+        "requestParseMs": 0.348,
+        "clientOutputParseMs": 0.079,
+        "modelOutputParseMs": 0.018,
+        "totalMs": 1.136
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.753,
+        "requestParseMs": 0.377,
+        "clientOutputParseMs": 0.057,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.187
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.856,
+        "requestParseMs": 0.428,
+        "clientOutputParseMs": 0.122,
+        "modelOutputParseMs": 0.018,
+        "totalMs": 1.405
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.707,
+        "requestParseMs": 0.381,
+        "clientOutputParseMs": 0.06,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.147
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.809,
+        "requestParseMs": 0.361,
+        "clientOutputParseMs": 0.057,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.227
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.703,
+        "requestParseMs": 0.348,
+        "clientOutputParseMs": 0.054,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.105
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.712,
+        "requestParseMs": 0.343,
+        "clientOutputParseMs": 0.074,
+        "modelOutputParseMs": 0.018,
+        "totalMs": 1.129
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.666,
+        "requestParseMs": 0.381,
+        "clientOutputParseMs": 0.058,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.104
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.682,
+        "requestParseMs": 0.34,
+        "clientOutputParseMs": 0.052,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.074
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.714,
+        "requestParseMs": 0.338,
+        "clientOutputParseMs": 0.052,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.104
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.695,
+        "requestParseMs": 0.339,
+        "clientOutputParseMs": 0.052,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.086
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.71,
+        "requestParseMs": 0.336,
+        "clientOutputParseMs": 0.074,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.121
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.668,
+        "requestParseMs": 0.361,
+        "clientOutputParseMs": 0.053,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.082
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.71,
+        "requestParseMs": 0.339,
+        "clientOutputParseMs": 0.051,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.1
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.688,
+        "requestParseMs": 0.355,
+        "clientOutputParseMs": 0.053,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.096
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.694,
+        "requestParseMs": 0.335,
+        "clientOutputParseMs": 0.052,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.081
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.805,
+        "requestParseMs": 0.372,
+        "clientOutputParseMs": 0.056,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.233
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.814,
+        "requestParseMs": 0.411,
+        "clientOutputParseMs": 0.057,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.282
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.752,
+        "requestParseMs": 0.353,
+        "clientOutputParseMs": 0.054,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.159
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.782,
+        "requestParseMs": 0.658,
+        "clientOutputParseMs": 0.095,
+        "modelOutputParseMs": 0.03,
+        "totalMs": 1.535
+      },
+      {
+        "warmup": false,
+        "assembleMs": 1.031,
+        "requestParseMs": 0.48,
+        "clientOutputParseMs": 0.067,
+        "modelOutputParseMs": 0.018,
+        "totalMs": 1.578
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.739,
+        "requestParseMs": 0.381,
+        "clientOutputParseMs": 0.058,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.178
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.707,
+        "requestParseMs": 0.345,
+        "clientOutputParseMs": 0.054,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.107
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.693,
+        "requestParseMs": 0.368,
+        "clientOutputParseMs": 0.057,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.118
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.676,
+        "requestParseMs": 0.367,
+        "clientOutputParseMs": 0.054,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.097
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.733,
+        "requestParseMs": 0.34,
+        "clientOutputParseMs": 0.054,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.127
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.81,
+        "requestParseMs": 0.372,
+        "clientOutputParseMs": 0.079,
+        "modelOutputParseMs": 0.018,
+        "totalMs": 1.261
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.683,
+        "requestParseMs": 0.365,
+        "clientOutputParseMs": 0.055,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.103
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.76,
+        "requestParseMs": 0.374,
+        "clientOutputParseMs": 0.057,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.191
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.708,
+        "requestParseMs": 0.342,
+        "clientOutputParseMs": 0.055,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.104
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.719,
+        "requestParseMs": 0.341,
+        "clientOutputParseMs": 0.075,
+        "modelOutputParseMs": 0.018,
+        "totalMs": 1.135
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.67,
+        "requestParseMs": 0.365,
+        "clientOutputParseMs": 0.053,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.087
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.704,
+        "requestParseMs": 0.349,
+        "clientOutputParseMs": 0.053,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.106
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.692,
+        "requestParseMs": 0.363,
+        "clientOutputParseMs": 0.053,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.107
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.686,
+        "requestParseMs": 0.343,
+        "clientOutputParseMs": 0.053,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.083
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.706,
+        "requestParseMs": 0.363,
+        "clientOutputParseMs": 0.055,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.124
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.666,
+        "requestParseMs": 0.36,
+        "clientOutputParseMs": 0.058,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.083
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.709,
+        "requestParseMs": 0.337,
+        "clientOutputParseMs": 0.053,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.1
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.689,
+        "requestParseMs": 0.36,
+        "clientOutputParseMs": 0.053,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.102
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.695,
+        "requestParseMs": 0.333,
+        "clientOutputParseMs": 0.052,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.08
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.694,
+        "requestParseMs": 0.363,
+        "clientOutputParseMs": 0.054,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.111
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.672,
+        "requestParseMs": 0.362,
+        "clientOutputParseMs": 0.054,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.088
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.882,
+        "requestParseMs": 0.403,
+        "clientOutputParseMs": 0.059,
+        "modelOutputParseMs": 0.018,
+        "totalMs": 1.344
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.707,
+        "requestParseMs": 0.345,
+        "clientOutputParseMs": 0.078,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.13
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.692,
+        "requestParseMs": 0.364,
+        "clientOutputParseMs": 0.055,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.111
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.73,
+        "requestParseMs": 0.345,
+        "clientOutputParseMs": 0.053,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.127
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.684,
+        "requestParseMs": 0.364,
+        "clientOutputParseMs": 0.054,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.102
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.686,
+        "requestParseMs": 0.339,
+        "clientOutputParseMs": 0.053,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.078
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.685,
+        "requestParseMs": 0.363,
+        "clientOutputParseMs": 0.053,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.101
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.664,
+        "requestParseMs": 0.363,
+        "clientOutputParseMs": 0.051,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.077
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.704,
+        "requestParseMs": 0.337,
+        "clientOutputParseMs": 0.141,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.182
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.707,
+        "requestParseMs": 0.361,
+        "clientOutputParseMs": 0.055,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.124
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.675,
+        "requestParseMs": 0.361,
+        "clientOutputParseMs": 0.055,
+        "modelOutputParseMs": 0.022,
+        "totalMs": 1.09
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.692,
+        "requestParseMs": 0.364,
+        "clientOutputParseMs": 0.104,
+        "modelOutputParseMs": 0.018,
+        "totalMs": 1.159
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.819,
+        "requestParseMs": 0.351,
+        "clientOutputParseMs": 0.129,
+        "modelOutputParseMs": 0.02,
+        "totalMs": 1.299
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.809,
+        "requestParseMs": 0.377,
+        "clientOutputParseMs": 0.057,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.243
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.679,
+        "requestParseMs": 0.367,
+        "clientOutputParseMs": 0.052,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.098
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.713,
+        "requestParseMs": 0.341,
+        "clientOutputParseMs": 0.053,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.107
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.692,
+        "requestParseMs": 0.358,
+        "clientOutputParseMs": 0.053,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.103
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.692,
+        "requestParseMs": 0.338,
+        "clientOutputParseMs": 0.074,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.104
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.688,
+        "requestParseMs": 0.364,
+        "clientOutputParseMs": 0.051,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.103
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.678,
+        "requestParseMs": 0.346,
+        "clientOutputParseMs": 0.051,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.075
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.711,
+        "requestParseMs": 0.344,
+        "clientOutputParseMs": 0.05,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.104
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.686,
+        "requestParseMs": 0.362,
+        "clientOutputParseMs": 0.053,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.101
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.685,
+        "requestParseMs": 0.341,
+        "clientOutputParseMs": 0.071,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.096
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.66,
+        "requestParseMs": 0.38,
+        "clientOutputParseMs": 0.052,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.092
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.685,
+        "requestParseMs": 0.338,
+        "clientOutputParseMs": 0.05,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.073
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.703,
+        "requestParseMs": 0.334,
+        "clientOutputParseMs": 0.051,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.089
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.684,
+        "requestParseMs": 0.333,
+        "clientOutputParseMs": 0.05,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.067
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.785,
+        "requestParseMs": 0.362,
+        "clientOutputParseMs": 0.054,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.201
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.67,
+        "requestParseMs": 0.38,
+        "clientOutputParseMs": 0.052,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.101
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.688,
+        "requestParseMs": 0.336,
+        "clientOutputParseMs": 0.051,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.075
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.727,
+        "requestParseMs": 0.337,
+        "clientOutputParseMs": 0.05,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.114
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.686,
+        "requestParseMs": 0.335,
+        "clientOutputParseMs": 0.05,
+        "modelOutputParseMs": 0.015,
+        "totalMs": 1.072
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.686,
+        "requestParseMs": 0.36,
+        "clientOutputParseMs": 0.052,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.099
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.66,
+        "requestParseMs": 0.361,
+        "clientOutputParseMs": 0.051,
+        "modelOutputParseMs": 0.015,
+        "totalMs": 1.072
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.703,
+        "requestParseMs": 0.341,
+        "clientOutputParseMs": 0.051,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.096
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.682,
+        "requestParseMs": 0.357,
+        "clientOutputParseMs": 0.05,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.089
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.685,
+        "requestParseMs": 0.46,
+        "clientOutputParseMs": 0.118,
+        "modelOutputParseMs": 0.03,
+        "totalMs": 1.263
+      },
+      {
+        "warmup": false,
+        "assembleMs": 1.052,
+        "requestParseMs": 0.37,
+        "clientOutputParseMs": 0.065,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.488
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.734,
+        "requestParseMs": 0.351,
+        "clientOutputParseMs": 0.082,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.168
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.701,
+        "requestParseMs": 0.379,
+        "clientOutputParseMs": 0.055,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.135
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.78,
+        "requestParseMs": 0.371,
+        "clientOutputParseMs": 0.055,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.207
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.702,
+        "requestParseMs": 0.342,
+        "clientOutputParseMs": 0.053,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.097
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.714,
+        "requestParseMs": 0.366,
+        "clientOutputParseMs": 0.055,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.135
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.67,
+        "requestParseMs": 0.364,
+        "clientOutputParseMs": 0.052,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.086
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.714,
+        "requestParseMs": 0.343,
+        "clientOutputParseMs": 0.052,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.11
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.692,
+        "requestParseMs": 0.34,
+        "clientOutputParseMs": 0.052,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.084
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.704,
+        "requestParseMs": 0.339,
+        "clientOutputParseMs": 0.052,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.094
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.683,
+        "requestParseMs": 0.658,
+        "clientOutputParseMs": 0.094,
+        "modelOutputParseMs": 0.033,
+        "totalMs": 1.435
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.78,
+        "requestParseMs": 0.362,
+        "clientOutputParseMs": 0.057,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.2
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.714,
+        "requestParseMs": 0.391,
+        "clientOutputParseMs": 0.056,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.161
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.672,
+        "requestParseMs": 0.466,
+        "clientOutputParseMs": 0.056,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.194
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.741,
+        "requestParseMs": 0.346,
+        "clientOutputParseMs": 0.057,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.144
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.705,
+        "requestParseMs": 0.623,
+        "clientOutputParseMs": 0.097,
+        "modelOutputParseMs": 0.028,
+        "totalMs": 1.425
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.994,
+        "requestParseMs": 0.453,
+        "clientOutputParseMs": 0.066,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.513
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.709,
+        "requestParseMs": 0.4,
+        "clientOutputParseMs": 0.059,
+        "modelOutputParseMs": 0.017,
+        "totalMs": 1.167
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.706,
+        "requestParseMs": 0.348,
+        "clientOutputParseMs": 0.054,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.107
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.717,
+        "requestParseMs": 0.346,
+        "clientOutputParseMs": 0.053,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.116
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.699,
+        "requestParseMs": 0.363,
+        "clientOutputParseMs": 0.052,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.114
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.697,
+        "requestParseMs": 0.364,
+        "clientOutputParseMs": 0.052,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.113
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.691,
+        "requestParseMs": 0.363,
+        "clientOutputParseMs": 0.052,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.106
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.699,
+        "requestParseMs": 0.372,
+        "clientOutputParseMs": 0.052,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.123
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.716,
+        "requestParseMs": 0.343,
+        "clientOutputParseMs": 0.077,
+        "modelOutputParseMs": 0.072,
+        "totalMs": 1.137
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.68,
+        "requestParseMs": 0.459,
+        "clientOutputParseMs": 0.056,
+        "modelOutputParseMs": 0.015,
+        "totalMs": 1.195
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.714,
+        "requestParseMs": 0.346,
+        "clientOutputParseMs": 0.053,
+        "modelOutputParseMs": 0.015,
+        "totalMs": 1.113
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.687,
+        "requestParseMs": 0.34,
+        "clientOutputParseMs": 0.05,
+        "modelOutputParseMs": 0.015,
+        "totalMs": 1.077
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.704,
+        "requestParseMs": 0.406,
+        "clientOutputParseMs": 0.075,
+        "modelOutputParseMs": 0.015,
+        "totalMs": 1.185
+      },
+      {
+        "warmup": false,
+        "assembleMs": 1.15,
+        "requestParseMs": 0.39,
+        "clientOutputParseMs": 0.059,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.598
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.729,
+        "requestParseMs": 0.401,
+        "clientOutputParseMs": 0.056,
+        "modelOutputParseMs": 0.015,
+        "totalMs": 1.186
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.872,
+        "requestParseMs": 0.41,
+        "clientOutputParseMs": 0.057,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.34
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.724,
+        "requestParseMs": 0.344,
+        "clientOutputParseMs": 0.051,
+        "modelOutputParseMs": 0.015,
+        "totalMs": 1.119
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.736,
+        "requestParseMs": 0.37,
+        "clientOutputParseMs": 0.055,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.161
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.68,
+        "requestParseMs": 0.515,
+        "clientOutputParseMs": 0.057,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.253
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.846,
+        "requestParseMs": 0.36,
+        "clientOutputParseMs": 0.057,
+        "modelOutputParseMs": 0.015,
+        "totalMs": 1.263
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.726,
+        "requestParseMs": 0.398,
+        "clientOutputParseMs": 0.054,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.178
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.675,
+        "requestParseMs": 0.369,
+        "clientOutputParseMs": 0.164,
+        "modelOutputParseMs": 0.021,
+        "totalMs": 1.208
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.748,
+        "requestParseMs": 0.391,
+        "clientOutputParseMs": 0.055,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.194
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.713,
+        "requestParseMs": 0.348,
+        "clientOutputParseMs": 0.082,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.144
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.688,
+        "requestParseMs": 0.378,
+        "clientOutputParseMs": 0.053,
+        "modelOutputParseMs": 0.015,
+        "totalMs": 1.118
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.795,
+        "requestParseMs": 0.373,
+        "clientOutputParseMs": 0.054,
+        "modelOutputParseMs": 0.015,
+        "totalMs": 1.221
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.813,
+        "requestParseMs": 0.358,
+        "clientOutputParseMs": 0.058,
+        "modelOutputParseMs": 0.015,
+        "totalMs": 1.229
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.862,
+        "requestParseMs": 0.384,
+        "clientOutputParseMs": 0.055,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.301
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.728,
+        "requestParseMs": 0.405,
+        "clientOutputParseMs": 0.056,
+        "modelOutputParseMs": 0.016,
+        "totalMs": 1.189
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.869,
+        "requestParseMs": 0.375,
+        "clientOutputParseMs": 0.055,
+        "modelOutputParseMs": 0.101,
+        "totalMs": 1.299
+      },
+      {
+        "warmup": false,
+        "assembleMs": 1.092,
+        "requestParseMs": 0.702,
+        "clientOutputParseMs": 0.13,
+        "modelOutputParseMs": 0.044,
+        "totalMs": 1.924
+      },
+      {
+        "warmup": false,
+        "assembleMs": 1.326,
+        "requestParseMs": 0.587,
+        "clientOutputParseMs": 0.21,
+        "modelOutputParseMs": 0.027,
+        "totalMs": 2.124
+      },
+      {
+        "warmup": false,
+        "assembleMs": 1.306,
+        "requestParseMs": 0.556,
+        "clientOutputParseMs": 0.09,
+        "modelOutputParseMs": 0.025,
+        "totalMs": 1.952
+      },
+      {
+        "warmup": false,
+        "assembleMs": 1.203,
+        "requestParseMs": 0.528,
+        "clientOutputParseMs": 0.084,
+        "modelOutputParseMs": 0.025,
+        "totalMs": 1.815
+      },
+      {
+        "warmup": false,
+        "assembleMs": 1.029,
+        "requestParseMs": 0.608,
+        "clientOutputParseMs": 0.089,
+        "modelOutputParseMs": 0.044,
+        "totalMs": 1.726
+      },
+      {
+        "warmup": false,
+        "assembleMs": 1.016,
+        "requestParseMs": 0.525,
+        "clientOutputParseMs": 0.071,
+        "modelOutputParseMs": 0.037,
+        "totalMs": 1.612
+      },
+      {
+        "warmup": false,
+        "assembleMs": 1.005,
+        "requestParseMs": 0.519,
+        "clientOutputParseMs": 0.073,
+        "modelOutputParseMs": 0.024,
+        "totalMs": 1.596
+      },
+      {
+        "warmup": false,
+        "assembleMs": 1.012,
+        "requestParseMs": 0.506,
+        "clientOutputParseMs": 0.092,
+        "modelOutputParseMs": 0.024,
+        "totalMs": 1.61
+      },
+      {
+        "warmup": false,
+        "assembleMs": 1.003,
+        "requestParseMs": 0.496,
+        "clientOutputParseMs": 0.07,
+        "modelOutputParseMs": 0.025,
+        "totalMs": 1.569
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.991,
+        "requestParseMs": 0.532,
+        "clientOutputParseMs": 0.071,
+        "modelOutputParseMs": 0.024,
+        "totalMs": 1.594
+      },
+      {
+        "warmup": false,
+        "assembleMs": 0.978,
+        "requestParseMs": 0.604,
+        "clientOutputParseMs": 0.073,
+        "modelOutputParseMs": 0.024,
+        "totalMs": 1.655
+      },
+      {
+        "warmup": false,
+        "assembleMs": 1.017,
+        "requestParseMs": 0.518,
+        "clientOutputParseMs": 0.103,
+        "modelOutputParseMs": 0.024,
+        "totalMs": 1.637
+      },
+      {
+        "warmup": false,
+        "assembleMs": 1.097,
+        "requestParseMs": 0.551,
+        "clientOutputParseMs": 0.073,
+        "modelOutputParseMs": 0.024,
+        "totalMs": 1.72
+      },
+      {
+        "warmup": false,
+        "assembleMs": 1.103,
+        "requestParseMs": 0.604,
+        "clientOutputParseMs": 0.101,
+        "modelOutputParseMs": 0.037,
+        "totalMs": 1.809
+      }
+    ]
+  },
+  "v1": {
+    "mode": "alternating",
+    "note": "D = 2000 ms. change: Stimme in beforeRespond (nach der Verzögerung, vor der Antwort). primary = erster qa.summaryRuntime-Abruf nach Jobende; secondary = interner Queue-Zustand (getQaSummaryRuntime, ohne Kontextaufbau) direkt nach Jobende. freshPreviewHash = qa.summaryContextPreview direkt nach dem primären Abruf (nicht mitgezählt).",
+    "runs": {
+      "B/change": [
+        {
+          "warmup": true,
+          "iteration": 0,
+          "orderInIteration": 0,
+          "requestMs": 97.125,
+          "jobDoneMs": 2300.48,
+          "totalMs": 2383.918,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "9e84c92d3286c53eb5b9f00ff1f7011c3d3cf7e0932954f948298fb0e628074f",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "9e84c92d3286c53eb5b9f00ff1f7011c3d3cf7e0932954f948298fb0e628074f",
+            "hasRuntimeStatement": false
+          },
+          "dataChanged": true,
+          "freshPreviewHash": "9e84c92d3286c53eb5b9f00ff1f7011c3d3cf7e0932954f948298fb0e628074f",
+          "prepareHookCalls": 4,
+          "realPrepares": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": true,
+          "iteration": 1,
+          "orderInIteration": 1,
+          "requestMs": 70.802,
+          "jobDoneMs": 2266.192,
+          "totalMs": 2339.884,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "291fb68994494ac132d9a423a2c371a6c4f2785f14413f7d50da9da5e17872d6",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "291fb68994494ac132d9a423a2c371a6c4f2785f14413f7d50da9da5e17872d6",
+            "hasRuntimeStatement": false
+          },
+          "dataChanged": true,
+          "freshPreviewHash": "291fb68994494ac132d9a423a2c371a6c4f2785f14413f7d50da9da5e17872d6",
+          "prepareHookCalls": 4,
+          "realPrepares": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": true,
+          "iteration": 2,
+          "orderInIteration": 0,
+          "requestMs": 71.531,
+          "jobDoneMs": 2317.72,
+          "totalMs": 2410.816,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "823a4818120ce6302035eba434950c3803ae9e9e640ab0f0491a5a088139269b",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "823a4818120ce6302035eba434950c3803ae9e9e640ab0f0491a5a088139269b",
+            "hasRuntimeStatement": false
+          },
+          "dataChanged": true,
+          "freshPreviewHash": "823a4818120ce6302035eba434950c3803ae9e9e640ab0f0491a5a088139269b",
+          "prepareHookCalls": 4,
+          "realPrepares": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 3,
+          "orderInIteration": 1,
+          "requestMs": 110.486,
+          "jobDoneMs": 2303.759,
+          "totalMs": 2389.336,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "cd644fc90986f947182b3a0a397fa2140b8b98ce81ab1571a4588e08fe4d9617",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "cd644fc90986f947182b3a0a397fa2140b8b98ce81ab1571a4588e08fe4d9617",
+            "hasRuntimeStatement": false
+          },
+          "dataChanged": true,
+          "freshPreviewHash": "cd644fc90986f947182b3a0a397fa2140b8b98ce81ab1571a4588e08fe4d9617",
+          "prepareHookCalls": 4,
+          "realPrepares": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 4,
+          "orderInIteration": 0,
+          "requestMs": 78.149,
+          "jobDoneMs": 2258.703,
+          "totalMs": 2349.498,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "9d1f52f4acf57d0df245c1be4ad2e90e985996949d9ac28d3af34fc7fa9fe584",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "9d1f52f4acf57d0df245c1be4ad2e90e985996949d9ac28d3af34fc7fa9fe584",
+            "hasRuntimeStatement": false
+          },
+          "dataChanged": true,
+          "freshPreviewHash": "9d1f52f4acf57d0df245c1be4ad2e90e985996949d9ac28d3af34fc7fa9fe584",
+          "prepareHookCalls": 4,
+          "realPrepares": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 5,
+          "orderInIteration": 1,
+          "requestMs": 81.788,
+          "jobDoneMs": 2274.124,
+          "totalMs": 2348.928,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "719fbf384780d5a8e31c84c5a2977e357ad5117ac2d68c0abda423c64d91dd5b",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "719fbf384780d5a8e31c84c5a2977e357ad5117ac2d68c0abda423c64d91dd5b",
+            "hasRuntimeStatement": false
+          },
+          "dataChanged": true,
+          "freshPreviewHash": "719fbf384780d5a8e31c84c5a2977e357ad5117ac2d68c0abda423c64d91dd5b",
+          "prepareHookCalls": 4,
+          "realPrepares": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 6,
+          "orderInIteration": 0,
+          "requestMs": 76.385,
+          "jobDoneMs": 2258.409,
+          "totalMs": 2336.333,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "7b147386bab2f250add644b1d793a4f930eccf211a45944bde3098da9081a338",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "7b147386bab2f250add644b1d793a4f930eccf211a45944bde3098da9081a338",
+            "hasRuntimeStatement": false
+          },
+          "dataChanged": true,
+          "freshPreviewHash": "7b147386bab2f250add644b1d793a4f930eccf211a45944bde3098da9081a338",
+          "prepareHookCalls": 4,
+          "realPrepares": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 7,
+          "orderInIteration": 1,
+          "requestMs": 84.455,
+          "jobDoneMs": 2284.431,
+          "totalMs": 2355.379,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "0b22663b62b95b850e72b4d462da214bf3433cdb10e027540415a1aeca7a4e62",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "0b22663b62b95b850e72b4d462da214bf3433cdb10e027540415a1aeca7a4e62",
+            "hasRuntimeStatement": false
+          },
+          "dataChanged": true,
+          "freshPreviewHash": "0b22663b62b95b850e72b4d462da214bf3433cdb10e027540415a1aeca7a4e62",
+          "prepareHookCalls": 4,
+          "realPrepares": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 8,
+          "orderInIteration": 0,
+          "requestMs": 78.52,
+          "jobDoneMs": 2272.739,
+          "totalMs": 2348.616,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "2acff2da6ba28464a99a94019b0647bf962da5f0531cd66d04523a183982b9de",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "2acff2da6ba28464a99a94019b0647bf962da5f0531cd66d04523a183982b9de",
+            "hasRuntimeStatement": false
+          },
+          "dataChanged": true,
+          "freshPreviewHash": "2acff2da6ba28464a99a94019b0647bf962da5f0531cd66d04523a183982b9de",
+          "prepareHookCalls": 4,
+          "realPrepares": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 9,
+          "orderInIteration": 1,
+          "requestMs": 76.358,
+          "jobDoneMs": 2299.345,
+          "totalMs": 2484.239,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "d460fedaa5606d20e31604d71f69ba41b37e381e82e2c4da467c8e3dca3f4f7d",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "d460fedaa5606d20e31604d71f69ba41b37e381e82e2c4da467c8e3dca3f4f7d",
+            "hasRuntimeStatement": false
+          },
+          "dataChanged": true,
+          "freshPreviewHash": "d460fedaa5606d20e31604d71f69ba41b37e381e82e2c4da467c8e3dca3f4f7d",
+          "prepareHookCalls": 4,
+          "realPrepares": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 10,
+          "orderInIteration": 0,
+          "requestMs": 88.342,
+          "jobDoneMs": 2310.751,
+          "totalMs": 2410.316,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "22e84a5e9e5962e2013663697ae75612ca0114eb99ff95a45aff2b75f545f333",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "22e84a5e9e5962e2013663697ae75612ca0114eb99ff95a45aff2b75f545f333",
+            "hasRuntimeStatement": false
+          },
+          "dataChanged": true,
+          "freshPreviewHash": "22e84a5e9e5962e2013663697ae75612ca0114eb99ff95a45aff2b75f545f333",
+          "prepareHookCalls": 4,
+          "realPrepares": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 11,
+          "orderInIteration": 1,
+          "requestMs": 85.951,
+          "jobDoneMs": 2264.835,
+          "totalMs": 2346.1,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "3294177cbcacc0e4dd693524ef63a280baae2de39d6dbb5f9af5d14254427d8b",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "3294177cbcacc0e4dd693524ef63a280baae2de39d6dbb5f9af5d14254427d8b",
+            "hasRuntimeStatement": false
+          },
+          "dataChanged": true,
+          "freshPreviewHash": "3294177cbcacc0e4dd693524ef63a280baae2de39d6dbb5f9af5d14254427d8b",
+          "prepareHookCalls": 4,
+          "realPrepares": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 12,
+          "orderInIteration": 0,
+          "requestMs": 85.394,
+          "jobDoneMs": 2282.044,
+          "totalMs": 2363.221,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "599aab59ae519249175d24c91a32010a295e69bfa0dc8edd3b371e5f4abc85b3",
+            "hasRuntimeStatement": false
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "599aab59ae519249175d24c91a32010a295e69bfa0dc8edd3b371e5f4abc85b3",
+            "hasRuntimeStatement": false
+          },
+          "dataChanged": true,
+          "freshPreviewHash": "599aab59ae519249175d24c91a32010a295e69bfa0dc8edd3b371e5f4abc85b3",
+          "prepareHookCalls": 4,
+          "realPrepares": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        }
+      ],
+      "V1/change": [
+        {
+          "warmup": true,
+          "iteration": 0,
+          "orderInIteration": 1,
+          "requestMs": 88.221,
+          "jobDoneMs": 2175.892,
+          "totalMs": 2263.468,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "080fe3d50bb598cd3963a3ad9f93751ed6b70a871c0cd9da24c06cb782ee4884",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "4cf8ddea583442020fd41b577cd0902d8c735e0d16d3958815000d58881a870f",
+            "hasRuntimeStatement": false
+          },
+          "dataChanged": true,
+          "freshPreviewHash": "4cf8ddea583442020fd41b577cd0902d8c735e0d16d3958815000d58881a870f",
+          "prepareHookCalls": 4,
+          "realPrepares": 3,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": true,
+            "section10": true
+          }
+        },
+        {
+          "warmup": true,
+          "iteration": 1,
+          "orderInIteration": 0,
+          "requestMs": 67.715,
+          "jobDoneMs": 2186.345,
+          "totalMs": 2273.996,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "4cf8ddea583442020fd41b577cd0902d8c735e0d16d3958815000d58881a870f",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "cf86a895d3ee1f0dbb677209ca7479cba92e5c01da71480e2a672c35efa52184",
+            "hasRuntimeStatement": false
+          },
+          "dataChanged": true,
+          "freshPreviewHash": "cf86a895d3ee1f0dbb677209ca7479cba92e5c01da71480e2a672c35efa52184",
+          "prepareHookCalls": 4,
+          "realPrepares": 3,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": true,
+            "section10": true
+          }
+        },
+        {
+          "warmup": true,
+          "iteration": 2,
+          "orderInIteration": 1,
+          "requestMs": 96.042,
+          "jobDoneMs": 2214.108,
+          "totalMs": 2320.409,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "cf86a895d3ee1f0dbb677209ca7479cba92e5c01da71480e2a672c35efa52184",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "8f9a2608856f190ff35edf4af9b37832e74aeff48ac1a52e13f4adac936fab36",
+            "hasRuntimeStatement": false
+          },
+          "dataChanged": true,
+          "freshPreviewHash": "8f9a2608856f190ff35edf4af9b37832e74aeff48ac1a52e13f4adac936fab36",
+          "prepareHookCalls": 4,
+          "realPrepares": 3,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": true,
+            "section10": true
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 3,
+          "orderInIteration": 0,
+          "requestMs": 79.743,
+          "jobDoneMs": 2177.042,
+          "totalMs": 2275.827,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "8f9a2608856f190ff35edf4af9b37832e74aeff48ac1a52e13f4adac936fab36",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "a00d065abb46cf3b01c981045d1c71e7d11ef648b5c974ae3946c69caf1b188b",
+            "hasRuntimeStatement": false
+          },
+          "dataChanged": true,
+          "freshPreviewHash": "a00d065abb46cf3b01c981045d1c71e7d11ef648b5c974ae3946c69caf1b188b",
+          "prepareHookCalls": 4,
+          "realPrepares": 3,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": true,
+            "section10": true
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 4,
+          "orderInIteration": 1,
+          "requestMs": 81.946,
+          "jobDoneMs": 2185.05,
+          "totalMs": 2297.52,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "a00d065abb46cf3b01c981045d1c71e7d11ef648b5c974ae3946c69caf1b188b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "eb867ba2ae324d1b2c4f72f5fdc9fd7bef7c3f3c81b14e8ac5f5d859a5505ecd",
+            "hasRuntimeStatement": false
+          },
+          "dataChanged": true,
+          "freshPreviewHash": "eb867ba2ae324d1b2c4f72f5fdc9fd7bef7c3f3c81b14e8ac5f5d859a5505ecd",
+          "prepareHookCalls": 4,
+          "realPrepares": 3,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": true,
+            "section10": true
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 5,
+          "orderInIteration": 0,
+          "requestMs": 79.007,
+          "jobDoneMs": 2180.38,
+          "totalMs": 2283.839,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "eb867ba2ae324d1b2c4f72f5fdc9fd7bef7c3f3c81b14e8ac5f5d859a5505ecd",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "36bbf7c9903db56771dddc23870531827a94f9f9eb371e1444ee5ef47d881fb3",
+            "hasRuntimeStatement": false
+          },
+          "dataChanged": true,
+          "freshPreviewHash": "36bbf7c9903db56771dddc23870531827a94f9f9eb371e1444ee5ef47d881fb3",
+          "prepareHookCalls": 4,
+          "realPrepares": 3,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": true,
+            "section10": true
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 6,
+          "orderInIteration": 1,
+          "requestMs": 75.68,
+          "jobDoneMs": 2172.138,
+          "totalMs": 2271.208,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "36bbf7c9903db56771dddc23870531827a94f9f9eb371e1444ee5ef47d881fb3",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "e0757b3020d77029a4cc86c8e43073c0d388568866cc3c590678d00628e0d542",
+            "hasRuntimeStatement": false
+          },
+          "dataChanged": true,
+          "freshPreviewHash": "e0757b3020d77029a4cc86c8e43073c0d388568866cc3c590678d00628e0d542",
+          "prepareHookCalls": 4,
+          "realPrepares": 3,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": true,
+            "section10": true
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 7,
+          "orderInIteration": 0,
+          "requestMs": 74.388,
+          "jobDoneMs": 2168.225,
+          "totalMs": 2258.639,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "e0757b3020d77029a4cc86c8e43073c0d388568866cc3c590678d00628e0d542",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "541ab05c5e7c47b9d0d1bd224d77638e468dfde9483696a0ecfd22be141a0214",
+            "hasRuntimeStatement": false
+          },
+          "dataChanged": true,
+          "freshPreviewHash": "541ab05c5e7c47b9d0d1bd224d77638e468dfde9483696a0ecfd22be141a0214",
+          "prepareHookCalls": 4,
+          "realPrepares": 3,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": true,
+            "section10": true
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 8,
+          "orderInIteration": 1,
+          "requestMs": 76.111,
+          "jobDoneMs": 2169.884,
+          "totalMs": 2288.529,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "541ab05c5e7c47b9d0d1bd224d77638e468dfde9483696a0ecfd22be141a0214",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "f36fc0c11b2a8faeaaacb949b31a445abf82dcebae0f8599d9b3663de693993b",
+            "hasRuntimeStatement": false
+          },
+          "dataChanged": true,
+          "freshPreviewHash": "f36fc0c11b2a8faeaaacb949b31a445abf82dcebae0f8599d9b3663de693993b",
+          "prepareHookCalls": 4,
+          "realPrepares": 3,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": true,
+            "section10": true
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 9,
+          "orderInIteration": 0,
+          "requestMs": 83.499,
+          "jobDoneMs": 2183.133,
+          "totalMs": 2282.939,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "f36fc0c11b2a8faeaaacb949b31a445abf82dcebae0f8599d9b3663de693993b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "5f7d25fdabffad412125df905a5f744414c27c4d73f2320ced616974537a3200",
+            "hasRuntimeStatement": false
+          },
+          "dataChanged": true,
+          "freshPreviewHash": "5f7d25fdabffad412125df905a5f744414c27c4d73f2320ced616974537a3200",
+          "prepareHookCalls": 4,
+          "realPrepares": 3,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": true,
+            "section10": true
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 10,
+          "orderInIteration": 1,
+          "requestMs": 98.524,
+          "jobDoneMs": 2236.506,
+          "totalMs": 2358.147,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "5f7d25fdabffad412125df905a5f744414c27c4d73f2320ced616974537a3200",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "6c643297400d3a89d358ad1b89d04886d4c5b959fc9dc10df44d3c4b66cdb242",
+            "hasRuntimeStatement": false
+          },
+          "dataChanged": true,
+          "freshPreviewHash": "6c643297400d3a89d358ad1b89d04886d4c5b959fc9dc10df44d3c4b66cdb242",
+          "prepareHookCalls": 4,
+          "realPrepares": 3,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": true,
+            "section10": true
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 11,
+          "orderInIteration": 0,
+          "requestMs": 77.121,
+          "jobDoneMs": 2185.47,
+          "totalMs": 2276.064,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "6c643297400d3a89d358ad1b89d04886d4c5b959fc9dc10df44d3c4b66cdb242",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "de127fb17c42d8478bd2b22fd617dc08a46179df9cb8d6a0c2dd06556b08b41b",
+            "hasRuntimeStatement": false
+          },
+          "dataChanged": true,
+          "freshPreviewHash": "de127fb17c42d8478bd2b22fd617dc08a46179df9cb8d6a0c2dd06556b08b41b",
+          "prepareHookCalls": 4,
+          "realPrepares": 3,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": true,
+            "section10": true
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 12,
+          "orderInIteration": 1,
+          "requestMs": 79.726,
+          "jobDoneMs": 2191.452,
+          "totalMs": 2329.654,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "de127fb17c42d8478bd2b22fd617dc08a46179df9cb8d6a0c2dd06556b08b41b",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "extractive",
+            "fallbackReason": "source_changed",
+            "snapshotHash": "db26310d90437b2a05fb1bc987efd8e7d2b38b13acd03e37a8d386ca86440024",
+            "hasRuntimeStatement": false
+          },
+          "dataChanged": true,
+          "freshPreviewHash": "db26310d90437b2a05fb1bc987efd8e7d2b38b13acd03e37a8d386ca86440024",
+          "prepareHookCalls": 4,
+          "realPrepares": 3,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": true,
+            "section10": true
+          }
+        }
+      ],
+      "B/quiet": [
+        {
+          "warmup": true,
+          "iteration": 0,
+          "orderInIteration": 0,
+          "requestMs": 154.567,
+          "jobDoneMs": 2422.488,
+          "totalMs": 2577.788,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+            "hasRuntimeStatement": true
+          },
+          "dataChanged": false,
+          "freshPreviewHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+          "prepareHookCalls": 4,
+          "realPrepares": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": true,
+          "iteration": 1,
+          "orderInIteration": 1,
+          "requestMs": 102.034,
+          "jobDoneMs": 2286.841,
+          "totalMs": 2360.736,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+            "hasRuntimeStatement": true
+          },
+          "dataChanged": false,
+          "freshPreviewHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+          "prepareHookCalls": 4,
+          "realPrepares": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": true,
+          "iteration": 2,
+          "orderInIteration": 0,
+          "requestMs": 122.248,
+          "jobDoneMs": 2303.236,
+          "totalMs": 2391.65,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+            "hasRuntimeStatement": true
+          },
+          "dataChanged": false,
+          "freshPreviewHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+          "prepareHookCalls": 4,
+          "realPrepares": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 3,
+          "orderInIteration": 1,
+          "requestMs": 95.408,
+          "jobDoneMs": 2278.154,
+          "totalMs": 2350.665,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+            "hasRuntimeStatement": true
+          },
+          "dataChanged": false,
+          "freshPreviewHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+          "prepareHookCalls": 4,
+          "realPrepares": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 4,
+          "orderInIteration": 0,
+          "requestMs": 72.72,
+          "jobDoneMs": 2223.338,
+          "totalMs": 2298.05,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+            "hasRuntimeStatement": true
+          },
+          "dataChanged": false,
+          "freshPreviewHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+          "prepareHookCalls": 4,
+          "realPrepares": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 5,
+          "orderInIteration": 1,
+          "requestMs": 77.002,
+          "jobDoneMs": 2265.333,
+          "totalMs": 2352.628,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+            "hasRuntimeStatement": true
+          },
+          "dataChanged": false,
+          "freshPreviewHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+          "prepareHookCalls": 4,
+          "realPrepares": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 6,
+          "orderInIteration": 0,
+          "requestMs": 153.995,
+          "jobDoneMs": 2355.802,
+          "totalMs": 2451.617,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+            "hasRuntimeStatement": true
+          },
+          "dataChanged": false,
+          "freshPreviewHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+          "prepareHookCalls": 4,
+          "realPrepares": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 7,
+          "orderInIteration": 1,
+          "requestMs": 88.44,
+          "jobDoneMs": 2277.853,
+          "totalMs": 2380.998,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+            "hasRuntimeStatement": true
+          },
+          "dataChanged": false,
+          "freshPreviewHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+          "prepareHookCalls": 4,
+          "realPrepares": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 8,
+          "orderInIteration": 0,
+          "requestMs": 93.509,
+          "jobDoneMs": 2262.911,
+          "totalMs": 2338.515,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+            "hasRuntimeStatement": true
+          },
+          "dataChanged": false,
+          "freshPreviewHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+          "prepareHookCalls": 4,
+          "realPrepares": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 9,
+          "orderInIteration": 1,
+          "requestMs": 85.454,
+          "jobDoneMs": 2255.954,
+          "totalMs": 2339.314,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+            "hasRuntimeStatement": true
+          },
+          "dataChanged": false,
+          "freshPreviewHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+          "prepareHookCalls": 4,
+          "realPrepares": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 10,
+          "orderInIteration": 0,
+          "requestMs": 83.6,
+          "jobDoneMs": 2243.599,
+          "totalMs": 2319.284,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+            "hasRuntimeStatement": true
+          },
+          "dataChanged": false,
+          "freshPreviewHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+          "prepareHookCalls": 4,
+          "realPrepares": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 11,
+          "orderInIteration": 1,
+          "requestMs": 78.358,
+          "jobDoneMs": 2254.981,
+          "totalMs": 2369.091,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+            "hasRuntimeStatement": true
+          },
+          "dataChanged": false,
+          "freshPreviewHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+          "prepareHookCalls": 4,
+          "realPrepares": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 12,
+          "orderInIteration": 0,
+          "requestMs": 90.869,
+          "jobDoneMs": 2260.707,
+          "totalMs": 2336.92,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+            "hasRuntimeStatement": true
+          },
+          "dataChanged": false,
+          "freshPreviewHash": "7e521bf73aaf5c493653f80f74b9e69984e48390e226074b859813e857d2f224",
+          "prepareHookCalls": 4,
+          "realPrepares": 4,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        }
+      ],
+      "V1/quiet": [
+        {
+          "warmup": true,
+          "iteration": 0,
+          "orderInIteration": 1,
+          "requestMs": 126.146,
+          "jobDoneMs": 2241.677,
+          "totalMs": 2372.603,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+            "hasRuntimeStatement": true
+          },
+          "dataChanged": false,
+          "freshPreviewHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+          "prepareHookCalls": 4,
+          "realPrepares": 3,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": true,
+          "iteration": 1,
+          "orderInIteration": 0,
+          "requestMs": 118.403,
+          "jobDoneMs": 2239.378,
+          "totalMs": 2315.948,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+            "hasRuntimeStatement": true
+          },
+          "dataChanged": false,
+          "freshPreviewHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+          "prepareHookCalls": 4,
+          "realPrepares": 3,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": true,
+          "iteration": 2,
+          "orderInIteration": 1,
+          "requestMs": 86.338,
+          "jobDoneMs": 2188.639,
+          "totalMs": 2267.847,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+            "hasRuntimeStatement": true
+          },
+          "dataChanged": false,
+          "freshPreviewHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+          "prepareHookCalls": 4,
+          "realPrepares": 3,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 3,
+          "orderInIteration": 0,
+          "requestMs": 82.069,
+          "jobDoneMs": 2166.681,
+          "totalMs": 2271.227,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+            "hasRuntimeStatement": true
+          },
+          "dataChanged": false,
+          "freshPreviewHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+          "prepareHookCalls": 4,
+          "realPrepares": 3,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 4,
+          "orderInIteration": 1,
+          "requestMs": 78.772,
+          "jobDoneMs": 2161.861,
+          "totalMs": 2238.312,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+            "hasRuntimeStatement": true
+          },
+          "dataChanged": false,
+          "freshPreviewHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+          "prepareHookCalls": 4,
+          "realPrepares": 3,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 5,
+          "orderInIteration": 0,
+          "requestMs": 70.493,
+          "jobDoneMs": 2152.062,
+          "totalMs": 2223.466,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+            "hasRuntimeStatement": true
+          },
+          "dataChanged": false,
+          "freshPreviewHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+          "prepareHookCalls": 4,
+          "realPrepares": 3,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 6,
+          "orderInIteration": 1,
+          "requestMs": 93.8,
+          "jobDoneMs": 2196.954,
+          "totalMs": 2312.011,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+            "hasRuntimeStatement": true
+          },
+          "dataChanged": false,
+          "freshPreviewHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+          "prepareHookCalls": 4,
+          "realPrepares": 3,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 7,
+          "orderInIteration": 0,
+          "requestMs": 83.227,
+          "jobDoneMs": 2171.5,
+          "totalMs": 2251.281,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+            "hasRuntimeStatement": true
+          },
+          "dataChanged": false,
+          "freshPreviewHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+          "prepareHookCalls": 4,
+          "realPrepares": 3,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 8,
+          "orderInIteration": 1,
+          "requestMs": 73.853,
+          "jobDoneMs": 2156.968,
+          "totalMs": 2246.26,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+            "hasRuntimeStatement": true
+          },
+          "dataChanged": false,
+          "freshPreviewHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+          "prepareHookCalls": 4,
+          "realPrepares": 3,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 9,
+          "orderInIteration": 0,
+          "requestMs": 86.659,
+          "jobDoneMs": 2177.535,
+          "totalMs": 2260.883,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+            "hasRuntimeStatement": true
+          },
+          "dataChanged": false,
+          "freshPreviewHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+          "prepareHookCalls": 4,
+          "realPrepares": 3,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 10,
+          "orderInIteration": 1,
+          "requestMs": 81.4,
+          "jobDoneMs": 2164.131,
+          "totalMs": 2246.391,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+            "hasRuntimeStatement": true
+          },
+          "dataChanged": false,
+          "freshPreviewHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+          "prepareHookCalls": 4,
+          "realPrepares": 3,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 11,
+          "orderInIteration": 0,
+          "requestMs": 82.039,
+          "jobDoneMs": 2170.505,
+          "totalMs": 2261.687,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+            "hasRuntimeStatement": true
+          },
+          "dataChanged": false,
+          "freshPreviewHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+          "prepareHookCalls": 4,
+          "realPrepares": 3,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        },
+        {
+          "warmup": false,
+          "iteration": 12,
+          "orderInIteration": 1,
+          "requestMs": 70.369,
+          "jobDoneMs": 2149.577,
+          "totalMs": 2251.313,
+          "requestStatus": "pending",
+          "internal": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+            "hasRuntimeStatement": true
+          },
+          "primary": {
+            "status": "ready",
+            "effectiveMode": "full-context",
+            "fallbackReason": null,
+            "snapshotHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+            "hasRuntimeStatement": true
+          },
+          "dataChanged": false,
+          "freshPreviewHash": "476d69cefe16152de602a6383826ed1eea2a1163bc70b51e5f0c5658d1aec447",
+          "prepareHookCalls": 4,
+          "realPrepares": 3,
+          "prepareCallsByPhase": ["request", "job", "job", "read"],
+          "stalePrimary": {
+            "section6": false,
+            "section10": false
+          },
+          "staleSecondary": {
+            "section6": false,
+            "section10": false
+          }
+        }
+      ]
+    }
+  },
+  "testsCompleted": ["m1m2m5", "m3m4", "v1"]
+}
