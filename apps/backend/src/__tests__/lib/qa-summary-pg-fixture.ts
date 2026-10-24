@@ -15,8 +15,10 @@ import {
 import { prisma } from '../../db';
 import { getRedis } from '../../redis';
 import { hashCapability } from '../../lib/capabilityCrypto';
-import { moderationQaContextInternals } from '../../lib/moderationQaContext';
-import { resolveQaPresenterSortMode } from '../../lib/qaPresenterSortMode';
+import {
+  loadAuthorizedModerationState,
+  moderationQaContextInternals,
+} from '../../lib/moderationQaContext';
 import {
   QA_SEMANTIC_TOPIC_SNAPSHOT_VERSION,
   QaSemanticTopicSnapshotSchema,
@@ -366,13 +368,14 @@ export async function createFullContextScenario(options: {
 
   // Blitzlicht über den echten Router.
   const { quickFeedbackRouter } = await import('../../routers/quickFeedback');
-  const host = quickFeedbackRouter.createCaller({ req: {} as never });
+  const host = quickFeedbackRouter.createCaller({});
   await host.create({ type: 'YESNO', sessionCode: room.code });
   const values = YesNoValueEnum.options;
   for (let index = 0; index < FULL_CONTEXT_QUICK_FEEDBACK_VOTES; index += 1) {
     const voter = voters[index]!;
+    // Teilnahme-Capability wie beim WebSocket-Transport (`extractParticipantCapability`).
     const caller = quickFeedbackRouter.createCaller({
-      req: { headers: { 'x-participant-capability': voter.capability } } as never,
+      connectionParams: { participantCapability: voter.capability, participantId: voter.id },
     });
     await caller.vote({
       sessionCode: room.code,
@@ -410,12 +413,9 @@ export async function createFullContextScenario(options: {
     select: { id: true, text: true },
     orderBy: { id: 'asc' },
   });
-  const { qaRankingRevision } = await prisma.session.findUniqueOrThrow({
-    where: { id: room.sessionId },
-    select: { qaRankingRevision: true },
-  });
-  const participantCount = await prisma.participant.count({ where: { sessionId: room.sessionId } });
-  const metric = resolveQaPresenterSortMode(room.sessionId);
+  // Derselbe autorisierte Zustand, aus dem der Kontextaufbau die aktuelle Korpusrevision bildet.
+  const state = await loadAuthorizedModerationState({ sessionId: room.sessionId, access: {} });
+  const metric = state.activeSortMode;
   const members = topicQuestions.map((question) => ({
     questionId: question.id,
     textDigest: hashQaSemanticTopicMemberText(question.text),
@@ -425,8 +425,8 @@ export async function createFullContextScenario(options: {
     status: 'ready',
     metric,
     corpusRevision: moderationQaContextInternals.buildCurrentQaSemanticCorpusRevision({
-      state: { qaRankingRevision } as never,
-      participantCount,
+      state,
+      participantCount: state.participantCount,
       metric,
     }),
     analyzedAt: new Date().toISOString(),
@@ -503,12 +503,19 @@ export async function restorePlatformStatistic(snapshot: PlatformStatisticSnapsh
   }
 }
 
-/** Entfernt Redis-Schlüssel der registrierten Sessions (Analyse-Caches, Quick-Feedback). */
+/**
+ * Entfernt Redis-Schlüssel der registrierten Sessions (Analyse-Caches, Quick-Feedback und das
+ * Start-Limit für session-gebundene Blitzlicht-Runden, `checkQuickFeedbackSessionCreateRate`:
+ * `rl:quickFeedback:session:<CODE>`).
+ */
 export async function deleteFixtureRedisKeys(registry: FixtureRegistry): Promise<void> {
   const redis = getRedis();
   const patterns = [
     ...registry.sessionIds.map((id) => `*${id}*`),
-    ...registry.sessionCodes.map((sessionCode) => `qf:*${sessionCode}*`),
+    ...registry.sessionCodes.flatMap((sessionCode) => [
+      `qf:*${sessionCode}*`,
+      `rl:quickFeedback:session:${sessionCode.toUpperCase()}`,
+    ]),
   ];
   for (const pattern of patterns) {
     const keys = await redis.keys(pattern);
