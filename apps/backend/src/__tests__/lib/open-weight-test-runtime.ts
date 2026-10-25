@@ -57,6 +57,11 @@ export type TestRuntimeOptions = {
    * `QaSummaryModelOutput`). Standard: {@link defaultLegacyOutput}.
    */
   readonly legacyOutput?: (body: string) => QaSummaryModelOutput;
+  /**
+   * Zusätzliche `GET`-Endpunkte (Pfad → Antwort), z. B. `/props` oder `/v1/models`
+   * für Trockenläufe der Laborharness. Ohne Eintrag antwortet ein `GET` mit 404.
+   */
+  readonly getRoutes?: Readonly<Record<string, { readonly status: number; readonly body: string }>>;
 };
 
 export type TestRuntime = {
@@ -139,6 +144,47 @@ export function completionEnvelope(content: string): string {
   });
 }
 
+/**
+ * Wie {@link defaultCompletionBody}, zusätzlich mit `usage`, `timings` und
+ * `system_fingerprint` in der Form, die llama-server b10524 liefert
+ * (`docs/features/open-weight-llm-runtime.md`, protokollierte Modellprüfung).
+ * **Alle Zahlen sind künstlich:** Die Test-Runtime hat keinen Tokenizer und kein
+ * Modell. `prompt_tokens` ist ein Viertel der UTF-8-Bytes aller Nachrichteninhalte
+ * (aufgerundet), die Zeiten teilen `delayMs` im Verhältnis 4 : 1 auf. Nur für
+ * Trockenläufe von Messwerkzeugen, nie als Evidenz.
+ */
+export function defaultCompletionBodyWithUsage(rawBody: string, delayMs: number): string {
+  const envelope = JSON.parse(defaultCompletionBody(rawBody)) as {
+    choices: { message: { content: string } }[];
+  };
+  const parsed = JSON.parse(rawBody) as ChatBody;
+  const messageBytes = (parsed.messages ?? []).reduce(
+    (sum, message) => sum + Buffer.byteLength(message.content ?? '', 'utf8'),
+    0,
+  );
+  const promptTokens = Math.ceil(messageBytes / 4);
+  const completionTokens = Math.ceil(
+    Buffer.byteLength(envelope.choices[0]!.message.content, 'utf8') / 4,
+  );
+  return JSON.stringify({
+    ...envelope,
+    system_fingerprint: TEST_RUNTIME_MODEL_VERSION,
+    usage: {
+      completion_tokens: completionTokens,
+      prompt_tokens: promptTokens,
+      total_tokens: promptTokens + completionTokens,
+      prompt_tokens_details: { cached_tokens: 0 },
+    },
+    timings: {
+      cache_n: 0,
+      prompt_n: promptTokens,
+      prompt_ms: delayMs * 0.8,
+      predicted_n: completionTokens,
+      predicted_ms: delayMs * 0.2,
+    },
+  });
+}
+
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -166,6 +212,12 @@ export async function startTestRuntime(options: TestRuntimeOptions = {}): Promis
               ? '[]'
               : '{"error":{"code":503,"message":"no slot available","type":"unavailable_error"}}',
           );
+          return;
+        }
+        const getRoute = req.method === 'GET' ? options.getRoutes?.[path] : undefined;
+        if (getRoute) {
+          res.writeHead(getRoute.status, { 'content-type': 'application/json' });
+          res.end(getRoute.body);
           return;
         }
         if (req.method === 'POST' && path === TEST_RUNTIME_LEGACY_PATH) {
