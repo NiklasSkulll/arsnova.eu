@@ -1,7 +1,7 @@
 // Auswertung der 1C-Messreihen (Design Teil 2, Abschnitte 5, 6 und 10).
 //
 // Aufruf aus dem Repository-Wurzelverzeichnis:
-//   node docs/referat-thema-1/evidenz/1C/messung/auswertung.mjs <messung.json> [...]
+//   node docs/referat-thema-1/evidenz/1C/messung/auswertung.mjs <messung.json.gz> [...]
 //
 // Kennzahlen ohne Aufwärmläufe. Median: bei geradem n Mittel der beiden
 // mittleren Werte. p95: Nearest-Rank, b[ceil(0,95 · n) − 1] (bei n = 10 also
@@ -29,6 +29,7 @@
 // L4 Statusverteilung mit Wilson-Intervall, L5 Befund T3.1 je Arm. Trockenläufe gegen die
 // Test-Runtime (`labor.dryRun`) werden als solche markiert und sind keine Evidenz.
 import { readFileSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
 
 const SEED = 20261024;
 const RESAMPLES = 10_000;
@@ -755,9 +756,12 @@ function evaluateLabor(labor, out) {
   }
 }
 
-const files = process.argv
-  .slice(2)
-  .map((path) => ({ path, data: JSON.parse(readFileSync(path, 'utf8')) }));
+const files = process.argv.slice(2).map((path) => {
+  // Rohdaten liegen gzip-komprimiert im Repository (`*.json.gz`); unkomprimierte Dateien gehen weiter.
+  const raw = readFileSync(path);
+  const text = (path.endsWith('.gz') ? gunzipSync(raw) : raw).toString('utf8');
+  return { path, data: JSON.parse(text) };
+});
 for (const { path, data } of files) {
   console.log(`# ${path}`);
   console.log(JSON.stringify(evaluate(data), null, 1));

@@ -126,11 +126,13 @@ docker rm -f labor-1c-pg labor-1c-redis
 
 ## 7. Einchecken
 
-Nur die JSON-Datei und das Protokoll, keine Logs mit Umgebungsdaten. Vorher den Diff lesen:
+Nur die Rohdaten und das Protokoll, keine Logs mit Umgebungsdaten. Rohdaten liegen wie alle Messdaten gzip-komprimiert im Repository (`gzip -9n`, deterministisch; `auswertung.mjs` liest `.json.gz` direkt). SHA-256 der unkomprimierten Datei vorher im Protokoll festhalten. Vorher den Diff lesen:
 
 ```bash
 git switch feature-1C-context-path
-git add docs/referat-thema-1/evidenz/1C/messung/<DATUM>-labor.json
+sha256sum docs/referat-thema-1/evidenz/1C/messung/<DATUM>-labor.json
+gzip -9n docs/referat-thema-1/evidenz/1C/messung/<DATUM>-labor.json
+git add docs/referat-thema-1/evidenz/1C/messung/<DATUM>-labor.json.gz
 git diff --cached --stat
 git commit -m 'docs(referat): record the 1C lab run against the private runtime'
 ```
