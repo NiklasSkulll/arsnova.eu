@@ -17,7 +17,7 @@ Ein Versionskonflikt zwischen Prozessen ist damit weder für die Lehrperson (Vor
 
 ## Reproduktion
 
-Die Charakterisierungstests halten das Ist-Verhalten fest:
+Die Charakterisierungstests halten das Ist-Verhalten fest. Sie liegen auf dem Branch `feature-1C-context-path`, nicht in `main` `248029dc`: hinzugefügt in Commit `3f6e2f85`, in der heutigen Form (`it.todo` statt des vorherigen `it.fails`) seit Commit `14d26d15`.
 
 - `apps/backend/src/lib/wordCloudAnalysisCache.test.ts`: „Negativprobe: liefert für einen strukturell gültigen Latest-Snapshot mit fremder Version still null wie bei fehlenden Daten“ (Versionen `qa-semantic-topic-snapshot-v0` und `-v2`; kein `warn`).
 - `apps/backend/src/lib/moderationQaContext.test.ts`: „negative probe: projects a structurally valid snapshot with a foreign version exactly like no data“ (Projektion gleich der ohne Snapshot), daneben `it.todo('distinguishes a stale snapshot from no data')`.
@@ -39,4 +39,4 @@ Laut #456 (Abschnitt 11: „Versionierte Adapterfähigkeit statt stiller Feldver
 
 ## Gültigkeitsgrenze
 
-Geprüft an `main` `248029dc` mit Unit-Tests (Redis gemockt). Wie häufig solche Snapshots im Betrieb vorkommen, ist nicht untersucht.
+Produktivcode gleich `main` `248029dc`; geprüft mit den Unit-Tests auf dem Branch `feature-1C-context-path` (Redis gemockt). Wie häufig solche Snapshots im Betrieb vorkommen, ist nicht untersucht.

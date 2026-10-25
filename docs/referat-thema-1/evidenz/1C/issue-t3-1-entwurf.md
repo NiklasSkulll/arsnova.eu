@@ -22,7 +22,7 @@ Zeilen gelten für `main` `248029dc` (Basis des Branches `feature-1C-context-pat
 1. `loadQuickFeedbackModerationSnapshot` setzt das Zeitfenster der Blitzlicht-Quelle auf `{ kind: 'interval', from: roundStartedAt, to: max(roundStartedAt, observedAt) }` (`quickFeedbackModerationSnapshot.ts` Z. 389–391 und 398).
 2. `observedAt` ist der Aufbauzeitpunkt: `buildAuthorizedModerationTeachingSignals` übergibt `initial.authorizedAt` (`moderationTeachingSignals.ts` Z. 1999), und `loadAuthorizedModerationState` setzt `authorizedAt` auf `new Date()` (`moderationQaContext.ts` Z. 196 und 203).
 3. `sourceRevisionFor` hasht den ungepackten Analysekontext und nimmt nur `analyzedAt`, `classifiedAt` und `confirmedAt` aus (`moderationPromptContext.ts` Z. 517–528 und Z. 40). Der Packer übernimmt `meta` samt `sourceRevision` (`moderationPromptContextPacking.ts` Z. 909–910).
-4. `hashModerationPromptContextMaterial` (`moderationPromptContextPacking.ts` ab Z. 212) nimmt dieselben drei Schlüssel aus (Z. 159). Intervallgrenzen bleiben laut Kommentar (Z. 161–166) bewusst Teil des Hashs.
+4. `hashModerationPromptContextMaterial` (`moderationPromptContextPacking.ts` Z. 212–234) nimmt dieselben drei Schlüssel aus (Z. 159). Intervallgrenzen bleiben laut Kommentar (Z. 161–166) bewusst Teil des Hashs.
 5. `processJob` vergleicht die Hashes von prepare (2) und (3) (`qaSummaryQueue.ts` Z. 341–345), der Lesepfad `getQaSummaryRuntimeFresh` den gespeicherten Hash mit einem neuen Aufbau (Z. 426–438), der Cooldown-Cache verlangt denselben Hash (Z. 494–508).
 
 Für `TEMPO` entsteht keine Quelle (`quickFeedbackModerationSnapshot.ts` Z. 376–384); deshalb ist dieser Typ nicht betroffen.
