@@ -19,6 +19,9 @@
 // M7b (Nachtrag im Protokoll Teil 3): zusätzlich Klasse (b) = source_changed oder
 // failed/context_unavailable nach CONFLICT in prepare (2)/(3), mit Kriterium K_b.
 // M7c: Diagnose `scheduleDiagnostic` (Zeitpläne mit Ankunft im Fenster), kein Kriterium.
+// Teil 3, Task 5 (nachträglich, kein Kriterium): exakte Poisson-Binomial-Randwahrscheinlichkeiten
+// P(X ≥ k) und P(X ≤ k) für die Zahl der Zeitpläne mit Ankunft im Fenster und für die Zahl der
+// Läufe mit geändertem Hash, X = Summe unabhängiger Bernoulli(1 − e^(−r·T_i)) über die Läufe mit T.
 import { readFileSync } from 'node:fs';
 
 const SEED = 20261024;
@@ -109,6 +112,23 @@ function binomialCdf(k, n, p) {
     total += coefficient * p ** i * (1 - p) ** (n - i);
   }
   return k < 0 ? 0 : total;
+}
+/** Verteilung der Summe unabhängiger Bernoulli(p_i) (Poisson-Binomial), exakt per Faltung. */
+function poissonBinomialTails(probabilities, k) {
+  let distribution = [1];
+  for (const p of probabilities) {
+    const next = new Array(distribution.length + 1).fill(0);
+    distribution.forEach((value, i) => {
+      next[i] += value * (1 - p);
+      next[i + 1] += value * p;
+    });
+    distribution = next;
+  }
+  const sum = (values) => values.reduce((total, value) => total + value, 0);
+  return {
+    pAtLeast: +sum(distribution.slice(k)).toFixed(4),
+    pAtMost: +sum(distribution.slice(0, k + 1)).toFixed(4),
+  };
 }
 const mean = (values) => values.reduce((sum, value) => sum + value, 0) / values.length;
 const measured = (runs) => runs.filter((run) => run.warmup === false);
@@ -411,6 +431,16 @@ function evaluateM7(m7, out) {
               schedulesWithArrivalInWindow: withT.filter((x) => scheduleHitsWindow(x, r)).length,
               runsWithT: withT.length,
               expected: +withT.reduce((sum, x) => sum + predict(x.windowInnerMs), 0).toFixed(1),
+              // Nachtrag Task 5: exakte Randwahrscheinlichkeiten unter der Vorhersage.
+              schedulesTails: poissonBinomialTails(
+                withT.map((x) => predict(x.windowInnerMs)),
+                withT.filter((x) => scheduleHitsWindow(x, r)).length,
+              ),
+              hashChangedRunsWithT: withT.filter((x) => x.hashChanged === true).length,
+              hashChangedTails: poissonBinomialTails(
+                withT.map((x) => predict(x.windowInnerMs)),
+                withT.filter((x) => x.hashChanged === true).length,
+              ),
             },
       modelOutputDiscarded: {
         k: discarded,
