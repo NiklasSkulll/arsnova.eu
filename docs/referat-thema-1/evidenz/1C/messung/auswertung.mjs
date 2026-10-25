@@ -22,6 +22,12 @@
 // Teil 3, Task 5 (nachträglich, kein Kriterium): exakte Poisson-Binomial-Randwahrscheinlichkeiten
 // P(X ≥ k) und P(X ≤ k) für die Zahl der Zeitpläne mit Ankunft im Fenster und für die Zahl der
 // Läufe mit geändertem Hash, X = Summe unabhängiger Bernoulli(1 − e^(−r·T_i)) über die Läufe mit T.
+// Laborlauf (Entwurf docs/referat-thema-1/specs/2026-10-25-1c-labor-design.md, Schlüssel `labor`):
+// L1 Vorschau = Draht je Lauf, L2 q = usage.prompt_tokens / budget.packedInputTokens,
+// L3 Zeiten (Median, p95 Nearest-Rank, Bootstrap-Perzentil-Intervall 95 % für Mediane, 10 000
+// Wiederholungen, Seed 20261024 wie oben; Verhältnisse von Medianen mit 4 Nachkommastellen),
+// L4 Statusverteilung mit Wilson-Intervall, L5 Befund T3.1 je Arm. Trockenläufe gegen die
+// Test-Runtime (`labor.dryRun`) werden als solche markiert und sind keine Evidenz.
 import { readFileSync } from 'node:fs';
 
 const SEED = 20261024;
@@ -207,6 +213,7 @@ function evaluate(data) {
   if (data.m6) evaluateM6(data.m6, out);
   if (data.m7calibration) out['M7 Kalibrierung'] = data.m7calibration.steps;
   if (data.m7) evaluateM7(data.m7, out);
+  if (data.labor) evaluateLabor(data.labor, out);
   return out;
 }
 
@@ -456,6 +463,295 @@ function evaluateM7(m7, out) {
       completionRequests: distinct(runs.map((x) => x.completionRequests)),
       votersRemaining: rate.remainingVotersByKey,
     };
+  }
+}
+
+/** Bootstrap-Perzentil-Intervall 95 % für Median(a) / Median(b), 4 Nachkommastellen. */
+function bootstrapMedianRatio4(a, b) {
+  const random = mulberry32(SEED);
+  const draw = (values) => values.map(() => values[Math.floor(random() * values.length)]);
+  const ratios = [];
+  for (let i = 0; i < RESAMPLES; i += 1) ratios.push(median(draw(a)) / median(draw(b)));
+  const s = sorted(ratios);
+  return {
+    point: +(median(a) / median(b)).toFixed(4),
+    ci95: [
+      +s[Math.floor(0.025 * RESAMPLES)].toFixed(4),
+      +s[Math.ceil(0.975 * RESAMPLES) - 1].toFixed(4),
+    ],
+    resamples: RESAMPLES,
+    seed: SEED,
+  };
+}
+/** Median mit Bootstrap-Intervall für dimensionslose Werte (4 Nachkommastellen). */
+function ratioStats(values) {
+  const random = mulberry32(SEED);
+  const draws = [];
+  for (let i = 0; i < RESAMPLES; i += 1) {
+    draws.push(median(values.map(() => values[Math.floor(random() * values.length)])));
+  }
+  const s = sorted(draws);
+  const b = sorted(values);
+  return {
+    n: b.length,
+    min: +b[0].toFixed(4),
+    median: +median(b).toFixed(4),
+    max: +b[b.length - 1].toFixed(4),
+    medianCi95: [
+      +s[Math.floor(0.025 * RESAMPLES)].toFixed(4),
+      +s[Math.ceil(0.975 * RESAMPLES) - 1].toFixed(4),
+    ],
+  };
+}
+const timeStats = (values) =>
+  values.length ? { ...stats(values), medianCi95: bootstrapMedianCi(values) } : null;
+const countBy = (values) =>
+  Object.fromEntries(distinct(values).map((v) => [v, values.filter((x) => x === v).length]));
+const completionOf = (run) =>
+  (run.exchanges ?? []).find((x) => x.method === 'POST' && x.path === '/v1/chat/completions') ??
+  null;
+const laborOutcome = (o) => `${o.status}/${o.effectiveMode}/${o.fallbackReason}`;
+const prepareMs = (run, role) => run.prepares.find((p) => p.role === role)?.ms ?? null;
+const numbers = (values) => values.filter((v) => typeof v === 'number');
+
+/** L1 je Lauf: Hash, Draht und Unveränderlichkeit des Proxys. */
+function laborL1(run) {
+  const c = completionOf(run);
+  const w = c?.wire;
+  const checks = {
+    oneCompletion: run.completionRequests === 1,
+    hashPreviewEqualsSent: run.sent?.snapshotHash === run.preview.snapshotHash,
+    hashSentEqualsStored: run.stored.snapshotHash === run.sent?.snapshotHash,
+    userEqualsPreview: w?.userEqualsPreview === true,
+    rolesSystemSystemUser: JSON.stringify(w?.roles) === '["system","system","user"]',
+    systemInstructionMatches: w?.systemInstructionMatches === true,
+    systemDefinitionMatches: w?.systemDefinitionMatches === true,
+    maxTokensEqualsReserved:
+      typeof w?.maxTokens === 'number' && w.maxTokens === run.sent?.budget?.reservedOutputTokens,
+    topLevelKeysAsExpected: w?.topLevelKeysAsExpected === true,
+    forwardedBodyIdentical: (run.exchanges ?? []).every((x) => x.forwardedBodyIdentical),
+    authorizationMatchesExpected: (run.exchanges ?? []).every(
+      (x) => x.authorizationMatchesExpected !== false,
+    ),
+  };
+  return { checks, firstDifference: w?.userFirstDifferenceToPreview ?? null };
+}
+
+/** L2 je Lauf: q = usage.prompt_tokens / packedInputTokens des gesendeten Aufbaus. */
+function laborL2(run) {
+  const response = completionOf(run)?.wire?.response;
+  const promptTokens = response?.usage?.prompt_tokens;
+  const packed = run.sent?.budget?.packedInputTokens;
+  if (typeof promptTokens !== 'number' || typeof packed !== 'number' || packed === 0) return null;
+  const t = response.timings ?? {};
+  const promptN = typeof t.prompt_n === 'number' ? t.prompt_n : null;
+  const cacheN = typeof t.cache_n === 'number' ? t.cache_n : null;
+  return {
+    promptTokens,
+    packedInputTokens: packed,
+    q: promptTokens / packed,
+    bytesPerToken: (completionOf(run).wire.messageContentBytes ?? packed) / promptTokens,
+    promptTokensEqualsPromptNPlusCacheN:
+      promptN === null || cacheN === null ? null : promptTokens === promptN + cacheN,
+    cacheN,
+    completionTokens: response.usage.completion_tokens ?? null,
+    finishReason: response.finishReason ?? null,
+  };
+}
+
+function laborL2Summary(runs) {
+  const rows = runs.map(laborL2).filter(Boolean);
+  if (!rows.length) return { n: 0, note: 'keine usage-Werte (kein Proxy oder keine Antwort)' };
+  const qs = rows.map((r) => r.q);
+  return {
+    n: rows.length,
+    q: ratioStats(qs),
+    bytesPerToken: ratioStats(rows.map((r) => r.bytesPerToken)),
+    promptTokens: stats(rows.map((r) => r.promptTokens)),
+    packedInputTokens: stats(rows.map((r) => r.packedInputTokens)),
+    completionTokens: stats(numbers(rows.map((r) => r.completionTokens))),
+    promptTokensEqualsPromptNPlusCacheN: countBy(
+      rows.map((r) => String(r.promptTokensEqualsPromptNPlusCacheN)),
+    ),
+    cacheN: stats(numbers(rows.map((r) => r.cacheN))),
+    finishReasons: countBy(rows.map((r) => String(r.finishReason))),
+    K_L2_allQAtMost1: Math.max(...qs) <= 1,
+    // Kopffreiheit im Kontextfenster der Runtime mit der Antwortreserve (max_tokens).
+    maxPromptPlusReserved: Math.max(
+      ...runs
+        .filter((r) => laborL2(r))
+        .map((r) => laborL2(r).promptTokens + (r.sent?.budget?.reservedOutputTokens ?? 0)),
+    ),
+  };
+}
+
+function laborTimes(runs) {
+  const inference = [];
+  const transport = [];
+  for (const run of runs) {
+    const c = completionOf(run);
+    const t = c?.wire?.response?.timings;
+    if (t && typeof t.prompt_ms === 'number' && typeof t.predicted_ms === 'number') {
+      inference.push(t.prompt_ms + t.predicted_ms);
+      if (typeof c.upstreamMs === 'number')
+        transport.push(c.upstreamMs - (t.prompt_ms + t.predicted_ms));
+    }
+  }
+  const timingsOf = (field) =>
+    numbers(runs.map((r) => completionOf(r)?.wire?.response?.timings?.[field]));
+  return {
+    requestMs: timeStats(runs.map((r) => r.requestMs)),
+    jobDoneMs: timeStats(runs.map((r) => r.jobDoneMs)),
+    totalMs: timeStats(runs.map((r) => r.totalMs)),
+    upstreamCompletionMs: timeStats(numbers(runs.map((r) => completionOf(r)?.upstreamMs))),
+    runtimeInferenceMs: timeStats(inference),
+    runtimePromptMs: timeStats(timingsOf('prompt_ms')),
+    runtimePredictedMs: timeStats(timingsOf('predicted_ms')),
+    transportAndServerOverheadMs: timeStats(transport),
+    prepareMs: Object.fromEntries(
+      ['preview', 'request', 'before', 'after', 'read'].map((role) => [
+        role,
+        timeStats(numbers(runs.map((r) => prepareMs(r, role)))),
+      ]),
+    ),
+    windowInnerMs: timeStats(numbers(runs.map((r) => r.windowInnerMs))),
+  };
+}
+
+function laborOutcomes(runs) {
+  const n = runs.length;
+  const sourceChanged = runs.filter((r) => r.stored.fallbackReason === 'source_changed').length;
+  const fullContext = runs.filter((r) => r.stored.effectiveMode === 'full-context').length;
+  return {
+    n,
+    stored: countBy(runs.map((r) => laborOutcome(r.stored))),
+    host: countBy(runs.map((r) => laborOutcome(r.host))),
+    responseStage: countBy(runs.map((r) => completionOf(r)?.wire?.response?.stage ?? 'kein Proxy')),
+    statements: countBy(runs.map((r) => String(r.stored.statements))),
+    sourceChanged: { k: sourceChanged, wilson95: wilson(sourceChanged, n) },
+    fullContext: {
+      k: fullContext,
+      share: +(fullContext / n).toFixed(3),
+      wilson95: wilson(fullContext, n),
+    },
+    prepareErrors: runs.flatMap((r) =>
+      r.prepares.filter((p) => p.error).map((p) => `${p.role}: ${p.error}`),
+    ),
+  };
+}
+
+function evaluateLabor(labor, out) {
+  if (labor.dryRun) {
+    out['L WARNUNG'] =
+      'Trockenlauf gegen die In-Prozess-Test-Runtime: Zahlen künstlich, keine Evidenz.';
+  }
+  const before = labor.metadataBefore;
+  const after = labor.metadataAfter;
+  const ident = (m) =>
+    m &&
+    JSON.stringify([
+      m.props.buildInfo,
+      m.props.modelPath,
+      m.props.nCtx,
+      m.props.totalSlots,
+      m.models.ids,
+      m.props.chatTemplateSha256,
+    ]);
+  out['L Runtime'] = {
+    kind: labor.runtimeKind,
+    before: before
+      ? {
+          props: before.props,
+          models: before.models.ids,
+          health: before.health.status,
+          slots: before.slots,
+        }
+      : null,
+    unchangedAfterRun: after ? ident(before) === ident(after) : null,
+  };
+  const quiet = labor.quiet ? measured(labor.quiet.runs) : [];
+  if (quiet.length) {
+    const l1 = quiet.map(laborL1);
+    const names = Object.keys(l1[0].checks);
+    out['L1 Vorschau = Draht'] = {
+      n: quiet.length,
+      failuresPerCheck: Object.fromEntries(
+        names.map((name) => [name, l1.filter((x) => !x.checks[name]).length]),
+      ),
+      firstDifferences: distinct(l1.map((x) => x.firstDifference)),
+      K_L1: l1.every((x) => names.every((name) => x.checks[name])),
+    };
+    out['L2 Tokens'] = laborL2Summary(quiet);
+    const times = laborTimes(quiet);
+    out['L3 Zeiten quiet'] = times;
+    const request = quiet.map((r) => r.requestMs);
+    const upstream = numbers(quiet.map((r) => completionOf(r)?.upstreamMs));
+    out['L3 K (Rückkehr unabhängig vom Modell)'] = {
+      medianRequestMs: times.requestMs.median,
+      p95RequestMs: times.requestMs.p95,
+      maxRequestMs: Math.max(...request),
+      minUpstreamCompletionMs: upstream.length ? Math.min(...upstream) : null,
+      K_L3a:
+        times.requestMs.median < 1000 &&
+        times.requestMs.p95 < 1000 &&
+        (upstream.length ? Math.max(...request) < Math.min(...upstream) : false),
+    };
+    const afterMs = numbers(quiet.map((r) => prepareMs(r, 'after')));
+    if (afterMs.length === quiet.length) {
+      const share = bootstrapMedianRatio4(
+        afterMs,
+        quiet.map((r) => r.totalMs),
+      );
+      const inf = times.runtimeInferenceMs;
+      out['L3 Neubewertung Entscheidung 1 (Teil 2)'] = {
+        savingShare: share,
+        upperBelow5Percent: share.ci95[1] < 0.05,
+        pointAtLeast5Percent: share.point >= 0.05,
+        medianInferenceMs: inf ? inf.median : null,
+        inferenceVersusD2000: inf ? +(inf.median / 2000).toFixed(2) : null,
+        inferenceBelowThreshold: inf
+          ? { below1500: inf.median < 1500, below2100: inf.median < 2100 }
+          : null,
+      };
+    }
+    const windows = numbers(quiet.map((r) => r.windowInnerMs));
+    if (windows.length) {
+      out['L3 Vorhersage M7 bei 0,5/s (nur berichtet)'] = {
+        n: windows.length,
+        meanPrediction: +mean(windows.map((t) => 1 - Math.exp((-0.5 * t) / 1000))).toFixed(3),
+      };
+    }
+    out['L4 Status quiet'] = laborOutcomes(quiet);
+    if (labor.direct?.runs?.length) {
+      const direct = measured(labor.direct.runs);
+      out['L3 Kontrolle direkt (ohne Proxy)'] = {
+        totalMs: timeStats(direct.map((r) => r.totalMs)),
+        requestMs: timeStats(direct.map((r) => r.requestMs)),
+        outcomes: countBy(direct.map((r) => laborOutcome(r.stored))),
+        totalMsQuietMinusDirect: bootstrapMedianDiff(
+          quiet.map((r) => r.totalMs),
+          direct.map((r) => r.totalMs),
+          mulberry32(SEED),
+        ),
+      };
+    }
+  }
+  if (labor.l5?.arms) {
+    for (const [type, runs] of Object.entries(labor.l5.arms)) {
+      const r = measured(runs);
+      if (!r.length) continue;
+      const outcomes = laborOutcomes(r);
+      out[`L5 ${type}`] = {
+        ...outcomes,
+        K_L5:
+          type === 'YESNO'
+            ? outcomes.sourceChanged.k === outcomes.n
+            : outcomes.sourceChanged.k === 0,
+        tokens: laborL2Summary(r),
+        areas: distinct(r.map((x) => JSON.stringify(x.sent?.areas ?? null))),
+        truncations: distinct(r.map((x) => JSON.stringify(x.sent?.budget?.truncations ?? null))),
+      };
+    }
   }
 }
 
