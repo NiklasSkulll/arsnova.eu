@@ -2,6 +2,8 @@
 
 # Dossier 1C – Autorisierter Kontext und asynchroner Adapterpfad
 
+> **Überholt (2026-10-24):** Dieses Dossier ist der Recherche-Stand vom 2026-10-16 auf `27966e75`. Maßgeblich für 1C sind [`1C-diagrams.md`](./1C-diagrams.md) (Belege auf `248029dc`, dort auch die Abweichungen zu diesem Dossier) und die Protokolle unter [`evidenz/1C/`](./evidenz/1C/). Die Testlücken und Versuchsvorschläge unten sind dort teils umgesetzt, teils als offen ausgewiesen.
+
 **Zweck:** Forschungsdossier zur Vorbereitung des Gruppenauftrags 1C (Thema 1, Referatsprüfung Cloud Computing).
 **Repo-Stand der Analyse:** Branch `referat/thema-1-notes`, HEAD `27966e75215500b394b7a314f6c714eaae536452` (2026-10-15, Merge von PR #574). **Alle Zeilenangaben in diesem Dossier sind HEAD-Zeilen** (1-basiert; Serena-Ausgaben wurden von 0- auf 1-basiert umgerechnet). Der Release-Tag `v1.3.0` (`87c39334`, 2026-10-08) liegt 131 Commits früher. Er ist vermutlich die Prüfungsbaseline; die für 1C relevanten Abweichungen stehen in Abschnitt 1A.
 **Methode:** Quelltext gelesen (Read/grep), Aufrufketten mit codebase-memory-MCP (`trace_path` auf `processJob` und `prepareFreshModerationSummaryContext`) und Serena (`find_referencing_symbols`, Memories) gegengeprüft, Issue #456 und #463 per `gh issue view` gelesen. Es wurden **keine** Tests ausgeführt und **keine** Messungen durchgeführt; alle Laufzeitaussagen sind Code-Analyse. Abschnitte mit »Vorschlag« sind Versuchsentwürfe, keine Befunde.

@@ -4,21 +4,41 @@ Arbeitsordner von Jonas und Niklas für **Thema 1: KI-Inferenz für den
 Moderationskompass – Systemgrenzen und entkoppelte Architektur**. Wir
 bearbeiten alle drei Aufträge 1A, 1B und 1C.
 
-Der Ordner liegt auf dem Branch `referat/thema-1-notes` und ist Arbeits- und
-Evidenzmaterial. Er gehört **nicht** in die PR an kqc-real.
+Der Ordner liegt im Fork-`main` und ist Arbeits- und Evidenzmaterial. Er
+gehört **nicht** in die PR an kqc-real.
 
 ## Inhalt
 
-| Datei                                                                        | Inhalt                                                                         |
-| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| [00-rahmen-und-pruefung.md](./00-rahmen-und-pruefung.md)                     | Generalthema, Bewertung, Nachweiskette, KI-Regeln, Widersprüche, offene Fragen |
-| [01-aufteilung.md](./01-aufteilung.md)                                       | Aufteilung: Niklas = X (1A, 1B 3–4), Jonas = Y (1C, 1B 1–2); Optionen, Aufwand |
-| [1A-ressourcenisolation-app-host.md](./1A-ressourcenisolation-app-host.md)   | Code-Landkarte, Messwerkzeuge, Versuchsvorschlag, Lücken für 1A                |
-| [1B-private-inferenz-zweiter-host.md](./1B-private-inferenz-zweiter-host.md) | Zwei-Host-Deployment, LLM-Client, Messbarkeit, Lücken für 1B                   |
-| [1C-kontext-und-adapterpfad.md](./1C-kontext-und-adapterpfad.md)             | #456-Kontext, Verträge, Snapshot/Hash, Async-Pfad, Testlücken für 1C           |
+| Datei                                                                        | Inhalt                                                                               |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| [00-rahmen-und-pruefung.md](./00-rahmen-und-pruefung.md)                     | Generalthema, Bewertung, Nachweiskette, KI-Regeln, Widersprüche, offene Fragen       |
+| [01-aufteilung.md](./01-aufteilung.md)                                       | Aufteilung: Niklas = X (1A, 1B 3–4), Jonas = Y (1C, 1B 1–2); Optionen, Aufwand       |
+| [1C-diagrams.md](./1C-diagrams.md)                                           | Diagramme zu 1C (Handout DE, Arbeitskarte und Vertragsschichten EN) mit Belegtabelle |
+| [specs/](./specs/)                                                           | Vorab festgelegte Designs und Pläne der 1C-Tests und -Messungen (Teil 1 bis 3)       |
+| [evidenz/1C/](./evidenz/1C/)                                                 | Testprotokolle, Mutationsproben, Messrohdaten und Auswertung zu 1C                   |
+| [1A-ressourcenisolation-app-host.md](./1A-ressourcenisolation-app-host.md)   | Code-Landkarte, Messwerkzeuge, Versuchsvorschlag, Lücken für 1A                      |
+| [1B-private-inferenz-zweiter-host.md](./1B-private-inferenz-zweiter-host.md) | Zwei-Host-Deployment, LLM-Client, Messbarkeit, Lücken für 1B                         |
+| [1C-kontext-und-adapterpfad.md](./1C-kontext-und-adapterpfad.md)             | #456-Kontext, Verträge, Snapshot/Hash, Async-Pfad, Testlücken für 1C                 |
 
-Geplant: `evidenz/` für Rohdaten, Skripte und Messprotokolle je Auftrag (ohne
-Secrets, nur synthetische Daten).
+`evidenz/` enthält Rohdaten und Protokolle je Auftrag (ohne Secrets, nur
+synthetische Daten). Für 1C:
+
+| Datei                                                                                                                                                       | Inhalt                                                                                                                                                                           |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [2026-10-24-tests.md](./evidenz/1C/2026-10-24-tests.md)                                                                                                     | Protokoll Teil 1: Tests T1–T5                                                                                                                                                    |
+| [2026-10-24-teil2.md](./evidenz/1C/2026-10-24-teil2.md)                                                                                                     | Protokoll Teil 2: E1–E9, Messungen M1–M5 und V1                                                                                                                                  |
+| [2026-10-24-teil3.md](./evidenz/1C/2026-10-24-teil3.md)                                                                                                     | Protokoll Teil 3: E10–E15, Befund T3.1, Messungen M6, M7, M7b, M7c                                                                                                               |
+| [e15-widerlegt.patch](./evidenz/1C/e15-widerlegt.patch)                                                                                                     | nicht eingecheckter Test zum widerlegten Fall E15                                                                                                                                |
+| [issue-t2-3-entwurf.md](./evidenz/1C/issue-t2-3-entwurf.md)                                                                                                 | Issue-Entwurf zu Befund T2.3 (nicht angelegt)                                                                                                                                    |
+| [issue-t3-1-entwurf.md](./evidenz/1C/issue-t3-1-entwurf.md)                                                                                                 | Issue-Entwurf zu Befund T3.1 (nicht angelegt)                                                                                                                                    |
+| [labor-runbook.md](./evidenz/1C/labor-runbook.md)                                                                                                           | Runbook für den noch offenen Laborlauf gegen die private Runtime; Design-Entwurf [specs/2026-10-25-1c-labor-design.md](./specs/2026-10-25-1c-labor-design.md), nicht freigegeben |
+| [messung/auswertung.mjs](./evidenz/1C/messung/auswertung.mjs)                                                                                               | Auswertungsskript aller Messdateien                                                                                                                                              |
+| [messung/2026-10-24-messung.json.gz](./evidenz/1C/messung/2026-10-24-messung.json.gz)                                                                       | Rohdaten Teil 2, Primärlauf                                                                                                                                                      |
+| [messung/2026-10-24-messung-robustheit.json.gz](./evidenz/1C/messung/2026-10-24-messung-robustheit.json.gz)                                                 | Rohdaten Teil 2, Robustheitslauf                                                                                                                                                 |
+| [messung/2026-10-24-messung-teil3.json.gz](./evidenz/1C/messung/2026-10-24-messung-teil3.json.gz)                                                           | Rohdaten Teil 3, M6 und M7                                                                                                                                                       |
+| [messung/2026-10-24-messung-teil3-m7b.json.gz](./evidenz/1C/messung/2026-10-24-messung-teil3-m7b.json.gz)                                                   | Rohdaten Teil 3, M7b (nicht unabhängig von M7, siehe Protokoll)                                                                                                                  |
+| [messung/2026-10-24-messung-teil3-m7c.json.gz](./evidenz/1C/messung/2026-10-24-messung-teil3-m7c.json.gz)                                                   | Rohdaten Teil 3, M7c (unabhängige Seeds)                                                                                                                                         |
+| [messung/2026-10-25-probelauf-1.json.gz](./evidenz/1C/messung/2026-10-25-probelauf-1.json.gz) und [-2](./evidenz/1C/messung/2026-10-25-probelauf-2.json.gz) | Probeläufe vor M6/M7, nur zur Prüfung des Messcodes, nicht ausgewertet                                                                                                           |
 
 ## Arbeitsweise im Fork
 
@@ -33,6 +53,8 @@ Wegen des knappen Zeitrahmens gilt:
   vom Fork-`main`. Sonst landet dieser Ordner mit in der PR.
 
 ## Was recherchiert wurde
+
+Stand der Recherche: 2026-10-16. Spätere Ergebnisse stehen in `evidenz/`.
 
 - **Rahmen:**
   - Bewertung: 30 % Handout, 30 % Vortrag, 40 % Diskussion. Jede Person wird
@@ -49,12 +71,14 @@ Wegen des knappen Zeitrahmens gilt:
   - Wie das Zwei-Host-Deployment und der LLM-Client aufgebaut sind.
   - Gemessen wird bisher nur die Gesamtzeit. Die Detailzeiten von llama.cpp
     werden zwar ausgelesen, aber nicht verwendet.
-  - Es gibt keinen Fake-Server für Tests.
+  - Es gab keinen Fake-Server für Tests (inzwischen: Test-Runtime für 1C, siehe unten).
 - **1C, Kontextpfad bis zur Inferenz:**
-  - Snapshot und Hash. Wahrscheinlich ändert jede Stimme den Hash.
+  - Snapshot und Hash. Vermutung damals: Jede Stimme ändert den Hash; inzwischen
+    durch Tests belegt und eingegrenzt ([evidenz/1C](./evidenz/1C/)).
   - Der Async-Pfad.
   - Testlücken: Quelle mitten im Job gelöscht, langsamer Empfänger, volle
-    Queue.
+    Queue. Inzwischen abgedeckt durch E8, E5 und E6b sowie, für die volle
+    Queue, durch E11 (Teil 3).
 
 Alle Dossiers enthalten Code-Stellen (Datei:Zeile), Versuchsideen und Lücken.
 
@@ -75,8 +99,9 @@ Alle Dossiers enthalten Code-Stellen (Datei:Zeile), Versuchsideen und Lücken.
   - Darf der aktuelle `main` die Baseline sein statt `v1.3.0`?
   - Was ist beim zweiten Host bereitgestellt, und wie bekommen wir Zugang?
 - **Aufteilung 1A/1B/1C:** Am 2026-10-23 festgelegt (Option 1). Niklas ist X
-  (1A und 1B Schritte 3–4), Jonas ist Y (1C und 1B Schritte 1–2). Die
-  Abstimmung mit dem Prüfer steht noch aus. Details in
+  (1A und 1B Schritte 3–4), Jonas ist Y (1C und 1B Schritte 1–2). Eine
+  Abstimmung mit dem Prüfer ist nicht nötig (mündliche Ansage in der
+  Vorlesung, notiert 2026-10-24). Details in
   [01-aufteilung.md](./01-aufteilung.md#entscheidung-2026-10-23).
 
 ## Hinweis zur Entstehung

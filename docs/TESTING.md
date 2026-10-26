@@ -120,6 +120,60 @@ persistente Plattformprojektion und konkurrierende Richtungsstimmen. Der
 Migrations-Backfill läuft in einer kurzlebigen Datenbank und entfernt sie
 anschließend wieder.
 
+### Snapshot-Hash der Q&A-Zusammenfassung (PostgreSQL + Redis)
+
+Der Migration-Job prüft außerdem, dass echte Datenbankänderungen den
+`snapshotHash` aus `prepareFreshModerationSummaryContext` ändern. Nur so kann
+die Summary-Queue eine veraltete Modellantwort als `source_changed` verwerfen:
+
+```bash
+RUN_PG_QA_SUMMARY_HASH_TESTS=1 REDIS_URL=redis://localhost:6379 \
+  npm run test -w @arsnova/backend -- \
+  --run src/__tests__/qa.summary-hash.pg.test.ts
+```
+
+Die Suite prüft zuerst die Stabilität des Hashs ohne Änderung, auch beim
+direkten Packen am Packing-Cache vorbei. Danach prüft sie, dass sich der Hash
+nach einer Q&A-Stimme, einer neuen Frage, einem Beitritt, einer Löschung durch
+den Host (`qa.moderate`) und einer eigenen Löschung durch Teilnehmende
+(`qa.deleteOwn`) ändert und dass die Trigger die zugehörigen Revisionen
+erhöhen. Als Gegenprobe darf eine Quizstimme auf eine laufende Frage den Hash
+nicht ändern, während eine Stimme auf eine freigegebene Frage ihn ändert.
+Gemockt ist nur die Host-Tokenprüfung; Fragen, Stimmen,
+Teilnahme-Capabilities und Trigger laufen gegen die migrierte Datenbank.
+
+### Ende-zu-Ende-Pfad der Q&A-Zusammenfassung (PostgreSQL + Redis)
+
+Der Migration-Job prüft den Auftrag zur Moderationszusammenfassung vom
+tRPC-Router bis zur Runtime-Schnittstelle: `qa.summaryContextPreview`,
+`qa.requestSummary`, `qa.summaryRuntime` und `qa.moderate` → Summary-Queue →
+`prepareFreshModerationSummaryContext` → Open-Weight-Client → echtes HTTP →
+eine Test-Runtime im Testprozess auf `127.0.0.1`:
+
+```bash
+RUN_PG_QA_SUMMARY_E2E_TESTS=1 REDIS_URL=redis://localhost:6379 \
+  npm run test -w @arsnova/backend -- \
+  --run src/__tests__/qa.summary-e2e.pg.test.ts
+```
+
+Grundlage ist das Sechs-Fragen-Referenzszenario aus #456 mit 200
+Teilnehmenden; Fragen und Stimmen entstehen über die echten DB-Funktionen
+(`src/__tests__/lib/qa-summary-pg-fixture.ts`, gemeinsam mit der Hash-Suite).
+Die Suite prüft, dass die User-Nachricht im rohen Runtime-Body bytegleich dem
+Kontext der Host-Vorschau ist, dass Host-Token, Sitzungs- und
+Teilnehmendenkennungen sowie Hüllenfelder (`snapshotHash`, `packedAt`, Budget)
+den Server nicht verlassen und dass eine Stimme zwischen Vorschau und Auftrag
+den neuen Stand sendet. Außerdem prüft sie die Fallbacks bei einer Antwort mit
+fremder Ausgabe-Version (`invalid_response`), bei nicht erreichbarer Runtime
+(`unavailable`) und bei Überschreitung des Client-Timeouts (`timeout`), dass
+`qa.requestSummary` `pending` liefert, während die Runtime die Antwort noch
+hält, und dass eine Stimme oder eine Löschung durch den Host während der
+Inferenz die Modellaussage als `source_changed` verwirft, eine Quizstimme auf
+eine laufende Frage dagegen nicht. Die Test-Runtime
+(`src/__tests__/lib/open-weight-test-runtime.ts`) ist kein Modell: Sie
+speichert den rohen Body und antwortet mit einer festen, vertragsgültigen
+Ausgabe. Gemockt ist nur die Host-Tokenprüfung.
+
 ### tRPC-DoD-Non-Regression-Gate
 
 Für jede neue Query/Mutation und jede Query/Mutation mit geändertem

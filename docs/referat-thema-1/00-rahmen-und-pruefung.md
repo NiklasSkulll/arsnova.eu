@@ -126,8 +126,10 @@ Baselinelauf geklärt sein. Die Dossiers zitieren Zeilen auf HEAD.
 
 ## Offene Fragen an den Prüfer
 
-1. Wir sind zu zweit und bearbeiten alle drei Aufträge 1A, 1B und 1C. Wie wird
-   der dritte Auftrag zugeordnet und bewertet?
+1. ~~Wir sind zu zweit und bearbeiten alle drei Aufträge 1A, 1B und 1C. Wie
+   wird der dritte Auftrag zugeordnet und bewertet?~~ **Geklärt (mündliche
+   Ansage des Prüfers in der Vorlesung, notiert 2026-10-24):** Die Aufteilung aus [01-aufteilung](./01-aufteilung.md) passt so und muss
+   nicht mit dem Prüfer abgestimmt werden.
 2. Was genau gehört in die PR an kqc-real (Tests, Messskripte,
    Instrumentierung, Evidenzordner, Code-Verbesserung)?
 3. **Baseline:** Dürfen wir den aktuellen `main` statt `v1.3.0` (`87c39334`)
@@ -139,9 +141,74 @@ Baselinelauf geklärt sein. Die Dossiers zitieren Zeilen auf HEAD.
      deutlich.
    - Die Ergebnisse lassen sich direkt auf den aktuellen Stand des Repos
      anwenden.
-4. **Zweiter Host:** In der Vorlesung wurde ein bereitgestellter Server erwähnt,
-   vermutlich bei Hetzner oder Hostinger (nicht sicher mitgeschrieben). Was
-   genau steht dort bereit (Hardware, Netz, Zugangsweg)? Wie bekommen wir
-   Zugang zur Laborinstanz?
-5. Gilt die 48-Stunden-Frist der Folien oder der Vortag der Repo-Fassung?
+4. **Laborinstanz und zweiter Host:** Laut Material stellt die Lehrperson die
+   Laborinstanz einschließlich echter privater Runtime bereit (siehe
+   [Recherche unten](#laborinstanz-und-zweiter-host-recherche-2026-10-24)).
+   Konkret offen:
+   - Wo steht sie, wer betreut sie (Rolle „LB“), wie bekommen wir Zugang (SSH,
+     Account), ab wann und bis wann?
+   - Gibt es **zwei** VMs (App und Inferenz im selben privaten Netz)? 1B
+     verlangt die Reproduktion des Zwei-Host-Deployments.
+   - Welche Hardware und Architektur hat die Inferenz-VM (ARM oder x86)?
+     Folie 16 sagt „gleiche Kapazität“ (8 vCPU / 16 GB).
+   - Liegt das gepinnte Modell bzw. Runtime-Image bereit, oder dürfen wir es
+     selbst laden (ca. 2,5 GB GGUF)?
+   - Zählt eine lokale Messung (`npm run docker:up:llm:http`) als Evidenz oder
+     nur als Vorversuch?
+   - Wie hoch ist die Kostenobergrenze, und dürfen wir eigene Cloud-Server
+     anlegen?
+5. ~~Gilt die 48-Stunden-Frist der Folien oder der Vortag der Repo-Fassung?~~
+   **Geklärt (mündliche Ansage des Prüfers in der Vorlesung, notiert
+   2026-10-24):** Handout und Präsentation sind 48 Stunden (zwei Tage) vor der
+   Prüfung abzugeben. Das ist strenger als die Repo-Fassung („spätestens am
+   Vortag“, `CLOUD-COMPUTING-REFERAT-PRUEFUNG.md` Abschnitt 4 Punkt 4); wir
+   richten uns nach der strengeren Frist.
 6. Wo ist der geheimnisfreie Evidenzort (Repo-Ordner, Branch, eigener Speicher)?
+
+## Laborinstanz und zweiter Host: Recherche (2026-10-24)
+
+Durchsucht wurden das Repo, alle PDFs und Bilder aus „Woche 1“ und „Woche 2“
+(teils per OCR) sowie alle sechs Audio- und Videodateien (transkribiert mit
+faster-whisper). **Ergebnis:** Die Bereitstellung ist Pflicht der Lehrperson.
+Anbieter, Hardware, Zugang, Kosten und Fristen der Laborinstanz stehen
+nirgends. Hetzner oder Hostinger werden für einen Laborhost nicht genannt;
+Hetzner erscheint nur als Hoster der App (Impressum).
+
+Belege:
+
+- Referatsprüfung-PDF, Folie 40: „Eine vollständige 1.3-Laborinstanz
+  einschließlich echter privater Runtime ist bereitgestellt. Keine Abhängigkeit
+  von der Lieferung anderer Gruppen.“
+- [CLOUD-COMPUTING-REFERAT-PRUEFUNG.md](../didaktik/CLOUD-COMPUTING-REFERAT-PRUEFUNG.md)
+  Z. 84: Die Lehrperson stellt eine reproduzierbare Laborinstanz
+  „einschließlich funktionsfähiger privater Runtime und freigegebener
+  Testdaten bereit“. Versuche laufen „ausschließlich dort“. Z. 490: gleiche
+  Anforderung im Abnahmecheck.
+- `docs/didaktik/Modulkonzept Cloud Computing/Lehrenden_Runbook.md` Z. 87:
+  „Für jede Gruppe steht ein rücksetzbarer Zielserver oder eine gleichwertige
+  Sandbox ohne Produktionsdaten und Produktionszugänge bereit.“ Z. 53:
+  Zuständig ist die Rolle „LB“ (Lehrlaborbetrieb).
+- Referatsprüfung-PDF, Folie 16: „Die kanonische LLM-Rolle liegt auf einem
+  separaten privaten Host gleicher Kapazität“ (Live-Host 8 vCPU / 16 GB).
+
+Der **Produktions**-Inferenzhost `arsnova-privat` (8-Kern-ARM, privates Netz)
+ist nicht die Laborinstanz. Studierende sollen ihn nicht ansprechen
+([onboarding.md](../onboarding.md) Z. 317–322), und Produktion darf kein
+Testziel sein (REFERAT-PRUEFUNG Z. 84).
+
+Erlaubte Alternativen und ihre Beweiskraft:
+
+- **Lokal auf dem Laptop:** Profil `llm-http` (`npm run docker:up:llm:http`,
+  [onboarding.md](../onboarding.md) Z. 234–322). Laut REFERAT-PRUEFUNG Z. 106
+  ist das ein getrennter Nachweis. „Baseline und Leistungsurteil beruhen auf
+  dem echten Releasepfad“ (Z. 192). Gut für Vorversuche, nicht als alleinige
+  Baseline.
+- **Same-Host-Labor:** Profil `llm` (Z. 101, 194; ADR-0035 Z. 27–30). Nur als
+  Vergleichsvariante zulässig.
+- **Modellfreie Tests:** Sie brauchen keinen zweiten Host
+  ([Test-Design](./specs/2026-10-24-1c-tests-design.md)).
+
+Für das Aufsetzen eines zweiten Hosts gibt es ein vollständiges Runbook:
+[OPEN-WEIGHT-LLM-SECOND-HOST-RUNBOOK.md](../operations/OPEN-WEIGHT-LLM-SECOND-HOST-RUNBOOK.md)
+(Sizing Z. 44–51: mindestens 4 Kerne / 12 GiB, empfohlen 8 Kerne / 16 GiB;
+Firewall §5; Abnahme §17).
