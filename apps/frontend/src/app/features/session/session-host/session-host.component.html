@@ -141,22 +141,24 @@
           <p class="session-host__steering-callout-text">{{ steer.body }}</p>
         </div>
         <div class="session-host__steering-callout-actions">
-          <button
-            mat-flat-button
-            color="warn"
-            type="button"
-            data-testid="host-steering-retry"
-            [attr.aria-disabled]="
-              qaQuickFeedbackPending() || channelNavigationBusy() ? 'true' : null
-            "
-            (click)="steer.retry()"
-          >
-            @if (steer.retryLabel) {
-              {{ steer.retryLabel }}
-            } @else {
-              <span i18n="@@sessionHost.steeringCalloutRetry">Nochmal probieren</span>
-            }
-          </button>
+          @if (steer.retry; as retry) {
+            <button
+              mat-flat-button
+              color="warn"
+              type="button"
+              data-testid="host-steering-retry"
+              [attr.aria-disabled]="
+                qaQuickFeedbackPending() || channelNavigationBusy() ? 'true' : null
+              "
+              (click)="retry()"
+            >
+              @if (steer.retryLabel) {
+                {{ steer.retryLabel }}
+              } @else {
+                <span i18n="@@sessionHost.steeringCalloutRetry">Nochmal probieren</span>
+              }
+            </button>
+          }
           <a
             mat-stroked-button
             [attr.href]="hostSteeringCalloutReloadHref()"
@@ -628,7 +630,9 @@
                 [class.session-host__moderation-control--has-signals]="
                   moderationCompassHasSignals()
                 "
-                (click)="openModerationCompassDialog()"
+                (click)="openModerationCompassFromTrigger()"
+                (focus)="onModerationCompassTriggerFocus()"
+                (blur)="onModerationCompassTriggerBlur()"
                 aria-haspopup="dialog"
                 [attr.aria-label]="moderationCompassButtonAria()"
               >
@@ -640,7 +644,7 @@
                 >
               </button>
             }
-            @if (activeChannel() !== 'quickFeedback') {
+            @if (showLearningObjectivesControl()) {
               <button
                 type="button"
                 class="session-host__moderation-control session-host__learning-objectives-control"
@@ -657,6 +661,12 @@
                     class="session-host__moderation-control-label"
                     i18n="@@sessionHost.qaAssignmentButton"
                     >Auftrag</span
+                  >
+                } @else if (showAllConfirmedLearningObjectives()) {
+                  <span
+                    class="session-host__moderation-control-label"
+                    i18n="@@sessionHost.learningObjectivesOverviewButton"
+                    >Lernziele</span
                   >
                 } @else {
                   <span
@@ -1202,6 +1212,40 @@
                                     >
                                   </span>
                                 </div>
+                                @for (
+                                  link of finishedConfidenceObjectiveLinks(question);
+                                  track link.objectiveId
+                                ) {
+                                  <p class="session-host__finished-confidence-objective">
+                                    <span
+                                      class="session-host__finished-confidence-objective-kicker"
+                                    >
+                                      {{
+                                        learningObjectiveMisconceptionHeading(link.questionNumber)
+                                      }}
+                                    </span>
+                                    <span class="session-host__finished-confidence-objective-text">
+                                      {{ quoteLabel(link.objectiveText) }}
+                                    </span>
+                                    <span
+                                      class="session-host__finished-confidence-objective-detail"
+                                    >
+                                      {{
+                                        learningObjectiveMisconceptionMeasure(
+                                          link.incorrectHigh,
+                                          link.responseCount
+                                        )
+                                      }}
+                                    </span>
+                                    @if (link.topWrongOption; as option) {
+                                      <span
+                                        class="session-host__finished-confidence-objective-detail"
+                                      >
+                                        {{ learningObjectiveMisconceptionOption(option) }}
+                                      </span>
+                                    }
+                                  </p>
+                                }
                                 @if (finishedConfidenceTopWrongOption(question); as option) {
                                   <p class="session-host__finished-confidence-signal">
                                     <span i18n="@@sessionHost.finishedConfidenceTopSignal"
@@ -3780,24 +3824,38 @@
                           >Thema</mat-button-toggle
                         >
                       </mat-button-toggle-group>
-                      <button
-                        mat-button
-                        type="button"
-                        class="session-host__extra-action"
-                        [class.session-host__extra-action--icon]="freetextWordCloudMaximized()"
-                        [attr.aria-pressed]="wordCloudFrozen()"
-                        [attr.aria-label]="wordCloudFreezeLabel()"
-                        [matTooltip]="wordCloudFreezeLabel()"
-                        matTooltipTouchGestures="off"
-                        (click)="toggleWordCloudFreeze()"
-                      >
-                        <mat-icon aria-hidden="true">{{
-                          wordCloudFrozen() ? 'play_arrow' : 'pause_circle'
-                        }}</mat-icon>
-                        @if (!freetextWordCloudMaximized()) {
+                      @if (freetextWordCloudMaximized()) {
+                        <button
+                          mat-icon-button
+                          type="button"
+                          class="session-host__extra-action session-host__extra-action--icon"
+                          [attr.aria-pressed]="wordCloudFrozen()"
+                          [attr.aria-label]="wordCloudFreezeLabel()"
+                          [matTooltip]="wordCloudFreezeLabel()"
+                          matTooltipTouchGestures="off"
+                          (click)="toggleWordCloudFreeze()"
+                        >
+                          <mat-icon aria-hidden="true">{{
+                            wordCloudFrozen() ? 'play_arrow' : 'pause'
+                          }}</mat-icon>
+                        </button>
+                      } @else {
+                        <button
+                          mat-button
+                          type="button"
+                          class="session-host__extra-action"
+                          [attr.aria-pressed]="wordCloudFrozen()"
+                          [attr.aria-label]="wordCloudFreezeLabel()"
+                          [matTooltip]="wordCloudFreezeLabel()"
+                          matTooltipTouchGestures="off"
+                          (click)="toggleWordCloudFreeze()"
+                        >
+                          <mat-icon aria-hidden="true">{{
+                            wordCloudFrozen() ? 'play_arrow' : 'pause_circle'
+                          }}</mat-icon>
                           <span>{{ wordCloudFreezeLabel() }}</span>
-                        }
-                      </button>
+                        </button>
+                      }
                       @if (freetextWordCloudShowSmoothing()) {
                         <div class="session-host__smooth-cluster">
                           <button

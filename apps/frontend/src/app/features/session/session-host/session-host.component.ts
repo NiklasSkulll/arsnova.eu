@@ -58,6 +58,11 @@ import { firstValueFrom } from 'rxjs';
 import type { Unsubscribable } from '@trpc/server/observable';
 import { clearFeedbackHostToken } from '../../../core/feedback-host-token';
 import {
+  UpdateBannerSuppressionService,
+  bindUpdateBannerSuppression,
+  qaTitleDraftBlocksUpdateBanner,
+} from '../../../core/update-banner-suppression.service';
+import {
   clearHostToken,
   getHostSessionRole,
   hasHostToken,
@@ -103,6 +108,7 @@ import {
   isPresenterViewOffered,
   openPresenterViewWindow,
   PRESENTER_VIEW_OFFERED_MEDIA,
+  pushCurrentHostTokenToPresenter,
 } from '../session-present/presenter-window.util';
 import { localizePath, resolveLocalizedJoinUrl } from '../../../core/locale-router';
 import { sessionCodeAriaLabel as i18nSessionCodeAria } from '../../../core/session-code-aria';
@@ -124,6 +130,7 @@ import {
   createQuizHistoryAccessProof,
   resolveNumericEstimateToleranceMode,
   resolveNumericTolerance,
+  confidenceResultResponseCount,
   selectConfidencePriorityQuestions,
   CONFIDENCE_SCALE_MAX,
   CONFIDENCE_SCALE_MIN,
@@ -183,6 +190,7 @@ import {
   TeamAssignment,
   SessionResultsPdfProfile,
   SessionStatus,
+  SessionLearningObjectiveDTO,
   SessionStatusUpdate,
   TeamDTO,
   TeamLeaderboardEntryDTO,
@@ -193,6 +201,12 @@ import {
   WordCloudAnalysisVariant,
   WordCloudNormalizationFallbackReason,
 } from '@arsnova/shared-types';
+import {
+  confirmedLearningObjectiveAppliesToQuestion,
+  isConfirmedDisplayedLearningObjective,
+  learningObjectiveMisconceptionLinks,
+  type LearningObjectiveMisconceptionLink,
+} from './session-learning-objective-match';
 import {
   isDisplayableThemeWordCloudEntry,
   isWordCloudUnigramEntryKey,
@@ -213,16 +227,17 @@ import {
   type WordCloudTermDocument,
 } from '../session-present/word-cloud-term.service';
 import {
-  buildModerationCompassCards,
+  buildModerationCompassView,
   collectModerationQuizFacts,
   moderationQuizFactEvidenceRole,
   collectQaNlpCategorySources,
   compassQuestionStem,
+  pickCompassSourceDetail,
   compassTermsFromAnalysisEntries,
   mergeModerationQuizSources,
   rememberModerationQuizSnapshot,
   resolveModerationCompassAnalysisMode,
-  truncateCompassLabel,
+  truncateCompassLabelAtWord,
   type ModerationCompassCardKind,
   type ModerationCompassAnalysisVariant,
   type ModerationCompassQuizInsightKind,
@@ -258,7 +273,10 @@ import {
   buildQaQuestionsCsvFilename,
   buildSessionResultsCsvFilename,
 } from '../../../core/export-filename.util';
-import { stripMarkdownToPlainText } from '../../../core/markdown-plain-text.util';
+import {
+  markdownToReadableText,
+  stripMarkdownToPlainText,
+} from '../../../core/markdown-plain-text.util';
 import { localizeKnownServerError } from '../../../core/localize-known-server-message';
 import {
   SessionResultsExportService,
@@ -636,7 +654,7 @@ const ALL_MUSIC_TRACK_VALUES = new Set(ALL_MUSIC_TRACKS.map((t) => t.value));
 type HostSteeringCalloutState = {
   title: string;
   body: string;
-  retry: () => void;
+  retry?: () => void;
   retryLabel?: string;
   errorRequestId: string;
   suggestedArea: ProductFeedbackInAppArea;
@@ -923,6 +941,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   private readonly ngZone = inject(NgZone);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly themePreset = inject(ThemePresetService);
+  private readonly updateBannerSuppression = inject(UpdateBannerSuppressionService);
   readonly sound = inject(SoundService);
   private readonly hostDisplayMode = inject(HostDisplayModeService);
   private readonly dialog = inject(MatDialog);
@@ -1161,6 +1180,8 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   private presenterProjectionSyncQueue: Promise<void> = Promise.resolve();
   private lastQaWordCloudProjectionKey: string | null = null;
   private lastQaPresenterStageViewKey: string | null = null;
+  /** Ob der letzte Publish dieser Ansicht die Presenter-Sortierung übernommen hat. */
+  private lastQaPresenterStageViewTookOver = false;
   private channelToggleSyncing = false;
   private lastQaWordCloudAnalysisRequestKey: string | null = null;
   private lastQaWordCloudSemanticAnalyzedKey: string | null = null;
@@ -2055,6 +2076,17 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     const draft = this.qaTitleDraft().trim();
     return draft === server || this.qaTitleSaving();
   });
+  private readonly qaTitleUpdateBanner = bindUpdateBannerSuppression(
+    this.updateBannerSuppression,
+    'host-qa-title',
+    () =>
+      qaTitleDraftBlocksUpdateBanner({
+        editing: this.qaTitleEditing(),
+        saving: this.qaTitleSaving(),
+        draft: this.qaTitleDraft(),
+        serverTitle: this.session()?.channels?.qa?.title ?? '',
+      }),
+  );
   readonly qaSortMode = signal<QaQuestionSortMode>('BEST');
   readonly qaShowPinnedOnly = signal(false);
   readonly qaShowPendingOnly = signal(false);
@@ -2759,11 +2791,12 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       throw error;
     }
   };
-  readonly moderationCompassCards = computed(() =>
-    buildModerationCompassCards({
+  readonly moderationCompassView = computed(() =>
+    buildModerationCompassView({
       qaQuestions: this.moderationCompassInventoryQuestions().map((question) => ({
         id: question.id,
-        text: this.moderationCompassQaSourceText(question),
+        text: question.text,
+        sourceHeadline: this.moderationCompassQaSourceHeadline(question),
         status: question.status,
         isControversial: question.isControversial,
         positiveVoteCount: question.positiveVoteCount,
@@ -2784,7 +2817,8 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       nlpTopicSources: collectQaNlpCategorySources(
         this.moderationCompassInventoryQuestions().map((question) => ({
           id: question.id,
-          text: this.moderationCompassQaSourceText(question),
+          text: question.text,
+          sourceHeadline: this.moderationCompassQaSourceHeadline(question),
           status: question.status,
           nlp: question.nlp,
         })),
@@ -2796,6 +2830,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       quizInsightKind: this.moderationCompassQuizInsightKind(),
     }),
   );
+  readonly moderationCompassCards = computed(() => this.moderationCompassView().cards);
 
   private withCurrentFreetextQuestionTarget(
     terms: readonly ModerationCompassTerm[],
@@ -2806,19 +2841,35 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     }
     return terms.map((term) => ({ ...term, questionId: question.questionId }));
   }
-  readonly moderationCompassHasSignals = computed(() => this.moderationCompassCards().length > 0);
+  readonly moderationCompassHasSignals = computed(
+    () => this.moderationCompassView().actionRecommendation !== null,
+  );
   /** Im reinen Blitzlicht wiederholt der Kompass nur die sichtbare Rückmeldung. */
   readonly showModerationCompass = computed(
     () => this.activeChannel() !== 'quickFeedback' || this.channels().quiz || this.channels().qa,
   );
   /** Die Quiz-Gesamtauswertung zeigt den Kompass nicht. */
+  private moderationCompassButtonNaturallyVisible(): boolean {
+    return (
+      this.showModerationCompass() &&
+      this.moderationCompassHasSignals() &&
+      !(this.activeChannel() === 'quiz' && this.effectiveStatus() === 'FINISHED')
+    );
+  }
+  /** Dialog oder Tastaturfokus: der Trigger bleibt, bis der Fokus woanders liegt. */
+  private readonly moderationCompassDialogOpen = signal(false);
+  private readonly moderationCompassTriggerFocused = signal(false);
   readonly showModerationCompassButton = computed(
     () =>
-      this.showModerationCompass() &&
-      !(this.activeChannel() === 'quiz' && this.effectiveStatus() === 'FINISHED'),
+      this.moderationCompassDialogOpen() ||
+      this.moderationCompassTriggerFocused() ||
+      this.moderationCompassButtonNaturallyVisible(),
   );
   readonly showHostModerationStack = computed(
-    () => this.moderationCompassReturn() !== null || this.showModerationCompass(),
+    () =>
+      this.moderationCompassReturn() !== null ||
+      this.showModerationCompassButton() ||
+      this.showLearningObjectivesControl(),
   );
   readonly moderationCompassReturn = signal<{
     readonly channel: SessionChannelTab;
@@ -2832,6 +2883,11 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     }
     return $localize`:@@sessionHost.moderationButtonAriaWithSignals:Moderationskompass öffnen, Hinweise vorhanden`;
   });
+  openModerationCompassFromTrigger(): void {
+    if (!this.moderationCompassButtonNaturallyVisible()) return;
+    void this.openModerationCompassDialog();
+  }
+
   readonly openModerationCompassDialog = async (): Promise<void> => {
     this.moderationCompassReturn.set(null);
     this.clearQaCompassFocus();
@@ -2846,6 +2902,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     await this.refreshQaSummaryRuntime();
     const { ModerationCompassDialogComponent } =
       await import('./moderation-compass-dialog.component');
+    this.moderationCompassDialogOpen.set(true);
     const dialogRef = this.dialog.open(ModerationCompassDialogComponent, {
       data: {
         cards: () => this.moderationCompassCards(),
@@ -2885,13 +2942,109 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     dialogRef.afterClosed().subscribe(() => {
       this.qaSummaryPreviewRequestGeneration += 1;
       this.stopQaSummaryPolling();
+      if (!this.moderationCompassButtonNaturallyVisible()) {
+        this.moveFocusOffModerationCompassTrigger();
+      }
+      this.moderationCompassDialogOpen.set(false);
     });
   };
 
+  onModerationCompassTriggerFocus(): void {
+    this.moderationCompassTriggerFocused.set(true);
+  }
+
+  onModerationCompassTriggerBlur(): void {
+    this.moderationCompassTriggerFocused.set(false);
+  }
+
+  private moveFocusOffModerationCompassTrigger(): void {
+    const button = this.moderationCompassButtonRef?.nativeElement ?? null;
+    const fallback = this.findHostFocusFallback(button);
+    if (!fallback) return;
+    try {
+      fallback.focus({ preventScroll: true });
+    } catch {
+      fallback.focus();
+    }
+  }
+
+  private findHostFocusFallback(excluded: HTMLElement | null): HTMLElement | null {
+    const scope = this.document.querySelector('.session-host') ?? this.document.body;
+    const candidates = scope.querySelectorAll<HTMLElement>(
+      [
+        '[data-testid="host-learning-objectives"]',
+        '.session-channel-tabs button',
+        '[data-testid="host-more-actions"]',
+        '.session-host__live-actions button',
+      ].join(', '),
+    );
+    const connected = [...candidates].filter(
+      (candidate) =>
+        candidate !== excluded &&
+        !candidate.closest('[data-testid="host-moderation-compass"]') &&
+        candidate.isConnected &&
+        !candidate.hasAttribute('disabled'),
+    );
+    return (
+      connected.find((candidate) => this.isElementVisibleForFocus(candidate)) ??
+      connected[0] ??
+      null
+    );
+  }
+
+  readonly sessionLearningObjectives = signal<readonly SessionLearningObjectiveDTO[]>([]);
+  private learningObjectivesRequest = 0;
+  /** Letzter Abruf ist fehlgeschlagen; Polling und Reconnect holen ihn nach. */
+  private learningObjectivesRetryPending = false;
+  /** Lobby und Warten auf die erste Frage: alle bestätigten Ziele, nach Fragennummer geordnet. */
+  readonly showAllConfirmedLearningObjectives = computed(() => {
+    if (this.activeChannel() !== 'quiz') return false;
+    if (this.displayedCurrentQuestionForHost() !== null) return false;
+    return this.effectiveStatus() === 'LOBBY' || this.isQuizAwaitingFirstQuestion();
+  });
+  readonly showLearningObjectivesControl = computed(() => {
+    if (this.activeChannel() === 'quickFeedback') return false;
+    if (this.activeChannel() === 'qa') return true;
+    if (this.activeChannel() !== 'quiz') return false;
+    if (this.showAllConfirmedLearningObjectives()) {
+      return this.sessionLearningObjectives().some(isConfirmedDisplayedLearningObjective);
+    }
+    const questionId = this.displayedCurrentQuestionForHost()?.questionId;
+    if (!questionId) return false;
+    return this.sessionLearningObjectives().some((objective) =>
+      confirmedLearningObjectiveAppliesToQuestion(objective, questionId),
+    );
+  });
+
   learningObjectivesControlAriaLabel(): string {
-    return this.activeChannel() === 'qa'
-      ? $localize`:@@sessionHost.qaAssignmentAria:Auftrag für das Q&A-Forum öffnen`
-      : $localize`:@@sessionHost.learningObjectivesAria:Lernziele für diese Session öffnen`;
+    if (this.activeChannel() === 'qa') {
+      return $localize`:@@sessionHost.qaAssignmentAria:Auftrag für das Q&A-Forum öffnen`;
+    }
+    if (this.showAllConfirmedLearningObjectives()) {
+      return $localize`:@@sessionHost.learningObjectivesOverviewAria:Bestätigte Lernziele anzeigen`;
+    }
+    return $localize`:@@sessionHost.learningObjectivesAria:Lernziel zur aktuellen Frage anzeigen`;
+  }
+
+  private async refreshSessionLearningObjectives(): Promise<void> {
+    if (!this.channels().quiz || this.code.length !== 6) {
+      this.learningObjectivesRequest += 1;
+      this.learningObjectivesRetryPending = false;
+      this.sessionLearningObjectives.set([]);
+      return;
+    }
+    const request = ++this.learningObjectivesRequest;
+    try {
+      const snapshot = await trpc.session.getLearningObjectives.query({
+        code: this.code.toUpperCase(),
+      });
+      if (request !== this.learningObjectivesRequest) return;
+      this.learningObjectivesRetryPending = false;
+      this.sessionLearningObjectives.set(snapshot.objectives);
+    } catch {
+      if (request !== this.learningObjectivesRequest) return;
+      this.learningObjectivesRetryPending = true;
+    }
   }
 
   readonly openLearningObjectivesDialog = async (): Promise<void> => {
@@ -3577,27 +3730,27 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       .sort((left, right) => right[1] - left[1])
       .slice(0, 3)
       .map(([text, count]) => ({
-        label: $localize`:@@sessionHost.moderationFreetextRepeat:Mehrfach genannt: ${truncateCompassLabel(text, 64)}:text:`,
+        label: text,
+        displayLabel: $localize`:@@sessionHost.moderationFreetextRepeatHeadline:Mehrfach genannt`,
         documentFrequency: count,
         sourceCount: count,
-        memberTexts: [],
+        memberTexts: [text],
       }));
   }
 
-  private moderationCompassQaSourceText(question: {
-    text: string;
+  private moderationCompassQaSourceHeadline(question: {
     isControversial?: boolean;
     positiveVoteCount?: number;
     negativeVoteCount?: number;
-  }): string {
+  }): string | undefined {
     if (
       question.isControversial === true &&
       typeof question.positiveVoteCount === 'number' &&
       typeof question.negativeVoteCount === 'number'
     ) {
-      return $localize`:@@sessionHost.moderationFrictionVotes:${question.positiveVoteCount}:up: dafür, ${question.negativeVoteCount}:down: dagegen · ${question.text}:question:`;
+      return $localize`:@@sessionQa.votesBreakdownAria:${question.positiveVoteCount}:up: dafür, ${question.negativeVoteCount}:down: dagegen`;
     }
-    return question.text;
+    return undefined;
   }
 
   private moderationCompassFeedback(): ModerationCompassTempo | null {
@@ -3699,43 +3852,79 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   private localizeCurrentQuestionQuizSources(
     question: HostCurrentQuestionDTO,
   ): ModerationCompassSource[] {
-    return collectModerationQuizFacts(question)
+    const objectiveSources = this.learningObjectiveCompassSources(question);
+    const factSources = collectModerationQuizFacts(question)
+      .filter((fact) => objectiveSources.length === 0 || fact.type !== 'confidence-misconception')
       .flatMap((fact) => {
         const source = this.localizeModerationQuizFact(fact, question);
         if (!source) {
           return [];
         }
         return [{ ...source, evidenceRole: moderationQuizFactEvidenceRole(fact, question) }];
-      })
-      .slice(0, 3);
+      });
+    return [...objectiveSources, ...factSources].slice(0, 3);
   }
 
-  private withQuizQuestionStem(message: string, question: { text: string }): string {
-    const stem = compassQuestionStem(question.text);
-    if (!stem || message.includes(stem)) {
-      return message;
-    }
-    return `${message} · ${stem}`;
+  private learningObjectiveCompassSources(
+    question: HostCurrentQuestionDTO,
+  ): ModerationCompassSource[] {
+    const result = question.confidenceResult;
+    if (!result) return [];
+    const links = learningObjectiveMisconceptionLinks({
+      objectives: this.sessionLearningObjectives(),
+      questions: [
+        {
+          questionId: question.questionId,
+          questionOrder: question.order,
+          responseCount: confidenceResultResponseCount(result),
+          incorrectHigh: result.crossTab.incorrectHigh,
+          topWrongOption: result.highConfidenceWrongOptions?.[0]?.text ?? null,
+        },
+      ],
+    });
+    return links.map((link) => {
+      const measure = this.learningObjectiveMisconceptionMeasure(
+        link.incorrectHigh,
+        link.responseCount,
+      );
+      const option = link.topWrongOption
+        ? this.learningObjectiveMisconceptionOption(link.topWrongOption)
+        : '';
+      return {
+        kind: 'quiz-result',
+        label: this.learningObjectiveMisconceptionHeading(link.questionNumber),
+        evidence: this.quoteLabel(link.objectiveText),
+        context: option.length > 0 ? `${measure}. ${option}` : measure,
+        evidenceRole: 'clarification',
+        target: { channel: 'quiz', questionId: question.questionId },
+      };
+    });
   }
 
   private localizeModerationQuizFact(
     fact: ModerationQuizFact,
     question: HostCurrentQuestionDTO,
   ): ModerationCompassSource | null {
-    const quizSource = (label: string): ModerationCompassSource => ({
-      kind: 'quiz-result',
-      label: this.withQuizQuestionStem(label, question),
-      target: { channel: 'quiz', questionId: question.questionId },
-    });
+    const quizSource = (label: string, evidence?: string): ModerationCompassSource => {
+      const stem = compassQuestionStem(question.text, 64);
+      const distinctEvidence = pickCompassSourceDetail(label, evidence);
+      const context = pickCompassSourceDetail(
+        [label, distinctEvidence].filter(Boolean).join(' '),
+        stem,
+      );
+      return {
+        kind: 'quiz-result',
+        label,
+        ...(distinctEvidence ? { evidence: distinctEvidence } : {}),
+        ...(context ? { context } : {}),
+        target: { channel: 'quiz', questionId: question.questionId },
+      };
+    };
     switch (fact.type) {
-      case 'wrong-majority': {
-        const stem = compassQuestionStem(question.text);
+      case 'wrong-majority':
         return quizSource(
-          stem
-            ? $localize`:@@sessionHost.moderationQuizWrong:${fact.incorrect}:wrong: von ${fact.total}:total: liegen daneben · ${stem}:question:`
-            : $localize`:@@sessionHost.moderationQuizWrongPlain:${fact.incorrect}:wrong: von ${fact.total}:total: liegen daneben`,
+          $localize`:@@sessionHost.moderationQuizWrongPlain:${fact.incorrect}:wrong: von ${fact.total}:total: liegen daneben`,
         );
-      }
       case 'in-band':
         return quizSource(
           $localize`:@@sessionHost.moderationQuizInBand:Nur ${fact.percent}:percent: % der Schätzungen liegen im erwarteten Bereich`,
@@ -3750,23 +3939,35 @@ export class SessionHostComponent implements OnInit, OnDestroy {
         );
       case 'matching-confusion':
         return quizSource(
-          $localize`:@@sessionHost.moderationQuizMatch:Häufige Verwechslung: ${truncateCompassLabel(fact.left, 32)}:left: → ${truncateCompassLabel(fact.wrong, 32)}:wrong:`,
+          $localize`:@@sessionHost.moderationQuizMatchHeadline:Häufige Verwechslung`,
+          `${truncateCompassLabelAtWord(fact.left, 42)} → ${truncateCompassLabelAtWord(fact.wrong, 42)}`,
         );
       case 'ordering-swap':
         return quizSource(
-          $localize`:@@sessionHost.moderationQuizOrder:Häufig vertauscht: ${truncateCompassLabel(fact.a, 32)}:a: und ${truncateCompassLabel(fact.b, 32)}:b:`,
+          $localize`:@@sessionHost.moderationQuizOrderHeadline:Häufig vertauscht`,
+          `${truncateCompassLabelAtWord(fact.a, 42)} · ${truncateCompassLabelAtWord(fact.b, 42)}`,
         );
       case 'categorization-miss':
         return quizSource(
-          $localize`:@@sessionHost.moderationQuizCategory:Häufig falsch einsortiert: ${truncateCompassLabel(fact.item, 32)}:item: → ${truncateCompassLabel(fact.wrongCategory, 32)}:wrong:`,
+          $localize`:@@sessionHost.moderationQuizCategoryHeadline:Häufig falsch einsortiert`,
+          `${truncateCompassLabelAtWord(fact.item, 42)} → ${truncateCompassLabelAtWord(fact.wrongCategory, 42)}`,
         );
       case 'wrong-option':
         return quizSource(
-          $localize`:@@sessionHost.moderationQuizWrongOption:Häufigste andere Antwort: ${truncateCompassLabel(fact.option, 64)}:option:`,
+          $localize`:@@sessionHost.moderationQuizWrongOptionHeadline:Häufigste andere Antwort`,
+          truncateCompassLabelAtWord(fact.option, 72),
         );
+      case 'confidence-misconception':
+        return fact.option
+          ? quizSource(
+              $localize`:@@sessionHost.moderationQuizConfidenceMisconception:Selbstsicher falsch – mögliches Fehlkonzept`,
+              truncateCompassLabelAtWord(fact.option, 72),
+            )
+          : quizSource(this.confidenceMisconceptionLabel(fact.count));
       case 'survey-top':
         return quizSource(
-          $localize`:@@sessionHost.moderationQuizSurveyTop:Häufigste Antwort: ${truncateCompassLabel(fact.option, 64)}:option:`,
+          $localize`:@@sessionHost.moderationQuizSurveyTopHeadline:Häufigste Antwort`,
+          truncateCompassLabelAtWord(fact.option, 72),
         );
       case 'numeric-median':
         return quizSource(
@@ -3790,7 +3991,8 @@ export class SessionHostComponent implements OnInit, OnDestroy {
         );
       case 'freetext-repeat':
         return quizSource(
-          $localize`:@@sessionHost.moderationFreetextRepeat:Mehrfach genannt: ${truncateCompassLabel(fact.text, 64)}:text:`,
+          $localize`:@@sessionHost.moderationFreetextRepeatHeadline:Mehrfach genannt`,
+          truncateCompassLabelAtWord(fact.text, 72),
         );
       default:
         return null;
@@ -3999,6 +4201,25 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   private readonly injector = inject(Injector);
 
   constructor() {
+    effect(() => {
+      const dialogOpen = this.moderationCompassDialogOpen();
+      const focused = this.moderationCompassTriggerFocused();
+      const natural = this.moderationCompassButtonNaturallyVisible();
+      if (natural || dialogOpen || !focused) return;
+      untracked(() => {
+        queueMicrotask(() => {
+          if (this.destroyRef.destroyed) return;
+          if (
+            this.moderationCompassButtonNaturallyVisible() ||
+            this.moderationCompassDialogOpen() ||
+            !this.moderationCompassTriggerFocused()
+          ) {
+            return;
+          }
+          this.moveFocusOffModerationCompassTrigger();
+        });
+      });
+    });
     effect(() => {
       const questions = this.qaQuestions();
       const filtered = this.qaListCriteriaActive();
@@ -4863,6 +5084,42 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     return selectConfidencePriorityQuestions(summary.questions, 3);
   }
 
+  finishedConfidenceObjectiveLinks(
+    question: ConfidenceQuestionSummaryDTO,
+  ): LearningObjectiveMisconceptionLink[] {
+    return learningObjectiveMisconceptionLinks({
+      objectives: this.sessionLearningObjectives(),
+      questions: [
+        {
+          questionId: question.questionId,
+          questionOrder: question.questionOrder,
+          responseCount: question.responseCount,
+          incorrectHigh: question.result.crossTab.incorrectHigh,
+          topWrongOption: question.result.highConfidenceWrongOptions?.[0]?.text ?? null,
+        },
+      ],
+    });
+  }
+
+  quoteLabel(text: string): string {
+    const plain = markdownToReadableText(text).trim().replace(/\s+/g, ' ');
+    return $localize`:@@sessionHost.quotedLabel:»${plain}:text:«`;
+  }
+
+  learningObjectiveMisconceptionHeading(questionNumber: number): string {
+    return $localize`:@@sessionHost.learningObjectiveMisconceptionHeading:Lernziel zu Frage ${questionNumber}:questionNumber:`;
+  }
+
+  learningObjectiveMisconceptionMeasure(incorrectHigh: number, responseCount: number): string {
+    const percent = this.finishedConfidencePercent(incorrectHigh, responseCount);
+    return $localize`:@@sessionHost.learningObjectiveMisconceptionMeasure:${incorrectHigh}:incorrectHigh: von ${responseCount}:responseCount: falsch bei hoher Selbsteinschätzung (${percent}:percent: %)`;
+  }
+
+  learningObjectiveMisconceptionOption(option: string): string {
+    const quoted = this.quoteLabel(option);
+    return $localize`:@@sessionHost.learningObjectiveMisconceptionOption:Häufigste falsche Option: ${quoted}:option:`;
+  }
+
   finishedConfidenceIncorrectCount(question: ConfidenceQuestionSummaryDTO): number {
     const crossTab = question.result.crossTab;
     return crossTab.incorrectHigh + crossTab.incorrectMid + crossTab.incorrectLow;
@@ -5141,6 +5398,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       .then((issued) => {
         setHostToken(this.code, issued.hostToken);
         refreshTrpcWsBinding();
+        this.pushPresenterHostToken();
       })
       .catch(() => {
         // Der bestehende Token bleibt bis zu seinem eigenen Ablauf nutzbar; Reconnects bleiben fail-closed.
@@ -5151,8 +5409,22 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     return this.hostAccessRefreshInFlight;
   }
 
+  private pushPresenterHostToken(allowLookup = false): void {
+    const presenter = pushCurrentHostTokenToPresenter(
+      this.document.defaultView,
+      this.code,
+      this.presenterWindowHandle,
+      allowLookup,
+    );
+    if (presenter) {
+      this.presenterWindowHandle = presenter;
+      this.syncPresenterWindowOpenState();
+    }
+  }
+
   private startHostAccessRefresh(): void {
     if (this.hostAccessRefreshTimer || this.isPairedHostClient()) return;
+    this.pushPresenterHostToken(true);
     void this.refreshDurableHostAccess();
     this.hostAccessRefreshTimer = setInterval(
       () => void this.refreshDurableHostAccess(),
@@ -5314,6 +5586,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   }
 
   async ngOnInit(): Promise<void> {
+    void this.qaTitleUpdateBanner;
     if (this.code.length !== 6) return;
     this.syncPairedHostManualReconnectRegistration();
     if (this.isPairedHostClient()) {
@@ -5361,6 +5634,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     await this.generateQrCode();
     await this.refreshLiveFreetext();
     await this.refreshCurrentQuestionForHost();
+    await this.refreshSessionLearningObjectives();
     await this.refreshHostVoteProgress();
     this.syncMusic();
     this.startHostPolling();
@@ -6055,6 +6329,9 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     if (this.shouldPollEmojiReactions()) {
       tasks.push(this.refreshEmojiReactions(options));
     }
+    if (this.learningObjectivesRetryPending) {
+      tasks.push(this.refreshSessionLearningObjectives());
+    }
     if (tasks.length > 0) {
       await Promise.all(tasks);
     }
@@ -6108,6 +6385,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
 
   private unlockListener = (): void => {
     this.sound.unlock();
+    this.syncMusic();
     this.document.removeEventListener('click', this.unlockListener);
     this.document.removeEventListener('keydown', this.unlockListener);
   };
@@ -6751,7 +7029,8 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       return;
     }
     // Such-/Pin-/Autor-Kontext vor dem Hero-Sync an die Presenter-Bühne publizieren.
-    await this.publishQaPresenterSortMode(this.qaSortMode());
+    // takeover: eine am Presenter gewählte Sortierung weicht der Host-Filteränderung.
+    await this.publishQaPresenterSortMode(this.qaSortMode(), { takeover: true });
     const first = this.qaNavigableStageQuestions()[0] ?? null;
     this.qaListNavQuestionId.set(first?.id ?? null);
     if (first) {
@@ -7348,6 +7627,64 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       retry,
       errorRequestId: 'host.qa:failed',
       suggestedArea: 'QA',
+    });
+    this.scrollHostSteeringCalloutIntoView();
+  }
+
+  private canRenewHostAccess(): boolean {
+    return !this.isPairedHostClient() && getHostBrowserCapability(this.code) !== null;
+  }
+
+  private isTrpcUnauthorizedError(error: unknown): boolean {
+    if (!error || typeof error !== 'object') {
+      return false;
+    }
+    if ('data' in error && error.data && typeof error.data === 'object' && 'code' in error.data) {
+      return error.data.code === 'UNAUTHORIZED';
+    }
+    if ('code' in error && error.code === 'UNAUTHORIZED') {
+      return true;
+    }
+    return error instanceof Error && error.message.startsWith('UNAUTHORIZED');
+  }
+
+  /**
+   * Ergebnis-Export bleibt an den 15-Minuten-Host-Token gebunden.
+   * Vor dem Abruf und genau einmal nach UNAUTHORIZED erneuern, wenn das Gerät
+   * die Browser-Capability noch hat. Gekoppelte Hosts erneuern nicht.
+   */
+  private async withRenewedHostAccess<T>(run: () => Promise<T>): Promise<T> {
+    const renewal = this.refreshDurableHostAccess();
+    // Ohne Capability ist die Erneuerung ein leeres Promise. Darauf zu warten
+    // würde den Export um einen Tick verzögern, obwohl sich der Zugang nicht ändert.
+    if (this.hostAccessRefreshInFlight) {
+      await renewal;
+    }
+    try {
+      return await run();
+    } catch (error) {
+      if (!this.isTrpcUnauthorizedError(error) || !this.canRenewHostAccess()) {
+        throw error;
+      }
+      await this.refreshDurableHostAccess();
+      return await run();
+    }
+  }
+
+  private handleHostResultsExportError(error: unknown, retry: () => void): void {
+    if (this.isTrpcUnauthorizedError(error) && !this.canRenewHostAccess()) {
+      this.openHostSteeringCalloutForExpiredHostAccess();
+      return;
+    }
+    this.openHostSteeringCalloutForExportFailure(retry);
+  }
+
+  private openHostSteeringCalloutForExpiredHostAccess(): void {
+    this.hostSteeringCallout.set({
+      title: $localize`:@@sessionHost.steeringCalloutExportAccessTitle:Host-Zugang abgelaufen`,
+      body: $localize`:@@sessionHost.steeringCalloutExportAccessBody:PDF und CSV brauchen hier einen gültigen Host-Zugang. Den Nachbesprechungsplan holst du in der Quizsammlung über »Nachbesprechungsplan ansehen«.`,
+      errorRequestId: 'host.export:access-expired',
+      suggestedArea: 'PDF_OR_EXPORT',
     });
     this.scrollHostSteeringCalloutIntoView();
   }
@@ -11201,7 +11538,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     }
 
     this.qaSortMode.set(mode);
-    this.publishQaPresenterSortMode(mode);
+    this.publishQaPresenterSortMode(mode, { takeover: true });
     this.ensureQaSubscription();
 
     // Wenn die Q&A-Wortwolke im Themenmodus geöffnet ist, sofort den Backend-Reweight-Aufruf
@@ -11625,6 +11962,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       this.refreshParticipantsPayload(),
       this.refreshLobbyTeams(),
       this.refreshCurrentQuestionForHost(),
+      this.refreshSessionLearningObjectives(),
       this.refreshQuickFeedbackResult(),
       this.refreshQaQuestionsForChannelActivation(),
     ]);
@@ -12189,7 +12527,11 @@ export class SessionHostComponent implements OnInit, OnDestroy {
 
   private publishQaPresenterSortMode(
     sortMode: QaQuestionSortMode,
-    options?: { readonly force?: boolean; readonly skipStageRefresh?: boolean },
+    options?: {
+      readonly force?: boolean;
+      readonly skipStageRefresh?: boolean;
+      readonly takeover?: boolean;
+    },
   ): Promise<void> {
     if (!this.code) {
       return Promise.resolve();
@@ -12198,10 +12540,15 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     const pinnedOnly = this.qaShowPinnedOnly();
     const authorNickname = this.qaSelectedAuthorNickname();
     const stageViewKey = this.buildQaPresenterStageViewKey(sortMode);
-    if (!options?.force && stageViewKey === this.lastQaPresenterStageViewKey) {
+    const takeover = options?.takeover === true;
+    const sameView = stageViewKey === this.lastQaPresenterStageViewKey;
+    // Das Abo publiziert dieselbe Ansicht ohne takeover. Diese Buchung darf die
+    // anschließende ausdrückliche Übernahme nicht als Duplikat verschlucken.
+    if (!options?.force && sameView && (!takeover || this.lastQaPresenterStageViewTookOver)) {
       return Promise.resolve();
     }
     this.lastQaPresenterStageViewKey = stageViewKey;
+    this.lastQaPresenterStageViewTookOver = takeover;
     return this.enqueuePresenterProjectionSync(async () => {
       try {
         await trpc.qa.setPresenterSortMode.mutate({
@@ -12210,6 +12557,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
           search,
           pinnedOnly,
           ...(authorNickname ? { authorNickname } : {}),
+          ...(options?.takeover ? { takeover: true } : {}),
         });
         this.publishedQaPresenterStageViewKey = stageViewKey;
         // Refresh nicht in der Sync-Queue awaiten: sonst blockiert z. B. endPresentationView,
@@ -12219,6 +12567,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
         }
       } catch {
         this.lastQaPresenterStageViewKey = null;
+        this.lastQaPresenterStageViewTookOver = false;
       }
     });
   }
@@ -12993,11 +13342,27 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       ]);
       this.qaPresenterStageViewKey = requestedViewKey;
       this.qaPresenterStageSortMode = Array.isArray(snapshot) ? null : (snapshot.sortMode ?? null);
+      // Presenter-Sortierung übernehmen, bevor der Stale-Check einen Sync verwirft.
+      // Der Key steht vorher, damit das Abo dieselbe Ansicht nicht sofort zurückschreibt.
+      if (
+        !Array.isArray(snapshot) &&
+        snapshot.sortMode &&
+        snapshot.sortModeSource === 'presenter' &&
+        snapshot.sortMode !== this.qaSortMode()
+      ) {
+        const adopted = snapshot.sortMode;
+        const key = this.buildQaPresenterStageViewKey(adopted);
+        this.lastQaPresenterStageViewKey = key;
+        this.lastQaPresenterStageViewTookOver = false;
+        this.publishedQaPresenterStageViewKey = key;
+        this.qaSortMode.set(adopted);
+      }
       const pendingSyncId = this.pendingPresenterStageSyncQuestionId;
       if (pendingSyncId && !this.isQaPresenterStageStale()) {
         void this.syncPresenterToStageQuestionId(pendingSyncId);
       }
-      // Self-Heal: Backend-Restart leert die ephemeral Map → Presenter fällt auf Default.
+      // Self-Heal: Backend-Restart leert die ephemeral Map → Presenter fällt auf Default
+      // (kein sortModeSource). Eine Presenter-Sortierung bleibt oben unangetastet.
       // skipStageRefresh: sonst publish→refresh→publish-Endlosschleife, solange der
       // Snapshot noch den alten Modus liefert (ephemeral Map / Stub in Specs).
       if (
@@ -14806,10 +15171,13 @@ export class SessionHostComponent implements OnInit, OnDestroy {
 
   async exportSessionResultsCsv(): Promise<void> {
     if (!this.code || this.exportExporting()) return;
+    const code = this.code;
     this.exportStatus.set(null);
     this.exportExporting.set(true);
     try {
-      const data = await trpc.session.getExportData.query({ code: this.code.toUpperCase() });
+      const data = await this.withRenewedHostAccess(() =>
+        trpc.session.getExportData.query({ code: code.toUpperCase() }),
+      );
       const rows: string[] = [
         $localize`:@@sessionHost.exportQuestionsHeader:Frage Nr.;Fragentext;Typ;Teilnehmende;Aggregationsrunde;Ø Punkte;Selbsteinschätzung n;Gefestigt;Fehlkonzept-Hinweis;Fragil;Erkannte Wissenslücke;Unentschieden;Häufigste selbstsicher falsche Antwort;Details`,
       ];
@@ -14921,8 +15289,8 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       this.downloadCsvExport(rows, buildSessionResultsCsvFilename(data.quizName, data.sessionCode));
       this.exportStatus.set($localize`:@@sessionHost.exportCsvDone:Ergebnis-CSV exportiert.`);
       this.dismissHostSteeringCallout();
-    } catch {
-      this.openHostSteeringCalloutForExportFailure(() => void this.exportSessionResultsCsv());
+    } catch (error) {
+      this.handleHostResultsExportError(error, () => void this.exportSessionResultsCsv());
     } finally {
       this.exportExporting.set(false);
     }
@@ -14951,18 +15319,25 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     disposition: SessionResultsPdfDisposition = 'download',
   ): Promise<void> {
     if (!this.code || this.exportExporting()) return;
+    const code = this.code;
+    // Vor jedem Await: sonst blockiert der Browser den Ansehen-Tab nach der Token-Erneuerung.
+    const viewPlaceholder =
+      disposition === 'view' ? this.sessionResultsExport.openViewPlaceholder() : undefined;
     this.exportStatus.set(null);
     this.exportExporting.set(true);
     try {
-      const result = await this.sessionResultsExport.exportPdfFromSessionCode(this.code, {
-        profile,
-        disposition,
-        onLargeReportHint: (questionCount) => {
-          this.exportStatus.set(
-            $localize`:@@sessionHost.exportPdfGeneratingLarge:PDF wird erstellt (${questionCount} Fragen)…`,
-          );
-        },
-      });
+      const result = await this.withRenewedHostAccess(() =>
+        this.sessionResultsExport.exportPdfFromSessionCode(code, {
+          profile,
+          disposition,
+          viewPlaceholder,
+          onLargeReportHint: (questionCount) => {
+            this.exportStatus.set(
+              $localize`:@@sessionHost.exportPdfGeneratingLarge:PDF wird erstellt (${questionCount} Fragen)…`,
+            );
+          },
+        }),
+      );
       this.exportStatus.set(
         result === 'pdf-view'
           ? $localize`:@@sessionHost.exportPdfViewDone:Nachbesprechungsplan geöffnet.`
@@ -14971,8 +15346,12 @@ export class SessionHostComponent implements OnInit, OnDestroy {
             : $localize`:@@sessionHost.exportPdfPrintDone:Ergebnis-PDF zum Speichern geöffnet.`,
       );
       this.dismissHostSteeringCallout();
-    } catch {
-      this.openHostSteeringCalloutForExportFailure(
+    } catch (error) {
+      if (viewPlaceholder) {
+        this.sessionResultsExport.closeViewPlaceholder(viewPlaceholder);
+      }
+      this.handleHostResultsExportError(
+        error,
         () => void this.exportSessionResultsPdf(profile, disposition),
       );
     } finally {
