@@ -8,6 +8,7 @@ import { resolve } from 'node:path';
 import { of } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LocaleSwitchGuardService } from '../../../core/locale-switch-guard.service';
+import { UpdateBannerSuppressionService } from '../../../core/update-banner-suppression.service';
 import { QuizEditComponent } from './quiz-edit.component';
 import { QuizStoreService, type QuizDocument } from '../data/quiz-store.service';
 
@@ -48,7 +49,7 @@ describe('QuizEditComponent', { timeout: 30_000 }, () => {
   };
 
   const matDialogMock = {
-    open: vi.fn(() => ({
+    open: vi.fn((_component?: unknown, _config?: { data?: { saveLabel?: string } }) => ({
       afterClosed: () => of<boolean | 'save'>(true),
     })),
   };
@@ -225,6 +226,7 @@ describe('QuizEditComponent', { timeout: 30_000 }, () => {
 
     expect(component.settingsForm.dirty).toBe(false);
     expect(component.hasPendingChanges()).toBe(true);
+    expect(TestBed.inject(UpdateBannerSuppressionService).active()).toBe(true);
 
     component.saveAll();
 
@@ -535,7 +537,7 @@ describe('QuizEditComponent', { timeout: 30_000 }, () => {
         id: QUESTION_ID,
         text: 'Frage',
         type: 'SINGLE_CHOICE',
-        difficulty: 'MEDIUM',
+        difficulty: 'MEDIUM' as const,
         order: 0,
         enabled: true,
         timer: null,
@@ -602,7 +604,9 @@ describe('QuizEditComponent', { timeout: 30_000 }, () => {
 
     await expect(component.canDeactivate()).resolves.toBe(true);
 
-    expect(matDialogMock.open.mock.calls[0]?.[1]?.data.saveLabel).toBe('Alle Änderungen speichern');
+    expect(matDialogMock.open.mock.calls[0]?.[1]?.data?.saveLabel).toBe(
+      'Alle Änderungen speichern',
+    );
     expect(mockStore.updateQuizMetadata).toHaveBeenCalledWith(QUIZ_ID, {
       name: 'Gespeicherter Titel',
       description: 'Beschreibung',
@@ -675,7 +679,7 @@ describe('QuizEditComponent', { timeout: 30_000 }, () => {
     expect(mockStore.addQuestion).toHaveBeenCalledWith(QUIZ_ID, {
       text: 'Was ist korrekt?',
       type: 'SINGLE_CHOICE',
-      difficulty: 'MEDIUM',
+      difficulty: 'MEDIUM' as const,
       timer: null,
       skipReadingPhase: false,
       confidenceEnabled: true,
@@ -1079,7 +1083,7 @@ describe('QuizEditComponent', { timeout: 30_000 }, () => {
     expect(mockStore.addQuestion).toHaveBeenCalledWith(QUIZ_ID, {
       text: 'Was nimmst du heute mit?',
       type: 'FREETEXT',
-      difficulty: 'MEDIUM',
+      difficulty: 'MEDIUM' as const,
       timer: null,
       skipReadingPhase: false,
       answers: [],
@@ -1105,7 +1109,7 @@ describe('QuizEditComponent', { timeout: 30_000 }, () => {
     expect(mockStore.addQuestion).toHaveBeenCalledWith(QUIZ_ID, {
       text: 'Welche Stadt ist die Hauptstadt von Frankreich?',
       type: 'SHORT_TEXT',
-      difficulty: 'MEDIUM',
+      difficulty: 'MEDIUM' as const,
       timer: null,
       skipReadingPhase: false,
       confidenceEnabled: true,
@@ -1282,7 +1286,7 @@ describe('QuizEditComponent', { timeout: 30_000 }, () => {
     expect(mockStore.addQuestion).toHaveBeenCalledWith(QUIZ_ID, {
       text: 'Wie war das Tempo?',
       type: 'SURVEY',
-      difficulty: 'MEDIUM',
+      difficulty: 'MEDIUM' as const,
       timer: null,
       skipReadingPhase: false,
       shuffleAnswerOptions: true,
@@ -1379,7 +1383,7 @@ describe('QuizEditComponent', { timeout: 30_000 }, () => {
         id: QUESTION_ID,
         text: 'Was ist die Kreiszahl Pi?',
         type: 'FREETEXT',
-        difficulty: 'MEDIUM',
+        difficulty: 'MEDIUM' as const,
         order: 0,
         enabled: true,
         timer: null,
@@ -1427,7 +1431,7 @@ describe('QuizEditComponent', { timeout: 30_000 }, () => {
         id: QUESTION_ID,
         text: 'Was ist die Kreiszahl Pi?',
         type: 'FREETEXT',
-        difficulty: 'MEDIUM',
+        difficulty: 'MEDIUM' as const,
         order: 0,
         enabled: true,
         timer: null,
@@ -1644,7 +1648,7 @@ describe('QuizEditComponent', { timeout: 30_000 }, () => {
         id: QUESTION_ID,
         text: 'Nenne den passenden Fachbegriff.',
         type: 'SHORT_TEXT',
-        difficulty: 'MEDIUM',
+        difficulty: 'MEDIUM' as const,
         order: 0,
         enabled: true,
         timer: null,
@@ -1712,7 +1716,7 @@ describe('QuizEditComponent', { timeout: 30_000 }, () => {
         id: SECOND_QUESTION_ID,
         text: 'Zweite Frage',
         type: 'SINGLE_CHOICE',
-        difficulty: 'MEDIUM',
+        difficulty: 'MEDIUM' as const,
         order: 1,
         enabled: true,
         timer: null,
@@ -1843,7 +1847,7 @@ describe('QuizEditComponent', { timeout: 30_000 }, () => {
     expect(mockStore.addQuestion).toHaveBeenCalledWith(QUIZ_ID, {
       text: 'Ungültige SC Frage',
       type: 'SINGLE_CHOICE',
-      difficulty: 'MEDIUM',
+      difficulty: 'MEDIUM' as const,
       timer: null,
       skipReadingPhase: false,
       confidenceEnabled: true,
@@ -2121,7 +2125,7 @@ describe('QuizEditComponent', { timeout: 30_000 }, () => {
         id: QUESTION_ID,
         text: 'Erste Frage',
         type: 'SINGLE_CHOICE',
-        difficulty: 'MEDIUM',
+        difficulty: 'MEDIUM' as const,
         order: 0,
         enabled: true,
         timer: null,
@@ -2139,7 +2143,7 @@ describe('QuizEditComponent', { timeout: 30_000 }, () => {
         id: SECOND_QUESTION_ID,
         text: 'Zweite Frage',
         type: 'SINGLE_CHOICE',
-        difficulty: 'MEDIUM',
+        difficulty: 'MEDIUM' as const,
         order: 1,
         enabled: true,
         timer: null,
@@ -2194,7 +2198,7 @@ describe('QuizEditComponent', { timeout: 30_000 }, () => {
     const bottomAction = fixture.nativeElement.querySelector('.quiz-edit__bottom-actions');
     const backLink = bottomAction?.querySelector('a[routerLink=".."]') as HTMLAnchorElement | null;
     const previewButton = bottomAction?.querySelector(
-      'button[aria-label="Änderungen speichern und Vorschau öffnen"]',
+      'button[aria-label="Vorschau"]',
     ) as HTMLButtonElement | null;
     const saveButton = bottomAction?.querySelector(
       '.quiz-edit__bottom-actions-save',
@@ -2213,19 +2217,21 @@ describe('QuizEditComponent', { timeout: 30_000 }, () => {
     );
     const backLinks = fixture.nativeElement.querySelectorAll('a[routerLink=".."]');
     const previewButtons = fixture.nativeElement.querySelectorAll(
-      'button[aria-label="Änderungen speichern und Vorschau öffnen"]',
+      '.quiz-edit__bottom-actions button[aria-label="Vorschau"]',
     );
 
     expect(bottomAction).not.toBeNull();
     expect(backLink?.textContent).toContain('Zurück');
-    expect(previewButton?.textContent).toContain('Speichern & Vorschau');
+    expect(previewButton?.textContent).toContain('Vorschau');
+    expect(previewButton?.textContent).not.toContain('Speichern');
     expect(cancelButton?.textContent).toContain('Verwerfen');
     expect(addAnotherButton?.textContent).toContain('Weitere Frage');
     expect(saveButton?.textContent).toContain('Änderungen speichern');
     expect(cancelButton?.getAttribute('aria-label')).toBe('Verwerfen');
     expect(saveButton?.getAttribute('aria-label')).toBe('Änderungen speichern');
     expect(backLinks).toHaveLength(1);
-    expect(previewButtons).toHaveLength(2);
+    expect(previewButtons).toHaveLength(1);
+    expect(fixture.nativeElement.querySelector('.quiz-edit__meta-actions')).toBeNull();
     expect(metadataSubmit).toBeNull();
     expect(settingsSubmit).toBeNull();
   });
@@ -2259,6 +2265,25 @@ describe('QuizEditComponent', { timeout: 30_000 }, () => {
     expect(component.submitError()).toBeNull();
     expect(component.metadataSubmitError()).toBeNull();
     expect(component.settingsSubmitError()).toBeNull();
+  });
+
+  it('gibt den Update-Banner frei, nachdem eine bearbeitete Frage verworfen wurde', () => {
+    const fixture = TestBed.createComponent(QuizEditComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+    const suppression = TestBed.inject(UpdateBannerSuppressionService);
+
+    component.editQuestion(QUESTION_ID);
+    expect(component.hasPendingChanges()).toBe(false);
+    expect(suppression.active()).toBe(false);
+
+    component.form.controls.text.setValue('Geändert');
+    expect(suppression.active()).toBe(true);
+
+    component.cancelAllChanges();
+
+    expect(component.hasPendingChanges()).toBe(false);
+    expect(suppression.active()).toBe(false);
   });
 
   it('aktiviert den globalen Save-CTA bei Aenderungen an der Beschreibung', () => {
@@ -2308,7 +2333,7 @@ describe('QuizEditComponent', { timeout: 30_000 }, () => {
         id: QUESTION_ID,
         text: 'Formel: $a^2+b^2=c^2$',
         type: 'SINGLE_CHOICE',
-        difficulty: 'MEDIUM',
+        difficulty: 'MEDIUM' as const,
         order: 0,
         enabled: true,
         timer: null,
@@ -2424,7 +2449,7 @@ describe('QuizEditComponent', { timeout: 30_000 }, () => {
       validate({
         text: 'Sortiere',
         type: 'ORDERING',
-        difficulty: 'MEDIUM',
+        difficulty: 'MEDIUM' as const,
         timer: null,
         answers: [],
         orderingItems: [
@@ -2438,7 +2463,7 @@ describe('QuizEditComponent', { timeout: 30_000 }, () => {
       validate({
         text: 'Kategorisiere',
         type: 'CATEGORIZATION',
-        difficulty: 'MEDIUM',
+        difficulty: 'MEDIUM' as const,
         timer: null,
         answers: [],
         categories: [
