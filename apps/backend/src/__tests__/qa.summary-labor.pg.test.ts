@@ -19,6 +19,11 @@
  * In-Prozess-Test-Runtime; **keine Evidenz**, im JSON als `dryRun` markiert).
  * Fehlt etwas, scheitert der Lauf sofort mit einer Liste der fehlenden Variablen.
  *
+ * Queue- und Client-Timeout sind standardmäßig der Release-Wert 90 000 ms.
+ * `QA_SUMMARY_LABOR_TIMEOUT_MS` (1 000–300 000, die Produktgrenzen) setzt beide
+ * für langsame Laborhardware; das JSON vermerkt die Abweichung
+ * (`timeoutDeviatesFromRelease`, Design Frage A4).
+ *
  * Keine Zeit-Assertions; geprüft wird nur, dass jeder Lauf einen Endstatus
  * erreicht. Alle Kriterien wertet `evidenz/1C/messung/auswertung.mjs` aus.
  */
@@ -66,6 +71,8 @@ import { resetOpenWeightLlmClientForTests } from '../lib/openWeightLlmClient';
 import {
   OPEN_WEIGHT_LLM_MODEL_ID,
   OPEN_WEIGHT_LLM_MODEL_VERSION,
+  OPEN_WEIGHT_LLM_TIMEOUT_MAX_MS,
+  OPEN_WEIGHT_LLM_TIMEOUT_MIN_MS,
   isPrivateOpenWeightLlmAddress,
   resolveOpenWeightLlmConfig,
   resolveOpenWeightLlmUrl,
@@ -112,7 +119,13 @@ const DEFAULT_DIRECT_RUNS = 5;
 const DEFAULT_L5_RUNS = 0;
 const DEFAULT_FAKE_DELAY_MS = 200;
 /** Release-Standard (90 s) für Queue- und Client-Timeout, explizit gesetzt. */
-const RELEASE_TIMEOUT_MS = '90000';
+const RELEASE_TIMEOUT_MS = 90_000;
+/**
+ * Obergrenze wie im Produkt (`QA_SUMMARY_TIMEOUT_MAX_MS`, `OPEN_WEIGHT_LLM_TIMEOUT_MAX_MS`).
+ * Ein Wert über dem Release-Standard ist eine gekennzeichnete Abweichung (Design, Frage A4).
+ */
+const LABOR_TIMEOUT_MIN_MS = OPEN_WEIGHT_LLM_TIMEOUT_MIN_MS;
+const LABOR_TIMEOUT_MAX_MS = OPEN_WEIGHT_LLM_TIMEOUT_MAX_MS;
 const TERMINAL_MARGIN_MS = 60_000;
 const OUTER_TIMEOUT_MS = 4 * 60 * 60 * 1000;
 /** Vor- und Nachbereitung: Runtime-Abrufe (je höchstens 10 s), Aufräumen der Fixtures. */
@@ -141,6 +154,7 @@ type LaborConfig = {
   readonly directRuns: number;
   readonly l5Runs: number;
   readonly fakeDelayMs: number;
+  readonly timeoutMs: number;
   readonly baseline: string | null;
   readonly runtimeImage: string | null;
   readonly modelSha256: string | null;
@@ -223,6 +237,7 @@ async function resolveLaborConfig(): Promise<LaborConfig> {
     directRuns: intEnv('QA_SUMMARY_LABOR_DIRECT_RUNS', DEFAULT_DIRECT_RUNS, problems),
     l5Runs: intEnv('QA_SUMMARY_LABOR_L5_RUNS', DEFAULT_L5_RUNS, problems),
     fakeDelayMs: intEnv('QA_SUMMARY_LABOR_FAKE_DELAY_MS', DEFAULT_FAKE_DELAY_MS, problems),
+    timeoutMs: intEnv('QA_SUMMARY_LABOR_TIMEOUT_MS', RELEASE_TIMEOUT_MS, problems),
     baseline: patternEnv('QA_SUMMARY_LABOR_BASELINE', /^[\w.@/-]{1,80}$/, problems),
     runtimeImage: patternEnv(
       'QA_SUMMARY_LABOR_RUNTIME_IMAGE',
@@ -232,6 +247,11 @@ async function resolveLaborConfig(): Promise<LaborConfig> {
     modelSha256: patternEnv('QA_SUMMARY_LABOR_MODEL_SHA256', /^[0-9a-f]{64}$/, problems),
   };
   if (config.runs < 1) problems.push('QA_SUMMARY_LABOR_RUNS muss mindestens 1 sein');
+  if (config.timeoutMs < LABOR_TIMEOUT_MIN_MS || config.timeoutMs > LABOR_TIMEOUT_MAX_MS) {
+    problems.push(
+      `QA_SUMMARY_LABOR_TIMEOUT_MS muss zwischen ${LABOR_TIMEOUT_MIN_MS} und ${LABOR_TIMEOUT_MAX_MS} liegen`,
+    );
+  }
   if (problems.length > 0) {
     throw new Error(
       `RUN_QA_SUMMARY_LABOR=1, aber die Labor-Konfiguration ist unvollständig:\n- ${problems.join('\n- ')}\nSiehe docs/referat-thema-1/evidenz/1C/labor-runbook.md.`,
@@ -683,8 +703,8 @@ describe.skipIf(!RUN)(
       proxy = await startRecordingProxy({ upstream, expectedToken: token });
       useTestRuntimeEnv(proxy, {
         OPEN_WEIGHT_LLM_TOKEN: token,
-        QA_SUMMARY_TIMEOUT_MS: RELEASE_TIMEOUT_MS,
-        OPEN_WEIGHT_LLM_SUMMARY_TIMEOUT_MS: RELEASE_TIMEOUT_MS,
+        QA_SUMMARY_TIMEOUT_MS: String(config.timeoutMs),
+        OPEN_WEIGHT_LLM_SUMMARY_TIMEOUT_MS: String(config.timeoutMs),
       });
       const effectiveTimeoutMs = resolveEffectiveQaSummaryTimeoutMs();
       terminalWaitMs = effectiveTimeoutMs + TERMINAL_MARGIN_MS;
@@ -754,6 +774,9 @@ describe.skipIf(!RUN)(
           l5RunsPerArm: config.l5Runs,
           fakeDelayMs: config.fake ? config.fakeDelayMs : null,
           terminalWaitMs,
+          timeoutMs: config.timeoutMs,
+          releaseTimeoutMs: RELEASE_TIMEOUT_MS,
+          timeoutDeviatesFromRelease: config.timeoutMs !== RELEASE_TIMEOUT_MS,
           timer: 'performance.now()',
           proxy: 'lib/recording-proxy.ts (127.0.0.1, gepuffert, Body-Bytes unverändert)',
         },
@@ -814,8 +837,8 @@ describe.skipIf(!RUN)(
         { baseUrl: upstream },
         {
           OPEN_WEIGHT_LLM_TOKEN: token,
-          QA_SUMMARY_TIMEOUT_MS: RELEASE_TIMEOUT_MS,
-          OPEN_WEIGHT_LLM_SUMMARY_TIMEOUT_MS: RELEASE_TIMEOUT_MS,
+          QA_SUMMARY_TIMEOUT_MS: String(cfg.timeoutMs),
+          OPEN_WEIGHT_LLM_SUMMARY_TIMEOUT_MS: String(cfg.timeoutMs),
         },
       );
       const runs: unknown[] = [];
@@ -828,8 +851,8 @@ describe.skipIf(!RUN)(
       } finally {
         useTestRuntimeEnv(proxy!, {
           OPEN_WEIGHT_LLM_TOKEN: token,
-          QA_SUMMARY_TIMEOUT_MS: RELEASE_TIMEOUT_MS,
-          OPEN_WEIGHT_LLM_SUMMARY_TIMEOUT_MS: RELEASE_TIMEOUT_MS,
+          QA_SUMMARY_TIMEOUT_MS: String(cfg.timeoutMs),
+          OPEN_WEIGHT_LLM_SUMMARY_TIMEOUT_MS: String(cfg.timeoutMs),
         });
       }
       labor['direct'] = {
