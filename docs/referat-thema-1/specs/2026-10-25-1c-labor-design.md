@@ -1,9 +1,10 @@
 # Design: 1C Laborlauf – Kontextpfad bis zur ausgelieferten privaten Runtime
 
-> **Entwurf – nicht freigegeben; Freigabe durch den Autor vor dem Lauf.** Hypothesen,
-> Kriterien, Wiederholungen und Entscheidungsregeln gelten erst nach dieser Freigabe als vorab
-> festgelegt. Bis dahin ist nichts gemessen; ein Trockenlauf gegen die Test-Runtime (Abschnitt 10)
-> prüft nur das Messwerkzeug.
+> **Freigegeben vom Autor am 2026-11-04** (Fragen A1–A4 wie in Abschnitt 11 entschieden). Ab
+> hier gelten Hypothesen, Kriterien, Wiederholungen und Entscheidungsregeln als vorab festgelegt.
+> Gemessen ist noch nichts; die Trockenläufe gegen die Test-Runtime (Abschnitt 10) prüfen nur das
+> Messwerkzeug, die einzelne Kalibrierungsanfrage (Abschnitt 10.1) wird nicht ausgewertet. Ein
+> Hinweis zur Vorabfestlegung steht in Abschnitt 10.1.
 >
 > **Überarbeitet 2026-11-04, noch vor der Freigabe:** Der Prüfer hat die Fragen P1–P3 per E-Mail
 > beantwortet (Abschnitt 11). Laborinstanz ist der eigene Rechner, Referenzstand der aktuelle
@@ -71,21 +72,22 @@ Eigener Rechner (Laborinstanz laut Prüfer), alles an Loopback
 
 Nur Namen; Werte kommen aus der lokalen Laborumgebung. Das Token wird für den Lauf lokal erzeugt und steht nur in der Shell-Umgebung ([Runbook](../evidenz/1C/labor-runbook.md)).
 
-| Variable                                                          | Pflicht         | Bedeutung                                                                                      |
-| ----------------------------------------------------------------- | --------------- | ---------------------------------------------------------------------------------------------- |
-| `RUN_QA_SUMMARY_LABOR`                                            | ja (`1`)        | Opt-in; ohne Flag wird die Datei übersprungen                                                  |
-| `DATABASE_URL`, `REDIS_URL`                                       | ja              | Lauf-eigene Datenbank (migriert auf den Referenzstand) und Redis                               |
-| `QA_SUMMARY_LABOR_OUT`                                            | ja              | Zielpfad der JSON-Datei                                                                        |
-| `QA_SUMMARY_LABOR_RUNTIME_URL`                                    | ja              | Basis-URL der Runtime, lokal `http://127.0.0.1:8080`; muss privat auflösen (Loopback gilt)     |
-| `QA_SUMMARY_LABOR_RUNTIME_TOKEN`                                  | ja              | Bearer-Token der Runtime (32–512 URL-sichere Zeichen); wird nicht aufgezeichnet                |
-| `QA_SUMMARY_LABOR_BASELINE`                                       | empfohlen       | Bezeichnung des Referenzstands, `main@<sha>` des upstream-`main` im Branch                     |
-| `QA_SUMMARY_LABOR_GIT_SHA`, `…_GIT_DIRTY`                         | empfohlen       | Commit des Laufprozesses und ob der Checkout sauber war                                        |
-| `QA_SUMMARY_LABOR_RUNTIME_IMAGE`                                  | empfohlen       | Lokal gebautes Image als `<tag>@sha256:<Image-ID>` (keine Registry-Digest-Referenz, Runbook 2) |
-| `QA_SUMMARY_LABOR_MODEL_SHA256`                                   | empfohlen       | `sha256sum` der lokalen GGUF-Datei; wird gegen `OPEN_WEIGHT_LLM_MODEL_ID` geprüft              |
-| `QA_SUMMARY_LABOR_RUNS`, `…_WARMUP`, `…_DIRECT_RUNS`, `…_L5_RUNS` | nein            | Standard 20, 1, 5, 0; Abweichungen nur für Trockenläufe, im JSON vermerkt                      |
-| `QA_SUMMARY_LABOR_FAKE_RUNTIME`                                   | nur Trockenlauf | `1` startet die In-Prozess-Test-Runtime statt der echten; JSON `dryRun: true`                  |
+| Variable                                                          | Pflicht            | Bedeutung                                                                                                              |
+| ----------------------------------------------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| `RUN_QA_SUMMARY_LABOR`                                            | ja (`1`)           | Opt-in; ohne Flag wird die Datei übersprungen                                                                          |
+| `DATABASE_URL`, `REDIS_URL`                                       | ja                 | Lauf-eigene Datenbank (migriert auf den Referenzstand) und Redis                                                       |
+| `QA_SUMMARY_LABOR_OUT`                                            | ja                 | Zielpfad der JSON-Datei                                                                                                |
+| `QA_SUMMARY_LABOR_RUNTIME_URL`                                    | ja                 | Basis-URL der Runtime, lokal `http://127.0.0.1:8080`; muss privat auflösen (Loopback gilt)                             |
+| `QA_SUMMARY_LABOR_RUNTIME_TOKEN`                                  | ja                 | Bearer-Token der Runtime (32–512 URL-sichere Zeichen); wird nicht aufgezeichnet                                        |
+| `QA_SUMMARY_LABOR_BASELINE`                                       | empfohlen          | Bezeichnung des Referenzstands, `main@<sha>` des upstream-`main` im Branch                                             |
+| `QA_SUMMARY_LABOR_GIT_SHA`, `…_GIT_DIRTY`                         | empfohlen          | Commit des Laufprozesses und ob der Checkout sauber war                                                                |
+| `QA_SUMMARY_LABOR_RUNTIME_IMAGE`                                  | empfohlen          | Lokal gebautes Image als `<tag>@sha256:<Image-ID>` (keine Registry-Digest-Referenz, Runbook 2)                         |
+| `QA_SUMMARY_LABOR_MODEL_SHA256`                                   | empfohlen          | `sha256sum` der lokalen GGUF-Datei; wird gegen `OPEN_WEIGHT_LLM_MODEL_ID` geprüft                                      |
+| `QA_SUMMARY_LABOR_RUNS`, `…_WARMUP`, `…_DIRECT_RUNS`, `…_L5_RUNS` | nein               | Standard 20, 1, 5, 0; Abweichungen nur für Trockenläufe, im JSON vermerkt                                              |
+| `QA_SUMMARY_LABOR_FAKE_RUNTIME`                                   | nur Trockenlauf    | `1` startet die In-Prozess-Test-Runtime statt der echten; JSON `dryRun: true`                                          |
+| `QA_SUMMARY_LABOR_TIMEOUT_MS`                                     | ja für diesen Lauf | Queue- und Client-Timeout; Standard 90 000 (Release), Bereich 1 000–300 000 (Produktgrenzen); dieser Lauf 300 000 (A4) |
 
-Die Harness setzt für den Prozess selbst: `OPEN_WEIGHT_LLM_ENABLED=true`, `OPEN_WEIGHT_LLM_URL` = Proxy, `OPEN_WEIGHT_LLM_TOKEN` = Runtime-Token, `QA_SUMMARY_ENABLED=true`, `WORD_CLOUD_SEMANTIC_ENABLED=false` (L5: `true`), `QA_SUMMARY_TIMEOUT_MS` und `OPEN_WEIGHT_LLM_SUMMARY_TIMEOUT_MS` = 90 000 ms (Release-Standard am Werkzeugstand). Fehlt eine Pflichtvariable, bricht der Lauf vor jedem Auftrag mit einer Liste ab.
+Die Harness setzt für den Prozess selbst: `OPEN_WEIGHT_LLM_ENABLED=true`, `OPEN_WEIGHT_LLM_URL` = Proxy, `OPEN_WEIGHT_LLM_TOKEN` = Runtime-Token, `QA_SUMMARY_ENABLED=true`, `WORD_CLOUD_SEMANTIC_ENABLED=false` (L5: `true`), `QA_SUMMARY_TIMEOUT_MS` und `OPEN_WEIGHT_LLM_SUMMARY_TIMEOUT_MS` = `QA_SUMMARY_LABOR_TIMEOUT_MS` (Standard 90 000 ms, der Release-Standard am Werkzeugstand; das JSON vermerkt `timeoutMs`, `releaseTimeoutMs` und `timeoutDeviatesFromRelease`). Fehlt eine Pflichtvariable, bricht der Lauf vor jedem Auftrag mit einer Liste ab.
 
 ### 3.3 Referenzstand und Manifest
 
@@ -172,6 +174,7 @@ L1 ist die Kontrolle für L4: Ohne gleichen Hash in L1 wäre ein `ready` in L4 n
 - **Proxy auf dem Pfad:** ein zusätzlicher Loopback-Hop mit Pufferung; die Gegenprobe ohne Proxy schätzt seinen Anteil, die Reihenfolge (Proxy-Läufe zuerst) ist nicht randomisiert.
 - **Eine Fixture, eine Sprache (`de`), ruhige Session:** keine Aussage zu Last, Voting oder anderen Kontextgrößen; L5 deckt den vollen #456-Kontext nur exemplarisch ab.
 - **Eine Runtime-Instanz auf dem eigenen Rechner:** Notebook-Hardware (Abschnitt 4), Container mit 4 statt 8 CPUs, Laufprozess auf derselben Maschine, Runtime an Loopback statt im privaten Netz. Zeiten (L3, Neubewertung Entscheidung 1) gelten nur für diese Maschine und sind nicht auf den ausgelieferten Zwei-Host-Betrieb übertragbar; thermisches Drosseln des Notebooks ist möglich und wird über die Zeiten je Lauf sichtbar, aber nicht kontrolliert. L1, L2 und L4 hängen von Code, Modell und Runtime-Einstellungen ab, nicht von der Hardware, solange keine Timeouts auftreten. Prompt-Cache des System-Präfixes wirkt wie im Betrieb.
+- **Timeout 300 s statt 90 s (A4):** Mit Release-Timeout wäre der Pfad auf dieser Hardware nicht nutzbar (Abschnitt 10.1). Der Lauf belegt deshalb nicht, dass die Release-Einstellungen insgesamt auf dem eigenen Rechner funktionieren, sondern den Kontextpfad mit dem ausgelieferten Code, Modell und den übrigen Runtime-Einstellungen. L4-Anteile gelten für 300 s.
 - **Lokal gebautes Image:** dasselbe Rezept wie ausgeliefert, aber nicht dasselbe Registry-Artefakt; belegt sind Basisimage-Digest (Dockerfile), lokale Image-ID und `build_info` aus `/props`.
 - **Kein Qualitätsurteil:** `ready` heißt vertrags- und quellengültig, nicht inhaltlich gut.
 - **n = 20 bzw. 5:** Median und grobe Spannweiten; seltene Ausfälle bleiben unentdeckt.
@@ -191,7 +194,15 @@ Nur synthetische Daten: die Referenzfixture aus #456 Abschnitt 12 und ihre Erwei
 
 Gegen die In-Prozess-Test-Runtime mit künstlichen `usage`/`timings` (`QA_SUMMARY_LABOR_FAKE_RUNTIME=1`, n = 3, 1 Aufwärmlauf, 2 direkte Läufe, L5 mit 2 je Arm), lokale Podman-Datenbank. Ergebnis: Harness, Proxy und Auswertung laufen durch, K_L1 erfüllt, der Proxy leitet bytegleich weiter, kein Token in der JSON-Datei, die Datenbank ist danach im Ausgangszustand; L5 reproduziert T3.1 auch mit dem Werkzeug (YESNO `source_changed`, TEMPO `full-context`, Themen `available`). **Alle Zahlen dieses Laufs sind künstlich und keine Evidenz;** die Datei ist nicht eingecheckt.
 
-**Wiederholung am 2026-11-04** auf dem Merge `533b1100` (n = 3, 1 direkter Lauf, L5 mit 1 je Arm, lokale Podman-Datenbank): 3 von 3 Tests grün. Verwendet nur für die Budgetkontrolle in Abschnitt 3.4; ebenfalls keine Evidenz und nicht eingecheckt.
+**Wiederholung am 2026-11-04** auf dem Merge `533b1100` (n = 3, 1 direkter Lauf, L5 mit 1 je Arm, lokale Podman-Datenbank): 3 von 3 Tests grün. Verwendet nur für die Budgetkontrolle in Abschnitt 3.4; ebenfalls keine Evidenz und nicht eingecheckt. Ein weiterer Trockenlauf mit `QA_SUMMARY_LABOR_TIMEOUT_MS=300000` zeigt im JSON `timeoutMs` 300 000, `timeoutDeviatesFromRelease: true` und `terminalWaitMs` 360 000; ein Wert von 400 000 bricht vor dem ersten Auftrag mit einer Meldung ab.
+
+### 10.1 Kalibrierungsanfrage (2026-11-04, vor der Freigabe)
+
+Nach Frage A4 (c) und mit Zustimmung des Autors: **eine** Anfrage an die lokale Runtime (Podman, Image `arsnova-open-weight-llm:llama-b10524`, Build `b10524-9ee9fc04c`, GGUF-SHA geprüft), ohne Harness und ohne Client-Timeout per `curl`, mit dem rohen Completion-Body des Trockenlaufs (9671 Byte, Referenzfixture, `max_tokens` 640). Ergebnis: HTTP 200, `finish_reason: stop`, 196 s Wandzeit; Prefill 2166 Tokens in 95 s (22,8 Tokens/s, kein Cache), Ausgabe 354 Tokens in 101 s (3,5 Tokens/s). Die Modellantwort wurde nicht gespeichert und nicht gelesen.
+
+Folge: Mit dem Release-Timeout von 90 s würde jeder Lauf mit `timeout` enden, schon der Prefill liegt darüber. Daraus folgt die Entscheidung A4 (300 s). Im ungünstigsten Fall (640 Ausgabe-Tokens) wären es rund 95 + 183 = 280 s, also unter 300 s.
+
+**Hinweis zur Vorabfestlegung:** Die Kalibrierung zeigt nebenbei ein q = 2166 / 6855 ≈ 0,32 für einen Lauf. Das liegt im schon vorher genannten Erwartungsbereich 0,3–0,4 (Abschnitt 5, L2) und unter der Schwelle 0,5. Schwellen und Regeln aus Abschnitt 5 und 6 wurden danach **nicht** geändert. Die Anfrage geht nicht in die Auswertung ein.
 
 ## 11. Offene Fragen
 
@@ -201,29 +212,31 @@ An den Prüfer (gestellt per E-Mail am 2026-10-26, beantwortet per E-Mail nach R
 - ~~**P2 Laborinstanz:** Zugang, zwei VMs, Hardware, Image und GGUF?~~ **Beantwortet:** „Die Laborinstanz ist Ihr eigener Rechner.“ Daraus abgeleitet: keine bereitgestellten VMs, ein Rechner, Image und GGUF lädt der Autor selbst (Abschnitt 3.1).
 - **P3 Releasepfad:** nicht ausdrücklich beantwortet. Weil es keine Labor-App gibt, bleibt die Harness mit dem Backend-Code des Referenzstands der gewählte Weg (Abschnitt 3.1).
 
-An den Autor:
+An den Autor (entschieden am 2026-11-04):
 
-- **A1** Freigabe dieses Entwurfs mit den Schwellen (q ≤ 1, Median q 0,5, 1000 ms, 80 %, 5 %) und n (20, 5, 5).
-- **A2** L5 ausführen (verlängert den Lauf um etwa 10–15 min, auf dem eigenen Rechner eher mehr)?
-- **A3** Rohe Anfrage- und Antwort-Bodys im eingecheckten JSON behalten (synthetisch, etwa 15 KB je Lauf) oder nur Prüfsummen?
-- **A4** Umgang mit dem Timeout auf langsamer Hardware (Abschnitt 4). Vorschlag: (a) Release-Timeout 90 s bleibt für L1–L5 unverändert, weil der Lauf die unveränderte Baseline zeigen soll. Endet ein Lauf mit `timeout`, gilt er für L4 als Befund und fehlt in L2. (b) Liegt der Anteil `timeout` im Aufwärmlauf und den ersten 5 Messläufen über 50 %, wird abgebrochen und ein **gekennzeichneter Zusatzlauf** mit `QA_SUMMARY_LABOR_TIMEOUT_MS` = 300 000 ms geplant. Dafür bräuchte die Harness eine kleine Testcode-Änderung (heute fest 90 000 ms). Der Zusatzlauf liefert nur L1 und L2 und gilt nicht als Baseline. Alternativ (c): eine einzige, nicht gewertete Kalibrierungsanfrage vor der Freigabe, um den Durchsatz zu kennen. Das wäre selbst ein Modellaufruf und braucht deshalb ebenfalls die Freigabe.
+- **A1** Freigabe dieses Entwurfs mit den Schwellen (q ≤ 1, Median q 0,5, 1000 ms, 80 %, 5 %) und n (20, 5, 5). **Entschieden: freigegeben.**
+- **A2** L5 ausführen (verlängert den Lauf um etwa 10–15 min, auf dem eigenen Rechner eher mehr)? **Entschieden: ja**, `QA_SUMMARY_LABOR_L5_RUNS=5`.
+- **A3** Rohe Anfrage- und Antwort-Bodys im eingecheckten JSON behalten (synthetisch, etwa 15 KB je Lauf) oder nur Prüfsummen? **Entschieden: rohe Bodys behalten**, damit L1 direkt nachprüfbar ist.
+- **A4** Umgang mit dem Timeout auf langsamer Hardware (Abschnitt 4). **Entschieden nach der Kalibrierung (Abschnitt 10.1):** Der ganze Lauf (L1–L5, Aufwärmlauf, direkte Läufe) nutzt `QA_SUMMARY_LABOR_TIMEOUT_MS` = 300 000 ms, die Obergrenze, die das Produkt für Betreiber zulässt. Das ist eine **gekennzeichnete Abweichung** von der Release-Einstellung (90 s) und eine Gültigkeitsgrenze: Der Lauf zeigt den Kontextpfad mit dem ausgelieferten Code, Modell und Runtime-Einstellungen bis auf den Timeout. Ein Lauf mit 90 s entfällt, weil er nach der Kalibrierung nur Timeouts liefern würde; diese Aussage („mit Release-Timeout auf dieser Hardware nicht nutzbar“) wird als Befund berichtet. Erwartete Dauer etwa 2 h (36 Aufträge zu etwa 200 s). Ursprünglicher Vorschlag: (a) Release-Timeout 90 s bleibt für L1–L5 unverändert, weil der Lauf die unveränderte Baseline zeigen soll. Endet ein Lauf mit `timeout`, gilt er für L4 als Befund und fehlt in L2. (b) Liegt der Anteil `timeout` im Aufwärmlauf und den ersten 5 Messläufen über 50 %, wird abgebrochen und ein **gekennzeichneter Zusatzlauf** mit `QA_SUMMARY_LABOR_TIMEOUT_MS` = 300 000 ms geplant. Dafür bräuchte die Harness eine kleine Testcode-Änderung (heute fest 90 000 ms). Der Zusatzlauf liefert nur L1 und L2 und gilt nicht als Baseline. Alternativ (c): eine einzige, nicht gewertete Kalibrierungsanfrage vor der Freigabe, um den Durchsatz zu kennen. Das wäre selbst ein Modellaufruf und braucht deshalb ebenfalls die Freigabe.
 
 ## 12. KI-Nutzung
 
-Entwurf, Harness, Proxy, Auswertung und Runbook hat Claude Code (Anthropic, Modell Claude Opus 5.5) erstellt, einschließlich aller Schwellen und Wiederholungszahlen. Gegen den Code geprüft mit codebase-memory und Serena, llama-server-Felder mit Context7 (README `master`) und dem b10524-Protokoll im Repository. Der Autor hat den Umfang vorgegeben (kein Modelllauf, nur Vorbereitung, keine Produktionsänderung). Freigegeben ist nichts; siehe Kopf.
+Entwurf, Harness, Proxy, Auswertung und Runbook hat Claude Code (Anthropic, Modell Claude Opus 5.5) erstellt, einschließlich aller Schwellen und Wiederholungszahlen. Gegen den Code geprüft mit codebase-memory und Serena, llama-server-Felder mit Context7 (README `master`) und dem b10524-Protokoll im Repository. Der Autor hat den Umfang vorgegeben (bis 2026-11-04: kein Modelllauf, nur Vorbereitung, keine Produktionsänderung) und den Entwurf am 2026-11-04 freigegeben; siehe Kopf.
 
-Die Überarbeitung vom 2026-11-04 (Abschnitt 13) hat ebenfalls Claude Code erstellt, nach Vorgabe des Autors („auf eigenen Rechner und aktuellen `main` umstellen, Abweichungen zu `248029dc` ausweisen“). Der Abgleich in Abschnitt 3.4 beruht auf `git diff`, codebase-memory (Aufrufer von `inspectOpenWeightLlmAvailability`) und dem Trockenlauf aus Abschnitt 10; Frage A4 und ihre Vorschläge sind ein KI-Vorschlag.
+Die Überarbeitung vom 2026-11-04 (Abschnitt 13) hat ebenfalls Claude Code erstellt, nach Vorgabe des Autors („auf eigenen Rechner und aktuellen `main` umstellen, Abweichungen zu `248029dc` ausweisen“). Der Abgleich in Abschnitt 3.4 beruht auf `git diff`, codebase-memory (Aufrufer von `inspectOpenWeightLlmAvailability`) und dem Trockenlauf aus Abschnitt 10; Frage A4 und ihre Vorschläge sind ein KI-Vorschlag. Die Kalibrierungsanfrage (Abschnitt 10.1) und die Timeout-Variable der Harness hat Claude Code nach Zustimmung des Autors ausgeführt bzw. eingebaut; die Entscheidungen A1–A4 hat der Autor nach dem Vorschlag von Claude Code getroffen („Passt so“).
 
 ## 13. Änderungen vom 2026-11-04 (vor der Freigabe)
 
-| Abschnitt | Vorher                                                         | Jetzt                                                                                                              |
-| --------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Kopf, 3.3 | Codebasis offen (P1)                                           | aktueller `main`, Merge `533b1100` (upstream `cf522c63`)                                                           |
-| 2         | Nicht-Ziel „kein Modelllauf lokal“                             | Modelllauf auf dem eigenen Rechner (= Laborinstanz), nicht gegen Produktion                                        |
-| 3.1       | Zwei Hosts, Runtime über `npm run llm:prod`, Firewall-Freigabe | Ein Rechner, Runtime über `npm run docker:up:llm:http` an `127.0.0.1:8080`, Abweichungen zum Inferenz-Host benannt |
-| 3.2       | Token aus dem Passwortmanager, Image-Digest vom Inferenz-Host  | lokal erzeugtes Token, lokale Image-ID                                                                             |
-| 3.4       | –                                                              | neu: Abweichungen gegenüber `248029dc` mit empirischer Budgetkontrolle                                             |
-| 4, 7      | Ruhebedingung für die Labor-App, Dauer mit M2-Werten           | Ruhebedingung für den eigenen Rechner, Hardware genannt, Timeout-Risiko, neue Gültigkeitsgrenzen                   |
-| 11        | P1–P3 offen                                                    | P1, P2 beantwortet, P3 abgeleitet; neue Frage A4                                                                   |
+| Abschnitt    | Vorher                                                         | Jetzt                                                                                                              |
+| ------------ | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Kopf, 3.3    | Codebasis offen (P1)                                           | aktueller `main`, Merge `533b1100` (upstream `cf522c63`)                                                           |
+| 2            | Nicht-Ziel „kein Modelllauf lokal“                             | Modelllauf auf dem eigenen Rechner (= Laborinstanz), nicht gegen Produktion                                        |
+| 3.1          | Zwei Hosts, Runtime über `npm run llm:prod`, Firewall-Freigabe | Ein Rechner, Runtime über `npm run docker:up:llm:http` an `127.0.0.1:8080`, Abweichungen zum Inferenz-Host benannt |
+| 3.2          | Token aus dem Passwortmanager, Image-Digest vom Inferenz-Host  | lokal erzeugtes Token, lokale Image-ID                                                                             |
+| 3.4          | –                                                              | neu: Abweichungen gegenüber `248029dc` mit empirischer Budgetkontrolle                                             |
+| 4, 7         | Ruhebedingung für die Labor-App, Dauer mit M2-Werten           | Ruhebedingung für den eigenen Rechner, Hardware genannt, Timeout-Risiko, neue Gültigkeitsgrenzen                   |
+| 11           | P1–P3 offen                                                    | P1, P2 beantwortet, P3 abgeleitet; neue Frage A4                                                                   |
+| Kopf, 11     | nicht freigegeben, A1–A4 offen                                 | freigegeben 2026-11-04; A1 ja, A2 ja, A3 rohe Bodys, A4 300 s                                                      |
+| 3.2, 7, 10.1 | fester Timeout 90 s                                            | `QA_SUMMARY_LABOR_TIMEOUT_MS`, Kalibrierung dokumentiert, Timeout als Gültigkeitsgrenze                            |
 
 Unverändert: Fälle L1–L5, Hypothesen, Kriterien, Schwellen, Wiederholungszahlen und Entscheidungsregeln (Abschnitte 5 und 6).

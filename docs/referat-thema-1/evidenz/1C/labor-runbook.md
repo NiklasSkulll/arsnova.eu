@@ -1,6 +1,6 @@
 # Runbook: 1C-Laborlauf gegen die private Runtime
 
-Ablauf für den Laborlauf aus dem [Design-Entwurf](../../specs/2026-10-25-1c-labor-design.md). **Erst ausführen, wenn der Autor den Entwurf freigegeben hat** (Fragen A1–A4). Laborinstanz ist laut Prüfer der eigene Rechner, Referenzstand der aktuelle `main` (Design, Abschnitt 11). Platzhalter in `<…>` sind lokale Werte; Secrets stehen nie in einer Datei, einem Commit oder der Shell-Historie.
+Ablauf für den Laborlauf aus dem [Design-Entwurf](../../specs/2026-10-25-1c-labor-design.md). Der Autor hat den Entwurf am 2026-11-04 freigegeben (A1–A4: Schwellen wie vorgeschlagen, L5 ja, rohe Bodys ja, Timeout 300 s). Laborinstanz ist laut Prüfer der eigene Rechner, Referenzstand der aktuelle `main` (Design, Abschnitt 11). Platzhalter in `<…>` sind lokale Werte; Secrets stehen nie in einer Datei, einem Commit oder der Shell-Historie.
 
 Stand: 2026-10-25, auf den eigenen Rechner umgestellt am 2026-11-04. Werkzeug: `apps/backend/src/__tests__/qa.summary-labor.pg.test.ts` mit `lib/recording-proxy.ts`; Auswertung: [`messung/auswertung.mjs`](messung/auswertung.mjs). Runtime: lokaler Laborpfad `llm-http` ([Onboarding](../../../onboarding.md#optional-lokale-text-ki-qwen3-4b), [Vertrag](../../../features/open-weight-llm-runtime.md#same-host-labor)).
 
@@ -8,11 +8,11 @@ Stand: 2026-10-25, auf den eigenen Rechner umgestellt am 2026-11-04. Werkzeug: `
 
 | Was      | Anforderung                                                                                                                                                                    |
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Rechner  | Linux mit Docker Engine und Compose (Runtime), Podman oder Docker (Lauf-Datenbank), [mise](https://mise.jdx.dev/) mit Node 24.18.0, `jq`, `openssl`                            |
+| Rechner  | Linux mit rootless Podman und Compose-Provider (`podman compose`) oder Docker Engine mit Compose, [mise](https://mise.jdx.dev/) mit Node 24.18.0, `jq`, `openssl`              |
 | Speicher | etwa 2,5 GB für die GGUF-Datei, etwa 3 GB für `node_modules`; der Runtime-Container ist auf 5 GiB RAM begrenzt                                                                 |
 | Referenz | Fork-`main` und `feature-1C-context-path` enthalten den aktuellen upstream-`main` (Abschnitt 3)                                                                                |
 | Ruhe     | kein `npm run dev` und kein App-Container mit `OPEN_WEIGHT_LLM_ENABLED=true`; keine andere rechenintensive Last; Netzteil angeschlossen, Energieprofil auf Leistung (Design 4) |
-| Zeit     | auf dem eigenen Rechner unbekannt, grob 1–2 h ohne L5, plus 15–30 min mit L5; bei Timeouts bis etwa 90 s je Lauf (Design 4, Frage A4)                                          |
+| Zeit     | etwa 2 h: 36 Aufträge zu etwa 200 s (Kalibrierung, Design 10.1), höchstens 300 s je Auftrag; der Rechner ist in der Zeit nicht nutzbar                                         |
 
 ## 2. Runtime lokal starten und Stand ablesen
 
@@ -26,24 +26,25 @@ curl --fail --location \
 mise exec node@24.18.0 -- node scripts/open-weight-llm/verify-model.mjs   # erwartet: verified
 ```
 
-Wegwerf-Token erzeugen (64 Hex-Zeichen, URL-sicher) und die Runtime starten. Der Befehl entspricht `npm run docker:up:llm:http`. Weil Docker hier `sudo` braucht, ruft er Compose direkt auf und reicht nur die zwei Variablen durch:
+Wegwerf-Token erzeugen (64 Hex-Zeichen, URL-sicher) und die Runtime starten. Der Befehl entspricht `npm run docker:up:llm:http`, läuft hier aber mit rootless Podman (geprüft am 2026-11-04: Podman 6.1.4, cgroup v2 mit delegierten Controllern `cpu memory pids`, also greifen die Limits 4 CPUs / 5 GiB):
 
 ```bash
 QA_SUMMARY_LABOR_RUNTIME_TOKEN="$(openssl rand -hex 32)"
 export QA_SUMMARY_LABOR_RUNTIME_TOKEN
 export OPEN_WEIGHT_LLM_TOKEN="$QA_SUMMARY_LABOR_RUNTIME_TOKEN"
 export OPEN_WEIGHT_LLM_MODEL_DIR="$PWD/models/open-weight-llm"
-sudo --preserve-env=OPEN_WEIGHT_LLM_TOKEN,OPEN_WEIGHT_LLM_MODEL_DIR \
-  docker compose --profile llm-http up -d --build open-weight-llm-http
-sudo docker compose --profile llm-http ps   # warten bis healthy (Startzeit bis 180 s)
+podman compose --profile llm-http up -d --build open-weight-llm-http
+podman inspect --format '{{.State.Health.Status}}' arsnova-v3-open-weight-llm-http   # warten bis healthy (Startzeit bis 180 s)
 ```
+
+Mit Docker statt Podman: `sudo --preserve-env=OPEN_WEIGHT_LLM_TOKEN,OPEN_WEIGHT_LLM_MODEL_DIR docker compose …` und in den folgenden Befehlen `sudo docker` statt `podman`.
 
 Stand ablesen, nur Kennungen und Prüfsummen:
 
 ```bash
-sudo docker inspect --format 'Status={{.State.Status}} Health={{.State.Health.Status}} Neustarts={{.RestartCount}}' arsnova-v3-open-weight-llm-http
-RUNTIME_IMAGE_ID="$(sudo docker image inspect --format '{{.Id}}' arsnova-open-weight-llm:llama-b10524)"
-echo "arsnova-open-weight-llm:llama-b10524@${RUNTIME_IMAGE_ID}"   # → RUNTIME_IMAGE (Image-ID, kein Registry-Digest)
+podman inspect --format 'Status={{.State.Status}} Health={{.State.Health.Status}} Neustarts={{.RestartCount}}' arsnova-v3-open-weight-llm-http
+RUNTIME_IMAGE_ID="$(podman image inspect --format '{{.Id}}' arsnova-open-weight-llm:llama-b10524)"
+echo "arsnova-open-weight-llm:llama-b10524@sha256:${RUNTIME_IMAGE_ID#sha256:}"   # → RUNTIME_IMAGE (Image-ID, kein Registry-Digest)
 sha256sum models/open-weight-llm/Qwen3-4B-Instruct-2507-Q4_K_M.gguf   # → MODEL_SHA256
 grep '^FROM' docker/open-weight-llm/Dockerfile   # Basisimage-Digest fürs Protokoll
 lscpu | grep -E 'Model name|^CPU\(s\)'; free -g | head -2   # Hardware fürs Protokoll
@@ -105,7 +106,7 @@ Die Datei `/tmp/labor-dry.json` ist **keine Evidenz** (`dryRun: true`) und wird 
 
 ## 5. Lauf
 
-Aus `apps/backend`. `QA_SUMMARY_LABOR_L5_RUNS=5` nur, wenn der Autor L5 freigegeben hat (Design, Frage A2). Während des Laufs den Rechner nicht anderweitig belasten und nicht in den Ruhezustand gehen lassen:
+Aus `apps/backend`. L5 ist freigegeben (A2), der Timeout von 300 s ebenfalls (A4, gekennzeichnete Abweichung vom Release-Wert 90 s). Während des Laufs den Rechner nicht anderweitig belasten und nicht in den Ruhezustand gehen lassen:
 
 ```bash
 cd apps/backend
@@ -117,13 +118,14 @@ QA_SUMMARY_LABOR_GIT_DIRTY="$([ -z "$(git status --porcelain)" ] && echo false |
 QA_SUMMARY_LABOR_RUNTIME_IMAGE='<RUNTIME_IMAGE aus Abschnitt 2>' \
 QA_SUMMARY_LABOR_MODEL_SHA256='<MODEL_SHA256 aus Abschnitt 2>' \
 QA_SUMMARY_LABOR_L5_RUNS=5 \
+QA_SUMMARY_LABOR_TIMEOUT_MS=300000 \
 QA_SUMMARY_LABOR_OUT="$LABOR_OUT" \
   mise exec node@24.18.0 -- npx vitest run src/__tests__/qa.summary-labor.pg.test.ts --reporter=verbose \
   2>&1 | tee ~/labor-1c-vitest.log
 cd ../..
 ```
 
-Fehlt eine Variable oder zeigt die URL nicht auf eine private Adresse, bricht der Lauf sofort mit einer Liste ab, bevor ein Auftrag läuft. Abbruchregel bei Timeouts: Design, Frage A4.
+Fehlt eine Variable oder zeigt die URL nicht auf eine private Adresse, bricht der Lauf sofort mit einer Liste ab, bevor ein Auftrag läuft. Endet trotz 300 s ein Lauf mit `timeout`, zählt er für L4 als Befund (Design, Fall L4).
 
 ## 6. Prüfungen nach dem Lauf
 
@@ -138,7 +140,7 @@ Erwartet: `completed: true`, `dryRun: false`, `kind: "labor-runtime"`, in der Au
 
 ```bash
 unset QA_SUMMARY_LABOR_RUNTIME_TOKEN OPEN_WEIGHT_LLM_TOKEN
-sudo docker compose --profile llm-http rm --stop --force open-weight-llm-http   # nur die Runtime, nicht das ganze Projekt
+podman compose --profile llm-http rm --stop --force open-weight-llm-http   # nur die Runtime, nicht das ganze Projekt
 podman rm -f labor-1c-pg labor-1c-redis
 ```
 
