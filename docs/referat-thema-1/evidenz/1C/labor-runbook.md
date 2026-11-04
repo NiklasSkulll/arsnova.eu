@@ -1,70 +1,87 @@
 # Runbook: 1C-Laborlauf gegen die private Runtime
 
-Ablauf für den Laborlauf aus dem [Design-Entwurf](../../specs/2026-10-25-1c-labor-design.md). **Erst ausführen, wenn der Autor den Entwurf freigegeben hat** und die Fragen P1–P3 an den Prüfer beantwortet sind. Alle Platzhalter in `<…>` sind Werte der Laborinstanz; Secrets stehen nie in einer Datei, einem Commit oder der Shell-Historie.
+Ablauf für den Laborlauf aus dem [Design-Entwurf](../../specs/2026-10-25-1c-labor-design.md). **Erst ausführen, wenn der Autor den Entwurf freigegeben hat** (Fragen A1–A4). Laborinstanz ist laut Prüfer der eigene Rechner, Referenzstand der aktuelle `main` (Design, Abschnitt 11). Platzhalter in `<…>` sind lokale Werte; Secrets stehen nie in einer Datei, einem Commit oder der Shell-Historie.
 
-Stand: 2026-10-25. Werkzeug: `apps/backend/src/__tests__/qa.summary-labor.pg.test.ts` mit `lib/recording-proxy.ts`; Auswertung: [`messung/auswertung.mjs`](messung/auswertung.mjs).
+Stand: 2026-10-25, auf den eigenen Rechner umgestellt am 2026-11-04. Werkzeug: `apps/backend/src/__tests__/qa.summary-labor.pg.test.ts` mit `lib/recording-proxy.ts`; Auswertung: [`messung/auswertung.mjs`](messung/auswertung.mjs). Runtime: lokaler Laborpfad `llm-http` ([Onboarding](../../../onboarding.md#optional-lokale-text-ki-qwen3-4b), [Vertrag](../../../features/open-weight-llm-runtime.md#same-host-labor)).
 
 ## 1. Voraussetzungen
 
-| Was                    | Anforderung                                                                                                                                                                                     |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Inferenz-Host          | Runtime nach [OPEN-WEIGHT-LLM-SECOND-HOST-RUNBOOK.md](../../../operations/OPEN-WEIGHT-LLM-SECOND-HOST-RUNBOOK.md) Abschnitte 6–11 eingerichtet und `healthy`; Digest-Image, geprüfte GGUF-Datei |
-| App-Host (Laufrechner) | darf TCP 8080 des Inferenz-Hosts erreichen (Firewall §5); Git, Docker oder Podman, [mise](https://mise.jdx.dev/) mit Node 24.18.0; etwa 3 GB frei für `node_modules`                            |
-| Referenzstand          | Commit laut Antwort auf Frage P1. Die Harness existiert ab diesem Branch; für `v1.3.0` muss sie zurückportiert werden (Design 3.3)                                                              |
-| Ruhe                   | Niemand nutzt die Runtime während des Laufs (ein Slot). Die Labor-App hat keine Nutzer oder `OPEN_WEIGHT_LLM_ENABLED=false`                                                                     |
-| Zeit                   | etwa 45–60 min ohne L5, plus 10–15 min mit L5 (Schätzung aus Design 4; bei Timeouts bis etwa 90 s je Lauf)                                                                                      |
+| Was      | Anforderung                                                                                                                                                                    |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Rechner  | Linux mit Docker Engine und Compose (Runtime), Podman oder Docker (Lauf-Datenbank), [mise](https://mise.jdx.dev/) mit Node 24.18.0, `jq`, `openssl`                            |
+| Speicher | etwa 2,5 GB für die GGUF-Datei, etwa 3 GB für `node_modules`; der Runtime-Container ist auf 5 GiB RAM begrenzt                                                                 |
+| Referenz | Fork-`main` und `feature-1C-context-path` enthalten den aktuellen upstream-`main` (Abschnitt 3)                                                                                |
+| Ruhe     | kein `npm run dev` und kein App-Container mit `OPEN_WEIGHT_LLM_ENABLED=true`; keine andere rechenintensive Last; Netzteil angeschlossen, Energieprofil auf Leistung (Design 4) |
+| Zeit     | auf dem eigenen Rechner unbekannt, grob 1–2 h ohne L5, plus 15–30 min mit L5; bei Timeouts bis etwa 90 s je Lauf (Design 4, Frage A4)                                          |
 
-## 2. Inferenz-Host: Stand ablesen
+## 2. Runtime lokal starten und Stand ablesen
 
-Auf dem Inferenz-Host (SSH). Nur Prüfsummen und Kennungen notieren, keine Secrets:
+Modell einmalig laden und gegen das Manifest prüfen (aus dem Repository-Wurzelverzeichnis; `*.gguf` ist per `.gitignore` ausgeschlossen):
 
 ```bash
-cd /opt/arsnova-llm/repository
-npm run llm:prod -- ps
-docker inspect --format 'Status={{.State.Status}} Health={{.State.Health.Status}} Neustarts={{.RestartCount}}' arsnova-open-weight-llm
-docker inspect --format '{{.Config.Image}}' arsnova-open-weight-llm      # → RUNTIME_IMAGE (muss @sha256:… enthalten)
-sha256sum "$(sed -n 's/^OPEN_WEIGHT_LLM_MODEL_DIR=//p' .env.llm)/Qwen3-4B-Instruct-2507-Q4_K_M.gguf"   # → MODEL_SHA256
+mkdir -p models/open-weight-llm
+curl --fail --location \
+  --output models/open-weight-llm/Qwen3-4B-Instruct-2507-Q4_K_M.gguf \
+  https://huggingface.co/unsloth/Qwen3-4B-Instruct-2507-GGUF/resolve/a06e946bb6b655725eafa393f4a9745d460374c9/Qwen3-4B-Instruct-2507-Q4_K_M.gguf
+mise exec node@24.18.0 -- node scripts/open-weight-llm/verify-model.mjs   # erwartet: verified
 ```
 
-Erwartet: `Status=running Health=healthy`, ein Digest-Image und die SHA-256 `3605803b…c67e597` aus `docker/open-weight-llm/model-manifest.json`. Liegt `OPEN_WEIGHT_LLM_MODEL_DIR` nicht in `.env.llm`, den Pfad aus der Compose-Umgebung des Betreibers nehmen.
-
-## 3. App-Host: Laufumgebung vorbereiten
+Wegwerf-Token erzeugen (64 Hex-Zeichen, URL-sicher) und die Runtime starten. Der Befehl entspricht `npm run docker:up:llm:http`. Weil Docker hier `sudo` braucht, ruft er Compose direkt auf und reicht nur die zwei Variablen durch:
 
 ```bash
-git clone https://github.com/NiklasSkulll/arsnova.eu.git ~/arsnova-labor && cd ~/arsnova-labor
-git checkout <REFERENZ-COMMIT>
-git status --porcelain            # muss leer sein
+QA_SUMMARY_LABOR_RUNTIME_TOKEN="$(openssl rand -hex 32)"
+export QA_SUMMARY_LABOR_RUNTIME_TOKEN
+export OPEN_WEIGHT_LLM_TOKEN="$QA_SUMMARY_LABOR_RUNTIME_TOKEN"
+export OPEN_WEIGHT_LLM_MODEL_DIR="$PWD/models/open-weight-llm"
+sudo --preserve-env=OPEN_WEIGHT_LLM_TOKEN,OPEN_WEIGHT_LLM_MODEL_DIR \
+  docker compose --profile llm-http up -d --build open-weight-llm-http
+sudo docker compose --profile llm-http ps   # warten bis healthy (Startzeit bis 180 s)
+```
+
+Stand ablesen, nur Kennungen und Prüfsummen:
+
+```bash
+sudo docker inspect --format 'Status={{.State.Status}} Health={{.State.Health.Status}} Neustarts={{.RestartCount}}' arsnova-v3-open-weight-llm-http
+RUNTIME_IMAGE_ID="$(sudo docker image inspect --format '{{.Id}}' arsnova-open-weight-llm:llama-b10524)"
+echo "arsnova-open-weight-llm:llama-b10524@${RUNTIME_IMAGE_ID}"   # → RUNTIME_IMAGE (Image-ID, kein Registry-Digest)
+sha256sum models/open-weight-llm/Qwen3-4B-Instruct-2507-Q4_K_M.gguf   # → MODEL_SHA256
+grep '^FROM' docker/open-weight-llm/Dockerfile   # Basisimage-Digest fürs Protokoll
+lscpu | grep -E 'Model name|^CPU\(s\)'; free -g | head -2   # Hardware fürs Protokoll
+```
+
+Erwartet: `Status=running Health=healthy` und die SHA-256 `3605803b…c67e597` aus `docker/open-weight-llm/model-manifest.json`. **Hinweis zu `RUNTIME_IMAGE`:** Die Harness verlangt die Form `<name>@sha256:<64 hex>`. Ein lokal gebautes Image hat keine Registry-Digest-Referenz. Übergeben wird deshalb die lokale Image-ID; im Protokoll ist sie als solche zu bezeichnen, nicht als Registry-Digest.
+
+## 3. Laufumgebung vorbereiten
+
+Fork und Clone auf den aktuellen upstream-`main` bringen (Vorgabe des Prüfers). Nur per Merge, kein Rebase, kein Force-Push; Pushes nur nach Freigabe des Autors:
+
+```bash
+git fetch --all --prune
+git switch feature-1C-context-path
+git status --porcelain                         # muss leer sein
+git rev-list --count HEAD..upstream/main       # 0 = aktuell; sonst zuerst Fork-main, dann den Branch per Merge aktualisieren
 mise exec node@24.18.0 -- npm ci
 mise exec node@24.18.0 -- npm run prisma:generate
 ```
 
-Eigene PostgreSQL- und Redis-Instanz nur für den Lauf, an Loopback gebunden. Das Datenbank-Passwort ist ein Wegwerfwert und wird nicht eingecheckt:
+Hat sich upstream seit `533b1100` geändert, die Tabelle in Design 3.4 vor dem Lauf für den neuen Stand prüfen und ergänzen.
+
+Eigene PostgreSQL- und Redis-Instanz nur für den Lauf, an Loopback gebunden, getrennt von der Entwicklungsdatenbank. Das Datenbank-Passwort ist ein Wegwerfwert:
 
 ```bash
 LABOR_PG_PASSWORD="$(openssl rand -hex 16)"
-docker run -d --name labor-1c-pg -p 127.0.0.1:55432:5432 \
-  -e POSTGRES_USER=labor -e POSTGRES_PASSWORD="$LABOR_PG_PASSWORD" -e POSTGRES_DB=labor_1c postgres:16-alpine
-docker run -d --name labor-1c-redis -p 127.0.0.1:56379:6379 redis:7.4-alpine
+podman run -d --name labor-1c-pg -p 127.0.0.1:55432:5432 \
+  -e POSTGRES_USER=labor -e POSTGRES_PASSWORD="$LABOR_PG_PASSWORD" -e POSTGRES_DB=labor_1c docker.io/library/postgres:16-alpine
+podman run -d --name labor-1c-redis -p 127.0.0.1:56379:6379 docker.io/library/redis:7.4-alpine
 export DATABASE_URL="postgresql://labor:${LABOR_PG_PASSWORD}@127.0.0.1:55432/labor_1c?schema=public"
 export REDIS_URL=redis://127.0.0.1:56379
 mise exec node@24.18.0 -- npm run prisma:migrate
 ```
 
-(Mit Podman statt Docker dieselben Befehle mit `podman`.)
-
 ## 4. Prüfungen vor dem Lauf
 
-Token verdeckt aus dem Passwortmanager in die Umgebung, nicht in die Historie:
-
 ```bash
-read -r -s -p 'Runtime-Token: ' QA_SUMMARY_LABOR_RUNTIME_TOKEN; echo
-export QA_SUMMARY_LABOR_RUNTIME_TOKEN
-export QA_SUMMARY_LABOR_RUNTIME_URL='http://<PRIVATE-IP-DES-INFERENZ-HOSTS>:8080'
-```
-
-Erreichbarkeit, Authentisierung und freier Slot (wie Runbook §11):
-
-```bash
+export QA_SUMMARY_LABOR_RUNTIME_URL='http://127.0.0.1:8080'
 curl --fail --silent --show-error --max-time 5 "$QA_SUMMARY_LABOR_RUNTIME_URL/health"; echo
 curl --silent --output /dev/null --write-out '%{http_code}\n' --max-time 5 "$QA_SUMMARY_LABOR_RUNTIME_URL/slots?fail_on_no_slot=1"   # ohne Token: 401
 curl --fail --silent --show-error --max-time 5 --header "Authorization: Bearer $QA_SUMMARY_LABOR_RUNTIME_TOKEN" \
@@ -73,7 +90,7 @@ curl --fail --silent --show-error --max-time 5 --header "Authorization: Bearer $
 
 Erwartet: Health 200, ohne Token 401, genau ein Slot mit `"is_processing": false`. Sonst nicht starten.
 
-Optional ein Trockenlauf des Werkzeugs auf dem App-Host (ohne Runtime, prüft nur DB, Redis und Node):
+Optional ein Trockenlauf des Werkzeugs (ohne Runtime, prüft nur DB, Redis und Node):
 
 ```bash
 cd apps/backend
@@ -88,13 +105,13 @@ Die Datei `/tmp/labor-dry.json` ist **keine Evidenz** (`dryRun: true`) und wird 
 
 ## 5. Lauf
 
-Aus `apps/backend`. `QA_SUMMARY_LABOR_L5_RUNS=5` nur, wenn der Autor L5 freigegeben hat (Design, Frage A2):
+Aus `apps/backend`. `QA_SUMMARY_LABOR_L5_RUNS=5` nur, wenn der Autor L5 freigegeben hat (Design, Frage A2). Während des Laufs den Rechner nicht anderweitig belasten und nicht in den Ruhezustand gehen lassen:
 
 ```bash
 cd apps/backend
 LABOR_OUT="$PWD/../../docs/referat-thema-1/evidenz/1C/messung/$(date +%F)-labor.json"
 RUN_QA_SUMMARY_LABOR=1 \
-QA_SUMMARY_LABOR_BASELINE='<v1.3.0 oder main@KURZ-SHA>' \
+QA_SUMMARY_LABOR_BASELINE="main@$(git rev-parse --short upstream/main)" \
 QA_SUMMARY_LABOR_GIT_SHA="$(git rev-parse HEAD)" \
 QA_SUMMARY_LABOR_GIT_DIRTY="$([ -z "$(git status --porcelain)" ] && echo false || echo true)" \
 QA_SUMMARY_LABOR_RUNTIME_IMAGE='<RUNTIME_IMAGE aus Abschnitt 2>' \
@@ -106,7 +123,7 @@ QA_SUMMARY_LABOR_OUT="$LABOR_OUT" \
 cd ../..
 ```
 
-Fehlt eine Variable oder zeigt die URL nicht auf eine private Adresse, bricht der Lauf sofort mit einer Liste ab, bevor ein Auftrag läuft. Während des Laufs den Rechner nicht anderweitig belasten.
+Fehlt eine Variable oder zeigt die URL nicht auf eine private Adresse, bricht der Lauf sofort mit einer Liste ab, bevor ein Auftrag läuft. Abbruchregel bei Timeouts: Design, Frage A4.
 
 ## 6. Prüfungen nach dem Lauf
 
@@ -117,12 +134,15 @@ grep -c -F "$QA_SUMMARY_LABOR_RUNTIME_TOKEN" "$LABOR_OUT" ~/labor-1c-vitest.log 
 grep -c -i 'bearer' "$LABOR_OUT"                                                  # muss 0 sein
 ```
 
-Erwartet: `completed: true`, `dryRun: false`, `kind: "labor-runtime"`, in der Auswertung `"L Runtime"."unchangedAfterRun": true`. Wenn `completed` `false` ist: Datei trotzdem behalten, Abbruchgrund aus dem Log ins Protokoll; die Kriterien gelten nur für vollständige Läufe. Danach Token aus der Umgebung entfernen und die Laufinstanzen löschen:
+Erwartet: `completed: true`, `dryRun: false`, `kind: "labor-runtime"`, in der Auswertung `"L Runtime"."unchangedAfterRun": true`. Wenn `completed` `false` ist: Datei trotzdem behalten, Abbruchgrund aus dem Log ins Protokoll; die Kriterien gelten nur für vollständige Läufe. Danach Token aus der Umgebung entfernen, die Runtime stoppen und die Laufinstanzen löschen:
 
 ```bash
-unset QA_SUMMARY_LABOR_RUNTIME_TOKEN
-docker rm -f labor-1c-pg labor-1c-redis
+unset QA_SUMMARY_LABOR_RUNTIME_TOKEN OPEN_WEIGHT_LLM_TOKEN
+sudo docker compose --profile llm-http rm --stop --force open-weight-llm-http   # nur die Runtime, nicht das ganze Projekt
+podman rm -f labor-1c-pg labor-1c-redis
 ```
+
+Die GGUF-Datei unter `models/open-weight-llm/` darf liegen bleiben; sie wird nie eingecheckt.
 
 ## 7. Einchecken
 
@@ -137,13 +157,13 @@ git diff --cached --stat
 git commit -m 'docs(referat): record the 1C lab run against the private runtime'
 ```
 
-Anschließend die Ergebnisse nach den Regeln des Designs (Abschnitt 6) in einem eigenen Protokoll `evidenz/1C/<DATUM>-labor.md` festhalten: Umgebung, Abweichungen vom Ablauf, je Fall H/G/K mit Wert, Entscheidung, Gültigkeitsgrenzen. Die Statuszeile „Open“ in [`1C-diagrams.md`](../../1C-diagrams.md#task-coverage-exam-document-43-1c) danach aktualisieren. Die JSON-Datei wird nach dem Commit nicht mehr verändert.
+Anschließend die Ergebnisse nach den Regeln des Designs (Abschnitt 6) in einem eigenen Protokoll `evidenz/1C/<DATUM>-labor.md` festhalten: Umgebung (Hardware, Commit, Image-ID, Basisimage-Digest, GGUF-SHA, `build_info`), Abweichungen vom Ablauf, je Fall H/G/K mit Wert, Entscheidung, Gültigkeitsgrenzen. Die Statuszeile „Open“ in [`1C-diagrams.md`](../../1C-diagrams.md#task-coverage-exam-document-43-1c) danach aktualisieren. Die JSON-Datei wird nach dem Commit nicht mehr verändert.
 
 ## 8. Was an den Prüfer geht
 
 - Link auf die JSON-Datei und das Protokoll im Evidenzordner (geheimnisfrei).
-- Referenzstand: Commit, Runtime-Image-Digest, GGUF-SHA-256, `build_info` aus `/props`.
+- Referenzstand: Commit, lokale Image-ID mit Basisimage-Digest, GGUF-SHA-256, `build_info` aus `/props`, Hardware des eigenen Rechners.
 - Die Auswertung der Fälle L1–L4 (und L5) mit Entscheidung und Gültigkeitsgrenze, wie im Design festgelegt.
 - Hinweis, dass Design und Schwellen vor dem Lauf freigegeben wurden (Datum der Freigabe), und die KI-Nutzung.
 
-Nicht senden: Token, `.env.llm`, `.env.production`, Logs des Inferenz-Hosts (mit `--log-verbosity 2` können sie Prompts enthalten).
+Nicht senden: Token, `.env`, `.env.llm`, Logs der Runtime (mit `--log-verbosity 2` können sie Prompts enthalten).

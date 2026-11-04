@@ -132,8 +132,13 @@ Baselinelauf geklärt sein. Die Dossiers zitieren Zeilen auf HEAD.
    nicht mit dem Prüfer abgestimmt werden.
 2. Was genau gehört in die PR an kqc-real (Tests, Messskripte,
    Instrumentierung, Evidenzordner, Code-Verbesserung)?
-3. **Baseline:** Dürfen wir den aktuellen `main` statt `v1.3.0` (`87c39334`)
-   als Baseline nehmen? Gründe:
+3. ~~**Baseline:** Dürfen wir den aktuellen `main` statt `v1.3.0` (`87c39334`)
+   als Baseline nehmen?~~ **Geklärt (E-Mail des Prüfers, notiert
+   2026-11-04):** „Aktualisieren Sie Ihren Fork und Clone vor Ihrer
+   Auswertung / Untersuchung.“ Wir messen deshalb gegen den aktuellen `main`
+   und weisen die Abweichungen zum Stand der modellfreien Tests (`248029dc`)
+   aus ([1C-Labor-Design, Abschnitt 3.4](./specs/2026-10-25-1c-labor-design.md#34-abweichungen-des-referenzstands-gegenüber-248029dc)).
+   Ursprüngliche Gründe:
    - In `v1.3.0` fehlen die späteren Fixes. Die Test-Suite läuft deutlich
      länger, Setup-Fixes fehlen, und einige Tests sind dort noch flaky.
    - Die zentralen Werte unterscheiden sich (siehe Tabelle oben).
@@ -141,10 +146,17 @@ Baselinelauf geklärt sein. Die Dossiers zitieren Zeilen auf HEAD.
      deutlich.
    - Die Ergebnisse lassen sich direkt auf den aktuellen Stand des Repos
      anwenden.
-4. **Laborinstanz und zweiter Host:** Laut Material stellt die Lehrperson die
-   Laborinstanz einschließlich echter privater Runtime bereit (siehe
+4. **Laborinstanz und zweiter Host:** **Geklärt (E-Mail des Prüfers, notiert
+   2026-11-04):** „Die Laborinstanz ist Ihr eigener Rechner.“ Es gibt also
+   keine bereitgestellten VMs; Modell und Runtime-Image laden wir selbst, der
+   Lauf nutzt den lokalen Laborpfad `npm run docker:up:llm:http`
+   ([1C-Labor-Design, Abschnitt 3.1](./specs/2026-10-25-1c-labor-design.md#31-topologie)).
+   Was das für die Zwei-Host-Reproduktion in 1B bedeutet, ist damit nicht
+   ausdrücklich beantwortet. Ursprünglich lautete die Frage: Laut Material
+   stellt die Lehrperson die Laborinstanz einschließlich echter privater
+   Runtime bereit (siehe
    [Recherche unten](#laborinstanz-und-zweiter-host-recherche-2026-10-24)).
-   Konkret offen:
+   Konkret offen war:
    - Wo steht sie, wer betreut sie (Rolle „LB“), wie bekommen wir Zugang (SSH,
      Account), ab wann und bis wann?
    - Gibt es **zwei** VMs (App und Inferenz im selben privaten Netz)? 1B

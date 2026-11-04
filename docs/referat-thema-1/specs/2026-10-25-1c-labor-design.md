@@ -4,12 +4,16 @@
 > Kriterien, Wiederholungen und Entscheidungsregeln gelten erst nach dieser Freigabe als vorab
 > festgelegt. Bis dahin ist nichts gemessen; ein Trockenlauf gegen die Test-Runtime (Abschnitt 10)
 > prüft nur das Messwerkzeug.
+>
+> **Überarbeitet 2026-11-04, noch vor der Freigabe:** Der Prüfer hat die Fragen P1–P3 per E-Mail
+> beantwortet (Abschnitt 11). Laborinstanz ist der eigene Rechner, Referenzstand der aktuelle
+> `main`. Was sich dadurch geändert hat, steht in Abschnitt 13.
 
-- **Stand:** 2026-10-25
+- **Stand:** 2026-10-25, überarbeitet 2026-11-04
 - **Autor:** Jonas Weirauch (Rolle Y)
 - **Issue:** [#10](https://github.com/NiklasSkulll/arsnova.eu/issues/10), Schritt 2
 - **Branch:** `feature-1C-context-path`
-- **Codebasis:** offen (Abschnitt 11, Frage P1). Werkzeug geschrieben auf `main` `248029dc` plus diesem Branch.
+- **Codebasis:** aktueller `main` (Abschnitt 3.3). Werkzeug geschrieben auf `main` `248029dc` plus diesem Branch; seit 2026-11-04 läuft der Branch auf `kqc-real/main` `cf522c63` (Merge `533b1100`). Abweichungen zu `248029dc`: Abschnitt 3.4.
 - **Vorgänger:** [Teil 2](2026-10-24-1c-teil2-design.md) (E1–E9, M1–M5, V1), [Teil 3](2026-10-24-1c-teil3-design.md) (E10–E15, M6, M7). Fixture, Auswertung und Rollenlogik der Kontextaufbauten werden wiederverwendet.
 - **KI-Nutzung:** Entwurf mit Claude Code (Abschnitt 12).
 
@@ -17,13 +21,13 @@
 
 Auftrag 1C, Punkt 2 (Prüfungsdokument 4.3) verlangt, einen realen Auftrag durch die versionierten Verträge **bis zur privaten Runtime** zu verfolgen und für denselben Revisionsstand Host-Vorschau und gepackte Nutzlast zu vergleichen. Issue #10, Schritt 2, ergänzt: Baseline nach Dossier §11.2, `messages[2]` gegen den kanonischen Kontext der Vorschau, `max_tokens`, und `usage.prompt_tokens` gegen `budget.packedInputTokens`.
 
-Teil 2 und 3 haben das nur bis zu einer **Test-Runtime** auf 127.0.0.1 gezeigt (E1, E3, E15). Offen ist laut [`1C-diagrams.md`](../1C-diagrams.md#task-coverage-exam-document-43-1c) allein der Lauf gegen die ausgelieferte Runtime. Dieser Laborlauf ist die **unveränderte eigene Baseline** auf dem echten Releasepfad (4.1.3). Er liefert zugleich die reale Inferenzzeit, die Teil 2 nur durch D = 2000 ms ersetzt hat.
+Teil 2 und 3 haben das nur bis zu einer **Test-Runtime** auf 127.0.0.1 gezeigt (E1, E3, E15). Offen ist laut [`1C-diagrams.md`](../1C-diagrams.md#task-coverage-exam-document-43-1c) allein der Lauf gegen die ausgelieferte Runtime. Dieser Laborlauf ist die **unveränderte eigene Baseline** mit der ausgelieferten Runtime (gepinntes llama.cpp-Basisimage, gepinntes GGUF, Release-Einstellungen) auf dem lokalen Laborpfad des Repositorys (Abschnitt 3.1). Er liefert zugleich die reale Inferenzzeit, die Teil 2 nur durch D = 2000 ms ersetzt hat.
 
 ## 2. Ziele, Nicht-Ziele, Anti-Ziele
 
 **Ziele**
 
-- L1–L4 (Abschnitt 5) auf der Laborinstanz gegen die gepinnte Runtime, mit Rohdaten im Evidenzordner.
+- L1–L4 (Abschnitt 5) auf der Laborinstanz (eigener Rechner) gegen die gepinnte Runtime, mit Rohdaten im Evidenzordner.
 - Optional L5: Befund T3.1 (zeitabhängiger Hash bei live Blitzlicht-Runde) auf dem echten Pfad.
 - Eine Einordnung der Entscheidungen aus Teil 2 und 3 mit realen Zeiten, nach vorab festgelegten Regeln.
 
@@ -32,7 +36,7 @@ Teil 2 und 3 haben das nur bis zu einer **Test-Runtime** auf 127.0.0.1 gezeigt (
 - Keine Änderung am Produktivcode und keine Änderung am Vertrag; auch keine Negativprobe auf der echten Runtime (E4, E6, E10 bleiben bei der Test-Runtime).
 - Keine Aussage über Prompt- oder Antwortqualität (Gültigkeitsgrenze 1C, Thema 2).
 - Keine Last- oder Kapazitätsmessung (Thema 3) und keine Rückwirkung auf Liveaktionen (1A, 1B Schritte 3–4).
-- Kein Modelllauf lokal oder gegen Produktion.
+- Kein Modelllauf gegen Produktion oder den Produktions-Inferenzhost. Der Modelllauf findet auf dem eigenen Rechner statt; das ist laut Prüfer die Laborinstanz (Abschnitt 11). Bis 2026-11-04 stand hier „kein Modelllauf lokal“, weil eine bereitgestellte Laborinstanz erwartet wurde.
 
 **Anti-Ziele**
 
@@ -45,41 +49,41 @@ Teil 2 und 3 haben das nur bis zu einer **Test-Runtime** auf 127.0.0.1 gezeigt (
 ### 3.1 Topologie
 
 ```text
-Labor-App-Host (Firewall-Freigabe zu TCP 8080)          Labor-Inferenz-Host
-┌───────────────────────────────────────────────┐        ┌──────────────────────────────┐
-│ vitest: qa.summary-labor.pg.test.ts           │        │ open-weight-llm (Compose,    │
-│  tRPC-Router → Queue → Kontextaufbau          │        │ docker-compose.llm.yml)      │
-│  → Open-Weight-Client                         │        │ llama-server b10524,         │
-│  → http://127.0.0.1:<p>  Aufzeichnungs-Proxy ─┼─ HTTP ─┼→ <privat>:8080, --api-key,   │
-│ Postgres + Redis nur für den Lauf             │        │ Qwen3-4B Q4_K_M (SHA geprüft)│
-└───────────────────────────────────────────────┘        └──────────────────────────────┘
+Eigener Rechner (Laborinstanz laut Prüfer), alles an Loopback
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ vitest: qa.summary-labor.pg.test.ts          open-weight-llm-http (Compose-  │
+│  tRPC-Router → Queue → Kontextaufbau         Profil llm-http, Hostnetz)      │
+│  → Open-Weight-Client                        llama-server b10524, --api-key, │
+│  → http://127.0.0.1:<p>  Aufzeichnungs-Proxy ─ HTTP → 127.0.0.1:8080         │
+│ Postgres + Redis nur für den Lauf            Qwen3-4B Q4_K_M (SHA geprüft)   │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-- **Inferenz-Host:** die ausgelieferte Runtime unverändert, gestartet über `scripts/open-weight-llm/prod-compose.mjs` (`npm run llm:prod`) nach [OPEN-WEIGHT-LLM-SECOND-HOST-RUNBOOK.md](../../operations/OPEN-WEIGHT-LLM-SECOND-HOST-RUNBOOK.md): Digest-Image, `--parallel 1`, `--ctx-size 8192`, `--n-predict 768`, `--slots`, `--api-key` (`docker/open-weight-llm/entrypoint.sh`). Der Entry-Point prüft vor dem Start die SHA-256 der GGUF-Datei.
-- **App-Host:** der Laufprozess (Vitest) mit dem Backend-Code des Referenzstands, echter tRPC-Router über `createCaller`, echte Queue, echter Kontextaufbau, echter Client, echtes HTTP. Gemockt ist nur die Host-Tokenprüfung, wie in allen E-Tests. Eigene PostgreSQL- und Redis-Instanz nur für den Lauf, nicht die Daten einer laufenden Laborinstanz.
-- **Warum vom App-Host:** Laut Runbook §5/§11 darf nur der App-Host Port 8080 erreichen. Ein Lauf vom Laptop bräuchte eine Firewall-Ausnahme; das ändert die Topologie.
+- **Runtime:** der lokale Laborpfad des Repositorys, `npm run docker:up:llm:http` (Profil `llm-http` in `docker-compose.yml`, Anleitung in [`docs/onboarding.md`](../../onboarding.md#optional-lokale-text-ki-qwen3-4b), Vertrag in [`open-weight-llm-runtime.md`](../../features/open-weight-llm-runtime.md#same-host-labor)). Gleich wie beim ausgelieferten Inferenz-Host sind Image-Rezept und Entry-Point (`docker/open-weight-llm/`, Basisimage `llama.cpp:server-b10524` per Digest gepinnt), GGUF mit SHA-Prüfung im Entry-Point, `--parallel 1`, `--ctx-size 8192`, `--n-predict 768`, `--slots`, `--api-key`. Anders: das Image wird lokal gebaut (Tag `arsnova-open-weight-llm:llama-b10524`, keine Registry-Digest-Referenz), die Runtime bindet an `127.0.0.1` statt an eine private RFC1918-Adresse, und der Container ist auf 4 CPUs, 5 GiB und 4 Threads begrenzt statt auf 8 CPUs, 8 GiB und 8 Threads (`docker-compose.llm.yml`). Der Produktionswrapper `npm run llm:prod` lehnt Loopback ab und ist deshalb nicht der Laborpfad.
+- **Laufprozess:** Vitest mit dem Backend-Code des Referenzstands, echter tRPC-Router über `createCaller`, echte Queue, echter Kontextaufbau, echter Client, echtes HTTP. Gemockt ist nur die Host-Tokenprüfung, wie in allen E-Tests. Eigene PostgreSQL- und Redis-Instanz nur für den Lauf.
+- **Ein Rechner statt zwei Hosts:** Laufprozess und Runtime teilen sich CPU und Speicher. Der Laufprozess ist zwischen den Runtime-Aufrufen fast untätig, sein Kontextaufbau läuft aber vor und nach dem Aufruf mit, während die Runtime noch rechnen oder schon fertig sein kann. Das ist eine Gültigkeitsgrenze für die Zeiten (Abschnitt 7), keine für L1 und L2.
 - **Beobachtung des rohen Bodys ohne Produktionseingriff:** Der Client wird per Env auf einen Proxy in `apps/backend/src/__tests__/lib/recording-proxy.ts` gerichtet. Loopback gilt im Client als privat (`isPrivateOpenWeightLlmAddress`). Der Proxy puffert Anfrage und Antwort, leitet **dieselben Bytes** weiter, setzt nur `host` auf die Runtime und entfernt hop-by-hop-Header. Er zeichnet beide Bodys, Zeitpunkte und SHA-256-Summen auf, vom `authorization`-Header nur „vorhanden“ und „entspricht dem erwarteten Token“. Weil der Client die Privatheitsprüfung jetzt gegen den Proxy macht, prüft die Harness die Runtime-URL selbst mit derselben Regel (nur private Adressen) und bricht sonst vor dem Lauf ab.
 - **Gegenprobe ohne Proxy:** 5 Läufe direkt gegen die Runtime (nur Zeiten und Status), um den Zeitanteil des Proxys abzuschätzen.
 
-**Alternative (nicht gewählt, Frage P3):** die laufende Labor-App selbst per `OPEN_WEIGHT_LLM_URL` auf einen Proxy richten und über die UI auslösen. Das prüft zusätzlich den gebauten Container und HTTP-tRPC, braucht aber einen Host-Token, eine Konfigurationsänderung der Laborinstanz und einen separaten Proxyprozess. Die Harness prüft denselben Code mit derselben Fixture wie Teil 2 und 3 und ist dadurch direkt vergleichbar.
+**Alternative (nicht gewählt, Frage P3):** die App selbst per `OPEN_WEIGHT_LLM_URL` auf einen Proxy richten und über die UI auslösen. Das prüft zusätzlich HTTP-tRPC, braucht aber einen Host-Token und einen separaten Proxyprozess. Die Harness prüft denselben Code mit derselben Fixture wie Teil 2 und 3 und ist dadurch direkt vergleichbar.
 
 ### 3.2 Umgebungsvariablen
 
-Nur Namen; Werte kommen aus der Laborumgebung, das Token aus dem Passwortmanager ([Runbook](../evidenz/1C/labor-runbook.md)).
+Nur Namen; Werte kommen aus der lokalen Laborumgebung. Das Token wird für den Lauf lokal erzeugt und steht nur in der Shell-Umgebung ([Runbook](../evidenz/1C/labor-runbook.md)).
 
-| Variable                                                          | Pflicht         | Bedeutung                                                                                       |
-| ----------------------------------------------------------------- | --------------- | ----------------------------------------------------------------------------------------------- |
-| `RUN_QA_SUMMARY_LABOR`                                            | ja (`1`)        | Opt-in; ohne Flag wird die Datei übersprungen                                                   |
-| `DATABASE_URL`, `REDIS_URL`                                       | ja              | Lauf-eigene Datenbank (migriert auf den Referenzstand) und Redis                                |
-| `QA_SUMMARY_LABOR_OUT`                                            | ja              | Zielpfad der JSON-Datei                                                                         |
-| `QA_SUMMARY_LABOR_RUNTIME_URL`                                    | ja              | Basis-URL der Runtime, z. B. `http://<private-ip>:8080`; muss privat auflösen                   |
-| `QA_SUMMARY_LABOR_RUNTIME_TOKEN`                                  | ja              | Bearer-Token der Runtime (32–512 URL-sichere Zeichen); wird nicht aufgezeichnet                 |
-| `QA_SUMMARY_LABOR_BASELINE`                                       | empfohlen       | Bezeichnung des Referenzstands, z. B. `v1.3.0` oder `main@<sha>`                                |
-| `QA_SUMMARY_LABOR_GIT_SHA`, `…_GIT_DIRTY`                         | empfohlen       | Commit des Laufprozesses und ob der Checkout sauber war                                         |
-| `QA_SUMMARY_LABOR_RUNTIME_IMAGE`                                  | empfohlen       | Digest-Referenz des laufenden Runtime-Images (vom Inferenz-Host abgelesen)                      |
-| `QA_SUMMARY_LABOR_MODEL_SHA256`                                   | empfohlen       | `sha256sum` der GGUF-Datei auf dem Inferenz-Host; wird gegen `OPEN_WEIGHT_LLM_MODEL_ID` geprüft |
-| `QA_SUMMARY_LABOR_RUNS`, `…_WARMUP`, `…_DIRECT_RUNS`, `…_L5_RUNS` | nein            | Standard 20, 1, 5, 0; Abweichungen nur für Trockenläufe, im JSON vermerkt                       |
-| `QA_SUMMARY_LABOR_FAKE_RUNTIME`                                   | nur Trockenlauf | `1` startet die In-Prozess-Test-Runtime statt der echten; JSON `dryRun: true`                   |
+| Variable                                                          | Pflicht         | Bedeutung                                                                                      |
+| ----------------------------------------------------------------- | --------------- | ---------------------------------------------------------------------------------------------- |
+| `RUN_QA_SUMMARY_LABOR`                                            | ja (`1`)        | Opt-in; ohne Flag wird die Datei übersprungen                                                  |
+| `DATABASE_URL`, `REDIS_URL`                                       | ja              | Lauf-eigene Datenbank (migriert auf den Referenzstand) und Redis                               |
+| `QA_SUMMARY_LABOR_OUT`                                            | ja              | Zielpfad der JSON-Datei                                                                        |
+| `QA_SUMMARY_LABOR_RUNTIME_URL`                                    | ja              | Basis-URL der Runtime, lokal `http://127.0.0.1:8080`; muss privat auflösen (Loopback gilt)     |
+| `QA_SUMMARY_LABOR_RUNTIME_TOKEN`                                  | ja              | Bearer-Token der Runtime (32–512 URL-sichere Zeichen); wird nicht aufgezeichnet                |
+| `QA_SUMMARY_LABOR_BASELINE`                                       | empfohlen       | Bezeichnung des Referenzstands, `main@<sha>` des upstream-`main` im Branch                     |
+| `QA_SUMMARY_LABOR_GIT_SHA`, `…_GIT_DIRTY`                         | empfohlen       | Commit des Laufprozesses und ob der Checkout sauber war                                        |
+| `QA_SUMMARY_LABOR_RUNTIME_IMAGE`                                  | empfohlen       | Lokal gebautes Image als `<tag>@sha256:<Image-ID>` (keine Registry-Digest-Referenz, Runbook 2) |
+| `QA_SUMMARY_LABOR_MODEL_SHA256`                                   | empfohlen       | `sha256sum` der lokalen GGUF-Datei; wird gegen `OPEN_WEIGHT_LLM_MODEL_ID` geprüft              |
+| `QA_SUMMARY_LABOR_RUNS`, `…_WARMUP`, `…_DIRECT_RUNS`, `…_L5_RUNS` | nein            | Standard 20, 1, 5, 0; Abweichungen nur für Trockenläufe, im JSON vermerkt                      |
+| `QA_SUMMARY_LABOR_FAKE_RUNTIME`                                   | nur Trockenlauf | `1` startet die In-Prozess-Test-Runtime statt der echten; JSON `dryRun: true`                  |
 
 Die Harness setzt für den Prozess selbst: `OPEN_WEIGHT_LLM_ENABLED=true`, `OPEN_WEIGHT_LLM_URL` = Proxy, `OPEN_WEIGHT_LLM_TOKEN` = Runtime-Token, `QA_SUMMARY_ENABLED=true`, `WORD_CLOUD_SEMANTIC_ENABLED=false` (L5: `true`), `QA_SUMMARY_TIMEOUT_MS` und `OPEN_WEIGHT_LLM_SUMMARY_TIMEOUT_MS` = 90 000 ms (Release-Standard am Werkzeugstand). Fehlt eine Pflichtvariable, bricht der Lauf vor jedem Auftrag mit einer Liste ab.
 
@@ -91,14 +95,29 @@ Aufgezeichnet wird, was den Stand eindeutig macht:
 | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
 | Commit und Bezeichnung des Laufprozesses         | `QA_SUMMARY_LABOR_GIT_SHA`, `…_BASELINE`, `…_GIT_DIRTY`                                                                   |
 | Gepinnte Erwartung im Code                       | `OPEN_WEIGHT_LLM_MODEL_ID` (GGUF-SHA), `OPEN_WEIGHT_LLM_MODEL_VERSION` (`llama:server-b10524`)                            |
-| Runtime-Image und GGUF-Prüfsumme                 | vom Betreiber auf dem Inferenz-Host abgelesen (`docker inspect`, `sha256sum`) und per Env übergeben                       |
+| Runtime-Image und GGUF-Prüfsumme                 | lokal abgelesen (`docker image inspect`, `sha256sum`) und per Env übergeben                                               |
 | Build, Modellpfad, Kontextgröße, Slots, Template | `GET /props`: `build_info`, `model_path`, `default_generation_settings.n_ctx`, `total_slots`, SHA-256 von `chat_template` |
 | Modellkennung                                    | `GET /v1/models`: `data[].id` (Alias) und `meta`; je Antwort `model` und `system_fingerprint`                             |
 | Unverändertheit während des Laufs                | dieselben Abrufe vor und nach dem Lauf; die Auswertung vergleicht sie                                                     |
 
-Geprüft: Feldnamen von `/props`, `/v1/models`, `usage` und `timings` laut llama.cpp-Server-README (Context7, Stand `master`). Für b10524 belegt die protokollierte Modellprüfung vom 2026-10-05 in [`open-weight-llm-runtime.md`](../../features/open-weight-llm-runtime.md#vollständig-protokollierte-lokale-modellprüfung-vom-2026-10-05) `usage`, `timings` und `system_fingerprint` (`b10524-9ee9fc04c`) und dass `usage.prompt_tokens` den Cache einschließt (143 = 142 aus dem Cache + 1). Die Felder von `/props` und `/v1/models` sind für b10524 **nicht** geprüft; fehlende Felder werden als `null` aufgezeichnet. Keine API liefert die GGUF-Prüfsumme; deshalb die Betreiberangabe plus die SHA-Prüfung des Entry-Points.
+Geprüft: Feldnamen von `/props`, `/v1/models`, `usage` und `timings` laut llama.cpp-Server-README (Context7, Stand `master`). Für b10524 belegt die protokollierte Modellprüfung vom 2026-10-05 in [`open-weight-llm-runtime.md`](../../features/open-weight-llm-runtime.md#vollständig-protokollierte-lokale-modellprüfung-vom-2026-10-05) `usage`, `timings` und `system_fingerprint` (`b10524-9ee9fc04c`) und dass `usage.prompt_tokens` den Cache einschließt (143 = 142 aus dem Cache + 1). Die Felder von `/props` und `/v1/models` sind für b10524 **nicht** geprüft; fehlende Felder werden als `null` aufgezeichnet. Keine API liefert die GGUF-Prüfsumme; deshalb die eigene Ablesung plus die SHA-Prüfung des Entry-Points.
 
-**v1.3.0 oder `main`:** offen (Frage P1). Die Harness läuft am Werkzeugstand (`main` + Branch). Für `v1.3.0` (`87c39334`) müsste sie zurückportiert werden: Dort fehlen `resolveEffectiveQaSummaryTimeoutMs` und das Trimmen, `--ctx-size` ist 4096, der Standard-Timeout 8000 ms ([Unterschiede](../1C-diagrams.md#differences-to-v130)). Das Ergebnis gilt nur für den Stand, der im JSON steht.
+**Referenzstand `main`:** entschieden (Frage P1, Abschnitt 11). Gemessen wird der aktuelle upstream-`main`, den der Branch per Merge enthält, nicht `v1.3.0` (`87c39334`). Eine Rückportierung der Harness entfällt. Unmittelbar vor dem Lauf werden Fork und Clone erneut auf upstream gebracht (Runbook 3); der tatsächlich gemessene Commit steht im JSON. Das Ergebnis gilt nur für diesen Stand.
+
+### 3.4 Abweichungen des Referenzstands gegenüber `248029dc`
+
+Teil 1–3 sind an `248029dc` gebunden und bleiben dort gültig. Für den Laborlauf zählt der aktuelle Stand, geprüft am Merge `533b1100` (upstream `cf522c63`, 2026-11-04) mit `git diff 248029dc cf522c63`:
+
+| Bereich                                                                  | Änderung                                                                                                                                                                                 | Wirkung auf den 1C-Pfad                                                                                                                           |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `qaSummaryQueue.ts`                                                      | keine                                                                                                                                                                                    | keine                                                                                                                                             |
+| `openWeightLlmClient.ts` (+53/−3)                                        | Lernziel-Systemprompt `v2` → `v4`; neue Funktion `inspectOpenWeightLlmAvailability` (Slot-Vorabprüfung über `/slots?fail_on_no_slot=1`)                                                  | Keine für `qa_summary`: Der Prompt gehört zum Auftrag `learning_objectives`; die Vorabprüfung rufen nur die Lernzielableitung und ihre Router auf |
+| `routers/qa.ts` (+19/−7)                                                 | Präsentations-Sortierung: `sortModeSource`, `takeover`                                                                                                                                   | Keine: `summaryContextPreview`, `requestSummary`, `summaryRuntime` sind unverändert                                                               |
+| `moderationTeachingSignals.ts`, `moderation-compass-rules.ts`            | Konfidenz-Aggregat in der Signal-SQL (`confidenceResponseCount`, `highConfidenceWrongCount`, falsche Optionen) und neuer Kompass-Fakt `confidence-misconception`; `evidenceRole` je Fakt | Kann den Kompassbereich des Kontexts ändern, aber nur bei Fragen mit Konfidenzabfrage. Die Referenzfixture hat keine Konfidenzstimmen             |
+| `confidence.ts`, `sessionLearningObjectives.ts`                          | `questionId` in der Konfidenzzusammenfassung; Fragen-IDs werden aus modellabgeleiteten Lernzieltexten entfernt                                                                           | Nur für Sessions mit Konfidenz bzw. modellabgeleiteten Lernzielen; beides hat die Referenzfixture nicht                                           |
+| Runtime (`docker/open-weight-llm/`, Compose, `scripts/open-weight-llm/`) | keine                                                                                                                                                                                    | keine                                                                                                                                             |
+
+**Empirische Kontrolle (2026-11-04, Trockenlauf am Merge, Test-Runtime, kein Modell):** Instruktions- und Definitionsversion sind unverändert (`qa-summary-technical-handoff-v2`, `moderation-prompt-definitions-v1`), ebenso die Budgets der Referenzfixture: `dataTokens` 6338 (Referenzfixture, L1–L4), 6608 (L5 `YESNO`) und 6660 (L5 `TEMPO`). Das sind dieselben Werte wie an `248029dc` (Teil 2 M5; Teil 3, Tabelle zu E15: `reference/m3-env`, `full/YESNO`, `full/TEMPO`). Weil die Schätzung UTF-8-Bytes zählt, ist die Länge des kanonischen Kontexts gleich; ein Hashvergleich über die Stände ist nicht möglich, weil jede Fixture neue IDs erzeugt. Die Harness und die PostgreSQL-Suiten (e2e 20/20, hash 8/8) laufen auf dem neuen Stand grün.
 
 ## 4. Ablauf
 
@@ -111,9 +130,9 @@ Je Lauf, nacheinander:
 
 **Wiederholungen:** 1 verworfener Aufwärmlauf, n = 20 Messläufe (L1–L4), danach 5 Läufe ohne Proxy, optional L5 mit 5 Läufen je Arm (abwechselnd, Reihenfolge je Iteration getauscht). Begründung n = 20: wie M1/M2; bei 0 von 20 Ereignissen reicht das Wilson-Intervall bis 16,1 %, das genügt für „kein systematisches Auftreten“, nicht für seltene Ereignisse.
 
-**Ruhebedingung:** Während des Laufs nutzt niemand die Runtime (ein Slot; schon die Statusprobe der App belegt ihn bis zu 20 + 90 + 20 s, Dossier 1B). Die Labor-App bleibt ohne Nutzer oder mit `OPEN_WEIGHT_LLM_ENABLED=false`; vor dem Start meldet `/slots` den Slot frei.
+**Ruhebedingung:** Während des Laufs nutzt niemand die Runtime (ein Slot; schon die Statusprobe der App belegt ihn bis zu 20 + 90 + 20 s, Dossier 1B). Auf dem eigenen Rechner heißt das: kein `npm run dev` oder App-Container mit `OPEN_WEIGHT_LLM_ENABLED=true`, keine andere rechenintensive Last, Netzteil angeschlossen, kein Energiesparprofil. Vor dem Start meldet `/slots` den Slot frei.
 
-**Erwartete Dauer** (Schätzung, keine Hypothese): Die Modellprüfung vom 2026-10-05 lief mit etwa 56 Prompt-Tokens/s und 28–31 Ausgabe-Tokens/s (Hardware dort nicht angegeben). Bei geschätzt 2000–2800 Prompt-Tokens (6855 Byte gepackt, 2,5–3,5 Byte je Token) und 100–250 Ausgabe-Tokens wären das 40–60 s je Auftrag, also 30–45 min für alle Läufe ohne L5 und 10–15 min für L5. Liegt die Inferenz über 90 s, enden Läufe mit `timeout` (L4).
+**Erwartete Dauer** (Schätzung, keine Hypothese): Die Modellprüfung vom 2026-10-05 lief auf einem Apple M2 Pro mit 4 Container-CPUs bei etwa 56 Prompt-Tokens/s und 28–31 Ausgabe-Tokens/s ([`open-weight-llm-runtime.md`](../../features/open-weight-llm-runtime.md#vollständig-protokollierte-lokale-modellprüfung-vom-2026-10-05)). Der eigene Rechner ist ein Notebook mit Intel Core i7-6820HQ (Skylake, 4 Kerne, 8 Threads, AVX2) und 31 GiB RAM, der Container hat 4 CPUs. Dort ist ein deutlich niedrigerer Durchsatz zu erwarten; eine belastbare Zahl gibt es vor dem Lauf nicht. Bei geschätzt 2000–2800 Prompt-Tokens (6855 Byte gepackt, 2,5–3,5 Byte je Token) und 100–250 Ausgabe-Tokens wären es mit den M2-Werten 40–60 s je Auftrag. Bei halbem Durchsatz läge schon der Prefill bei 70–100 s, also am oder über dem Release-Timeout von 90 s. Dann enden Läufe mit `timeout` (L4), und L2 bekommt keine `usage`-Werte. Wie damit umgegangen wird, legt Frage A4 vor dem Lauf fest.
 
 ## 5. Fälle
 
@@ -152,7 +171,8 @@ L1 ist die Kontrolle für L4: Ohne gleichen Hash in L1 wäre ein `ready` in L4 n
 - **Ein Laufprozess, nicht der ausgelieferte App-Container:** gleicher Backend-Code, aber über `createCaller` ohne HTTP-tRPC und mit gemockter Host-Tokenprüfung; eigene PostgreSQL/Redis-Instanz.
 - **Proxy auf dem Pfad:** ein zusätzlicher Loopback-Hop mit Pufferung; die Gegenprobe ohne Proxy schätzt seinen Anteil, die Reihenfolge (Proxy-Läufe zuerst) ist nicht randomisiert.
 - **Eine Fixture, eine Sprache (`de`), ruhige Session:** keine Aussage zu Last, Voting oder anderen Kontextgrößen; L5 deckt den vollen #456-Kontext nur exemplarisch ab.
-- **Eine Runtime-Instanz:** Hardware der Laborinstanz; Werte nicht auf Produktion übertragbar. Prompt-Cache des System-Präfixes wirkt wie im Betrieb.
+- **Eine Runtime-Instanz auf dem eigenen Rechner:** Notebook-Hardware (Abschnitt 4), Container mit 4 statt 8 CPUs, Laufprozess auf derselben Maschine, Runtime an Loopback statt im privaten Netz. Zeiten (L3, Neubewertung Entscheidung 1) gelten nur für diese Maschine und sind nicht auf den ausgelieferten Zwei-Host-Betrieb übertragbar; thermisches Drosseln des Notebooks ist möglich und wird über die Zeiten je Lauf sichtbar, aber nicht kontrolliert. L1, L2 und L4 hängen von Code, Modell und Runtime-Einstellungen ab, nicht von der Hardware, solange keine Timeouts auftreten. Prompt-Cache des System-Präfixes wirkt wie im Betrieb.
+- **Lokal gebautes Image:** dasselbe Rezept wie ausgeliefert, aber nicht dasselbe Registry-Artefakt; belegt sind Basisimage-Digest (Dockerfile), lokale Image-ID und `build_info` aus `/props`.
 - **Kein Qualitätsurteil:** `ready` heißt vertrags- und quellengültig, nicht inhaltlich gut.
 - **n = 20 bzw. 5:** Median und grobe Spannweiten; seltene Ausfälle bleiben unentdeckt.
 - **Referenzstand:** gilt nur für den im JSON genannten Commit und die abgelesenen Artefakte.
@@ -165,26 +185,45 @@ Nicht aufgezeichnet: Token-Wert, Runtime-Adresse, Hostname des Laufrechners, `ch
 
 ## 9. Datenschutz
 
-Nur synthetische Daten: die Referenzfixture aus #456 Abschnitt 12 und ihre Erweiterung für den vollen Kontext; Teilnehmende sind generierte Datensätze. Keine Produktionsdaten, kein Zugriff auf den Produktions-Inferenzhost `arsnova-privat`. Das Token kommt aus dem Passwortmanager nur in die Shell-Umgebung des Laufs und steht in keiner Datei.
+Nur synthetische Daten: die Referenzfixture aus #456 Abschnitt 12 und ihre Erweiterung für den vollen Kontext; Teilnehmende sind generierte Datensätze. Keine Produktionsdaten, kein Zugriff auf den Produktions-Inferenzhost `arsnova-privat`. Das Runtime-Token ist ein lokal erzeugter Wegwerfwert, steht nur in der Shell-Umgebung des Laufs und in keiner Datei. Prompts und Antworten bleiben auf dem eigenen Rechner; es gibt keinen Cloud-Anbieter auf dem Pfad.
 
 ## 10. Trockenlauf des Werkzeugs (2026-10-25)
 
 Gegen die In-Prozess-Test-Runtime mit künstlichen `usage`/`timings` (`QA_SUMMARY_LABOR_FAKE_RUNTIME=1`, n = 3, 1 Aufwärmlauf, 2 direkte Läufe, L5 mit 2 je Arm), lokale Podman-Datenbank. Ergebnis: Harness, Proxy und Auswertung laufen durch, K_L1 erfüllt, der Proxy leitet bytegleich weiter, kein Token in der JSON-Datei, die Datenbank ist danach im Ausgangszustand; L5 reproduziert T3.1 auch mit dem Werkzeug (YESNO `source_changed`, TEMPO `full-context`, Themen `available`). **Alle Zahlen dieses Laufs sind künstlich und keine Evidenz;** die Datei ist nicht eingecheckt.
 
+**Wiederholung am 2026-11-04** auf dem Merge `533b1100` (n = 3, 1 direkter Lauf, L5 mit 1 je Arm, lokale Podman-Datenbank): 3 von 3 Tests grün. Verwendet nur für die Budgetkontrolle in Abschnitt 3.4; ebenfalls keine Evidenz und nicht eingecheckt.
+
 ## 11. Offene Fragen
 
-An den Prüfer:
+An den Prüfer (gestellt per E-Mail am 2026-10-26, beantwortet per E-Mail nach Rückfrage vom 2026-11-02, notiert 2026-11-04; siehe [00-rahmen](../00-rahmen-und-pruefung.md#offene-fragen-an-den-prüfer), Fragen 3 und 4):
 
-- **P1 Referenzstand:** `v1.3.0` (`87c39334`) oder `main` (siehe [00-rahmen](../00-rahmen-und-pruefung.md#offene-fragen-an-den-prüfer), Frage 3)? Bei `v1.3.0` muss die Harness zurückportiert werden (Abschnitt 3.3).
-- **P2 Laborinstanz:** Zugang, zwei VMs im privaten Netz, Hardware (ARM/x86, Kerne, RAM), liegt Image und GGUF bereit, darf der Laufprozess auf dem App-Host laufen und dort eine eigene PostgreSQL/Redis-Instanz starten?
-- **P3 Releasepfad:** Genügt der Laufprozess mit dem Backend-Code des Referenzstands, oder wird der Lauf über die gebaute Labor-App (Alternative in 3.1) erwartet?
+- ~~**P1 Referenzstand:** `v1.3.0` (`87c39334`) oder `main`?~~ **Beantwortet:** „Aktualisieren Sie Ihren Fork und Clone vor Ihrer Auswertung / Untersuchung.“ Daraus abgeleitet: aktueller `main`, keine Rückportierung (Abschnitt 3.3).
+- ~~**P2 Laborinstanz:** Zugang, zwei VMs, Hardware, Image und GGUF?~~ **Beantwortet:** „Die Laborinstanz ist Ihr eigener Rechner.“ Daraus abgeleitet: keine bereitgestellten VMs, ein Rechner, Image und GGUF lädt der Autor selbst (Abschnitt 3.1).
+- **P3 Releasepfad:** nicht ausdrücklich beantwortet. Weil es keine Labor-App gibt, bleibt die Harness mit dem Backend-Code des Referenzstands der gewählte Weg (Abschnitt 3.1).
 
 An den Autor:
 
 - **A1** Freigabe dieses Entwurfs mit den Schwellen (q ≤ 1, Median q 0,5, 1000 ms, 80 %, 5 %) und n (20, 5, 5).
-- **A2** L5 ausführen (verlängert den Lauf um etwa 10–15 min)?
+- **A2** L5 ausführen (verlängert den Lauf um etwa 10–15 min, auf dem eigenen Rechner eher mehr)?
 - **A3** Rohe Anfrage- und Antwort-Bodys im eingecheckten JSON behalten (synthetisch, etwa 15 KB je Lauf) oder nur Prüfsummen?
+- **A4** Umgang mit dem Timeout auf langsamer Hardware (Abschnitt 4). Vorschlag: (a) Release-Timeout 90 s bleibt für L1–L5 unverändert, weil der Lauf die unveränderte Baseline zeigen soll. Endet ein Lauf mit `timeout`, gilt er für L4 als Befund und fehlt in L2. (b) Liegt der Anteil `timeout` im Aufwärmlauf und den ersten 5 Messläufen über 50 %, wird abgebrochen und ein **gekennzeichneter Zusatzlauf** mit `QA_SUMMARY_LABOR_TIMEOUT_MS` = 300 000 ms geplant. Dafür bräuchte die Harness eine kleine Testcode-Änderung (heute fest 90 000 ms). Der Zusatzlauf liefert nur L1 und L2 und gilt nicht als Baseline. Alternativ (c): eine einzige, nicht gewertete Kalibrierungsanfrage vor der Freigabe, um den Durchsatz zu kennen. Das wäre selbst ein Modellaufruf und braucht deshalb ebenfalls die Freigabe.
 
 ## 12. KI-Nutzung
 
 Entwurf, Harness, Proxy, Auswertung und Runbook hat Claude Code (Anthropic, Modell Claude Opus 5.5) erstellt, einschließlich aller Schwellen und Wiederholungszahlen. Gegen den Code geprüft mit codebase-memory und Serena, llama-server-Felder mit Context7 (README `master`) und dem b10524-Protokoll im Repository. Der Autor hat den Umfang vorgegeben (kein Modelllauf, nur Vorbereitung, keine Produktionsänderung). Freigegeben ist nichts; siehe Kopf.
+
+Die Überarbeitung vom 2026-11-04 (Abschnitt 13) hat ebenfalls Claude Code erstellt, nach Vorgabe des Autors („auf eigenen Rechner und aktuellen `main` umstellen, Abweichungen zu `248029dc` ausweisen“). Der Abgleich in Abschnitt 3.4 beruht auf `git diff`, codebase-memory (Aufrufer von `inspectOpenWeightLlmAvailability`) und dem Trockenlauf aus Abschnitt 10; Frage A4 und ihre Vorschläge sind ein KI-Vorschlag.
+
+## 13. Änderungen vom 2026-11-04 (vor der Freigabe)
+
+| Abschnitt | Vorher                                                         | Jetzt                                                                                                              |
+| --------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Kopf, 3.3 | Codebasis offen (P1)                                           | aktueller `main`, Merge `533b1100` (upstream `cf522c63`)                                                           |
+| 2         | Nicht-Ziel „kein Modelllauf lokal“                             | Modelllauf auf dem eigenen Rechner (= Laborinstanz), nicht gegen Produktion                                        |
+| 3.1       | Zwei Hosts, Runtime über `npm run llm:prod`, Firewall-Freigabe | Ein Rechner, Runtime über `npm run docker:up:llm:http` an `127.0.0.1:8080`, Abweichungen zum Inferenz-Host benannt |
+| 3.2       | Token aus dem Passwortmanager, Image-Digest vom Inferenz-Host  | lokal erzeugtes Token, lokale Image-ID                                                                             |
+| 3.4       | –                                                              | neu: Abweichungen gegenüber `248029dc` mit empirischer Budgetkontrolle                                             |
+| 4, 7      | Ruhebedingung für die Labor-App, Dauer mit M2-Werten           | Ruhebedingung für den eigenen Rechner, Hardware genannt, Timeout-Risiko, neue Gültigkeitsgrenzen                   |
+| 11        | P1–P3 offen                                                    | P1, P2 beantwortet, P3 abgeleitet; neue Frage A4                                                                   |
+
+Unverändert: Fälle L1–L5, Hypothesen, Kriterien, Schwellen, Wiederholungszahlen und Entscheidungsregeln (Abschnitte 5 und 6).
