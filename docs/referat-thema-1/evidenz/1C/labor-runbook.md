@@ -65,7 +65,7 @@ mise exec node@24.18.0 -- npm ci
 mise exec node@24.18.0 -- npm run prisma:generate
 ```
 
-Hat sich upstream seit `533b1100` geändert, die Tabelle in Design 3.4 vor dem Lauf für den neuen Stand prüfen und ergänzen.
+Hat sich upstream seit `70c74002` (upstream `9f230abc`) geändert, die Tabelle in Design 3.4 vor dem Lauf für den neuen Stand prüfen und ergänzen.
 
 Eigene PostgreSQL- und Redis-Instanz nur für den Lauf, an Loopback gebunden, getrennt von der Entwicklungsdatenbank. Das Datenbank-Passwort ist ein Wegwerfwert:
 

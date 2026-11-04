@@ -14,7 +14,7 @@
 - **Autor:** Jonas Weirauch (Rolle Y)
 - **Issue:** [#10](https://github.com/NiklasSkulll/arsnova.eu/issues/10), Schritt 2
 - **Branch:** `feature-1C-context-path`
-- **Codebasis:** aktueller `main` (Abschnitt 3.3). Werkzeug geschrieben auf `main` `248029dc` plus diesem Branch; seit 2026-11-04 läuft der Branch auf `kqc-real/main` `cf522c63` (Merge `533b1100`). Abweichungen zu `248029dc`: Abschnitt 3.4.
+- **Codebasis:** aktueller `main` (Abschnitt 3.3). Werkzeug geschrieben auf `main` `248029dc` plus diesem Branch; seit 2026-11-04 läuft der Branch auf `kqc-real/main` `9f230abc` (Merge `70c74002`, davor `cf522c63` mit Merge `533b1100`). Abweichungen zu `248029dc`: Abschnitt 3.4.
 - **Vorgänger:** [Teil 2](2026-10-24-1c-teil2-design.md) (E1–E9, M1–M5, V1), [Teil 3](2026-10-24-1c-teil3-design.md) (E10–E15, M6, M7). Fixture, Auswertung und Rollenlogik der Kontextaufbauten werden wiederverwendet.
 - **KI-Nutzung:** Entwurf mit Claude Code (Abschnitt 12).
 
@@ -120,6 +120,8 @@ Teil 1–3 sind an `248029dc` gebunden und bleiben dort gültig. Für den Laborl
 | Runtime (`docker/open-weight-llm/`, Compose, `scripts/open-weight-llm/`) | keine                                                                                                                                                                                    | keine                                                                                                                                             |
 
 **Empirische Kontrolle (2026-11-04, Trockenlauf am Merge, Test-Runtime, kein Modell):** Instruktions- und Definitionsversion sind unverändert (`qa-summary-technical-handoff-v2`, `moderation-prompt-definitions-v1`), ebenso die Budgets der Referenzfixture: `dataTokens` 6338 (Referenzfixture, L1–L4), 6608 (L5 `YESNO`) und 6660 (L5 `TEMPO`). Das sind dieselben Werte wie an `248029dc` (Teil 2 M5; Teil 3, Tabelle zu E15: `reference/m3-env`, `full/YESNO`, `full/TEMPO`). Weil die Schätzung UTF-8-Bytes zählt, ist die Länge des kanonischen Kontexts gleich; ein Hashvergleich über die Stände ist nicht möglich, weil jede Fixture neue IDs erzeugt. Die Harness und die PostgreSQL-Suiten (e2e 20/20, hash 8/8) laufen auf dem neuen Stand grün.
+
+**Nachtrag 2026-11-04, abends:** upstream ist auf `9f230abc` weitergegangen (Merge `70c74002`). Die drei neuen Commits ändern nur die Wortwolke (`wordCloud*`-Backend, Wortwolken-Komponenten im Frontend, deren Schemas in `libs/shared-types`, Übersetzungen, Doku); keine der Dateien aus der Tabelle oben ist betroffen. Wiederholt am Merge `70c74002` mit Test-Runtime: Harness 3/3 grün, `dataTokens` 6338/6608/6660, Versionen `qa-summary-technical-handoff-v2` und `moderation-prompt-definitions-v1` unverändert, PostgreSQL-Suiten 28/28 grün.
 
 ## 4. Ablauf
 
@@ -238,5 +240,6 @@ Die Überarbeitung vom 2026-11-04 (Abschnitt 13) hat ebenfalls Claude Code erste
 | 11           | P1–P3 offen                                                    | P1, P2 beantwortet, P3 abgeleitet; neue Frage A4                                                                   |
 | Kopf, 11     | nicht freigegeben, A1–A4 offen                                 | freigegeben 2026-11-04; A1 ja, A2 ja, A3 rohe Bodys, A4 300 s                                                      |
 | 3.2, 7, 10.1 | fester Timeout 90 s                                            | `QA_SUMMARY_LABOR_TIMEOUT_MS`, Kalibrierung dokumentiert, Timeout als Gültigkeitsgrenze                            |
+| Kopf, 3.4    | Merge `533b1100` (upstream `cf522c63`)                         | Merge `70c74002` (upstream `9f230abc`), nach der Freigabe; nur Wortwolke geändert, Kontrolle wiederholt            |
 
 Unverändert: Fälle L1–L5, Hypothesen, Kriterien, Schwellen, Wiederholungszahlen und Entscheidungsregeln (Abschnitte 5 und 6).
