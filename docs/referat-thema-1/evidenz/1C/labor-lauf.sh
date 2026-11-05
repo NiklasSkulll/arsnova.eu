@@ -53,7 +53,9 @@ TAG="${LABOR_TAG:+-$LABOR_TAG}"
 OUTDIR="${LABOR_OUTDIR:-$HOME/labor-1c}"
 DAY="$(date +%F)"
 LOG="$OUTDIR/$MODE$TAG-$DAY.log"
-NODE=(mise exec node@24.18.0 --)
+# Gepinnte Node auch für Kindprozesse (npx, Shebangs) vorn in den PATH, sonst greift dort ggf. die System-Node.
+NODE_BIN="$(mise where node@24.18.0)/bin"
+NODE=(mise exec node@24.18.0 -- env PATH="$NODE_BIN:$PATH")
 COMPOSE=("$CLI" compose -f docker-compose.yml)
 [[ -n "$OVERRIDE" ]] && COMPOSE+=(-f "$OVERRIDE")
 [[ "$MODE" == cacheversuch && "$LABOR_CACHE_ARM" == aus ]] && COMPOSE+=(-f docs/referat-thema-1/evidenz/1C/labor-cache-aus.override.yml)
@@ -174,8 +176,6 @@ if [[ "$MODE" == cacheversuch ]]; then
   done
   rm -f "$BODY"
   "$CLI" inspect --format 'Nach dem Versuch: Status={{.State.Status}} Neustarts={{.RestartCount}} OOMKilled={{.State.OOMKilled}}' "$CONTAINER"
-  step "Server-Log, Zeilen mit cache_ram/prompt cache: $("$CLI" logs "$CONTAINER" 2>&1 | grep -ciE 'cache_ram|prompt cache|cache state' || true)"
-  "$CLI" logs "$CONTAINER" 2>&1 | grep -iE 'cache_ram|prompt cache|cache state' | head -5 || true
   step "Ergebnis in $CSV"
   notify "Cacheversuch Arm $ARM fertig"
   exit 0
@@ -212,6 +212,9 @@ step "Slots: $slots"
 [[ "$(jq 'length' <<<"$slots")" == 1 && "$(jq '.[0].is_processing' <<<"$slots")" == false ]] || fail "Slot-Zustand unerwartet"
 
 # --- Lauf (Runbook 5) ---
+npx_node="$("${NODE[@]}" npx --no-install node -v)"
+step "Node für vitest (über npx): $npx_node"
+[[ "$npx_node" == v24.18.0 ]] || fail "npx findet Node $npx_node statt v24.18.0"
 cd "$REPO/apps/backend"
 LABOR_OUT="$REPO/docs/referat-thema-1/evidenz/1C/messung/$DAY-labor$TAG.json"
 VITEST_LOG="$OUTDIR/vitest$TAG-$DAY.log"
