@@ -169,3 +169,42 @@ Anschließend die Ergebnisse nach den Regeln des Designs (Abschnitt 6) in einem 
 - Hinweis, dass Design und Schwellen vor dem Lauf freigegeben wurden (Datum der Freigabe), und die KI-Nutzung.
 
 Nicht senden: Token, `.env`, `.env.llm`, Logs der Runtime (mit `--log-verbosity 2` können sie Prompts enthalten).
+
+## 9. Zusatzlauf auf einem zweiten Rechner mit Produktionslimits (Design 14)
+
+Für den Zusatzlauf nach [Design Abschnitt 14](../../specs/2026-10-25-1c-labor-design.md#14-nachtrag-zusatzlauf-mit-produktionslimits-und-release-timeout-vor-dem-lauf-festgelegt). Das Skript [`labor-lauf.sh`](labor-lauf.sh) fasst die Abschnitte 2–6 zusammen; es setzt die Runtime per [`labor-produktionslimits.override.yml`](labor-produktionslimits.override.yml) auf 8 CPUs, 8 GiB, 10 GiB mit Swap und 8 Threads, hält das Energieprofil `performance` (falls `powerprofilesctl` vorhanden), sperrt den Ruhezustand (falls `systemd-inhibit` vorhanden) und räumt Runtime, Lauf-DB und Token am Ende ab. Voraussetzung: rootless Podman oder Docker ohne `sudo` (Benutzer in der Gruppe `docker`), dazu `mise`, `jq`, `openssl`, `curl`.
+
+Vorbereitung auf dem Rechner (einmalig; Abschnitt 2 für das Modell, Abschnitt 3 für den Clone):
+
+```bash
+git clone https://github.com/NiklasSkulll/arsnova.eu.git && cd arsnova.eu
+git remote add upstream https://github.com/kqc-real/arsnova.eu.git && git fetch --all
+git switch feature-1C-context-path
+mise exec node@24.18.0 -- npm ci
+mise exec node@24.18.0 -- npm run prisma:generate
+# Modell laden und prüfen wie Abschnitt 2 (curl …, verify-model.mjs)
+```
+
+**Schritt 1, Kalibrierung** (etwa 2–5 min, nicht gewertet). Druckt `prompt_ms`, `predicted_ms`, Durchsätze und die Inferenzzeit I; der Antworttext wird verworfen:
+
+```bash
+LABOR_TAG=pc docs/referat-thema-1/evidenz/1C/labor-lauf.sh kalibrierung
+```
+
+**Schritt 2, Timeout nach Design 14.3 wählen:** I ≤ 90 s → Release-Timeout (Standard des Skripts, 90 000 ms); I > 90 s → `LABOR_TIMEOUT_MS=300000`. Die Kalibrierungswerte gehören ins Protokoll.
+
+**Schritt 3, Lauf** (je nach Kalibrierung etwa 1–2 h). Ergebnis unter `docs/referat-thema-1/evidenz/1C/messung/<DATUM>-labor-pc.json`, Logs, Auswertung und Speicherprotokoll `speicher-pc-<DATUM>.csv` unter `~/labor-1c/`:
+
+```bash
+LABOR_TAG=pc docs/referat-thema-1/evidenz/1C/labor-lauf.sh lauf                          # I ≤ 90 s
+LABOR_TAG=pc LABOR_TIMEOUT_MS=300000 docs/referat-thema-1/evidenz/1C/labor-lauf.sh lauf  # I > 90 s
+```
+
+Zeitgesteuert, ohne offene Sitzung (Beispiel 06:45 am nächsten Tag; der Rechner darf bis dahin nicht schlafen):
+
+```bash
+systemd-run --user --unit=labor-1c-run --on-calendar='<DATUM> 06:45:00' --timer-property=AccuracySec=1s \
+  --setenv=LABOR_TAG=pc "$PWD/docs/referat-thema-1/evidenz/1C/labor-lauf.sh" lauf
+```
+
+Danach Einchecken und Protokoll wie Abschnitt 7, mit eigener Datei `evidenz/1C/<DATUM>-labor-pc.md`; die Hardware-Tabelle als zweite Spalte neben dem Laptop ([Laptop-Protokoll](2026-11-05-labor.md#laufrechner-laptop)), L6 aus dem Speicherprotokoll und `OOMKilled`.

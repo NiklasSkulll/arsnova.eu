@@ -243,3 +243,51 @@ Die Überarbeitung vom 2026-11-04 (Abschnitt 13) hat ebenfalls Claude Code erste
 | Kopf, 3.4    | Merge `533b1100` (upstream `cf522c63`)                         | Merge `70c74002` (upstream `9f230abc`), nach der Freigabe; nur Wortwolke geändert, Kontrolle wiederholt            |
 
 Unverändert: Fälle L1–L5, Hypothesen, Kriterien, Schwellen, Wiederholungszahlen und Entscheidungsregeln (Abschnitte 5 und 6).
+
+## 14. Nachtrag: Zusatzlauf mit Produktionslimits und Release-Timeout (vor dem Lauf festgelegt)
+
+> **Festgelegt am 2026-11-05, nach dem Laptop-Lauf und vor jeder Messung auf dem zweiten Rechner;
+> freigegeben vom Autor am selben Tag.** Abschnitte 1–13 und das [Laptop-Protokoll](../evidenz/1C/2026-11-05-labor.md)
+> bleiben unverändert. Dieser Lauf ersetzt den Laptop-Lauf nicht, er ist ein gekennzeichneter Zusatzlauf.
+
+### 14.1 Zweck
+
+Der Laptop-Lauf weicht an zwei Stellen von der ausgelieferten Konfiguration ab: Timeout 300 s statt 90 s (A4) und Runtime-Limits des Laborpfads (4 CPUs, 5 GiB, 4 Threads) statt des Inferenz-Hosts (8 CPUs, 8 GiB, 10 GiB mit Swap, 8 Threads). Außerdem wurde die Runtime dort am 5-GiB-Limit per OOM beendet. Der Zusatzlauf auf einem stärkeren Rechner beseitigt beide Abweichungen, soweit die Hardware das zulässt, und klärt, ob der OOM-Kill an das Laborlimit gebunden ist.
+
+### 14.2 Aufbau
+
+- **Rechner:** Desktop-PC des Autors, Intel Core i7-8700 (Coffee Lake, 6 Kerne / 12 Threads, 3,2 GHz Basis, 4,6 GHz max., L3 12 MiB, AVX2/FMA/F16C, kein AVX-512, kein AVX-VNNI), 31 GiB RAM, NVIDIA GTX 1060 6 GB (nicht genutzt, die Runtime ist CPU-only). Vollständige Angaben liest das Laufskript ab.
+- **Runtime:** Laborpfad `llm-http` wie Abschnitt 3.1, aber mit [`labor-produktionslimits.override.yml`](../evidenz/1C/labor-produktionslimits.override.yml): 8 CPUs, 8 GiB, 10 GiB mit Swap, 8 Threads wie `docker-compose.llm.yml`. Image-Rezept, Entry-Point, Modell, Loopback und Healthcheck bleiben gleich. Nicht „volle Kapazität“ des PCs: Gemessen werden soll die ausgelieferte Ressourcenkonfiguration, nicht die Hardware.
+- **Laufprozess, Fixture, Fälle, n:** unverändert (n = 20, 1 Aufwärmlauf, 5 direkt, L5 5 je Arm).
+- **Werkzeug:** [`labor-lauf.sh`](../evidenz/1C/labor-lauf.sh) (Runbook 9), zusätzlich ein Speicherprotokoll der Runtime im 15-s-Takt.
+
+### 14.3 Kalibrierung und Wahl des Timeouts
+
+Vor dem Lauf genau **eine** nicht gewertete Anfrage wie Abschnitt 10.1, mit dem rohen Completion-Body des ersten Messlaufs aus dem Laptop-Lauf. Maßgeblich ist I = `prompt_ms + predicted_ms`; die Antwort wird nicht gespeichert.
+
+| Kalibrierung  | Lauf                                                                                                                                         |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| I ≤ 75 s      | Timeout 90 s (Release). Release-Baseline auf Produktionslimits.                                                                              |
+| 75 < I ≤ 90 s | Timeout 90 s (Release). Timeouts sind zu erwarten und zählen als L4-Befund (Regel „L4: Anteil `full-context` < 80 %“, Grund `timeout`).      |
+| I > 90 s      | Kein 90-s-Lauf (er lieferte nur Timeouts; Befund wie A4). Stattdessen Timeout 300 s auf Produktionslimits; L4-Anteile gelten dann für 300 s. |
+
+Die Schätzung vor der Kalibrierung (Laptop-Werte hochgerechnet auf 6 Kerne und höheren Takt) lag bei 80–95 s, also im Grenzbereich; sie ist keine Hypothese.
+
+### 14.4 Fälle und Regeln
+
+L1–L5 mit denselben H, G, K und Regeln (Abschnitte 5 und 6). Neu:
+
+| Nr. | Frage                                                                      | H                                               | G                                      | K                                                                                                                                                                              |
+| --- | -------------------------------------------------------------------------- | ----------------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| L6  | Bleibt die Runtime mit Produktionslimits über alle Aufträge ohne OOM-Kill? | Kein Neustart, kein OOM-Kill während des Laufs. | Mindestens ein Neustart oder OOM-Kill. | `RestartCount` vor und nach dem Lauf 0 und `OOMKilled` false. Berichtet: Speicherverlauf im 15-s-Takt, Maximum, Wert nach dem Aufwärmlauf gegen Wert nach dem letzten Auftrag. |
+
+| Ergebnis      | Entscheidung                                                                                                                                                                                                                                            |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| K_L6 erfüllt  | Befund: Der OOM-Kill des Laptop-Laufs ist an das 5-GiB-Limit des Laborpfads gebunden. **Verbesserung prüfen, nicht umsetzen:** Limit des Laborpfads in `docker-compose.yml`. Steigt der Speicher trotzdem über den Lauf, wird das zusätzlich berichtet. |
+| K_L6 verfehlt | Befund: Auch mit Produktionslimits reicht der Speicher nicht. Der Verlauf zeigt, ob er über die Aufträge wächst. Issue-Kandidat, Anlegen nur mit Freigabe des Autors.                                                                                   |
+
+Zeiten (L3) werden je Rechner berichtet und dem Laptop gegenübergestellt, ohne Schwelle.
+
+### 14.5 Gültigkeitsgrenzen
+
+Wie Abschnitt 7, außer Timeout und Limits, soweit 14.3 den Release-Timeout erlaubt. Zusätzlich: ein anderer Rechner als Laptop und Inferenz-Host; 8 Runtime-Threads auf 6 physischen Kernen (2 über SMT), anders als auf einem Host mit 8 Kernen; Desktop-Speicher (vermutlich DDR4) bestimmt die Ausgabegeschwindigkeit mit; weiterhin ein Rechner für Laufprozess und Runtime. L6 belegt das Speicherverhalten dieses Images mit diesen Limits, nicht das des Produktionshosts.
