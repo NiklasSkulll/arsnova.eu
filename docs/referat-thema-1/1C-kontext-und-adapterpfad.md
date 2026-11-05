@@ -643,6 +643,8 @@ Kanonisierung: `canonicalModerationPromptJson` (Z. 124–144) sortiert Schlüsse
 
 ## 11. Vorschlag: Versuchsdesign (Labor, synthetische Daten)
 
+> **Aktualisiert 2026-11-05:** Dieser Vorschlag ist überholt. Das tatsächliche Versuchsdesign steht in [specs/2026-10-25-1c-labor-design.md](./specs/2026-10-25-1c-labor-design.md), die Ergebnisse im [Ergebnisbericht](./1C-ergebnis.md) und in den [ADRs](./adr/README.md). Der Text unten bleibt als ursprünglicher Stand stehen.
+
 > **Vorschlag.** Nur in der vom Prüfer bereitgestellten Laborinstanz, nicht gegen Produktion oder eine laufende Lehrveranstaltung (Prüfungsdokument Z. 84, 141).
 
 ### 11.1 Reproduzierbarkeit (vor dem ersten Lauf festhalten)
@@ -734,6 +736,8 @@ Kanonisierung: `canonicalModerationPromptJson` (Z. 124–144) sortiert Schlüsse
 
 ## 13. Offene Punkte / Fragen an den Prüfer
 
+> **Aktualisiert 2026-11-05:** Diese Liste ist überholt. Geklärte Fragen stehen im [Rahmendokument](./00-rahmen-und-pruefung.md#offene-fragen-an-den-prüfer), der aktuelle Stand im [Ergebnisbericht, Abschnitt 9](./1C-ergebnis.md#9-offene-punkte-und-fragen-an-den-prüfer). Der Text unten bleibt als ursprünglicher Stand stehen.
+
 | Nr. | Punkt                                                                                                                                                                                                                                                                                                                      |
 | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | O1  | Gilt `v1.3.0` (`87c39334`) als 1.3-Baseline? Dieses Dossier zitiert HEAD `27966e75` (131 Commits später). Abweichungen stehen in Abschnitt 1A. Insbesondere: Ist am Tag ein Queue-Timeout von 8 s als Baseline gewollt?                                                                                                    |
@@ -752,6 +756,8 @@ Kanonisierung: `canonicalModerationPromptJson` (Z. 124–144) sortiert Schlüsse
 ---
 
 ## 14. Befundliste (Kurzfassung für Handout)
+
+> **Aktualisiert 2026-11-05:** Diese Befundliste stammt aus der Recherche vor den Tests und Messungen. Die geprüften Befunde mit Entscheidung stehen im [Ergebnisbericht, Abschnitt 5](./1C-ergebnis.md#5-befunde-und-empfehlungen) und in den [ADRs](./adr/README.md); das Handout entsteht nach dem [Präsentationsgerüst](./1C-praesentation-geruest.md). Der Text unten bleibt als ursprünglicher Stand stehen.
 
 | Nr. | Befund                                                                                                                                                                                                            | Evidenz                                                                      |
 | --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |

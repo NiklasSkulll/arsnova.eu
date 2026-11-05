@@ -9,6 +9,8 @@ Diagrams for assignment 1C ([issue #10](https://github.com/NiklasSkulll/arsnova.
 > ([00-rahmen](./00-rahmen-und-pruefung.md#offene-fragen-an-den-prüfer)). Elements that exist only on
 > `main` are listed in [Differences to v1.3.0](#differences-to-v130).
 
+> **Aktualisiert 2026-11-05:** The baseline question is settled (current `main`), and the lab runs used `main@9f230abc`. The consolidated result, decisions and open points are in the German [result report](./1C-ergebnis.md) and the [ADRs](./adr/README.md).
+
 ## Figures
 
 | No.    | Figure                               | Use                  | Language | Source                                                                                                                           |

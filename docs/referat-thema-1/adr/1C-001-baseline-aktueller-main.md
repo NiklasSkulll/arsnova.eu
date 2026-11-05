@@ -14,7 +14,7 @@ Gemessen wird der aktuelle `main`, nicht `v1.3.0`. Grundlage ist die E-Mail des 
 ## Alternativen
 
 - **`v1.3.0` als Baseline.** Verworfen: Die Antwort des Prüfers zielt auf den aktuellen Stand; außerdem fehlen im Tag spätere Fixes, und die zentralen Werte unterscheiden sich ([Rahmendokument](../00-rahmen-und-pruefung.md#baseline-tag-v130-oder-aktueller-main)). Eine Rückportierung der Laborharness auf den Tag entfällt ([Labor-Design 3.3](../specs/2026-10-25-1c-labor-design.md#33-referenzstand-und-manifest)).
-- **Nachziehen auf `96b2e46e` vor den Läufen.** Verworfen, weil beide Läufe denselben Code messen sollen; Begründung und Prüfung in ADR 1C-022 (in Arbeit).
+- **Nachziehen auf `96b2e46e` vor den Läufen.** Verworfen, weil beide Läufe denselben Code messen sollen; Begründung und Prüfung in [ADR 1C-022](1C-022-codestand-eingefroren-9f230abc.md).
 
 ## Belege
 
@@ -27,4 +27,4 @@ Gemessen wird der aktuelle `main`, nicht `v1.3.0`. Grundlage ist die E-Mail des 
 
 - Alle Laborzahlen gelten nur für `main@9f230abc` und die im JSON genannten Artefakte, nicht für `v1.3.0` und nicht für `96b2e46e`.
 - Die Prüfungsvorlage nennt „Release 1.3“; die Aussagen übertragen sich auf den Tag nur, soweit die Abweichungstabelle sie nicht berührt. Das ist eine Gültigkeitsgrenze.
-- Der Codestand der Läufe wird im Laborbereich nochmals als eigene Festlegung geführt (ADR 1C-022, in Arbeit).
+- Der Codestand der Läufe wird im Laborbereich nochmals als eigene Festlegung geführt ([ADR 1C-022](1C-022-codestand-eingefroren-9f230abc.md)).

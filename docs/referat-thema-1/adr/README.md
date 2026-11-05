@@ -4,7 +4,7 @@ Diese ADRs halten jede Entscheidung aus Auftrag 1C (Kontext- und Adapterpfad der
 Q&A-Zusammenfassung) fest: fachliche Ergebnisse, Labor-Befunde und methodische
 Festlegungen. Jede ADR fasst zusammen und verlinkt auf die Quelle (Dossier,
 Design, Protokoll, Rohdaten); Zahlen stehen nur mit Beleg. Einstieg in das
-Gesamtergebnis: `1C-ergebnis.md` (folgt).
+Gesamtergebnis: [`1C-ergebnis.md`](../1C-ergebnis.md).
 
 Grundlage der Form: [Dokumentationsdesign](../specs/2026-11-05-1c-doku-design.md).
 
@@ -18,7 +18,7 @@ Grundlage der Form: [Dokumentationsdesign](../specs/2026-11-05-1c-doku-design.md
 | `methodisch`     | Festlegung zum Vorgehen (Baseline, Testumgebung, Laborparameter), keine Aussage über das Produkt.   |
 
 Kein ADR beschreibt einen Produktivpatch: Auftrag 1C verlangt eine Empfehlung,
-keinen Patch (siehe ADR 1C-004).
+keinen Patch (siehe [ADR 1C-004](1C-004-empfehlung-statt-patch.md)).
 
 ## Nummernplan
 

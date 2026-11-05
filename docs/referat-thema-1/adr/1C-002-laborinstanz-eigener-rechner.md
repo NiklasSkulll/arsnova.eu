@@ -26,5 +26,5 @@ Die Laborinstanz ist der eigene Rechner des Autors (E-Mail des Prüfers, notiert
 ## Folgen
 
 - Laufprozess und Runtime teilen sich CPU und Speicher. Zeiten (L3) gelten nur für diese Maschine und sind nicht auf den Zwei-Host-Betrieb übertragbar; L1, L2 und L4 hängen von Code, Modell und Runtime-Einstellungen ab, nicht von der Hardware, solange keine Timeouts auftreten.
-- Weil der Laptop mit 4 statt 8 CPUs lief, wurde der Timeout im Laptop-Lauf angehoben (ADR 1C-020) und ein Zusatzlauf mit Produktionslimits auf einem zweiten Rechner angesetzt (ADR 1C-021); beide ADRs sind in Arbeit.
+- Weil der Laptop mit 4 statt 8 CPUs lief, wurde der Timeout im Laptop-Lauf angehoben ([ADR 1C-020](1C-020-timeout-300-s-und-kalibrierungsregel.md)) und ein Zusatzlauf mit Produktionslimits auf einem zweiten Rechner angesetzt ([ADR 1C-021](1C-021-zusatzlauf-produktionslimits-zweiter-rechner.md)).
 - Der Lauf ersetzt keinen Betriebstest des ausgelieferten Zwei-Host-Aufbaus.
