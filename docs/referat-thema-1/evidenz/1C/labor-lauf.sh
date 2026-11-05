@@ -3,6 +3,7 @@
 #
 #   labor-lauf.sh kalibrierung   eine nicht gewertete Anfrage (Design 10.1 / 14.3), druckt nur Zeiten
 #   labor-lauf.sh lauf           vollständiger Lauf L1–L5 mit Speicherprotokoll (Design 14)
+#   labor-lauf.sh cacheversuch   Ursachenversuch V1 (Design 15): 10 direkte Anfragen, Speicher nach jeder
 #
 # Steuerung über Umgebungsvariablen (Standard in Klammern):
 #   LABOR_TAG          Kennung im Dateinamen, z. B. "pc"                 (ohne)
@@ -10,6 +11,7 @@
 #   LABOR_OVERRIDE     zusätzliche Compose-Datei                          (labor-produktionslimits.override.yml)
 #                      leer setzen ("LABOR_OVERRIDE=") für die Limits des Laborpfads (4 CPUs, 5 GiB)
 #   LABOR_CLI          podman oder docker                                 (podman, wenn vorhanden)
+#   LABOR_CACHE_ARM    nur cacheversuch: standard oder aus                (Pflicht)
 #   LABOR_OUTDIR       Logs und Speicherprotokoll, nie einchecken         (~/labor-1c)
 #
 # Das Runtime-Token und das DB-Passwort entstehen nur im Speicher dieses Prozesses.
@@ -19,7 +21,10 @@
 set -euo pipefail
 
 MODE="${1:-}"
-[[ "$MODE" == kalibrierung || "$MODE" == lauf ]] || { echo "Aufruf: $0 kalibrierung|lauf" >&2; exit 2; }
+[[ "$MODE" == kalibrierung || "$MODE" == lauf || "$MODE" == cacheversuch ]] || { echo "Aufruf: $0 kalibrierung|lauf|cacheversuch" >&2; exit 2; }
+if [[ "$MODE" == cacheversuch ]]; then
+  [[ "${LABOR_CACHE_ARM:-}" == standard || "${LABOR_CACHE_ARM:-}" == aus ]] || { echo "cacheversuch braucht LABOR_CACHE_ARM=standard|aus" >&2; exit 2; }
+fi
 
 REPO="$(git -C "$(dirname "$(readlink -f "$0")")" rev-parse --show-toplevel)"
 SELF="$(readlink -f "$0")"
@@ -51,6 +56,7 @@ LOG="$OUTDIR/$MODE$TAG-$DAY.log"
 NODE=(mise exec node@24.18.0 --)
 COMPOSE=("$CLI" compose -f docker-compose.yml)
 [[ -n "$OVERRIDE" ]] && COMPOSE+=(-f "$OVERRIDE")
+[[ "$MODE" == cacheversuch && "$LABOR_CACHE_ARM" == aus ]] && COMPOSE+=(-f docs/referat-thema-1/evidenz/1C/labor-cache-aus.override.yml)
 COMPOSE+=(--profile llm-http)
 CONTAINER=arsnova-v3-open-weight-llm-http
 URL='http://127.0.0.1:8080'
@@ -142,6 +148,36 @@ if [[ "$MODE" == kalibrierung ]]; then
   step "Wandzeit $(awk -v a="$start" -v b="$end" 'BEGIN { printf "%.1f", b - a }') s"
   jq -r '"Inferenz (prompt_ms + predicted_ms): \(((.prompt_ms + .predicted_ms) / 1000) | floor) s; ungünstigster Fall bei 640 Ausgabe-Tokens: \(((.prompt_ms + 640 / .predicted_per_s * 1000) / 1000) | floor) s"' "$OUTDIR/kalibrierung$TAG-$DAY.json"
   notify "Kalibrierung fertig, siehe $LOG"
+  exit 0
+fi
+
+# --- Ursachenversuch V1 (Design 15): 10 verschiedene Bodies aus dem Laptop-Lauf, Speicher nach jeder Anfrage ---
+if [[ "$MODE" == cacheversuch ]]; then
+  ARM="$LABOR_CACHE_ARM"
+  step "Arm $ARM, LLAMA_ARG_CACHE_RAM im Container: $("$CLI" exec "$CONTAINER" printenv LLAMA_ARG_CACHE_RAM 2>/dev/null || echo 'nicht gesetzt (Standard 8192 MiB)')"
+  CSV="$OUTDIR/cacheversuch-$ARM$TAG-$DAY.csv"
+  mem() { "$CLI" stats --no-stream --format '{{.MemUsage}}' "$CONTAINER" 2>/dev/null | cut -d/ -f1 | tr -d ' ' || echo ?; }
+  sleep 5
+  echo "nr,zeit,prompt_n,cache_n,predicted_n,prompt_ms,predicted_ms,speicher,neustarts" > "$CSV"
+  echo "0,$(date '+%F %T'),,,,,,$(mem),$("$CLI" inspect --format '{{.RestartCount}}' "$CONTAINER")" >> "$CSV"
+  BODY="$OUTDIR/cacheversuch-body.json"
+  for i in $(seq 0 9); do
+    zcat docs/referat-thema-1/evidenz/1C/messung/2026-11-05-labor.json.gz \
+      | jq -r --argjson i "$i" '[.labor.quiet.runs[] | select(.warmup | not)][$i] | [.exchanges[] | select(.path == "/v1/chat/completions")][0].rawRequestBody' > "$BODY"
+    t="$(curl --fail --silent --show-error --max-time 600 "${AUTH[@]}" --header 'Content-Type: application/json' \
+      --data-binary @"$BODY" "$URL/v1/chat/completions" \
+      | jq -r '[.timings.prompt_n, .timings.cache_n, .timings.predicted_n, .timings.prompt_ms, .timings.predicted_ms] | map(tostring) | join(",")' || echo ',,,,')"
+    sleep 3
+    line="$((i + 1)),$(date '+%F %T'),$t,$(mem),$("$CLI" inspect --format '{{.RestartCount}}' "$CONTAINER")"
+    echo "$line" >> "$CSV"
+    step "Anfrage $((i + 1))/10: $line"
+  done
+  rm -f "$BODY"
+  "$CLI" inspect --format 'Nach dem Versuch: Status={{.State.Status}} Neustarts={{.RestartCount}} OOMKilled={{.State.OOMKilled}}' "$CONTAINER"
+  step "Server-Log, Zeilen mit cache_ram/prompt cache: $("$CLI" logs "$CONTAINER" 2>&1 | grep -ciE 'cache_ram|prompt cache|cache state' || true)"
+  "$CLI" logs "$CONTAINER" 2>&1 | grep -iE 'cache_ram|prompt cache|cache state' | head -5 || true
+  step "Ergebnis in $CSV"
+  notify "Cacheversuch Arm $ARM fertig"
   exit 0
 fi
 

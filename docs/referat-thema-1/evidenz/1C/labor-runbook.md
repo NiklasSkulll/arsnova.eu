@@ -201,6 +201,13 @@ LABOR_TAG=pc docs/referat-thema-1/evidenz/1C/labor-lauf.sh lauf                 
 LABOR_TAG=pc LABOR_TIMEOUT_MS=300000 docs/referat-thema-1/evidenz/1C/labor-lauf.sh lauf  # I > 90 s
 ```
 
+**Schritt 4, Ursachenversuch V1** ([Design Abschnitt 15](../../specs/2026-10-25-1c-labor-design.md#15-nachtrag-ursachenversuch-v1-zum-speicherwachstum-vor-dem-versuch-festgelegt), nur nach einem verfehlten L6; je Arm etwa 15–20 min). Zwei Arme nacheinander, jeweils mit frisch gestarteter Runtime; Ergebnis je Arm in `~/labor-1c/cacheversuch-<arm>-pc-<DATUM>.csv`:
+
+```bash
+LABOR_TAG=pc LABOR_CACHE_ARM=standard docs/referat-thema-1/evidenz/1C/labor-lauf.sh cacheversuch
+LABOR_TAG=pc LABOR_CACHE_ARM=aus      docs/referat-thema-1/evidenz/1C/labor-lauf.sh cacheversuch
+```
+
 Zeitgesteuert, ohne offene Sitzung (Beispiel 06:45 am nächsten Tag; der Rechner darf bis dahin nicht schlafen):
 
 ```bash
