@@ -22,11 +22,11 @@ keinen Patch (siehe [ADR 1C-004](1C-004-empfehlung-statt-patch.md)).
 
 ## Nummernplan
 
-| Bereich           | Inhalt                                   | Verantwortlich |
-| ----------------- | ---------------------------------------- | -------------- |
-| `1C-001`–`1C-009` | Methodik (Baseline, Laborinstanz, Tests) | Laptop-Sitzung |
-| `1C-010`–`1C-019` | Fachliche Befunde aus Teil 1–3 und Labor | Laptop-Sitzung |
-| `1C-020`–`1C-029` | Labor (Läufe, Limits, Laufzeitbefunde)   | PC-Sitzung     |
+| Bereich           | Inhalt                                   | Verantwortlich                                                                     |
+| ----------------- | ---------------------------------------- | ---------------------------------------------------------------------------------- |
+| `1C-001`–`1C-009` | Methodik (Baseline, Laborinstanz, Tests) | Laptop-Sitzung                                                                     |
+| `1C-010`–`1C-019` | Fachliche Befunde aus Teil 1–3 und Labor | Laptop-Sitzung                                                                     |
+| `1C-020`–`1C-029` | Labor (Läufe, Limits, Laufzeitbefunde)   | PC-Sitzung geplant; erstellt am Laptop (siehe [Eigenanteil](../1C-eigenanteil.md)) |
 
 Dateiname: `1C-NNN-<kurztitel-kebab>.md`.
 

@@ -66,7 +66,7 @@ Zielumfang rund 1.500 Wörter Fließtext plus Abb. 1 und Abb. 2, die je etwa ein
    - Diagramm: [Abb. 1](1C-diagrams.md#abb-1-structure).
 4. **Befunde je Auftragsschritt** (etwa 450 Wörter, dazu Abb. 2)
    - Schritt 2, Verträge: L1 20 von 20 auf beiden Rechnern ([1C-013](adr/1C-013-vorschau-gleich-nutzlast-beibehalten.md)), strikte Validierung ([1C-011](adr/1C-011-strikte-vertragsvalidierung-beibehalten.md)).
-   - Schritt 3, Entkopplung: `requestMs` 27,6 ms (Laptop) und 17,9 ms (PC) ([1C-012](adr/1C-012-entkopplung-host-aufruf-beibehalten.md)); Endstatus 19 von 20 `full-context` bei 300 s ([1C-019](adr/1C-019-endstatus-echter-pfad-beibehalten.md)).
+   - Schritt 3, Entkopplung: `requestMs` 27,6 ms (Laptop) und 17,9 ms (PC) ([1C-012](adr/1C-012-entkopplung-host-aufruf-beibehalten.md)); Endstatus 19 von 20 `full-context` bei 300 s, Laptop und PC ([1C-019](adr/1C-019-endstatus-echter-pfad-beibehalten.md)).
    - Schritt 4, Konsistenz: s = 0,03 % (Laptop) und 0,04 % (PC) ([1C-010](adr/1C-010-nachpruefung-nach-inferenz-beibehalten.md)), T3.1 ([1C-016](adr/1C-016-zeitabhaengiger-hash-blitzlicht.md)), M7 ([1C-017](adr/1C-017-m7-empfehlung-zurueckgehalten.md)).
    - Diagramm: [Abb. 2](1C-diagrams.md#abb-2-timing).
 5. **Empfehlungen mit Kosten, Risiko und Betriebsfolge** (etwa 300 Wörter)
