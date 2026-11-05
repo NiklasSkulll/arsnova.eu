@@ -66,5 +66,9 @@ Kosten, Risiken, Gültigkeitsgrenzen, offene Punkte, zugehörige Issue-Entwürfe
 
 ## Index
 
-| Nr. | Titel | Status | Kategorie |
-| --- | ----- | ------ | --------- |
+| Nr.                                              | Titel                                                                                       | Status     | Kategorie |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------- | ---------- | --------- |
+| [1C-001](1C-001-baseline-aktueller-main.md)      | Baseline ist der aktuelle `main`, nicht `v1.3.0`                                            | methodisch | Methodik  |
+| [1C-002](1C-002-laborinstanz-eigener-rechner.md) | Laborinstanz ist der eigene Rechner, Pfad `llm-http`                                        | methodisch | Methodik  |
+| [1C-003](1C-003-teststrategie-modellfrei.md)     | Teststrategie modellfrei mit Test-Runtime, gekennzeichnete Negativproben, Echtpfad im Labor | methodisch | Methodik  |
+| [1C-004](1C-004-empfehlung-statt-patch.md)       | Ergebnisform ist eine Empfehlung, kein Produktivpatch                                       | methodisch | Methodik  |
