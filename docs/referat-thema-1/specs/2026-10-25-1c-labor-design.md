@@ -292,17 +292,19 @@ Zeiten (L3) werden je Rechner berichtet und dem Laptop gegenübergestellt, ohne 
 
 Wie Abschnitt 7, außer Timeout und Limits, soweit 14.3 den Release-Timeout erlaubt. Zusätzlich: ein anderer Rechner als Laptop und Inferenz-Host; 8 Runtime-Threads auf 6 physischen Kernen (2 über SMT), anders als auf einem Host mit 8 Kernen; Desktop-Speicher (vermutlich DDR4) bestimmt die Ausgabegeschwindigkeit mit; weiterhin ein Rechner für Laufprozess und Runtime. L6 belegt das Speicherverhalten dieses Images mit diesen Limits, nicht das des Produktionshosts.
 
-## 15. Nachtrag: Ursachenversuch V1 zum Speicherwachstum (vor dem Versuch festgelegt)
+## 15. Nachtrag: Ursachenversuch U1 zum Speicherwachstum (vor dem Versuch festgelegt)
 
+> **Bezeichnung:** am 2026-11-05 nach dem Versuch von „V1“ in „U1“ umbenannt, weil V1 in 1C schon die Gegenvariante aus Teil 2 bezeichnet; Inhalt, Kriterien und Regeln unverändert.
+>
 > **Festgelegt am 2026-11-05, nach dem PC-Lauf (Abschnitt 14, K_L6 verfehlt) und vor dem Versuch;
-> freigegeben vom Autor am selben Tag.** Abschnitte 1–14 bleiben unverändert. V1 ist kein Fall des Laufs,
+> freigegeben vom Autor am selben Tag.** Abschnitte 1–14 bleiben unverändert. U1 ist kein Fall des Laufs,
 > sondern ein gekennzeichneter Folgeversuch zu einem Befund.
 
 ### 15.1 Anlass und Hypothese
 
 Im PC-Lauf wuchs der Speicher der Runtime um etwa 0,41–0,43 GB pro Auftrag, ohne Freigabe, bis zum OOM-Kill am 8-GiB-Limit. Das Image `llama-b10524` hält standardmäßig einen Prompt-Cache im Arbeitsspeicher (`--cache-ram`, Standard 8192 MiB, laut `llama-server --help` im Image); `docker/open-weight-llm/entrypoint.sh` setzt den Wert nicht. Grobe Rechnung: Der KV-Cache von Qwen3-4B (36 Schichten, 8 KV-Köpfe, Kopfdimension 128, f16) braucht etwa 144 KiB pro Token, ein Auftrag mit rund 2600 Tokens also gut 0,35 GB. Grundlast (etwa 3,1 GB) plus bis zu 8 GiB Cache überschreitet jedes Limit von 8 GiB.
 
-**Hypothese H_V1:** Das Wachstum kommt vom Prompt-Cache. Mit `--cache-ram 0` bleibt der Speicher über die Aufträge flach.
+**Hypothese H_U1:** Das Wachstum kommt vom Prompt-Cache. Mit `--cache-ram 0` bleibt der Speicher über die Aufträge flach.
 
 ### 15.2 Aufbau
 
@@ -318,8 +320,8 @@ Im PC-Lauf wuchs der Speicher der Runtime um etwa 0,41–0,43 GB pro Auftrag, oh
 
 | Ergebnis                                                                                       | Befund und Entscheidung                                                                                                                                                                                                                                                     |
 | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| standard: Median Δ ≥ 0,25 GB; aus: Median Δ ≤ 0,05 GB und m₁₀ − m₁ ≤ 0,3 GB (**K_V1 erfüllt**) | H_V1 gestützt: Der Prompt-Cache treibt das Wachstum und den OOM-Kill. **Verbesserung prüfen, nicht umsetzen:** `--cache-ram` im Entry-Point so begrenzen, dass Grundlast plus Cache unter `mem_limit` bleibt (oder 0). Issue-Kandidat, Anlegen nur mit Freigabe des Autors. |
-| standard wächst, aus wächst ebenfalls (Median Δ > 0,05 GB)                                     | H_V1 nicht gestützt, der Cache ist nicht (allein) die Ursache. Befund „Speicherwachstum ungeklärt“, Issue-Kandidat mit Verlauf beider Arme.                                                                                                                                 |
+| standard: Median Δ ≥ 0,25 GB; aus: Median Δ ≤ 0,05 GB und m₁₀ − m₁ ≤ 0,3 GB (**K_U1 erfüllt**) | H_U1 gestützt: Der Prompt-Cache treibt das Wachstum und den OOM-Kill. **Verbesserung prüfen, nicht umsetzen:** `--cache-ram` im Entry-Point so begrenzen, dass Grundlast plus Cache unter `mem_limit` bleibt (oder 0). Issue-Kandidat, Anlegen nur mit Freigabe des Autors. |
+| standard wächst, aus wächst ebenfalls (Median Δ > 0,05 GB)                                     | H_U1 nicht gestützt, der Cache ist nicht (allein) die Ursache. Befund „Speicherwachstum ungeklärt“, Issue-Kandidat mit Verlauf beider Arme.                                                                                                                                 |
 | standard: Median Δ < 0,25 GB                                                                   | Wachstum mit direkten Anfragen nicht reproduziert. Kein Schluss auf die Ursache; berichtet wird der Unterschied zum Lauf (Proxy, Harness, andere Bodies).                                                                                                                   |
 
 Zeiten (`prompt_ms`, `predicted_ms`) und `cache_n` werden je Arm berichtet, ohne Schwelle; ohne Cache kann der gemeinsame Präfix nicht wiederverwendet werden.

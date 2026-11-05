@@ -3,7 +3,7 @@
 #
 #   labor-lauf.sh kalibrierung   eine nicht gewertete Anfrage (Design 10.1 / 14.3), druckt nur Zeiten
 #   labor-lauf.sh lauf           vollständiger Lauf L1–L5 mit Speicherprotokoll (Design 14)
-#   labor-lauf.sh cacheversuch   Ursachenversuch V1 (Design 15): 10 direkte Anfragen, Speicher nach jeder
+#   labor-lauf.sh cacheversuch   Ursachenversuch U1 (Design 15): 10 direkte Anfragen, Speicher nach jeder
 #
 # Steuerung über Umgebungsvariablen (Standard in Klammern):
 #   LABOR_TAG          Kennung im Dateinamen, z. B. "pc"                 (ohne)
@@ -153,7 +153,7 @@ if [[ "$MODE" == kalibrierung ]]; then
   exit 0
 fi
 
-# --- Ursachenversuch V1 (Design 15): 10 verschiedene Bodies aus dem Laptop-Lauf, Speicher nach jeder Anfrage ---
+# --- Ursachenversuch U1 (Design 15): 10 verschiedene Bodies aus dem Laptop-Lauf, Speicher nach jeder Anfrage ---
 if [[ "$MODE" == cacheversuch ]]; then
   ARM="$LABOR_CACHE_ARM"
   step "Arm $ARM, LLAMA_ARG_CACHE_RAM im Container: $("$CLI" exec "$CONTAINER" printenv LLAMA_ARG_CACHE_RAM 2>/dev/null || echo 'nicht gesetzt (Standard 8192 MiB)')"
