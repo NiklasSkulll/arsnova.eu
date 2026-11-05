@@ -25,6 +25,6 @@ Die strikte Vertragsvalidierung bleibt unverändert (`assemblePreparedModeration
 
 ## Folgen
 
-- **Kosten:** unverändert, je Kontextaufbau ≈ 1,2 ms für die in Design 5 benannten Prüfungen, bei vier Aufbauten je Auftrag ≈ 5 ms ([Teil 2, Entscheidung 2](../evidenz/1C/2026-10-24-teil2.md#entscheidung-und-empfehlung-1c)).
+- **Kosten:** unverändert, je Kontextaufbau ≈ 1,2 ms für die in Design 5 benannten Prüfungen, bei vier Aufbauten je Auftrag mit erstem Abruf (drei im Auftrag, prepare (1)–(3), plus einer je Runtime-Lesezugriff, [Key findings 2](../1C-diagrams.md#key-findings)) ≈ 5 ms ([Teil 2, Entscheidung 2](../evidenz/1C/2026-10-24-teil2.md#entscheidung-und-empfehlung-1c)).
 - **Risiko:** keines neu. **Rückweg:** entfällt.
 - **Gültigkeitsgrenze:** gemessen lokal mit Test-Runtime. M4 misst genau die in Design 5 benannten Prüfungen; nicht gemessen sind unter anderem `ModerationAnalysisContextV1Schema.parse`, `ChatCompletionResponseSchema` im Client und die Ausgabevalidierung des tRPC-Routers ([M4, Abdeckung](../evidenz/1C/2026-10-24-teil2.md#m4--kosten-der-validierung-n--200-auf-dem-promptcontext-aus-m3)). Inkompatible Versionen enden ohne eigenen Grund als `context_unavailable` bzw. `invalid_response` (Befund B3, [Dossier 14](../1C-kontext-und-adapterpfad.md#14-befundliste-kurzfassung-für-handout)); daran ändert diese Entscheidung nichts.
