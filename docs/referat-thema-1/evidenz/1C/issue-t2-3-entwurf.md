@@ -40,3 +40,5 @@ Laut #456 (Abschnitt 11: „Versionierte Adapterfähigkeit statt stiller Feldver
 ## Gültigkeitsgrenze
 
 Produktivcode gleich `main` `248029dc`; geprüft mit den Unit-Tests auf dem Branch `feature-1C-context-path` (Redis gemockt). Wie häufig solche Snapshots im Betrieb vorkommen, ist nicht untersucht.
+
+> **Aktualisiert 2026-11-05:** Die beiden Laborläufe ([Laptop](2026-11-05-labor.md#l4-endstatus), [PC](2026-11-05-labor-pc.md#l4-endstatus)) haben diesen Befund nicht untersucht: Sie lieferten weder einen Snapshot mit fremder Version noch Redis-Zustände aus einem Deployment. L4 zeigt nur, dass in den Läufen keine `source_changed`-Endstatus auftraten. Es gibt aus dem Labor daher keinen zusätzlichen Beleg für T2.3; die Gültigkeitsgrenze oben bleibt unverändert.

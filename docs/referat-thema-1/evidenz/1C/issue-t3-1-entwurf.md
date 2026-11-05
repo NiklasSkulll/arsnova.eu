@@ -66,3 +66,5 @@ Empfehlung des Entwurfs (Vorschlag, keine Entscheidung): Option 1 prüfen, weil 
 - Geprüft auf dem Branch `feature-1C-context-path` mit lokaler PostgreSQL- und Redis-Instanz (Podman) und einer Test-Runtime statt privater Inferenz; Produktivcode gleich `main` `248029dc`.
 - Getestet ist ein Typ (`YESNO`) auf einer synthetischen Referenzfixture. Weitere zeitabhängige Quellen sind nicht systematisch gesucht.
 - Wie oft in echten Vorlesungen eine Nicht-TEMPO-Runde läuft, während eine Zusammenfassung angefordert wird, ist nicht gemessen.
+
+> **Aktualisiert 2026-11-05:** Der Befund ist auf dem echten Pfad bestätigt (Test-Pfad mit privater Runtime, Fall L5): YESNO endete in 5 von 5 Läufen als `ready/extractive/source_changed`, TEMPO in 5 von 5 als `ready/full-context/null`. Belege: [Laptop, L5](2026-11-05-labor.md#l5-t31-auf-dem-echten-pfad) (dort erreichte der erste YESNO-Lauf das Modell nicht) und [PC, L5](2026-11-05-labor-pc.md#l5-t31-auf-dem-echten-pfad) (alle 10 Läufe mit Modellantwort). Die Gültigkeitsgrenze oben gilt weiter für andere Blitzlicht-Typen als YESNO.
