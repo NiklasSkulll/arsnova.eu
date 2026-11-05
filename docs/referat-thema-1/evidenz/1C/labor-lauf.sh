@@ -96,6 +96,7 @@ free -b | sed -n 2p
 git fetch --all --prune --quiet || step "WARNUNG: git fetch fehlgeschlagen"
 step "HEAD $(git rev-parse HEAD) auf $(git branch --show-current), upstream/main $(git rev-parse --short upstream/main)"
 step "Commits upstream/main, die HEAD fehlen: $(git rev-list --count HEAD..upstream/main)"
+step "Baseline (letzter eingemergter upstream-Stand): main@$(git rev-parse --short "$(git merge-base HEAD upstream/main)")"
 
 # --- Runtime (Runbook 2) ---
 QA_SUMMARY_LABOR_RUNTIME_TOKEN="$(openssl rand -hex 32)"
@@ -103,6 +104,11 @@ export QA_SUMMARY_LABOR_RUNTIME_TOKEN
 export OPEN_WEIGHT_LLM_TOKEN="$QA_SUMMARY_LABOR_RUNTIME_TOKEN"
 export OPEN_WEIGHT_LLM_MODEL_DIR="$REPO/models/open-weight-llm"
 "${NODE[@]}" node scripts/open-weight-llm/verify-model.mjs
+# podman compose mit docker-compose als Provider braucht den Podman-API-Socket.
+if [[ "$CLI" == podman ]] && command -v systemctl >/dev/null && ! systemctl --user is-active --quiet podman.socket; then
+  step "podman.socket inaktiv, starte ihn (nur für diese Sitzung)"
+  systemctl --user start podman.socket || fail "podman.socket lässt sich nicht starten"
+fi
 "${COMPOSE[@]}" up -d --build open-weight-llm-http
 h=none
 for _ in $(seq 1 60); do
@@ -177,7 +183,7 @@ step "Lauf startet, Ausgabe $LABOR_OUT"
 notify "Lauf gestartet"
 set +e
 RUN_QA_SUMMARY_LABOR=1 \
-QA_SUMMARY_LABOR_BASELINE="main@$(git rev-parse --short upstream/main)" \
+QA_SUMMARY_LABOR_BASELINE="main@$(git rev-parse --short "$(git merge-base HEAD upstream/main)")" \
 QA_SUMMARY_LABOR_GIT_SHA="$(git rev-parse HEAD)" \
 QA_SUMMARY_LABOR_GIT_DIRTY=false \
 QA_SUMMARY_LABOR_RUNTIME_IMAGE="$RUNTIME_IMAGE" \

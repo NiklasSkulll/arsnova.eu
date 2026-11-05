@@ -179,7 +179,8 @@ Vorbereitung auf dem Rechner (einmalig; Abschnitt 2 für das Modell, Abschnitt 3
 ```bash
 git clone https://github.com/NiklasSkulll/arsnova.eu.git && cd arsnova.eu
 git remote add upstream https://github.com/kqc-real/arsnova.eu.git && git fetch --all
-git switch feature-1C-context-path
+git switch --track origin/feature-1C-context-path   # --track nötig, wenn mehrere Fork-Remotes den Branch haben
+systemctl --user start podman.socket                # nur Podman: docker-compose als Provider braucht den API-Socket
 mise exec node@24.18.0 -- npm ci
 mise exec node@24.18.0 -- npm run prisma:generate
 # Modell laden und prüfen wie Abschnitt 2 (curl …, verify-model.mjs)
@@ -191,7 +192,7 @@ mise exec node@24.18.0 -- npm run prisma:generate
 LABOR_TAG=pc docs/referat-thema-1/evidenz/1C/labor-lauf.sh kalibrierung
 ```
 
-**Schritt 2, Timeout nach Design 14.3 wählen:** I ≤ 90 s → Release-Timeout (Standard des Skripts, 90 000 ms); I > 90 s → `LABOR_TIMEOUT_MS=300000`. Die Kalibrierungswerte gehören ins Protokoll.
+**Schritt 2, Timeout nach Design 14.3 wählen:** I ≤ 90 s → Release-Timeout (Standard des Skripts, 90 000 ms); I > 90 s → `LABOR_TIMEOUT_MS=300000`. Die Kalibrierungswerte gehören ins Protokoll. Als Baseline trägt das Skript den letzten in HEAD eingemergten upstream-Stand ein (`git merge-base HEAD upstream/main`), nicht den aktuellen `upstream/main`. So bleibt der Codestand des Laptop-Laufs vergleichbar, auch wenn upstream inzwischen weiter ist.
 
 **Schritt 3, Lauf** (je nach Kalibrierung etwa 1–2 h). Ergebnis unter `docs/referat-thema-1/evidenz/1C/messung/<DATUM>-labor-pc.json`, Logs, Auswertung und Speicherprotokoll `speicher-pc-<DATUM>.csv` unter `~/labor-1c/`:
 
