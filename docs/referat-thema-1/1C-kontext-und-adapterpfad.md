@@ -2,6 +2,8 @@
 
 # Dossier 1C – Autorisierter Kontext und asynchroner Adapterpfad
 
+> **Überholt (2026-10-24):** Dieses Dossier ist der Recherche-Stand vom 2026-10-16 auf `27966e75`. Maßgeblich für 1C sind [`1C-diagrams.md`](./1C-diagrams.md) (Belege auf `248029dc`, dort auch die Abweichungen zu diesem Dossier) und die Protokolle unter [`evidenz/1C/`](./evidenz/1C/). Die Testlücken und Versuchsvorschläge unten sind dort teils umgesetzt, teils als offen ausgewiesen.
+
 **Zweck:** Forschungsdossier zur Vorbereitung des Gruppenauftrags 1C (Thema 1, Referatsprüfung Cloud Computing).
 **Repo-Stand der Analyse:** Branch `referat/thema-1-notes`, HEAD `27966e75215500b394b7a314f6c714eaae536452` (2026-10-15, Merge von PR #574). **Alle Zeilenangaben in diesem Dossier sind HEAD-Zeilen** (1-basiert; Serena-Ausgaben wurden von 0- auf 1-basiert umgerechnet). Der Release-Tag `v1.3.0` (`87c39334`, 2026-10-08) liegt 131 Commits früher. Er ist vermutlich die Prüfungsbaseline; die für 1C relevanten Abweichungen stehen in Abschnitt 1A.
 **Methode:** Quelltext gelesen (Read/grep), Aufrufketten mit codebase-memory-MCP (`trace_path` auf `processJob` und `prepareFreshModerationSummaryContext`) und Serena (`find_referencing_symbols`, Memories) gegengeprüft, Issue #456 und #463 per `gh issue view` gelesen. Es wurden **keine** Tests ausgeführt und **keine** Messungen durchgeführt; alle Laufzeitaussagen sind Code-Analyse. Abschnitte mit »Vorschlag« sind Versuchsentwürfe, keine Befunde.
@@ -641,6 +643,8 @@ Kanonisierung: `canonicalModerationPromptJson` (Z. 124–144) sortiert Schlüsse
 
 ## 11. Vorschlag: Versuchsdesign (Labor, synthetische Daten)
 
+> **Aktualisiert 2026-11-05:** Dieser Vorschlag ist überholt. Das tatsächliche Versuchsdesign steht in [specs/2026-10-25-1c-labor-design.md](./specs/2026-10-25-1c-labor-design.md), die Ergebnisse im [Ergebnisbericht](./1C-ergebnis.md) und in den [ADRs](./adr/README.md). Der Text unten bleibt als ursprünglicher Stand stehen.
+
 > **Vorschlag.** Nur in der vom Prüfer bereitgestellten Laborinstanz, nicht gegen Produktion oder eine laufende Lehrveranstaltung (Prüfungsdokument Z. 84, 141).
 
 ### 11.1 Reproduzierbarkeit (vor dem ersten Lauf festhalten)
@@ -732,6 +736,8 @@ Kanonisierung: `canonicalModerationPromptJson` (Z. 124–144) sortiert Schlüsse
 
 ## 13. Offene Punkte / Fragen an den Prüfer
 
+> **Aktualisiert 2026-11-05:** Diese Liste ist überholt. Geklärte Fragen stehen im [Rahmendokument](./00-rahmen-und-pruefung.md#offene-fragen-an-den-prüfer), der aktuelle Stand im [Ergebnisbericht, Abschnitt 9](./1C-ergebnis.md#9-offene-punkte-und-fragen-an-den-prüfer). Der Text unten bleibt als ursprünglicher Stand stehen.
+
 | Nr. | Punkt                                                                                                                                                                                                                                                                                                                      |
 | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | O1  | Gilt `v1.3.0` (`87c39334`) als 1.3-Baseline? Dieses Dossier zitiert HEAD `27966e75` (131 Commits später). Abweichungen stehen in Abschnitt 1A. Insbesondere: Ist am Tag ein Queue-Timeout von 8 s als Baseline gewollt?                                                                                                    |
@@ -750,6 +756,8 @@ Kanonisierung: `canonicalModerationPromptJson` (Z. 124–144) sortiert Schlüsse
 ---
 
 ## 14. Befundliste (Kurzfassung für Handout)
+
+> **Aktualisiert 2026-11-05:** Diese Befundliste stammt aus der Recherche vor den Tests und Messungen. Die geprüften Befunde mit Entscheidung stehen im [Ergebnisbericht, Abschnitt 5](./1C-ergebnis.md#5-befunde-und-empfehlungen) und in den [ADRs](./adr/README.md); das Handout entsteht nach dem [Präsentationsgerüst](./1C-praesentation-geruest.md). Der Text unten bleibt als ursprünglicher Stand stehen.
 
 | Nr. | Befund                                                                                                                                                                                                            | Evidenz                                                                      |
 | --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
