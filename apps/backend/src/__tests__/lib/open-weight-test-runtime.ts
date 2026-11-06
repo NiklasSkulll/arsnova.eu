@@ -24,14 +24,32 @@ import { vi } from 'vitest';
 
 /** Synthetisches Bearer-Token (32+ URL-sichere Zeichen), nur für Tests. */
 export const TEST_RUNTIME_TOKEN = 'e2e-test-runtime-token-0123456789abcdef';
-/** Erkennungszeichen der Modellaussage der Test-Runtime. */
-export const TEST_RUNTIME_STATEMENT_TEXT = 'Aussage der Test-Runtime zur ersten gepackten Frage.';
+/**
+ * Erkennungszeichen der beiden Modellaussagen der Test-Runtime. Seit upstream `96b2e46e`
+ * verwirft das Quality-Gate (`hasAcceptableQaSummaryQuality`) Antworten mit weniger als
+ * zwei Aussagen oder ohne verschiedene Leads in der Form „Lead: Text“ als
+ * `invalid_response`; beide Texte erfüllen diese Form.
+ */
+export const TEST_RUNTIME_STATEMENT_TEXT =
+  'Testlauf: Aussage der Test-Runtime zur ersten gepackten Frage.';
+export const TEST_RUNTIME_SECOND_STATEMENT_TEXT =
+  'Gegenprobe: Zweite Aussage der Test-Runtime zur ersten gepackten Frage.';
+export const TEST_RUNTIME_STATEMENT_TEXTS = [
+  TEST_RUNTIME_STATEMENT_TEXT,
+  TEST_RUNTIME_SECOND_STATEMENT_TEXT,
+] as const;
 export const TEST_RUNTIME_MODEL_VERSION = 'e2e-test-runtime';
 /** Pfad des Legacy-Text-Endpunkts; die volle URL kommt nach `QA_SUMMARY_INFERENCE_URL`. */
 export const TEST_RUNTIME_LEGACY_PATH = '/legacy/qa-summary';
-/** Erkennungszeichen der Legacy-Aussage der Test-Runtime. */
+/** Erkennungszeichen der beiden Legacy-Aussagen der Test-Runtime (Form wie oben). */
 export const TEST_RUNTIME_LEGACY_STATEMENT_TEXT =
-  'Legacy-Aussage der Test-Runtime zur ersten gesendeten Quelle.';
+  'Legacy-Testlauf: Aussage der Test-Runtime zur ersten gesendeten Quelle.';
+export const TEST_RUNTIME_LEGACY_SECOND_STATEMENT_TEXT =
+  'Legacy-Gegenprobe: Zweite Aussage der Test-Runtime zur ersten gesendeten Quelle.';
+export const TEST_RUNTIME_LEGACY_STATEMENT_TEXTS = [
+  TEST_RUNTIME_LEGACY_STATEMENT_TEXT,
+  TEST_RUNTIME_LEGACY_SECOND_STATEMENT_TEXT,
+] as const;
 
 export type RecordedRuntimeRequest = {
   readonly method: string;
@@ -95,17 +113,19 @@ export function firstQaQuestionSourceId(rawBody: string): string {
   return source.id;
 }
 
-/** Gültige `QaSummaryModelOutputV2` im Antwortformat des Clients (Status `ready`). */
+/**
+ * Gültige `QaSummaryModelOutputV2` im Antwortformat des Clients (Status `ready`):
+ * zwei Aussagen, beide an die erste gesendete `qa-question`-Quelle gebunden.
+ */
 export function defaultCompletionBody(rawBody: string): string {
+  const sourceId = firstQaQuestionSourceId(rawBody);
   const content = {
     schemaVersion: QA_SUMMARY_V2_SCHEMA_VERSION,
     taskType: 'qa_summary',
     outputContract: QA_SUMMARY_MODEL_OUTPUT_V2_CONTRACT_VERSION,
     output: {
       status: 'ready',
-      statements: [
-        { text: TEST_RUNTIME_STATEMENT_TEXT, sourceIds: [firstQaQuestionSourceId(rawBody)] },
-      ],
+      statements: TEST_RUNTIME_STATEMENT_TEXTS.map((text) => ({ text, sourceIds: [sourceId] })),
       suggestedNextSteps: [],
       limitations: [],
       modelVersion: TEST_RUNTIME_MODEL_VERSION,
@@ -124,13 +144,15 @@ export function legacySourceIdsOf(rawBody: string): string[] {
   return ids as string[];
 }
 
-/** Gültige Legacy-`QaSummaryModelOutput` (Status `ready`), die die erste gesendete Quelle zitiert. */
+/** Gültige Legacy-`QaSummaryModelOutput` (Status `ready`): zwei Aussagen zur ersten gesendeten Quelle. */
 export function defaultLegacyOutput(rawBody: string): QaSummaryModelOutput {
+  const sourceId = legacySourceIdsOf(rawBody)[0]!;
   return {
     status: 'ready',
-    statements: [
-      { text: TEST_RUNTIME_LEGACY_STATEMENT_TEXT, sourceIds: [legacySourceIdsOf(rawBody)[0]!] },
-    ],
+    statements: TEST_RUNTIME_LEGACY_STATEMENT_TEXTS.map((text) => ({
+      text,
+      sourceIds: [sourceId],
+    })),
     suggestedNextSteps: [],
     limitations: [],
     modelVersion: TEST_RUNTIME_MODEL_VERSION,

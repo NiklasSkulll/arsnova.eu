@@ -59,9 +59,9 @@ import { qaRouter } from '../routers/qa';
 import { quickFeedbackRouter } from '../routers/quickFeedback';
 import {
   TEST_RUNTIME_LEGACY_PATH,
-  TEST_RUNTIME_LEGACY_STATEMENT_TEXT,
+  TEST_RUNTIME_LEGACY_STATEMENT_TEXTS,
   TEST_RUNTIME_MODEL_VERSION,
-  TEST_RUNTIME_STATEMENT_TEXT,
+  TEST_RUNTIME_STATEMENT_TEXTS,
   TEST_RUNTIME_TOKEN,
   closedLoopbackUrl,
   completionEnvelope,
@@ -315,7 +315,7 @@ describe.skipIf(!RUN_PG)(
       expect(messages[1]!.content).toBe(QA_SUMMARY_TECHNICAL_DEFINITION_TEXT);
       expect(messages[1]!.content).toContain(shown.definitionVersion);
 
-      // (4) ready, full-context, Aussage an eine gepackte Q&A-Quelle gebunden.
+      // (4) ready, full-context, beide Aussagen an dieselbe gepackte Q&A-Quelle gebunden.
       const result = final.result!;
       expect(result.status).toBe('ready');
       expect(result.execution).toEqual({
@@ -323,9 +323,11 @@ describe.skipIf(!RUN_PG)(
         effectiveMode: 'full-context',
         fallback: null,
       });
-      expect(result.statements).toHaveLength(1);
-      expect(result.statements[0]!.text).toBe(TEST_RUNTIME_STATEMENT_TEXT);
+      expect(result.statements.map((statement) => statement.text)).toEqual([
+        ...TEST_RUNTIME_STATEMENT_TEXTS,
+      ]);
       const [citedId] = result.statements[0]!.sourceIds;
+      expect(result.statements[1]!.sourceIds).toEqual([citedId]);
       const packedSource = shown.promptContext.context.sources.find(
         (source) => source.id === citedId,
       );
@@ -562,7 +564,7 @@ describe.skipIf(!RUN_PG)(
         effectiveMode: 'extractive',
         fallback: { mode: 'extractive', reason: 'invalid_response' },
       });
-      expectNoRuntimeStatement(result, [foreignText, TEST_RUNTIME_STATEMENT_TEXT]);
+      expectNoRuntimeStatement(result, [foreignText, ...TEST_RUNTIME_STATEMENT_TEXTS]);
       // Queue danach frei.
       await waitForQaSummaryIdleForTests(TERMINAL_WAIT_MS);
       expect(getQaSummaryQueueMetrics()).toMatchObject({ queueLength: 0, running: 0, failed: 0 });
@@ -620,7 +622,7 @@ describe.skipIf(!RUN_PG)(
         effectiveMode: 'extractive',
         fallback: { mode: 'extractive', reason: 'unavailable' },
       });
-      expectNoRuntimeStatement(final.result!, [TEST_RUNTIME_STATEMENT_TEXT]);
+      expectNoRuntimeStatement(final.result!, TEST_RUNTIME_STATEMENT_TEXTS);
     });
 
     it('bricht eine zu langsame Runtime nach dem Client-Timeout ab und meldet den Grund timeout', async () => {
@@ -647,7 +649,7 @@ describe.skipIf(!RUN_PG)(
         effectiveMode: 'extractive',
         fallback: { mode: 'extractive', reason: 'timeout' },
       });
-      expectNoRuntimeStatement(final.result!, [TEST_RUNTIME_STATEMENT_TEXT]);
+      expectNoRuntimeStatement(final.result!, TEST_RUNTIME_STATEMENT_TEXTS);
       // Der Queue-Timeout hat nicht gegriffen.
       expect(getQaSummaryQueueMetrics().timeouts).toBe(0);
       expect(totalMs).toBeLessThan(timeoutMs + 2_000);
@@ -675,7 +677,7 @@ describe.skipIf(!RUN_PG)(
         effectiveMode: 'extractive',
         fallback: { reason: 'source_changed' },
       });
-      expectNoRuntimeStatement(stored, [TEST_RUNTIME_STATEMENT_TEXT]);
+      expectNoRuntimeStatement(stored, TEST_RUNTIME_STATEMENT_TEXTS);
       expect(stored.snapshotHash).toBe(fresh.promptContext.snapshotHash);
 
       const completions = completionRequests(runtime);
@@ -691,7 +693,7 @@ describe.skipIf(!RUN_PG)(
         effectiveMode: 'extractive',
         fallback: { reason: 'source_changed' },
       });
-      expectNoRuntimeStatement(result, [TEST_RUNTIME_STATEMENT_TEXT]);
+      expectNoRuntimeStatement(result, TEST_RUNTIME_STATEMENT_TEXTS);
       expect(result.snapshotHash).toBe(fresh.promptContext.snapshotHash);
     });
 
@@ -730,7 +732,7 @@ describe.skipIf(!RUN_PG)(
           effectiveMode: 'extractive',
           fallback: { reason: 'source_changed' },
         });
-        expectNoRuntimeStatement(result, [TEST_RUNTIME_STATEMENT_TEXT]);
+        expectNoRuntimeStatement(result, TEST_RUNTIME_STATEMENT_TEXTS);
         expect(result.sources.map((source) => source.id)).not.toContain(deletedId);
         for (const statement of [...result.statements, ...result.suggestedNextSteps]) {
           expect(statement.sourceIds).not.toContain(deletedId);
@@ -774,7 +776,7 @@ describe.skipIf(!RUN_PG)(
         fallback: null,
       });
       expect(final.result!.statements.map((statement) => statement.text)).toEqual([
-        TEST_RUNTIME_STATEMENT_TEXT,
+        ...TEST_RUNTIME_STATEMENT_TEXTS,
       ]);
     });
 
@@ -791,7 +793,7 @@ describe.skipIf(!RUN_PG)(
         effectiveMode: 'extractive',
         fallback: { mode: 'extractive', reason: 'busy' },
       });
-      expectNoRuntimeStatement(final.result!, [TEST_RUNTIME_STATEMENT_TEXT]);
+      expectNoRuntimeStatement(final.result!, TEST_RUNTIME_STATEMENT_TEXTS);
       // Die Runtime hat nur die Slot-Abfrage gesehen, keinen POST.
       expect(runtime.requests.map((request) => `${request.method} ${request.path}`)).toEqual([
         'GET /slots?fail_on_no_slot=1',
@@ -855,7 +857,7 @@ describe.skipIf(!RUN_PG)(
         effectiveMode: 'extractive',
         fallback: { mode: 'extractive', reason: 'queue_full' },
       });
-      expectNoRuntimeStatement(third.result!, [TEST_RUNTIME_STATEMENT_TEXT]);
+      expectNoRuntimeStatement(third.result!, TEST_RUNTIME_STATEMENT_TEXTS);
 
       // (3) Jobs 1 und 2 enden ready über die Runtime.
       for (const room of rooms.slice(0, 2)) {
@@ -989,7 +991,7 @@ describe.skipIf(!RUN_PG)(
       });
       expect(result.modelVersion).toBe(TEST_RUNTIME_MODEL_VERSION);
       expect(result.statements.map((statement) => statement.text)).toEqual([
-        TEST_RUNTIME_LEGACY_STATEMENT_TEXT,
+        ...TEST_RUNTIME_LEGACY_STATEMENT_TEXTS,
       ]);
       // Jede Quellen-ID einer Aussage ist eine gepackte (und gesendete) Quelle.
       const packedIds = new Set(shown.promptContext.context.sources.map((source) => source.id));
@@ -1013,7 +1015,10 @@ describe.skipIf(!RUN_PG)(
         legacyOutput: (body) => ({
           status: 'ready',
           statements: [
-            { text: TEST_RUNTIME_LEGACY_STATEMENT_TEXT, sourceIds: [legacySourceIdsOf(body)[0]!] },
+            ...TEST_RUNTIME_LEGACY_STATEMENT_TEXTS.map((text) => ({
+              text,
+              sourceIds: [legacySourceIdsOf(body)[0]!],
+            })),
             { text: unknownText, sourceIds: [unknownId] },
           ],
           suggestedNextSteps: [],
@@ -1031,7 +1036,7 @@ describe.skipIf(!RUN_PG)(
       expect(result.status).toBe('ready');
       expect(result.execution.effectiveMode).toBe('legacy-text');
       expect(result.statements.map((statement) => statement.text)).toEqual([
-        TEST_RUNTIME_LEGACY_STATEMENT_TEXT,
+        ...TEST_RUNTIME_LEGACY_STATEMENT_TEXTS,
       ]);
       expect(result.limitations).toContain(DROPPED_UNSOURCED_QA_SUMMARY_LIMITATION);
       // Die unbekannte ID fehlt überall im Ergebnis, ebenso der Text ihrer Aussage.
@@ -1084,20 +1089,21 @@ describe.skipIf(!RUN_PG)(
       const first = await preview(room.sessionId);
       const second = await preview(room.sessionId);
 
-      // Die Blitzlicht-Quelle ist gepackt und enthält keine Stimme.
-      const feedbackSource = first.promptContext.context.sources.find(
-        (source) => source.kind === 'feedback-aggregate',
+      // Seit upstream `96b2e46e` (Auswahl `topics-first`, neue Force-Fit-Stufen) fällt die
+      // Blitzlicht-Quelle der Referenzfixture aus Budgetgründen aus dem gepackten Kontext;
+      // das Modell sieht sie nicht (Trockenlauf 2026-11-06, Protokoll).
+      expect(
+        first.promptContext.context.sources.some((source) => source.kind === 'feedback-aggregate'),
+      ).toBe(false);
+      expect(first.promptContext.budget.truncations).toContainEqual(
+        expect.objectContaining({ section: 'feedback', reason: 'token-budget' }),
       );
-      expect(feedbackSource).toMatchObject({ population: { included: 0 } });
-      // Zwei Aufbauten ohne Datenänderung: anderer Hash, andere Revision, anderes Fensterende …
+      // Zwei Aufbauten ohne Datenänderung: trotzdem anderer Hash und andere Revision …
       expect(second.promptContext.snapshotHash).not.toBe(first.promptContext.snapshotHash);
       expect(second.promptContext.context.meta.sourceRevision).not.toBe(
         first.promptContext.context.meta.sourceRevision,
       );
-      expect(feedbackWindowEnd(second.promptContext.context)).not.toBe(
-        feedbackWindowEnd(first.promptContext.context),
-      );
-      // … sonst ist der gepackte Kontext gleich. Der Packing-Cache trifft nicht.
+      // … der gepackte Kontext ist sonst gleich. Der Packing-Cache trifft nicht.
       expect(withoutBuildTimeFields(second.promptContext.context)).toEqual(
         withoutBuildTimeFields(first.promptContext.context),
       );
@@ -1113,7 +1119,7 @@ describe.skipIf(!RUN_PG)(
         effectiveMode: 'extractive',
         fallback: { reason: 'source_changed' },
       });
-      expectNoRuntimeStatement(stored, [TEST_RUNTIME_STATEMENT_TEXT]);
+      expectNoRuntimeStatement(stored, TEST_RUNTIME_STATEMENT_TEXTS);
 
       // Jeder Abruf von qa.summaryRuntime baut neu und bindet das Ergebnis mit neuem Hash.
       const polledOnce = await waitForTerminal(room.sessionId);
