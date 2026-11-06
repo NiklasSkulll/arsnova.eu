@@ -113,7 +113,7 @@ Weitere Ursachenketten stehen in [1C-005](adr/1C-005-e15-widerlegung-bleibt-steh
   - Teil 3: „steht aus“; bis dahin sind die Einordnung zu M7, die Entscheidung zu E15 und die Issue-Entwürfe Vorschläge ([KI-Nutzung Teil 3](evidenz/1C/2026-10-24-teil3.md#ki-nutzung)). Betrifft [1C-005](adr/1C-005-e15-widerlegung-bleibt-stehen.md), [1C-016](adr/1C-016-zeitabhaengiger-hash-blitzlicht.md) (Optionswahl) und [1C-017](adr/1C-017-m7-empfehlung-zurueckgehalten.md), dazu die Ausführung von M7b und M7c ohne vorherige Freigabe.
   - Laborläufe: Entscheidungen folgen den vorab freigegebenen Regeln; eine Ergebnisprüfung mit Datum steht in den Protokollen nicht.
   - Abschlussdokumentation: Die Freigabe der neuen Texte (Bericht, ADRs, Eigenanteil) steht aus ([Eigenanteil](1C-eigenanteil.md#eigenanteil-je-artefakt)).
-- **Frage an den Autor: Nachlauf auf dem aktuellen upstream-Stand?** Der Prüfer verlangte per E-Mail, Fork und Clone vor der Auswertung zu aktualisieren ([Rahmendokument, Frage 3](00-rahmen-und-pruefung.md#offene-fragen-an-den-prüfer)). Gemessen wurde `main@9f230abc` (Commit vom 2026-11-04, 16:49). Danach kamen am 2026-11-05 zwischen 12:11 und 13:16 die Commits `12f1d8e4`, `a998ada0` und der Merge `96b2e46e` (PR #643). Laut `git diff 9f230abc upstream/main` ändern sie den gemessenen Pfad inhaltlich: Instruktion `qa-summary-technical-handoff-v2` → `-v5`, Grammatik `statements` `maxItems` 3 → `minItems` 2 / `maxItems` 4, ein neues Quality-Gate (`qaSummaryQuality.ts`, Fallback `invalid_response`), Fragekandidaten bei kleinem Korpus 4 → 3 und neue Force-Fit-Stufen ([ADR 1C-022](adr/1C-022-codestand-eingefroren-9f230abc.md#belege)). Upstream nennt die 56,9 s am Produktionshost „historisch“ und verlangt für v5 eine neue Messung. Ein modellfreier Trockenlauf am neuen Stand wie in Labor-Design 3.4 ist nicht gemacht und wäre der erste Schritt eines Nachlaufs. Der Codestand wurde bewusst eingefroren, damit Laptop- und PC-Lauf denselben Code messen ([ADR 1C-022](adr/1C-022-codestand-eingefroren-9f230abc.md)). Defaults unverändert, die gemessenen Inferenzzeiten (Grundlage von A4) und das Speicherwachstum je Auftrag (L6, U1) nicht übertragbar, weil sie an der Tokenzahl hängen; L1, L2, L4 und L5 sind dort nicht geprüft; ob ein Nachlauf auf dem neuen Stand erfolgt, entscheidet der Autor.
+- **Frage an den Autor: Nachlauf auf dem aktuellen upstream-Stand?** Der Prüfer verlangte per E-Mail, Fork und Clone vor der Auswertung zu aktualisieren ([Rahmendokument, Frage 3](00-rahmen-und-pruefung.md#offene-fragen-an-den-prüfer)). Gemessen wurde `main@9f230abc` (Commit vom 2026-11-04, 16:49). Danach kamen am 2026-11-05 zwischen 12:11 und 13:16 die Commits `12f1d8e4`, `a998ada0` und der Merge `96b2e46e` (PR #643). Laut `git diff 9f230abc upstream/main` ändern sie den gemessenen Pfad inhaltlich: Instruktion `qa-summary-technical-handoff-v2` → `-v5`, Grammatik `statements` `maxItems` 3 → `minItems` 2 / `maxItems` 4, ein neues Quality-Gate (`qaSummaryQuality.ts`, Fallback `invalid_response`), Fragekandidaten bei kleinem Korpus 4 → 3 und neue Force-Fit-Stufen ([ADR 1C-022](adr/1C-022-codestand-eingefroren-9f230abc.md#belege)). Upstream nennt die 56,9 s am Produktionshost „historisch“ und verlangt für v5 eine neue Messung. Ein modellfreier Trockenlauf am neuen Stand wie in Labor-Design 3.4 ist nicht gemacht und wäre der erste Schritt eines Nachlaufs. _Aktualisiert 2026-11-06:_ Der Trockenlauf ist nachgeholt auf `44c0a796` ([Protokoll](evidenz/1C/2026-11-06-trockenlauf-upstream.md)): Vorschau = Nutzlast und Hash-Grenze halten, T3.1 besteht weiter und trifft dort auch einen aus Budgetgründen nicht gesendeten Blitzlicht-Bereich; die Test-Runtime besteht das neue Quality-Gate nicht (11 von 20 E2E-Tests rot, Ursache Testvertrag). Der Autor hat einen Nachlauf beschlossen; Design und Lauf folgen. Der Codestand wurde bewusst eingefroren, damit Laptop- und PC-Lauf denselben Code messen ([ADR 1C-022](adr/1C-022-codestand-eingefroren-9f230abc.md)). Defaults unverändert, die gemessenen Inferenzzeiten (Grundlage von A4) und das Speicherwachstum je Auftrag (L6, U1) nicht übertragbar, weil sie an der Tokenzahl hängen; L1, L2, L4 und L5 sind dort nicht geprüft; ob ein Nachlauf auf dem neuen Stand erfolgt, entscheidet der Autor.
 - **Nicht geprüft:** die Wirkung der upstream-Commits nach `9f230abc` auf den 1C-Pfad ([ADR 1C-001](adr/1C-001-baseline-aktueller-main.md#alternativen)); der Anteil des Proxys an den Laborzeiten; wie oft Voting-Raten und live Blitzlicht-Runden in echten Vorlesungen auftreten.
 
 ## 10. Landkarte der 1C-Dateien
@@ -148,39 +148,41 @@ Weitere Ursachenketten stehen in [1C-005](adr/1C-005-e15-widerlegung-bleibt-steh
 
 **Evidenz** (`evidenz/1C/`)
 
-| Datei                                                                                     | Zweck                                                                    |
-| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| [`2026-10-24-tests.md`](evidenz/1C/2026-10-24-tests.md)                                   | Protokoll Teil 1: T1–T5 mit Mutationsproben, Befund T2.3                 |
-| [`2026-10-24-teil2.md`](evidenz/1C/2026-10-24-teil2.md)                                   | Protokoll Teil 2: E1–E9, M1–M5, V1, Entscheidungen 1–4                   |
-| [`2026-10-24-teil3.md`](evidenz/1C/2026-10-24-teil3.md)                                   | Protokoll Teil 3: E10–E15, Befund T3.1, M6, M7, M7b, M7c                 |
-| [`2026-11-05-labor.md`](evidenz/1C/2026-11-05-labor.md)                                   | Protokoll Laborlauf Laptop, L1–L5                                        |
-| [`2026-11-05-labor-pc.md`](evidenz/1C/2026-11-05-labor-pc.md)                             | Protokoll Zusatzlauf PC mit Produktionslimits, L1–L6, Ursachenversuch U1 |
-| [`e15-widerlegt.patch`](evidenz/1C/e15-widerlegt.patch)                                   | nicht eingecheckter Test zum widerlegten Fall E15                        |
-| [`issue-cache-ram-entwurf.md`](evidenz/1C/issue-cache-ram-entwurf.md)                     | Issue-Entwurf `--cache-ram` (nicht angelegt)                             |
-| [`issue-t2-3-entwurf.md`](evidenz/1C/issue-t2-3-entwurf.md)                               | Issue-Entwurf T2.3 (nicht angelegt)                                      |
-| [`issue-t3-1-entwurf.md`](evidenz/1C/issue-t3-1-entwurf.md)                               | Issue-Entwurf T3.1 (nicht angelegt)                                      |
-| [`labor-runbook.md`](evidenz/1C/labor-runbook.md)                                         | Runbook für Laborlauf, Kalibrierung und U1                               |
-| [`labor-lauf.sh`](evidenz/1C/labor-lauf.sh)                                               | Laufskript für Kalibrierung, Lauf und Cacheversuch                       |
-| [`labor-produktionslimits.override.yml`](evidenz/1C/labor-produktionslimits.override.yml) | Compose-Override mit den Limits des Inferenz-Hosts (Zusatzlauf, U1)      |
-| [`labor-cache-aus.override.yml`](evidenz/1C/labor-cache-aus.override.yml)                 | Compose-Override für den U1-Arm „aus“ (`LLAMA_ARG_CACHE_RAM=0`)          |
+| Datei                                                                                     | Zweck                                                                       |
+| ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| [`2026-10-24-tests.md`](evidenz/1C/2026-10-24-tests.md)                                   | Protokoll Teil 1: T1–T5 mit Mutationsproben, Befund T2.3                    |
+| [`2026-10-24-teil2.md`](evidenz/1C/2026-10-24-teil2.md)                                   | Protokoll Teil 2: E1–E9, M1–M5, V1, Entscheidungen 1–4                      |
+| [`2026-10-24-teil3.md`](evidenz/1C/2026-10-24-teil3.md)                                   | Protokoll Teil 3: E10–E15, Befund T3.1, M6, M7, M7b, M7c                    |
+| [`2026-11-05-labor.md`](evidenz/1C/2026-11-05-labor.md)                                   | Protokoll Laborlauf Laptop, L1–L5                                           |
+| [`2026-11-05-labor-pc.md`](evidenz/1C/2026-11-05-labor-pc.md)                             | Protokoll Zusatzlauf PC mit Produktionslimits, L1–L6, Ursachenversuch U1    |
+| [`2026-11-06-trockenlauf-upstream.md`](evidenz/1C/2026-11-06-trockenlauf-upstream.md)     | _Aktualisiert 2026-11-06:_ modellfreier Trockenlauf auf upstream `44c0a796` |
+| [`e15-widerlegt.patch`](evidenz/1C/e15-widerlegt.patch)                                   | nicht eingecheckter Test zum widerlegten Fall E15                           |
+| [`issue-cache-ram-entwurf.md`](evidenz/1C/issue-cache-ram-entwurf.md)                     | Issue-Entwurf `--cache-ram` (nicht angelegt)                                |
+| [`issue-t2-3-entwurf.md`](evidenz/1C/issue-t2-3-entwurf.md)                               | Issue-Entwurf T2.3 (nicht angelegt)                                         |
+| [`issue-t3-1-entwurf.md`](evidenz/1C/issue-t3-1-entwurf.md)                               | Issue-Entwurf T3.1 (nicht angelegt)                                         |
+| [`labor-runbook.md`](evidenz/1C/labor-runbook.md)                                         | Runbook für Laborlauf, Kalibrierung und U1                                  |
+| [`labor-lauf.sh`](evidenz/1C/labor-lauf.sh)                                               | Laufskript für Kalibrierung, Lauf und Cacheversuch                          |
+| [`labor-produktionslimits.override.yml`](evidenz/1C/labor-produktionslimits.override.yml) | Compose-Override mit den Limits des Inferenz-Hosts (Zusatzlauf, U1)         |
+| [`labor-cache-aus.override.yml`](evidenz/1C/labor-cache-aus.override.yml)                 | Compose-Override für den U1-Arm „aus“ (`LLAMA_ARG_CACHE_RAM=0`)             |
 
 **Rohdaten und Auswertung** (`evidenz/1C/messung/`)
 
-| Datei                                                                                                   | Zweck                                                  |
-| ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| [`auswertung.mjs`](evidenz/1C/messung/auswertung.mjs)                                                   | Auswertungsskript aller Messdateien                    |
-| [`2026-10-24-messung.json.gz`](evidenz/1C/messung/2026-10-24-messung.json.gz)                           | Teil 2, Primärlauf                                     |
-| [`2026-10-24-messung-robustheit.json.gz`](evidenz/1C/messung/2026-10-24-messung-robustheit.json.gz)     | Teil 2, Robustheitslauf                                |
-| [`2026-10-24-messung-teil3.json.gz`](evidenz/1C/messung/2026-10-24-messung-teil3.json.gz)               | Teil 3, M6 und M7                                      |
-| [`2026-10-24-messung-teil3-m7b.json.gz`](evidenz/1C/messung/2026-10-24-messung-teil3-m7b.json.gz)       | Teil 3, M7b (nicht unabhängig von M7)                  |
-| [`2026-10-24-messung-teil3-m7c.json.gz`](evidenz/1C/messung/2026-10-24-messung-teil3-m7c.json.gz)       | Teil 3, M7c (unabhängige Seeds)                        |
-| [`2026-10-25-probelauf-1.json.gz`](evidenz/1C/messung/2026-10-25-probelauf-1.json.gz)                   | Probelauf vor M6/M7, nicht ausgewertet                 |
-| [`2026-10-25-probelauf-2.json.gz`](evidenz/1C/messung/2026-10-25-probelauf-2.json.gz)                   | Probelauf vor M6/M7, nicht ausgewertet                 |
-| [`2026-11-05-labor.json.gz`](evidenz/1C/messung/2026-11-05-labor.json.gz)                               | Laborlauf Laptop                                       |
-| [`2026-11-05-labor-pc.json.gz`](evidenz/1C/messung/2026-11-05-labor-pc.json.gz)                         | Zusatzlauf PC                                          |
-| [`2026-11-05-speicher-pc.csv`](evidenz/1C/messung/2026-11-05-speicher-pc.csv)                           | Speicherverlauf der Runtime im PC-Lauf (L6), 15-s-Takt |
-| [`2026-11-05-cacheversuch-standard-pc.csv`](evidenz/1C/messung/2026-11-05-cacheversuch-standard-pc.csv) | U1, Arm „standard“                                     |
-| [`2026-11-05-cacheversuch-aus-pc.csv`](evidenz/1C/messung/2026-11-05-cacheversuch-aus-pc.csv)           | U1, Arm „aus“                                          |
+| Datei                                                                                                   | Zweck                                                         |
+| ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| [`auswertung.mjs`](evidenz/1C/messung/auswertung.mjs)                                                   | Auswertungsskript aller Messdateien                           |
+| [`2026-10-24-messung.json.gz`](evidenz/1C/messung/2026-10-24-messung.json.gz)                           | Teil 2, Primärlauf                                            |
+| [`2026-10-24-messung-robustheit.json.gz`](evidenz/1C/messung/2026-10-24-messung-robustheit.json.gz)     | Teil 2, Robustheitslauf                                       |
+| [`2026-10-24-messung-teil3.json.gz`](evidenz/1C/messung/2026-10-24-messung-teil3.json.gz)               | Teil 3, M6 und M7                                             |
+| [`2026-10-24-messung-teil3-m7b.json.gz`](evidenz/1C/messung/2026-10-24-messung-teil3-m7b.json.gz)       | Teil 3, M7b (nicht unabhängig von M7)                         |
+| [`2026-10-24-messung-teil3-m7c.json.gz`](evidenz/1C/messung/2026-10-24-messung-teil3-m7c.json.gz)       | Teil 3, M7c (unabhängige Seeds)                               |
+| [`2026-10-25-probelauf-1.json.gz`](evidenz/1C/messung/2026-10-25-probelauf-1.json.gz)                   | Probelauf vor M6/M7, nicht ausgewertet                        |
+| [`2026-10-25-probelauf-2.json.gz`](evidenz/1C/messung/2026-10-25-probelauf-2.json.gz)                   | Probelauf vor M6/M7, nicht ausgewertet                        |
+| [`2026-11-05-labor.json.gz`](evidenz/1C/messung/2026-11-05-labor.json.gz)                               | Laborlauf Laptop                                              |
+| [`2026-11-05-labor-pc.json.gz`](evidenz/1C/messung/2026-11-05-labor-pc.json.gz)                         | Zusatzlauf PC                                                 |
+| [`2026-11-05-speicher-pc.csv`](evidenz/1C/messung/2026-11-05-speicher-pc.csv)                           | Speicherverlauf der Runtime im PC-Lauf (L6), 15-s-Takt        |
+| [`2026-11-05-cacheversuch-standard-pc.csv`](evidenz/1C/messung/2026-11-05-cacheversuch-standard-pc.csv) | U1, Arm „standard“                                            |
+| [`2026-11-05-cacheversuch-aus-pc.csv`](evidenz/1C/messung/2026-11-05-cacheversuch-aus-pc.csv)           | U1, Arm „aus“                                                 |
+| [`2026-11-06-trockenlauf-upstream.json.gz`](evidenz/1C/messung/2026-11-06-trockenlauf-upstream.json.gz) | _Aktualisiert 2026-11-06:_ Trockenlauf upstream, Test-Runtime |
 
 **Diagramme** (`diagrams/`; je Quelle `.mmd` mit gerenderter `.light.svg` und `.dark.svg`)
 
