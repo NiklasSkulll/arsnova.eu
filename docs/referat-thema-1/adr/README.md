@@ -87,5 +87,6 @@ Kosten, Risiken, Gültigkeitsgrenzen, offene Punkte, zugehörige Issue-Entwürfe
 | [1C-022](1C-022-codestand-eingefroren-9f230abc.md)               | Codestand beider Laborläufe eingefroren auf `main@9f230abc`                                 | methodisch     | Methodik      |
 | [1C-023](1C-023-release-timeout-90-s-zu-kurz.md)                 | Release-Timeout von 90 s reicht für CPU-Inferenz auf beiden Laborrechnern nicht (A4)        | empfohlen      | Betrieb       |
 | [1C-024](1C-024-prompt-cache-ram-begrenzen.md)                   | Prompt-Cache `--cache-ram` begrenzen oder abschalten (L6, U1)                               | empfohlen      | Konfiguration |
+| [1C-025](1C-025-codestand-auf-upstream-aktualisiert.md)          | Codestand auf upstream `44c0a796` aktualisiert, Test-Runtime an das Quality-Gate angepasst  | methodisch     | Methodik      |
 
-Nummern ohne Datei (1C-006–009, 1C-018, 1C-025–029) sind frei; die Lücke ist gewollt, damit der Nummernplan der Bereiche erhalten bleibt.
+Nummern ohne Datei (1C-006–009, 1C-018, 1C-026–029) sind frei; die Lücke ist gewollt, damit der Nummernplan der Bereiche erhalten bleibt.

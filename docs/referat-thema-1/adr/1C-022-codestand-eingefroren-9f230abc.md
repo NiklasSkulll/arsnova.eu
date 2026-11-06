@@ -1,6 +1,6 @@
 # 1C-022: Codestand beider Laborläufe eingefroren auf `main@9f230abc`
 
-- **Status:** methodisch (2026-11-05)
+- **Status:** methodisch (2026-11-05); _aktualisiert 2026-11-06:_ für spätere Läufe abgelöst durch [1C-025](1C-025-codestand-auf-upstream-aktualisiert.md), für die Läufe vom 2026-11-05 weiter gültig
 - **Kategorie:** Methodik
 
 ## Kontext
