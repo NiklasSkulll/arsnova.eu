@@ -293,7 +293,7 @@
           }
         </div>
 
-        @if (showHostViewControls() && activeChannel() !== 'quiz' && showPresenterViewButton()) {
+        @if (showHostViewControls() && activeChannel() !== 'quiz' && projectionControlsOffered()) {
           <div class="session-host__view-controls session-host__view-controls--inline">
             <button
               mat-icon-button
@@ -711,7 +711,7 @@
                   </figure>
                 }
                 <div class="session-lobby__actions session-lobby__actions--hero">
-                  @if (activeChannel() !== 'quiz' && showPresenterViewButton()) {
+                  @if (activeChannel() !== 'quiz' && projectionControlsOffered()) {
                     <button
                       matButton="filled"
                       type="button"
@@ -726,7 +726,7 @@
                   }
                   <button
                     [matButton]="
-                      activeChannel() !== 'quiz' && showPresenterViewButton() ? 'tonal' : 'filled'
+                      activeChannel() !== 'quiz' && projectionControlsOffered() ? 'tonal' : 'filled'
                     "
                     type="button"
                     data-testid="lobby-start-session"
@@ -3785,6 +3785,20 @@
                   </summary>
                   <div class="session-host__extra-content">
                     @if (freetextWordCloudMaximized()) {
+                      @if (moderationCompassReturn()) {
+                        <button
+                          mat-button
+                          type="button"
+                          class="session-host__extra-return-to-compass"
+                          data-testid="freetext-word-cloud-return-to-compass"
+                          (click)="returnToModerationCompass()"
+                        >
+                          <mat-icon aria-hidden="true">arrow_back</mat-icon>
+                          <span i18n="@@sessionHost.moderationReturnToCompass"
+                            >Zurück zum Kompass</span
+                          >
+                        </button>
+                      }
                       <button
                         mat-icon-button
                         type="button"
@@ -3800,7 +3814,9 @@
                       <mat-button-toggle-group
                         class="session-host__extra-analysis-toggle"
                         name="freetext-word-cloud-host-mode"
+                        [hideSingleSelectionIndicator]="true"
                         [value]="freetextWordCloudMode()"
+                        [disabled]="wordCloudFrozen()"
                         (change)="setFreetextWordCloudMode($event.value)"
                         i18n-aria-label="@@sessionHost.wordCloudAnalysisAria"
                         aria-label="Wortwolken-Ansicht"
@@ -3815,74 +3831,95 @@
                           value="PHRASES"
                           (click)="setFreetextWordCloudMode('PHRASES')"
                           i18n="@@sessionHost.wordCloudAnalysisPhrases"
-                          >Wörter &amp; Phrasen</mat-button-toggle
+                          >Wortgruppen</mat-button-toggle
                         >
                         <mat-button-toggle
                           value="SEMANTIC"
                           (click)="setFreetextWordCloudMode('SEMANTIC')"
                           i18n="@@sessionHost.wordCloudAnalysisSemantic"
-                          >Thema</mat-button-toggle
+                          >Themen</mat-button-toggle
                         >
                       </mat-button-toggle-group>
-                      @if (freetextWordCloudMaximized()) {
-                        <button
-                          mat-icon-button
-                          type="button"
-                          class="session-host__extra-action session-host__extra-action--icon"
-                          [attr.aria-pressed]="wordCloudFrozen()"
-                          [attr.aria-label]="wordCloudFreezeLabel()"
-                          [matTooltip]="wordCloudFreezeLabel()"
-                          matTooltipTouchGestures="off"
-                          (click)="toggleWordCloudFreeze()"
-                        >
-                          <mat-icon aria-hidden="true">{{
-                            wordCloudFrozen() ? 'play_arrow' : 'pause'
-                          }}</mat-icon>
-                        </button>
-                      } @else {
-                        <button
-                          mat-button
-                          type="button"
-                          class="session-host__extra-action"
-                          [attr.aria-pressed]="wordCloudFrozen()"
-                          [attr.aria-label]="wordCloudFreezeLabel()"
-                          [matTooltip]="wordCloudFreezeLabel()"
-                          matTooltipTouchGestures="off"
-                          (click)="toggleWordCloudFreeze()"
-                        >
-                          <mat-icon aria-hidden="true">{{
-                            wordCloudFrozen() ? 'play_arrow' : 'pause_circle'
-                          }}</mat-icon>
-                          <span>{{ wordCloudFreezeLabel() }}</span>
-                        </button>
-                      }
-                      @if (freetextWordCloudShowSmoothing()) {
-                        <div class="session-host__smooth-cluster">
-                          <button
-                            mat-button
-                            type="button"
-                            class="session-host__extra-action session-host__extra-action--smooth"
-                            [class.session-host__extra-action--smooth-active]="
-                              freetextWordCloudSmoothingPressed()
-                            "
-                            [disabled]="freetextWordCloudSmoothingDisabled()"
-                            [attr.aria-pressed]="freetextWordCloudSmoothingPressed()"
-                            [attr.aria-busy]="freetextWordCloudSmoothingBusy() ? true : null"
-                            (click)="toggleFreetextWordCloudSmoothing()"
+
+                      <button
+                        mat-button
+                        type="button"
+                        class="session-host__extra-action"
+                        [attr.aria-pressed]="wordCloudFrozen()"
+                        [attr.aria-label]="wordCloudFreezeLabel()"
+                        [matTooltip]="wordCloudFreezeLabel()"
+                        matTooltipTouchGestures="off"
+                        (click)="toggleWordCloudFreeze()"
+                      >
+                        <mat-icon aria-hidden="true">{{
+                          wordCloudFrozen() ? 'play_arrow' : 'pause_circle'
+                        }}</mat-icon>
+                        <span>{{ wordCloudFreezeLabel() }}</span>
+                      </button>
+                      <details class="session-host__word-cloud-options">
+                        <summary i18n="@@wordCloud.moreOptions">Weitere Optionen</summary>
+                        <div class="session-host__word-cloud-options-body">
+                          <label
+                            class="session-host__extra-action session-host__word-cloud-language"
                           >
-                            <mat-icon aria-hidden="true">{{
-                              freetextWordCloudSmoothingIcon()
-                            }}</mat-icon>
-                            <span>{{ freetextWordCloudSmoothingLabel() }}</span>
-                          </button>
+                            <span i18n="@@wordCloud.analysisLanguage">Sprache der Beiträge:</span>
+                            <select
+                              [value]="wordCloudTermLocale()"
+                              [disabled]="wordCloudLocaleLocked()"
+                              (change)="setWordCloudLemmaLocale($any($event.target).value)"
+                            >
+                              <option value="de" lang="de">Deutsch</option>
+                              <option value="en" lang="en">English</option>
+                              <option value="fr" lang="fr">Français</option>
+                              <option value="es" lang="es">Español</option>
+                              <option value="it" lang="it">Italiano</option>
+                            </select>
+                          </label>
+                          @if (freetextWordCloudShowSmoothing()) {
+                            <div class="session-host__smooth-cluster">
+                              <button
+                                mat-button
+                                type="button"
+                                class="session-host__extra-action session-host__extra-action--smooth"
+                                [class.session-host__extra-action--smooth-active]="
+                                  freetextWordCloudSmoothingPressed()
+                                "
+                                [attr.aria-disabled]="
+                                  freetextWordCloudSmoothingDisabled() || wordCloudFrozen()
+                                    ? true
+                                    : null
+                                "
+                                [attr.aria-pressed]="freetextWordCloudSmoothingPressed()"
+                                [attr.aria-busy]="freetextWordCloudSmoothingBusy() ? true : null"
+                                (click)="toggleFreetextWordCloudSmoothing()"
+                              >
+                                <mat-icon aria-hidden="true">{{
+                                  freetextWordCloudSmoothingIcon()
+                                }}</mat-icon>
+                                <span>{{ freetextWordCloudSmoothingLabel() }}</span>
+                              </button>
+                              @if (freetextWordCloudSmoothingOptionHint(); as hint) {
+                                <p
+                                  class="session-host__extra-note"
+                                  role="status"
+                                  aria-live="polite"
+                                >
+                                  {{ hint }}
+                                </p>
+                              }
+                            </div>
+                          }
                         </div>
-                      }
+                      </details>
                       @if (freetextWordCloudShowThemeRefresh()) {
                         <button
                           mat-button
                           type="button"
                           class="session-host__extra-action session-host__extra-action--refresh"
                           data-testid="freetext-word-cloud-refresh-themes"
+                          [attr.aria-disabled]="
+                            freetextWordCloudThemeRefreshDisabled() ? true : null
+                          "
                           [attr.aria-busy]="
                             freetextWordCloudSemanticAnalysisPending() ? true : null
                           "
@@ -3893,19 +3930,28 @@
                         </button>
                       }
                     </div>
+                    <p class="session-host__word-cloud-view-hint">
+                      {{ freetextWordCloudViewHint() }}
+                    </p>
+                    @if (wordCloudFrozen()) {
+                      <p role="status" i18n="@@sessionHost.wordCloudFrozenInfo">
+                        Die Wortwolke bleibt stehen. Das Sammeln neuer Beiträge wird dadurch nicht
+                        angehalten.
+                      </p>
+                    }
                     @if (exportStatus()) {
                       <p class="session-host__export-status" role="status">{{ exportStatus() }}</p>
                     }
                     <div class="session-host__word-cloud-stage">
                       @if (
                         freetextWordCloudSemanticAnalysisPending() ||
-                        freetextWordCloudSemanticHint() ||
-                        freetextWordCloudSmoothingHint()
+                        freetextWordCloudSemanticHint()
                       ) {
                         <div
                           class="session-host__word-cloud-status"
                           [class.session-host__word-cloud-status--cover]="
-                            freetextWordCloudSemanticAnalysisPending()
+                            freetextWordCloudSemanticAnalysisPending() &&
+                            freetextWordCloudDisplayMode() !== 'SEMANTIC'
                           "
                         >
                           @if (freetextWordCloudSemanticAnalysisPending()) {
@@ -3916,11 +3962,8 @@
                               aria-busy="true"
                               [attr.aria-label]="freetextWordCloudSemanticProgressAria()"
                             >
-                              <p
-                                class="session-host__word-cloud-progress-label"
-                                i18n="@@sessionQa.wordCloudSemanticPendingLabel"
-                              >
-                                Themen werden vorbereitet.
+                              <p class="session-host__word-cloud-progress-label">
+                                {{ freetextWordCloudSemanticHint() }}
                               </p>
                               @if (freetextWordCloudSemanticWaitHint(); as waitHint) {
                                 <p class="session-host__word-cloud-progress-wait">{{ waitHint }}</p>
@@ -3929,23 +3972,10 @@
                                 class="session-host__word-cloud-progress-bar"
                                 mode="indeterminate"
                               />
-                              <p
-                                class="session-host__word-cloud-progress-fallback"
-                                i18n="@@sessionQa.wordCloudSemanticPendingFallback"
-                              >
-                                Es gelten Wörter und Phrasen.
-                              </p>
                             </div>
-                          } @else if (
-                            freetextWordCloudSemanticHint() && !freetextWordCloudShowThemeRefresh()
-                          ) {
+                          } @else if (freetextWordCloudSemanticHint()) {
                             <p class="session-host__extra-note" role="status" aria-live="polite">
                               {{ freetextWordCloudSemanticHint() }}
-                            </p>
-                          }
-                          @if (freetextWordCloudSmoothingHint()) {
-                            <p class="session-host__extra-note" role="status" aria-live="polite">
-                              {{ freetextWordCloudSmoothingHint() }}
                             </p>
                           }
                         </div>
@@ -3955,21 +3985,23 @@
                         [responses]="displayedFreetextResponses()"
                         [terms]="displayedFreetextVisibleTerms()"
                         [analysisEntries]="displayedFreetextAnalysisEntries()"
-                        [selectionScopeKey]="displayedCurrentQuestionForHost()?.questionId ?? null"
+                        [selectionScopeKey]="freetextWordCloudSelectionScope()"
                         [eyebrow]="freetextWordCloudEyebrow"
-                        [description]="freetextWordCloudDescription()"
                         [wordLabelSingular]="freetextWordCloudWordLabelSingular()"
                         [wordLabelPlural]="freetextWordCloudWordLabelPlural()"
-                        [showConfidenceFilter]="freetextWordCloudMode() === 'SEMANTIC'"
+                        [showConfidenceFilter]="freetextWordCloudDisplayMode() === 'SEMANTIC'"
+                        [exportViewLabel]="freetextExportViewLabel()"
                         [weightingHint]="null"
                         [presentationMode]="freetextWordCloudMaximized()"
                         [showMaximizeAction]="!freetextWordCloudMaximized()"
-                        [showResponsesPanel]="!freetextWordCloudMaximized()"
+                        [showResponsesPanel]="true"
                         [maximizeActionHandler]="maximizeFreetextWordCloud"
                         [showReleaseNote]="false"
                         [focusedTermLabel]="moderationCompassFocusedTerm()"
                         [analysisModelVersion]="
-                          freetextWordCloudSemanticAnalysisResult()?.modelVersion ?? null
+                          freetextWordCloudDisplayMode() === 'SEMANTIC'
+                            ? (freetextWordCloudSemanticAnalysisResult()?.modelVersion ?? null)
+                            : null
                         "
                         [labelModelId]="
                           freetextWordCloudSemanticAnalysisResult()?.labelModelId ?? null
@@ -4533,7 +4565,7 @@
                           </mat-button-toggle>
                           <mat-button-toggle value="BEST">
                             <span class="session-qa-sort-toggle__label">
-                              <span i18n="@@sessionQa.sortBest">Beste Fragen</span>
+                              <span i18n="@@sessionQa.sortBest">Klare Zustimmung</span>
                               <span
                                 class="session-qa-sort-help"
                                 role="button"
@@ -4658,7 +4690,7 @@
                             <mat-icon aria-hidden="true">{{
                               qaSortMode() === 'BEST' ? 'check' : 'auto_awesome'
                             }}</mat-icon>
-                            <span i18n="@@sessionQa.sortBest">Beste Fragen</span>
+                            <span i18n="@@sessionQa.sortBest">Klare Zustimmung</span>
                           </button>
                           <button
                             mat-menu-item
@@ -5444,7 +5476,7 @@
         </div>
       }
     </div>
-    @if (showHostViewControls() && activeChannel() === 'quiz') {
+    @if (showHostViewControls() && activeChannel() === 'quiz' && projectionControlsOffered()) {
       <div class="session-host__quiz-tools">
         <section
           class="session-host__display-tools"
@@ -5452,19 +5484,17 @@
           aria-label="Auf Bildschirm zeigen"
         >
           <div class="session-host__view-controls session-host__view-controls--labeled">
-            @if (showPresenterViewButton()) {
-              <button
-                mat-button
-                type="button"
-                class="session-host__presenter-cta"
-                data-testid="open-presenter-view"
-                (click)="openPresenterView()"
-                [attr.aria-label]="presenterViewActionLabel()"
-              >
-                <app-presenter-icon matButtonIcon />
-                <span>{{ presenterViewActionLabel() }}</span>
-              </button>
-            }
+            <button
+              mat-button
+              type="button"
+              class="session-host__presenter-cta"
+              data-testid="open-presenter-view"
+              (click)="openPresenterView()"
+              [attr.aria-label]="presenterViewActionLabel()"
+            >
+              <app-presenter-icon matButtonIcon />
+              <span>{{ presenterViewActionLabel() }}</span>
+            </button>
           </div>
         </section>
       </div>
@@ -5533,7 +5563,7 @@
           i18n-aria-label="@@sessionHost.showOnScreen"
           aria-label="Auf Bildschirm zeigen"
         >
-          @if (isFullscreenSupported()) {
+          @if (projectionControlsOffered() && isFullscreenSupported()) {
             <button
               mat-menu-item
               type="button"
@@ -5561,19 +5591,7 @@
           </button>
         </div>
       }
-      @if (!showPresenterViewButton()) {
-        <button
-          mat-menu-item
-          type="button"
-          data-testid="mobile-presenter-view-action"
-          (click)="pendingHostMoreAction.set('openPresentation')"
-          [disabled]="presenterSurfacePending()"
-        >
-          <mat-icon aria-hidden="true">present_to_all</mat-icon>
-          <span>{{ presenterViewActionLabel() }}</span>
-        </button>
-      }
-      @if (session()?.presenterSurface !== 'ended') {
+      @if (projectionControlsOffered() && session()?.presenterSurface !== 'ended') {
         <button
           mat-menu-item
           type="button"

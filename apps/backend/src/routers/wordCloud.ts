@@ -2,6 +2,7 @@ import {
   AnalyzeQaWordCloudInputSchema,
   AnalyzeQaWordCloudOutputSchema,
   type AnalyzeQaWordCloudOutput,
+  QA_WORD_CLOUD_MAX_BASIS_LABEL_CHARS,
   QA_WORD_CLOUD_MAX_EXPLANATION_MEMBERS,
   QA_WORD_CLOUD_MAX_EXPLANATION_TEXT_CHARS,
   QA_WORD_CLOUD_MAX_OUTPUT_ENTRIES,
@@ -9,6 +10,7 @@ import {
   AnalyzeWordCloudInputSchema,
   AnalyzeWordCloudOutputSchema,
   type AnalyzeWordCloudOutput,
+  getWordCloudResultDisplayMode,
   isWordCloudPhraseAnalysisVariant,
   prepareWordCloudAnalysisText,
 } from '@arsnova/shared-types';
@@ -17,7 +19,10 @@ import { TRPCError } from '@trpc/server';
 import { prisma } from '../db';
 import { logger } from '../lib/logger';
 import { buildQaRankingMetricOrderSql, buildQaRankingScoreSelectSql } from '../lib/qaRankingSql';
-import { recordLatestQaSemanticTopicSnapshot } from '../lib/qaSemanticTopicSnapshot';
+import {
+  recordLatestQaSemanticTopicSnapshot,
+  type QaSemanticTopicSnapshot,
+} from '../lib/qaSemanticTopicSnapshot';
 import {
   buildLexicalWordCloudEntries,
   buildThemeWordCloudAnalysis,
@@ -37,7 +42,10 @@ import {
   recordWordCloudAnalyzeTelemetry,
 } from '../lib/wordCloudNlpTelemetry';
 import { acquireQaWordCloudAnalysisLock } from '../lib/qaWordCloudAnalysisLock';
-import { labelSemanticWordCloudSnapshot } from '../lib/wordCloudTopicLabels';
+import {
+  getWordCloudTopicLabelTelemetry,
+  labelSemanticWordCloudSnapshot,
+} from '../lib/wordCloudTopicLabels';
 import { hostProcedure, router } from '../trpc';
 
 export interface AnalyzeWordCloudSnapshotOptions {
@@ -53,6 +61,7 @@ export interface AnalyzeWordCloudSnapshotOptions {
     output: AnalyzeWordCloudOutput,
     effectiveInput: AnalyzeWordCloudInput,
   ) => Promise<void> | void;
+  readonly onResolvedInput?: (effectiveInput: AnalyzeWordCloudInput) => void;
 }
 
 function buildAnalysisOutput(
@@ -122,13 +131,12 @@ export async function analyzeWordCloudSnapshot(
   const startedAt = Date.now();
   const cache = options.cache ?? getWordCloudAnalysisCache();
   const normalize = options.normalize ?? normalizeWordCloudItems;
-  const analyzableItems = input.items.filter(
-    (item) => prepareWordCloudAnalysisText(item.text).segments.length > 0,
-  );
+  const analyzableItems = input.items.filter(isAnalyzableWordCloudItem);
   const effectiveInput: AnalyzeWordCloudInput =
     analyzableItems.length === input.items.length
       ? input
       : AnalyzeWordCloudInputSchema.parse({ ...input, items: analyzableItems });
+  options.onResolvedInput?.(effectiveInput);
 
   const cached =
     effectiveInput.refresh === true
@@ -152,7 +160,8 @@ export async function analyzeWordCloudSnapshot(
       labelSettlement: cached.labelSettlement ?? null,
       labelModelAccepted: Boolean(cached.labelModelId),
     });
-    return options.compactOutput?.(cached) ?? cached;
+    const output = options.compactOutput?.(cached) ?? cached;
+    return { ...output, effectiveMode: getWordCloudResultDisplayMode(output) };
   }
 
   const normalized = await normalize(effectiveInput, {
@@ -169,6 +178,7 @@ export async function analyzeWordCloudSnapshot(
           tokensByItemId: normalized.tokensByItemId,
         })
       : analyzeFromNormalized(effectiveInput, normalized);
+  const topicLabelTelemetry = getWordCloudTopicLabelTelemetry(rawOutput);
   if (options.onFreshOutput) {
     try {
       await options.onFreshOutput(rawOutput, effectiveInput);
@@ -178,7 +188,8 @@ export async function analyzeWordCloudSnapshot(
       });
     }
   }
-  const output = options.compactOutput?.(rawOutput) ?? rawOutput;
+  const compact = options.compactOutput?.(rawOutput) ?? rawOutput;
+  const output = { ...compact, effectiveMode: getWordCloudResultDisplayMode(compact) };
   await cache.setSnapshot(effectiveInput, output, options.cacheScope);
   recordWordCloudAnalyzeTelemetry({
     sessionCode: effectiveInput.sessionCode,
@@ -198,12 +209,22 @@ export async function analyzeWordCloudSnapshot(
       (rawOutput.encoderCalled ?? Boolean(output.modelVersion)),
     labelSettlement: output.labelSettlement ?? null,
     labelModelAccepted: Boolean(output.labelModelId),
+    labelModelCalled: topicLabelTelemetry.labelModelCalled,
+    labelCacheHits: topicLabelTelemetry.labelCacheHits,
+    labelCacheMisses: topicLabelTelemetry.labelCacheMisses,
   });
   return output;
 }
 
-function truncateQaExplanation(value: string): string {
-  return Array.from(value).slice(0, QA_WORD_CLOUD_MAX_EXPLANATION_TEXT_CHARS).join('');
+function isAnalyzableWordCloudItem(item: AnalyzeWordCloudInput['items'][number]): boolean {
+  return prepareWordCloudAnalysisText(item.text).segments.length > 0;
+}
+
+function truncateQaExplanation(
+  value: string,
+  maxChars = QA_WORD_CLOUD_MAX_EXPLANATION_TEXT_CHARS,
+): string {
+  return Array.from(value).slice(0, maxChars).join('');
 }
 
 function compactQaWordCloudOutput(output: AnalyzeWordCloudOutput): AnalyzeWordCloudOutput {
@@ -215,17 +236,75 @@ function compactQaWordCloudOutput(output: AnalyzeWordCloudOutput): AnalyzeWordCl
         ...entry,
         key: truncateQaExplanation(entry.key),
         label: truncateQaExplanation(entry.label),
-        basisLabel: entry.basisLabel === null ? null : truncateQaExplanation(entry.basisLabel),
+        basisLabel:
+          entry.basisLabel === null
+            ? null
+            : truncateQaExplanation(entry.basisLabel, QA_WORD_CLOUD_MAX_BASIS_LABEL_CHARS),
         members: entry.members
           .slice(0, QA_WORD_CLOUD_MAX_EXPLANATION_MEMBERS)
           .map((member) => ({ ...member, text: truncateQaExplanation(member.text) })),
-        variants: entry.variants.slice(0, 1).map(truncateQaExplanation),
+        variants: entry.variants.slice(0, 1).map((variant) => truncateQaExplanation(variant)),
         memberCount,
         membersTruncated:
           entry.membersTruncated === true || memberCount > QA_WORD_CLOUD_MAX_EXPLANATION_MEMBERS,
       };
     }),
   };
+}
+
+function resolveFocusedQaWordCloudGroupKey(input: {
+  readonly focusQuestionIds: readonly string[];
+  readonly analysis: AnalyzeWordCloudOutput;
+  readonly semanticSnapshot: QaSemanticTopicSnapshot | null;
+  readonly corpusRevision: string;
+  readonly corpusItems: readonly { readonly id: string; readonly text: string }[];
+}): string | null {
+  if (input.focusQuestionIds.length === 0) {
+    return null;
+  }
+  const focusIds = new Set(input.focusQuestionIds);
+  const direct = input.analysis.entries.find((entry) =>
+    entry.members.some((member) => focusIds.has(member.sourceId)),
+  );
+  if (direct) {
+    return direct.key;
+  }
+
+  const snapshot = input.semanticSnapshot;
+  if (
+    input.analysis.mode !== 'SEMANTIC' ||
+    !snapshot ||
+    snapshot.corpusRevision !== input.corpusRevision ||
+    snapshot.metric !== input.analysis.metric
+  ) {
+    return null;
+  }
+  const topic = snapshot.topics.find((candidate) =>
+    candidate.members.some((member) => focusIds.has(member.questionId)),
+  );
+  if (!topic) {
+    return null;
+  }
+
+  const labelSourceText = input.corpusItems.find(
+    (item) => item.id === topic.labelSourceQuestionId,
+  )?.text;
+  const byLabelSource = input.analysis.entries.find((entry) =>
+    entry.members.some((member) => member.sourceId === topic.labelSourceQuestionId),
+  );
+  if (byLabelSource) {
+    return byLabelSource.key;
+  }
+  if (labelSourceText) {
+    const byBasis = input.analysis.entries.find((entry) => entry.basisLabel === labelSourceText);
+    if (byBasis) {
+      return byBasis.key;
+    }
+  }
+  const modelLabel = topic.modelLabel?.text;
+  return modelLabel
+    ? (input.analysis.entries.find((entry) => entry.label === modelLabel)?.key ?? null)
+    : null;
 }
 
 function createRequestDisconnectSignal(req?: import('node:http').IncomingMessage): {
@@ -431,6 +510,7 @@ export const wordCloudRouter = router({
       const eligibleQuestionCount = Number(corpus[0]?.eligibleCount ?? 0);
       const cache = getWordCloudAnalysisCache();
       const disconnect = createRequestDisconnectSignal(ctx.req);
+      let resolvedAnalysisInput: AnalyzeWordCloudInput | null = null;
       let analysis: Omit<AnalyzeWordCloudOutput, 'entries'> & {
         entries: AnalyzeQaWordCloudOutput['entries'];
       };
@@ -454,10 +534,14 @@ export const wordCloudRouter = router({
             signal: disconnect.signal,
             compactOutput: compactQaWordCloudOutput,
             cacheScope: { sessionId: session.id },
+            onResolvedInput: (effectiveAnalysisInput) => {
+              resolvedAnalysisInput = effectiveAnalysisInput;
+            },
             onFreshOutput: async (rawAnalysis, effectiveAnalysisInput) => {
               await recordLatestQaSemanticTopicSnapshot({
                 cache,
                 scope: { sessionId: session.id },
+                analysisInput: effectiveAnalysisInput,
                 request: input,
                 analysis: rawAnalysis,
                 corpusRevision,
@@ -472,13 +556,28 @@ export const wordCloudRouter = router({
       } finally {
         disconnect.cleanup();
       }
+      const focusQuestionIds = input.focusQuestionIds ?? [];
+      const semanticSnapshot =
+        focusQuestionIds.length > 0 && input.mode === 'SEMANTIC' && resolvedAnalysisInput !== null
+          ? await cache.getQaSemanticTopicSnapshot(resolvedAnalysisInput, {
+              sessionId: session.id,
+            })
+          : null;
+      const focusedGroupKey = resolveFocusedQaWordCloudGroupKey({
+        focusQuestionIds,
+        analysis,
+        semanticSnapshot,
+        corpusRevision,
+        corpusItems: items,
+      });
       return {
         ...analysis,
         eligibleQuestionCount,
-        analyzedQuestionCount: corpus.length,
+        analyzedQuestionCount: items.filter(isAnalyzableWordCloudItem).length,
         corpusRevision,
         sortMode: input.metric,
         filter: input.filter,
+        ...(focusQuestionIds.length > 0 ? { focusedGroupKey } : {}),
       };
     }),
 });

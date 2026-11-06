@@ -4,6 +4,7 @@ import {
   WORD_CLOUD_ANALYSIS_TEXT_VERSION,
 } from '@arsnova/shared-types/word-cloud-analysis-text';
 import type { SupportedLocale } from '../../../core/locale-from-path';
+import type { WordCloudAnalysisEntryDTO, WordCloudAnalysisVariant } from '@arsnova/shared-types';
 import {
   getQaWordCloudQuestionWeight,
   getWordCloudWeightFromNormalizedMetric,
@@ -12,6 +13,55 @@ import {
 } from './word-cloud-weight.util';
 
 export { WORD_CLOUD_ANALYSIS_TEXT_VERSION };
+
+export function hasLegacyWordCloudTopics(
+  mode: WordCloudAnalysisVariant,
+  entries: readonly Pick<WordCloudAnalysisEntryDTO, 'key' | 'labelOrigin'>[],
+): boolean {
+  // Ältere Projektionen speichern nur den gewählten Modus. Semantische
+  // Einträge behalten ihre Namensherkunft oder den damaligen Cluster-Schlüssel.
+  return (
+    mode === 'SEMANTIC' &&
+    entries.some(({ key, labelOrigin }) => labelOrigin !== undefined || /^semantic-\d+-/u.test(key))
+  );
+}
+
+export function wordCloudTopicProgressLabel(showPrevious: boolean): string {
+  return showPrevious
+    ? $localize`:@@wordCloud.previousTopics:Die Themen werden aktualisiert. Der bisherige Stand bleibt sichtbar.`
+    : $localize`:@@sessionQa.wordCloudSemanticPendingHint:Themen werden vorbereitet.`;
+}
+
+export function wordCloudViewHint(
+  displayedVariant: WordCloudAnalysisVariant,
+  groupedByLemma = false,
+): string {
+  switch (displayedVariant) {
+    case 'LEXICAL':
+      return groupedByLemma
+        ? $localize`:@@wordCloud.viewHintWords:Einzelne Wörter nach Grundform: »lernen« und »gelernt« zählen gemeinsam als »lernen«.`
+        : $localize`:@@wordCloud.viewHintWordsOriginal:Einzelne Wörter in der eingegebenen Form.`;
+    case 'THEME':
+      return $localize`:@@wordCloud.viewHintPhrases:Wörter und kurze Wortgruppen wie »roter Faden«.`;
+    case 'SEMANTIC':
+      return $localize`:@@wordCloud.viewHintTopics:Ähnliche Beiträge, zusammengefasst als Themen.`;
+  }
+}
+
+export function wordCloudExportViewLabel(
+  selected: WordCloudAnalysisVariant,
+  displayed: WordCloudAnalysisVariant,
+): string {
+  if (displayed === 'SEMANTIC') return $localize`:@@wordCloud.exportTopics:Themen`;
+  if (selected !== displayed) {
+    return displayed === 'THEME'
+      ? $localize`:@@wordCloud.exportFallbackPhrases:Ersatzansicht mit Wörtern und Wortgruppen`
+      : $localize`:@@wordCloud.exportFallbackWords:Ersatzansicht mit Wörtern`;
+  }
+  return displayed === 'THEME'
+    ? $localize`:@@wordCloud.exportPhrases:Wörter und Wortgruppen`
+    : $localize`:@@wordCloud.exportWords:Wörter`;
+}
 export {
   getQaWordCloudQuestionWeight,
   getWordCloudWeightFromNormalizedMetric,
