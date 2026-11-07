@@ -839,6 +839,26 @@ Fixture-Inhalte, Projektionen und die unabhängige Hashprüfung sind in der
 
 Unified Live-Session: Join-Welle, Quiz-Vote, Q&A (20 %), Blitzlicht, WebSocket-Status/Host-Progress, Ergebnis-Fan-out.
 
+Die Join-Welle verwendet `arrivalCount`; sie belegt keine dauerhaft 500
+gleichzeitig aktiven Clients. Der Report kennzeichnet das unter `workload`.
+Für Beitritt, Quizstimme, Q&A und Blitzlicht enthält `layers.liveActions`
+Plan-/Versuchs-/Erfolgs-/Fehlerzahlen, übersprungene und nicht gestartete
+Aktionen, Rohstichproben und getrennte Erfolgs-/Fehlerlaufzeiten. Leere
+Stichproben werden als nicht verfügbar ausgewiesen und bestehen kein Gate.
+Die Fehlerquote wird pro vorgesehener Aktion geprüft (standardmäßig ≤ 0,5 %
+der Versuche), zusätzlich zu den bisherigen Smoke-Mindestanteilen.
+Die genauen Felder, Ausnahmen und Grenzen des Nachweises beschreibt die
+[A1-Messanleitung](referat-thema-1/1A-live-messungen.md).
+
+Die Instrumentierung lässt sich ohne laufende Anwendung prüfen:
+
+```bash
+npm run load:artillery:metrics:test
+```
+
+Die Tests verwenden unter anderem einen lokalen HTTP-Testserver und gehören
+zu `npm test` sowie `npm run test:coverage`. Ein Laborlauf erfolgt separat:
+
 ```bash
 npm run dev:backend
 PARTICIPANTS=500 npm run load:artillery:500
