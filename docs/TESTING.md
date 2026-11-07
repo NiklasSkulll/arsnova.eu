@@ -825,6 +825,16 @@ docker run --rm -i \
   grafana/k6 run - < scripts/load/k6-trpc-health-50vu.js
 ```
 
+### A1 resource-isolation fixture (offline)
+
+`npm run load:resource-isolation:fixture:test` builds shared-types and runs the
+fixture and CLI contract tests. It is also part of `npm test` and
+`npm run test:coverage`. After building shared-types,
+`npm run load:resource-isolation:fixture -- --validate` prints a reproducible
+summary without contacting a service or creating lab data. Fixture contents,
+projections and independent hash verification are documented in the
+[A1 fixture guide](referat-thema-1/1A-fixture.md).
+
 ### Artillery-Lasttest (Realtime, bis 500 TN)
 
 Unified Live-Session: Join-Welle, Quiz-Vote, Q&A (20 %), Blitzlicht, WebSocket-Status/Host-Progress, Ergebnis-Fan-out.
