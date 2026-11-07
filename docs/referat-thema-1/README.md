@@ -9,15 +9,15 @@ Evidenzmaterial. Er gehört **nicht** in die PR an kqc-real.
 
 ## Inhalt
 
-| Datei                                                                        | Inhalt                                                                                   |
-| ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| [00-rahmen-und-pruefung.md](./00-rahmen-und-pruefung.md)                     | Generalthema, Bewertung, Nachweiskette, KI-Regeln, Widersprüche, offene Fragen           |
-| [01-aufteilung.md](./01-aufteilung.md)                                       | Aufteilung: Niklas = X (1A, 1B 3–4), Jonas = Y (1C, 1B 1–2); Optionen, Aufwand           |
-| [1A-ressourcenisolation-app-host.md](./1A-ressourcenisolation-app-host.md)   | Code-Landkarte, Messwerkzeuge, Versuchsvorschlag, Lücken für 1A                          |
-| [1A-experiment-contract.md](./1A-experiment-contract.md)                     | Preregistered A1 hypotheses, workload, variants, budgets and evidence requirements       |
-| [1A-fixture.md](./1A-fixture.md)                                             | Shared deterministic reference/counter-case fixture, A1 projection and hash verification |
-| [1B-private-inferenz-zweiter-host.md](./1B-private-inferenz-zweiter-host.md) | Zwei-Host-Deployment, LLM-Client, Messbarkeit, Lücken für 1B                             |
-| [1C-kontext-und-adapterpfad.md](./1C-kontext-und-adapterpfad.md)             | #456-Kontext, Verträge, Snapshot/Hash, Async-Pfad, Testlücken für 1C                     |
+| Datei                                                                        | Inhalt                                                                                           |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| [00-rahmen-und-pruefung.md](./00-rahmen-und-pruefung.md)                     | Generalthema, Bewertung, Nachweiskette, KI-Regeln, Widersprüche, offene Fragen                   |
+| [01-aufteilung.md](./01-aufteilung.md)                                       | Aufteilung: Niklas = X (1A, 1B 3–4), Jonas = Y (1C, 1B 1–2); Optionen, Aufwand                   |
+| [1A-ressourcenisolation-app-host.md](./1A-ressourcenisolation-app-host.md)   | Code-Landkarte, Messwerkzeuge, Versuchsvorschlag, Lücken für 1A                                  |
+| [1A-experiment-contract.md](./1A-experiment-contract.md)                     | Vorab festgelegte A1-Hypothesen, Lastprofil, Varianten, Grenzwerte und Nachweisanforderungen     |
+| [1A-fixture.md](./1A-fixture.md)                                             | Gemeinsame deterministische Fixture mit Referenz- und Gegenfällen, A1-Projektion und Hashprüfung |
+| [1B-private-inferenz-zweiter-host.md](./1B-private-inferenz-zweiter-host.md) | Zwei-Host-Deployment, LLM-Client, Messbarkeit, Lücken für 1B                                     |
+| [1C-kontext-und-adapterpfad.md](./1C-kontext-und-adapterpfad.md)             | #456-Kontext, Verträge, Snapshot/Hash, Async-Pfad, Testlücken für 1C                             |
 
 Geplant: `evidenz/` für Rohdaten, Skripte und Messprotokolle je Auftrag (ohne
 Secrets, nur synthetische Daten).

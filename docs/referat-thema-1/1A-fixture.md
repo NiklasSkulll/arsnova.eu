@@ -1,16 +1,16 @@
-# Shared fixture for application-host resource isolation
+# Gemeinsame Fixture für die Ressourcenisolation auf dem Anwendungshost
 
-This is step 2 of the [A1 experiment contract](./1A-experiment-contract.md).
-Niklas owns the fixture tooling shared with assignments 1B and 1C
-([issues #9](https://github.com/NiklasSkulll/arsnova.eu/issues/9) and
-[#10](https://github.com/NiklasSkulll/arsnova.eu/issues/10)). The existing
-[Issue #456 reference fixtures](../../libs/shared-types/src/moderation-prompt-context-fixtures.ts)
-remain the authoritative source for the six questions and their metadata.
+Dieses Dokument beschreibt Schritt 2 des [A1-Versuchsvertrags](./1A-experiment-contract.md).
+Niklas verantwortet die Fixture-Werkzeuge, die auch für die Aufträge 1B und 1C
+verwendet werden ([Issues #9](https://github.com/NiklasSkulll/arsnova.eu/issues/9)
+und [#10](https://github.com/NiklasSkulll/arsnova.eu/issues/10)). Die vorhandenen
+[Referenzfixtures aus Issue #456](../../libs/shared-types/src/moderation-prompt-context-fixtures.ts)
+bleiben die maßgebliche Quelle für die sechs Fragen und ihre Metadaten.
 
-## Generate and inspect offline
+## Offline erzeugen und prüfen
 
-Use the Node version in `.nvmrc`, for example `nvm use`, and build the shared
-library before running the CLI:
+Die Node-Version aus `.nvmrc` verwenden, beispielsweise mit `nvm use`, und vor
+dem CLI-Aufruf die gemeinsame Bibliothek bauen:
 
 ```bash
 npm run build -w @arsnova/shared-types
@@ -18,104 +18,121 @@ npm run load:resource-isolation:fixture -- --validate
 npm run load:resource-isolation:fixture:test
 ```
 
-The validation summary reports the version, seed, SHA-256 hash, counts and shared
-ownership. To inspect the full JSON without npm's command banner:
+Die Validierungsübersicht enthält Version, Seed, SHA-256-Hash, Datensatzgrößen
+und die Zuständigkeit für das gemeinsame Artefakt. Die vollständige JSON-Ausgabe
+lässt sich ohne die zusätzliche npm-Befehlsausgabe so prüfen:
 
 ```bash
 node scripts/load/resource-isolation-fixture.mjs --print > /tmp/arsnova-1a-fixture.json
 ```
 
-Both modes operate without network, database, model downloads or environment
-credentials. They do not create sessions, seed a database or run a benchmark.
-Lab preparation in the later experiment runner must instantiate five separate
-analysis sessions from the same fixture and keep the live session separate.
+Beide Betriebsarten arbeiten ohne Netzwerk, Datenbank, Modelldownloads oder
+Zugangsdaten aus der Umgebung. Sie legen keine Sessions an, befüllen keine
+Datenbank und führen keinen Lasttest aus. Die Laborvorbereitung im späteren
+Versuchsskript muss aus derselben Fixture fünf getrennte Analysesessions anlegen
+und die Live-Session davon getrennt halten.
 
-## Contents and projections
+## Inhalt und Projektionen
 
-| Section                      | Meaning                                                                                                                                          |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `reference`                  | Six original texts and complete question metadata, including `PENDING` states, vote counts, scores, uncertainty and the participant basis of 200 |
-| `counterCases`               | Available zero votes (`unrated`), unavailable votes (`missing-votes`), uncertain NLP (`uncertain-nlp`) and pending moderation (`pending`)        |
-| `analysis.questions`         | Exactly 500 eligible, distinct raw texts: six projected reference rows, two counter-case rows and 492 filler rows                                |
-| `analysis.exclusionControls` | Three additional rows with `PENDING`, `ARCHIVED` and `DELETED` status; keep these out of the actual analysis input                               |
+| Abschnitt                    | Bedeutung                                                                                                                                                                           |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `reference`                  | Sechs Originaltexte und vollständige Fragenmetadaten einschließlich `PENDING`-Status, Stimmenzahlen, Scores, Unsicherheit und einer Teilnehmerbezugsgröße von 200                   |
+| `counterCases`               | Vorhandene Nullwerte bei Stimmen (`unrated`), nicht verfügbare Bewertungen (`missing-votes`), unsichere NLP-Klassifikation (`uncertain-nlp`) und ausstehende Moderation (`pending`) |
+| `analysis.questions`         | Genau 500 zulässige, unterschiedliche Rohtexte: sechs projizierte Referenzfragen, zwei Gegenfälle und 492 Füllfragen                                                                |
+| `analysis.exclusionControls` | Drei zusätzliche Fragen mit den Status `PENDING`, `ARCHIVED` und `DELETED`; sie gehören nicht in die eigentliche Analyseeingabe                                                     |
 
-Every call returns independent data. Mutating an A1 projection cannot change the
-shared reference fixture or another generated copy. The original pairings A/B,
-C/D and E/F remain context-test assumptions, not real encoder expectations.
+Jeder Aufruf liefert unabhängige Daten. Eine Änderung an der A1-Projektion kann
+weder die gemeinsame Referenzfixture noch eine andere erzeugte Kopie verändern.
+Die ursprünglichen Paare A/B, C/D und E/F bleiben Annahmen für Kontexttests und
+sind keine Erwartung an einen realen Encoder.
 
-In the A1 analysis projection, reference `PINNED` stays pinned; other reference
-states become `ACTIVE`. Positive and negative vote counts are preserved, and
-`upvoteCount` is the signed net count. The participant basis stays 200 and is
-independent of the 500-arrival live workload. Pending/archived/deleted controls
-must be stored with their declared status when a later lab loader is implemented.
-They bring the stored A1 question count to 503 while the eligible count stays 500.
+In der A1-Analyseprojektion bleibt `PINNED` angeheftet; andere Status der
+Referenzfragen werden zu `ACTIVE`. Positive und negative Stimmenzahlen bleiben
+erhalten; `upvoteCount` enthält den vorzeichenbehafteten Stimmensaldo. Die
+Teilnehmerbezugsgröße bleibt 200 und ist unabhängig vom Live-Lastprofil mit
+500 Beitritten. Sobald später ein Werkzeug zur Laborbefüllung implementiert
+wird, muss es die Ausschlusskontrollen mit ihrem angegebenen Status speichern.
+Damit enthält der gespeicherte A1-Datensatz 503 Fragen; für die Analyse zulässig
+bleiben 500.
 
-Unavailable votes stay unavailable in the context counter-case and are not
-converted to zero-valued analysis rows. The zero-vote case has explicit available
-zero counts and zero scores. The uncertain case reuses the existing uncertain
-NLP metadata. These metadata cases do not activate the disabled Q&A classifier.
+Nicht verfügbare Bewertungen bleiben im Kontextgegenfall ausdrücklich nicht
+verfügbar und werden nicht als Analysefragen mit Nullwerten ausgegeben. Der
+Nullwertfall enthält ausdrücklich verfügbare Stimmenzahlen und Scores mit dem
+Wert null. Der Unsicherheitsfall übernimmt die vorhandenen unsicheren
+NLP-Metadaten. Diese Metadatenfälle aktivieren den abgeschalteten
+Q&A-Klassifikator nicht.
 
-The filler reuses the existing German reference sentences because the protocol
-uses locale `de`. Seeded sentence selection and numeric suffixes make all 500
-analysis texts distinct before normalization. The two selected analysis
-counter-cases receive a `(0)` suffix; their context versions retain the original
-text. Filler suffixes start at `(1)` and end at `(492)`.
+Die Füllfragen verwenden die vorhandenen deutschen Referenzsätze, weil das
+Versuchsprotokoll die Sprache `de` festlegt. Die über den Seed gesteuerte
+Satzauswahl und numerische Zusätze sorgen dafür, dass sich alle 500 Analysetexte
+vor der Normalisierung unterscheiden. Die beiden ausgewählten Gegenfälle der
+Analyse erhalten den Zusatz `(0)`; ihre Kontextfassungen behalten den
+Originaltext. Die Zusätze der Füllfragen reichen von `(1)` bis `(492)`.
 
-This controlled corpus intentionally repeats a small vocabulary. It exercises
-the 500-item path without raw-text deduplication reducing the workload, but does
-not represent broad linguistic diversity or demonstrate model quality. Actual
-payload sizes, sidecar calls and successful normalization still need a lab pilot.
+Dieser kontrollierte Korpus wiederholt bewusst einen kleinen Wortschatz. Er
+belastet den Pfad für 500 Einträge, ohne dass die Deduplizierung der Rohtexte den
+Umfang reduziert. Er bildet jedoch keine breite sprachliche Vielfalt ab und
+belegt keine Modellqualität. Tatsächliche Nutzlastgrößen, Sidecar-Aufrufe und
+erfolgreiche Normalisierung müssen weiterhin in einem Laborvorlauf geprüft werden.
 
-## Identity and reproducibility
+## Identität und Reproduzierbarkeit
 
-The default version is `resource-isolation-fixture-v1`; its seed is decimal
-`438314513` (`0x1a202611`). Other unsigned 32-bit decimal seeds are accepted:
+Die Standardversion lautet `resource-isolation-fixture-v1`; ihr Seed ist dezimal
+`438314513` (`0x1a202611`). Andere vorzeichenlose 32-Bit-Seeds in Dezimalschreibweise
+werden ebenfalls akzeptiert:
 
 ```bash
 node scripts/load/resource-isolation-fixture.mjs --validate --seed 0
 node scripts/load/resource-isolation-fixture.mjs --print --seed 0
 ```
 
-Filler selection uses the unsigned recurrence
-`state = (1664525 * state + 1013904223) modulo 2^32`, followed by
-`state modulo 6` to select a reference sentence. This is a reproducibility
-mechanism, not a cryptographic random generator or representative sampling model.
+Für die Auswahl der Füllfragen wird die vorzeichenlose Rekurrenz
+`state = (1664525 * state + 1013904223) modulo 2^32` verwendet. Anschließend wählt
+`state modulo 6` einen Referenzsatz aus. Dieses Verfahren dient der
+Reproduzierbarkeit; es ist weder ein kryptografischer Zufallsgenerator noch ein
+Modell für eine repräsentative Stichprobe.
 
-Hash material is the entire fixture: compact UTF-8 JSON with recursively sorted
-object keys and preserved array order, without a trailing newline. SHA-256 is
-computed over those bytes. The CLI adds a newline for terminal output; exclude
-that newline when independently hashing a printed file. This local serialization
-contract does not claim conformance to a separate JSON canonicalization standard.
+Das Hashmaterial umfasst die gesamte Fixture: kompaktes UTF-8-JSON mit rekursiv
+sortierten Objektschlüsseln und unveränderter Arrayreihenfolge, ohne abschließenden
+Zeilenumbruch. Über diese Bytes wird SHA-256 berechnet. Die CLI ergänzt für die
+Terminalausgabe einen Zeilenumbruch. Bei einer unabhängigen Hashprüfung der
+ausgegebenen Datei muss dieser Zeilenumbruch ausgeschlossen werden. Dieser lokale
+Serialisierungsvertrag beansprucht keine Konformität mit einem gesonderten
+Standard zur JSON-Kanonisierung.
 
-For the default fixture at step 2, the hash is:
+Für die Standardfixture aus Schritt 2 lautet der Hash:
 
 ```text
 da24eeb3db1f7e08399583f527bf5f889ccb98cddd67fd0be84ec0e4dea17ded
 ```
 
-The versioned
-[fixture manifest](../../scripts/load/fixtures/resource-isolation-v1.manifest.json)
-records this default identity and is checked against generated content by a
-regression test. It identifies test inputs; it is not a run manifest and contains
-no claim about approved hardware, a release baseline or measurement results.
+Das versionierte
+[Fixture-Manifest](../../scripts/load/fixtures/resource-isolation-v1.manifest.json)
+hält diese Standardidentität fest. Ein Regressionstest gleicht sie mit den
+erzeugten Inhalten ab. Das Manifest identifiziert die Testeingaben; es ist kein
+Laufmanifest und enthält keine Aussage über freigegebene Hardware, eine
+Release-Baseline oder Messergebnisse.
 
-Record the generated version, seed and hash in each run manifest. A change in
-texts, metadata, projection, seed or source fixture changes the hash. Compare
-hashes before comparing measurements and record any deliberate fixture revision.
-Runtime session/question IDs and credentials belong to a separate ephemeral lab
-mapping and are not added to the canonical fixture. When validating loaded data,
-map it back to fixture keys before comparing content; do not confuse the runtime
-mapping with the hashed artifact.
+Erzeugte Version, Seed und Hash in jedem Laufmanifest festhalten. Änderungen an
+Texten, Metadaten, Projektion, Seed oder Quellfixture verändern den Hash. Vor dem
+Vergleich von Messungen zunächst die Hashes vergleichen und jede bewusste
+Fixture-Änderung dokumentieren. Zur Laufzeit erzeugte Session- und Fragen-IDs
+sowie Zugangsdaten gehören in eine getrennte, kurzlebige Laborzuordnung und
+werden nicht zur kanonischen Fixture hinzugefügt. Beim Prüfen geladener Daten
+diese vor dem Inhaltsvergleich wieder auf die Fixture-Schlüssel abbilden. Die
+Laufzeitzuordnung und das gehashte Artefakt bleiben getrennt.
 
-## Verification
+## Validierung
 
-The fixture tests exercise reference preservation, missing-versus-zero votes,
-eligibility, unique texts, real shared-schema compatibility, seed boundaries,
-independent copies, canonical serialization and hash sensitivity. CLI tests run
-the actual process, compare summaries with printed content and reject invalid
-modes/seeds. They also supply unusable connection settings to verify that fixture
-generation does not require configured services.
+Die Fixture-Tests prüfen den Erhalt der Referenzdaten, fehlende gegenüber
+nullwertigen Bewertungen, Analysezulässigkeit, eindeutige Texte, Kompatibilität
+mit den tatsächlichen gemeinsamen Schemas, Seed-Grenzen, unabhängige Kopien,
+kanonische Serialisierung und die Auswirkung von Inhaltsänderungen auf den Hash.
+Die CLI-Tests starten den tatsächlichen Prozess, vergleichen Übersichten mit der
+vollständigen Ausgabe und weisen ungültige Betriebsarten und Seeds zurück.
+Zusätzlich übergeben sie unbrauchbare Verbindungseinstellungen, um zu prüfen,
+dass die Fixture-Erzeugung keine konfigurierten Dienste benötigt.
 
-`npm test` and `npm run test:coverage` run the fixture test command; the existing
-CI coverage job therefore includes these checks. Shared-types are built before
-these Node tests so they read the current public package exports.
+`npm test` und `npm run test:coverage` führen den Fixture-Testbefehl aus. Damit
+enthält auch der bestehende CI-Coverage-Job diese Prüfungen. Vor diesen Node-Tests
+wird Shared-Types gebaut, damit sie die aktuellen öffentlichen Paketexporte verwenden.

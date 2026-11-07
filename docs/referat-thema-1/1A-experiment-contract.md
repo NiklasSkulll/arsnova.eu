@@ -1,277 +1,327 @@
-# 1A experiment contract: resource isolation on the application host
+# 1A-Versuchsvertrag: Ressourcenisolation auf dem Anwendungshost
 
-**Owner:** Niklas (role X). **Contract version:** 1.
-**Recorded:** 2026-11-07. **Status:** specified; measurement prerequisites open.
-**Assignment:** [fork issue #6](https://github.com/NiklasSkulll/arsnova.eu/issues/6).
+**Verantwortlich:** Niklas (Rolle X). **Vertragsversion:** 1.
+**Festgehalten am:** 2026-11-07. **Status:** festgelegt; Voraussetzungen für Messungen noch offen.
+**Auftrag:** [Issue #6 im Fork](https://github.com/NiklasSkulll/arsnova.eu/issues/6).
 
-This document fixes the intended comparisons and decision rules before collecting
-confirmatory measurements. It implements step 1 of the agreed seven-step A1
-implementation plan. The fixture, load instrumentation,
-resource collector, fault injector and experiment runner are later deliverables;
-their behavior below is a requirement, not a claim that they already exist.
+Dieses Dokument legt die vorgesehenen Vergleiche und Entscheidungsregeln vor den
+bestätigenden Messläufen fest. Es setzt Schritt 1 des vereinbarten siebenteiligen
+A1-Umsetzungsplans um. Fixture, Lastinstrumentierung, Ressourcenerfassung,
+Störungsinjektion und Versuchsskript sind Ergebnisse späterer Schritte. Das hier
+beschriebene Verhalten ist eine Anforderung und keine Aussage darüber, dass diese
+Werkzeuge bereits vorhanden sind.
 
-## Question, hypotheses and counter-alternative
+## Fragestellung, Hypothesen und Gegenalternative
 
-**Individual title:** Protecting live moderation signals from optional spaCy
-analysis on the Release 1.3 application host.
+**Individueller Titel:** Live-Signale für die Moderation vor Rückwirkungen der
+optionalen spaCy-Analyse auf dem Anwendungshost von Release 1.3 schützen.
 
-**Question:** Under the declared workload, can the application host run optional
-word-cloud smoothing without exceeding the live-action budgets below?
+**Leitfrage:** Kann der Anwendungshost unter dem festgelegten Lastprofil die
+optionale Wortwolken-Glättung ausführen, ohne die unten genannten Grenzen für
+Live-Aktionen zu überschreiten?
 
-- **H1:** Normal spaCy operation (V2) stays within both the relative and absolute
-  p95 regression budgets against analysis without spaCy (V1), and meets the live
-  error budget.
-- **H2:** CPU throttling (V3) and delayed responses (V4) also stay within those
-  live budgets against V1. Analysis duration and fallback frequency may increase;
-  live isolation and analysis availability are evaluated separately.
-- **Counter-alternative:** Keep `NLP_ENABLED=false` and use the existing lexical
-  word cloud. Compare its reduced operating effort and resource demand with the
-  limited benefit of merging inflected word forms.
+- **H1:** Der normale spaCy-Betrieb (V2) hält gegenüber der Analyse ohne spaCy
+  (V1) sowohl die relative als auch die absolute p95-Regressionsgrenze und die
+  Fehlergrenze für Live-Aktionen ein.
+- **H2:** Auch bei CPU-Drosselung (V3) und verzögerten Antworten (V4) bleiben die
+  Live-Grenzen gegenüber V1 eingehalten. Analysedauer und Fallbackhäufigkeit
+  dürfen steigen; Isolation der Live-Aktionen und Analyseverfügbarkeit werden
+  getrennt bewertet.
+- **Gegenalternative:** `NLP_ENABLED=false` beibehalten und die bestehende
+  lexikalische Wortwolke verwenden. Deren geringeren Betriebsaufwand und
+  Ressourcenbedarf gegen den begrenzten Nutzen der Zusammenführung von
+  Flexionsformen abwägen.
 
-V0 versus V1 measures the additional analysis path without spaCy. V1 versus V2
-measures the additional spaCy path, including backend transport, parsing and
-aggregation costs. Container metrics help locate resource competition; those
-comparisons alone cannot attribute a delay to one particular process or function.
+V0 gegenüber V1 misst den zusätzlichen Analysepfad ohne spaCy. V1 gegenüber V2
+misst den zusätzlichen spaCy-Pfad einschließlich Transport, Parsing und
+Aggregation im Backend. Containermetriken helfen, Ressourcenkonkurrenz
+zuzuordnen. Diese Vergleiche allein können eine Verzögerung jedoch keinem
+bestimmten Prozess oder einer bestimmten Funktion zuschreiben.
 
-## Authority and baseline selection
+## Maßgebliche Quellen und Auswahl der Baseline
 
-The [exam specification](../didaktik/CLOUD-COMPUTING-REFERAT-PRUEFUNG.md), sections
-4.1.1, 4.1.3 and 4.3, and
+Die [Prüfungsspezifikation](../didaktik/CLOUD-COMPUTING-REFERAT-PRUEFUNG.md),
+Abschnitte 4.1.1, 4.1.3 und 4.3, sowie
 [ADR-0035](../architecture/decisions/0035-self-hosted-llm-runtime-llama-cpp-over-ollama.md)
-define the scope and system boundaries. The
-[research dossier](./1A-ressourcenisolation-app-host.md), section 10, supplies
-experiment proposals. This contract selects explicit rules from those proposals;
-they are experimental decisions, not previously verified performance properties.
-Implementation details must be rechecked against the selected baseline.
+legen Umfang und Systemgrenzen fest. Das
+[Recherchedossier](./1A-ressourcenisolation-app-host.md), Abschnitt 10, enthält
+Versuchsvorschläge. Dieser Vertrag wählt daraus ausdrückliche Regeln aus. Dabei
+handelt es sich um Versuchsentscheidungen und nicht um bereits nachgewiesene
+Leistungseigenschaften. Implementierungsdetails müssen erneut gegen die
+gewählte Baseline geprüft werden.
 
-| Item                          | Recorded state or requirement                                                                                               |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Local preparation branch      | `feature-1A-resource-isolation`                                                                                             |
-| Inspected source commit       | `93bcf2e9288f66efafe809b617a93e70ba14de27`                                                                                  |
-| Local `v1.3.0` tag target     | `87c39334619fbcb0c5782b061da1ba0df0ba3142`                                                                                  |
-| Approved measurement baseline | Pending examiner/lab-owner confirmation; neither local reference above is automatically selected                            |
-| Lab provision                 | Dependency of [issue #8](https://github.com/NiklasSkulll/arsnova.eu/issues/8); actual hardware and access remain unverified |
-| Intended application host     | 8 vCPU / 16 GB RAM, as required by ADR-0035; actual hardware must be recorded                                               |
-| Preparation runtime           | Node 24.18.0, matching `.nvmrc`; record the actual generator and application runtimes separately                            |
-| Spending                      | No new paid resources authorized by this contract; confirm any additional cost before provisioning                          |
+| Punkt                          | Festgehaltener Stand oder Anforderung                                                                                                      |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Lokaler Vorbereitungsbranch    | `feature-1A-resource-isolation`                                                                                                            |
+| Geprüfter Quellcode-Commit     | `93bcf2e9288f66efafe809b617a93e70ba14de27`                                                                                                 |
+| Ziel des lokalen Tags `v1.3.0` | `87c39334619fbcb0c5782b061da1ba0df0ba3142`                                                                                                 |
+| Freigegebene Messbaseline      | Bestätigung durch Prüfer bzw. Laborverantwortliche steht aus; keine der obigen lokalen Referenzen ist automatisch ausgewählt               |
+| Laborbereitstellung            | Abhängigkeit von [Issue #8](https://github.com/NiklasSkulll/arsnova.eu/issues/8); tatsächliche Hardware und Zugang sind noch nicht geprüft |
+| Vorgesehener Anwendungshost    | 8 vCPU / 16 GB RAM gemäß ADR-0035; tatsächliche Hardware muss erfasst werden                                                               |
+| Laufzeit für die Vorbereitung  | Node 24.18.0 gemäß `.nvmrc`; tatsächliche Laufzeiten von Lastgenerator und Anwendung getrennt erfassen                                     |
+| Kosten                         | Dieser Vertrag autorisiert keine neuen kostenpflichtigen Ressourcen; zusätzliche Kosten vor einer Bereitstellung bestätigen lassen         |
 
-Before the first confirmatory run, record the approved application commit,
-release tag, image identities, environment, fixture hash and contract revision.
-Use the same application and sidecar images across variants. Keep the application
-release code unchanged; identify measurement-tool commits separately. Local pilots
-may prepare the tools but cannot replace a run on the approved baseline.
+Vor dem ersten bestätigenden Messlauf den freigegebenen Anwendungscommit,
+Release-Tag, Image-Identitäten, Umgebung, Fixture-Hash und Vertragsrevision
+festhalten. Über alle Varianten dieselben Anwendungs- und Sidecar-Images
+verwenden. Der Releasecode der Anwendung bleibt unverändert; Commits der
+Messwerkzeuge getrennt kennzeichnen. Lokale Vorläufe dürfen die Werkzeuge
+vorbereiten, ersetzen aber keinen Lauf auf der freigegebenen Baseline.
 
-## Fixed environment and data
+## Konstante Umgebung und Daten
 
-- Run only in an isolated lab with synthetic data. Record the target as a lab
-  alias; retain connection details and credentials outside committed evidence.
-- Use isolated container names, networks, volumes and ports. A different Compose
-  project name alone is insufficient when `container_name` is explicitly set.
-- Keep `app`, PostgreSQL, Redis and the PDF worker present. Run no PDF exports,
-  backups, builds or unrelated benchmarks during a measurement.
-- Keep `QA_NLP_ENABLED=false`, `WORD_CLOUD_SEMANTIC_ENABLED=false`,
-  `QA_SUMMARY_ENABLED=false` and `OPEN_WEIGHT_LLM_ENABLED=false`. Do not start the
-  encoder or LLM profiles. This choice limits the conclusion to that flag set.
-- Keep `NLP_TIMEOUT_MS=5000` and `NLP_CACHE_TTL_SECONDS=1800`. Record effective
-  resolved Compose values, not only values in an environment-file example.
-- Use valid host tokens and participant capabilities through existing tRPC
-  procedures. Session codes do not authorize requests. Obtain fresh credentials
-  for each run and keep them out of reports and command output.
-- Reuse the six reference texts and rankings from
-  [`moderation-prompt-context-fixtures.ts`](../../libs/shared-types/src/moderation-prompt-context-fixtures.ts).
-  Preserve the original reference fixture for 1C. Its A/B, C/D and E/F topic pairs
-  are deterministic fixture groupings, not expected real-model output.
-- For A1, prepare five separate analysis sessions with identical synthetic
-  content, 500 eligible questions each, a fixed seed and recorded content hash.
-  Include the reference texts, counter-cases and deterministic filler. Document
-  the A1 projection to `ACTIVE`/`PINNED`; `analyzeQa` excludes `PENDING` questions.
-  Record room size and reference rankings separately from the live-session size.
-- Use a separate live session so `qa.submit` cannot mutate the analysis corpus.
-  Verify identical corpus content and eligibility before and after every run.
-  Generated database IDs may differ; hash the canonical fixture content and
-  record its mapping to runtime data outside identity-free summaries.
-- Place the load generator outside the measured application host where possible.
-  Otherwise record its resource competition and restrict hardware conclusions.
+- Ausschließlich in einem isolierten Labor mit synthetischen Daten arbeiten.
+  Das Ziel als Laboralias festhalten; Verbindungsdetails und Zugangsdaten
+  außerhalb der eingecheckten Nachweise aufbewahren.
+- Getrennte Containernamen, Netzwerke, Volumes und Ports verwenden. Ein anderer
+  Compose-Projektname allein reicht bei ausdrücklich gesetztem `container_name`
+  nicht aus.
+- `app`, PostgreSQL, Redis und PDF-Worker beibehalten. Während einer Messung
+  keine PDF-Exporte, Backups, Builds oder anderen Lasttests ausführen.
+- `QA_NLP_ENABLED=false`, `WORD_CLOUD_SEMANTIC_ENABLED=false`,
+  `QA_SUMMARY_ENABLED=false` und `OPEN_WEIGHT_LLM_ENABLED=false` konstant halten.
+  Encoder- und LLM-Profile nicht starten. Die Aussagekraft bleibt auf diese
+  Schalterkonfiguration begrenzt.
+- `NLP_TIMEOUT_MS=5000` und `NLP_CACHE_TTL_SECONDS=1800` konstant halten. Die
+  tatsächlich aufgelösten Compose-Werte erfassen, nicht nur Werte aus einer
+  Beispiel-Umgebungsdatei.
+- Gültige Host-Tokens und Teilnehmer-Capabilities über bestehende
+  tRPC-Prozeduren verwenden. Session-Codes autorisieren keine Anfragen. Für
+  jeden Lauf neue Zugangsdaten beziehen und aus Berichten und Befehlsausgaben
+  heraushalten.
+- Die sechs Referenztexte und Bewertungen aus
+  [`moderation-prompt-context-fixtures.ts`](../../libs/shared-types/src/moderation-prompt-context-fixtures.ts)
+  wiederverwenden. Die ursprüngliche Referenzfixture für 1C erhalten. Die
+  Themenpaare A/B, C/D und E/F sind deterministische Fixture-Gruppierungen,
+  keine erwartete Ausgabe eines realen Modells.
+- Für A1 fünf getrennte Analysesessions mit identischen synthetischen Inhalten,
+  jeweils 500 zulässigen Fragen, festem Seed und dokumentiertem Inhaltshash
+  vorbereiten. Referenztexte, Gegenfälle und deterministische Füllfragen
+  aufnehmen. Die A1-Projektion auf `ACTIVE`/`PINNED` dokumentieren; `analyzeQa`
+  schließt `PENDING`-Fragen aus. Raumbezugsgröße und Referenzbewertungen
+  getrennt von der Größe der Live-Session erfassen.
+- Eine getrennte Live-Session verwenden, damit `qa.submit` den Analysekorpus
+  nicht verändert. Identische Korpusinhalte und Analysezulässigkeit vor und
+  nach jedem Lauf prüfen. Erzeugte Datenbank-IDs dürfen abweichen; die
+  kanonischen Fixture-Inhalte hashen und ihre Zuordnung zu Laufzeitdaten
+  außerhalb von Übersichten ohne Identitätsdaten festhalten.
+- Den Lastgenerator möglichst außerhalb des gemessenen Anwendungshosts
+  betreiben. Andernfalls seine Ressourcenkonkurrenz dokumentieren und
+  Aussagen über die Hardware entsprechend begrenzen.
 
-The inspected production Compose gives spaCy 1 CPU, 1 GiB RAM and 64 PIDs, with
-`network_mode: none`. App, PostgreSQL and Redis have no corresponding explicit
-limits there. These are configuration facts, not measured memory consumption or
-guaranteed resource reservations. Do not add limits to those services for A1.
+Die geprüfte Produktions-Compose-Konfiguration gibt spaCy 1 CPU, 1 GiB RAM und
+64 PIDs bei `network_mode: none`. App, PostgreSQL und Redis haben dort keine
+entsprechenden ausdrücklichen Limits. Dies sind Konfigurationswerte, keine
+gemessenen Speicherverbräuche oder garantierten Ressourcenreservierungen.
+Für A1 keine Limits zu diesen Diensten hinzufügen.
 
-## Workload and timing
+## Lastprofil und Zeitablauf
 
-The primary live profile is a **500-participant join wave**, based on
-[`500-live-session.yml`](../../scripts/load/artillery/500-live-session.yml).
-It does not establish 500 continuously connected or continuously active clients.
+Das primäre Live-Profil ist eine **Beitrittswelle mit 500 Teilnehmenden** auf
+Basis von [`500-live-session.yml`](../../scripts/load/artillery/500-live-session.yml).
+Es belegt keine 500 durchgehend verbundenen oder durchgehend aktiven Clients.
 
-| Parameter                | Preregistered value                                                                                                                          |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Warm-up                  | 60 seconds, excluded from measured samples, using disposable sessions with the same scenario types                                           |
-| Measured interval        | 300 seconds; collection and analysis schedules share one monotonic start time                                                                |
-| Live arrivals            | 500 scheduled participants over the first 90 seconds                                                                                         |
-| Per participant          | Join, status WebSocket subscription, session/question reads, one quiz vote, one tempo vote; every fifth participant submits one Q&A question |
-| Intended mutation counts | 500 joins, 500 quiz votes, 100 Q&A submissions, 500 tempo votes                                                                              |
-| Quiz question            | One active, untimed single-choice question throughout the live mutation phase                                                                |
-| Results transition       | Scheduled at second 270; no early reveal based on successful-vote count                                                                      |
-| Analysis clients         | Five independent host sessions, at most one analysis in flight per session                                                                   |
-| Analysis schedule        | One call per host every 10 seconds, with fixed offsets 0/2/4/6/8 seconds; no catch-up burst                                                  |
-| Analysis input           | `mode: 'LEXICAL'`, `locale: 'de'`, `metric: 'TOP'`, `normalization: 'LEMMA'`, `limit: 500`, `refresh: true`                                  |
-| Repetitions              | Five complete blocks; each contains V0–V4 once in a seeded random order                                                                      |
-| Optional outage          | V5 is a separately reported extension and does not replace a required variant                                                                |
+| Parameter                | Vorab festgelegter Wert                                                                                                                        |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Aufwärmphase             | 60 Sekunden, von Messstichproben ausgeschlossen; separate temporäre Sessions mit denselben Szenariotypen                                       |
+| Messintervall            | 300 Sekunden; Erfassung und Analysezeitpläne haben denselben monotonen Startzeitpunkt                                                          |
+| Live-Beitritte           | 500 geplante Teilnehmende über die ersten 90 Sekunden                                                                                          |
+| Je teilnehmender Person  | Beitritt, WebSocket-Status-Subscription, Session-/Frageabrufe, eine Quizstimme, eine Tempostimme; jede fünfte Person reicht eine Q&A-Frage ein |
+| Geplante Mutationszahlen | 500 Beitritte, 500 Quizstimmen, 100 Q&A-Einreichungen, 500 Tempostimmen                                                                        |
+| Quizfrage                | Eine aktive Single-Choice-Frage ohne Zeitlimit während der gesamten Phase der Live-Mutationen                                                  |
+| Ergebnisfreigabe         | Für Sekunde 270 geplant; keine vorzeitige Freigabe anhand der Zahl erfolgreicher Stimmen                                                       |
+| Analyseclients           | Fünf unabhängige Host-Sessions; höchstens eine laufende Analyse je Session                                                                     |
+| Analysezeitplan          | Ein Aufruf je Host alle 10 Sekunden, mit festen Versätzen von 0/2/4/6/8 Sekunden; keine nachgeholte Aufrufwelle                                |
+| Analyseeingabe           | `mode: 'LEXICAL'`, `locale: 'de'`, `metric: 'TOP'`, `normalization: 'LEMMA'`, `limit: 500`, `refresh: true`                                    |
+| Wiederholungen           | Fünf vollständige Blöcke; jeder enthält V0–V4 je einmal in einer über einen Seed randomisierten Reihenfolge                                    |
+| Optionaler Ausfall       | V5 wird als Erweiterung getrennt ausgewertet und ersetzt keine Pflichtvariante                                                                 |
 
-This fixes a burst workload inside a five-minute observation interval. The quiet
-tail is not sustained live traffic. Record actual connection concurrency and
-timestamps so readers can distinguish arrivals, mutations, fan-out and idle time.
-The existing Artillery runner needs later adaptation for this timing contract;
-its current completion-driven reveal is not an implementation of this schedule.
+Damit ist eine kurzzeitige Lastspitze innerhalb eines fünfminütigen
+Beobachtungsintervalls festgelegt. Die anschließende ruhige Phase ist kein
+anhaltender Live-Verkehr. Tatsächliche gleichzeitige Verbindungen und
+Zeitstempel erfassen, damit Beitritte, Mutationen, Ergebnisverteilung und
+Leerlauf unterscheidbar sind. Das vorhandene Artillery-Skript muss später an
+diesen Zeitvertrag angepasst werden; seine derzeit vom Bearbeitungsfortschritt
+abhängige Ergebnisfreigabe setzt diesen Zeitplan nicht um.
 
-A busy analysis session skips its next scheduled slot and records the skip; it
-does not queue hidden work or move future slots. Record scheduled, started,
-completed, rejected, timed-out and skipped calls, plus scheduler lateness and
-in-flight work remaining at the end. Thus slower variants cannot appear to
-preserve isolation merely by silently reducing the offered workload. Do not start
-new work after the interval. Mark outstanding work as unfinished at the cutoff,
-allow at most 60 seconds for draining, then cancel remaining work and stop the
-run's generators/proxy. Report cleanup separately and use this policy for every
-variant; late completions do not improve the measured-window availability rate.
+Eine ausgelastete Analysesession überspringt ihren nächsten geplanten
+Aufrufzeitpunkt und protokolliert dies. Sie reiht keine unsichtbare Arbeit ein
+und verschiebt keine späteren Aufrufe. Geplante, gestartete, abgeschlossene,
+abgelehnte, wegen Zeitüberschreitung gescheiterte und übersprungene Aufrufe
+sowie Verspätungen des Zeitplans und am Ende noch laufende Arbeit erfassen.
+Langsamere Varianten dürfen nicht allein deshalb isoliert erscheinen, weil die
+angebotene Last unbemerkt sinkt. Nach Ende des Intervalls keine neue Arbeit
+starten. Noch laufende Arbeit zum Stichtag als nicht abgeschlossen markieren
+und höchstens 60 Sekunden zum Auslaufen gewähren. Danach verbleibende Arbeit
+abbrechen und Lastgeneratoren bzw. Proxy des Laufs beenden. Die Bereinigung
+getrennt ausweisen und diese Regel für jede Variante anwenden. Späte Abschlüsse
+verbessern die Verfügbarkeitsquote des Messfensters nicht.
 
-## Variants
+## Varianten
 
-| Variant      | `NLP_ENABLED` | spaCy state                                         | Analysis load                    |
-| ------------ | ------------- | --------------------------------------------------- | -------------------------------- |
-| V0           | `false`       | Stopped                                             | None                             |
-| V1           | `false`       | Stopped                                             | Fixed schedule; lexical fallback |
-| V2           | `true`        | 1 CPU / 1 GiB, healthy real models                  | Fixed schedule                   |
-| V3           | `true`        | 0.25 CPU / 1 GiB, healthy real models               | Fixed schedule                   |
-| V4           | `true`        | 1 CPU / 1 GiB, real models behind a lab delay proxy | Fixed schedule                   |
-| V5, optional | `true`        | Stopped after preparation                           | Fixed schedule                   |
+| Variante     | `NLP_ENABLED` | spaCy-Zustand                                                     | Analyselast                             |
+| ------------ | ------------- | ----------------------------------------------------------------- | --------------------------------------- |
+| V0           | `false`       | Gestoppt                                                          | Keine                                   |
+| V1           | `false`       | Gestoppt                                                          | Fester Zeitplan; lexikalischer Fallback |
+| V2           | `true`        | 1 CPU / 1 GiB, echte Modelle betriebsbereit                       | Fester Zeitplan                         |
+| V3           | `true`        | 0.25 CPU / 1 GiB, echte Modelle betriebsbereit                    | Fester Zeitplan                         |
+| V4           | `true`        | 1 CPU / 1 GiB, echte Modelle hinter einem Labor-Verzögerungsproxy | Fester Zeitplan                         |
+| V5, optional | `true`        | Nach der Vorbereitung gestoppt                                    | Fester Zeitplan                         |
 
-V4 delays `/normalize` responses by 6000 ms before forwarding the request,
-exceeding the configured 5000 ms client timeout. Preserve request/response
-contracts and do not delay the health endpoint. Record the proxy source/image,
-configuration and socket routing as an explicit variant. Verify the timeout with
-a contract test; a client timeout does not prove upstream computation stopped.
+V4 verzögert Antworten auf `/normalize` um 6000 ms, indem der Proxy die Anfrage
+erst nach dieser Wartezeit weiterleitet. Damit wird das konfigurierte
+Client-Timeout von 5000 ms überschritten. Anfrage- und Antwortverträge erhalten
+und den Health-Endpunkt nicht verzögern. Proxy-Quellcode bzw. -Image,
+Konfiguration und Socket-Zuordnung als ausdrückliche Variante erfassen. Die
+Zeitüberschreitung mit einem Vertragstest prüfen. Ein Client-Timeout belegt
+nicht, dass die nachgelagerte Berechnung beendet wurde.
 
-Recreate the relevant lab containers and prepare fresh session data per run.
-Wait for readiness and use the same warm-up before measuring. Restore CPU limits,
-socket routing and flags between variants. Record container identities and
-counter baselines; do not subtract process-lifetime p95 values or memory peaks.
+Die relevanten Laborcontainer neu erzeugen und für jeden Lauf frische
+Session-Daten vorbereiten. Auf Betriebsbereitschaft warten und vor jeder Messung
+dieselbe Aufwärmphase verwenden. CPU-Limits, Socket-Zuordnung und Schalter
+zwischen den Varianten zurücksetzen. Containeridentitäten und Ausgangswerte
+der Zähler erfassen; keine p95-Werte oder Speicherspitzen aus der gesamten
+Prozesslebensdauer voneinander subtrahieren.
 
-## Measurements and decision rules
+## Messgrößen und Entscheidungsregeln
 
-For each live action, retain attempt counts, outcomes and duration samples.
-Report p50/p95/p99 of successful calls using nearest-rank percentiles and evaluate
-budgets before display rounding. Record failed-call durations separately. An
-empty successful sample set is unavailable, never zero latency or a passing gate.
+Für jede Live-Aktion Aufrufzahlen, Ergebnisse und Laufzeitstichproben
+aufbewahren. p50/p95/p99 erfolgreicher Aufrufe mit der Nearest-Rank-Methode
+angeben und Grenzen vor der Rundung für die Anzeige prüfen. Laufzeiten
+fehlgeschlagener Aufrufe getrennt erfassen. Eine leere Stichprobe erfolgreicher
+Aufrufe ist nicht verfügbar; sie bedeutet weder null Latenz noch eine bestandene
+Prüfung.
 
-Count every failed attempted live action, including 429 responses, transport
-errors and unexpected authorization/phase rejections. Also report these classes
-separately. Account for dependency-blocked and unsent scheduled actions explicitly;
-an incomplete workload cannot pass by reducing the denominator. Skipped quiz
-votes after an early reveal are not successful measurements. Do not automatically
-retry measured mutations; a failed logical action must remain visible.
+Jeden fehlgeschlagenen versuchten Live-Aufruf mitzählen, einschließlich
+429-Antworten, Transportfehlern und unerwarteten Ablehnungen aufgrund von
+Autorisierung oder Session-Phase. Diese Klassen zusätzlich getrennt ausweisen.
+Durch Abhängigkeiten blockierte oder nicht gesendete geplante Aktionen
+ausdrücklich erfassen. Eine unvollständige Last darf nicht durch einen kleineren
+Nenner bestehen. Nach einer vorzeitigen Ergebnisfreigabe übersprungene
+Quizstimmen sind keine erfolgreichen Messungen. Gemessene Mutationen nicht
+automatisch wiederholen; eine fehlgeschlagene logische Aktion muss sichtbar bleiben.
 
-| Criterion                    | Rule, applied per action and paired repetition                                                                                                                                                                                              |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Live p95 regression          | For V2, V3 and V4 against V1 in the same block: `candidateP95 <= baselineP95 * 1.10` **and** `candidateP95 - baselineP95 <= 50 ms`                                                                                                          |
-| Live error budget            | Failed attempted calls / attempted calls `<= 0.005`; require nonempty samples and complete scheduled-work accounting                                                                                                                        |
-| Live workload coverage       | For each action, `(failed attempted calls + unsent scheduled calls) / scheduled calls <= 0.005`; classify dependency-blocked calls as unsent and count each logical action once                                                             |
-| Absolute vote target         | Successful `vote.submit` p95 `<= 1000 ms`, reported for V0–V4 as an experimental target for this profile                                                                                                                                    |
-| Normal analysis availability | In V2, scheduled calls that fall back, fail, are rejected/skipped or remain unfinished / all scheduled calls `<= 0.01`; count each scheduled call once and report the individual outcome classes and response-only fallback rate separately |
-| Normal spaCy throttling      | V2 `delta(nr_throttled) / delta(nr_periods) <= 0.05`, only when both readings refer to the same container and the denominator is positive                                                                                                   |
-| Normal spaCy memory          | V2 cgroup peak `<= 80%` of the effective 1 GiB limit; distinguish whole-container peak including warm-up from sampled measurement-window maximum                                                                                            |
-| OOM events                   | No increase in recorded `oom_kill` events for measured services                                                                                                                                                                             |
+| Kriterium                             | Regel je Aktion und gepaarter Wiederholung                                                                                                                                                                                                        |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| p95-Regression der Live-Aktionen      | V2, V3 und V4 jeweils gegen V1 desselben Blocks: `candidateP95 <= baselineP95 * 1.10` **und** `candidateP95 - baselineP95 <= 50 ms`                                                                                                               |
+| Fehlergrenze der Live-Aktionen        | Fehlgeschlagene versuchte Aufrufe / versuchte Aufrufe `<= 0.005`; nicht leere Stichproben und vollständige Erfassung der geplanten Arbeit voraussetzen                                                                                            |
+| Vollständigkeit der Live-Last         | Je Aktion gilt `(failed attempted calls + unsent scheduled calls) / scheduled calls <= 0.005`; durch Abhängigkeiten blockierte Aufrufe als nicht gesendet einordnen und jede logische Aktion einmal zählen                                        |
+| Absolutes Ziel für Quizstimmen        | p95 erfolgreicher `vote.submit`-Aufrufe `<= 1000 ms`; für V0–V4 als Versuchsziel dieses Lastprofils ausweisen                                                                                                                                     |
+| Analyseverfügbarkeit im Normalbetrieb | In V2: geplante Aufrufe mit Fallback, Fehler, Ablehnung, Überspringen oder ohne Abschluss / alle geplanten Aufrufe `<= 0.01`; jeden geplanten Aufruf einmal zählen und Ergebnisklassen sowie reine Fallbackquote der Antworten getrennt ausweisen |
+| spaCy-Drosselung im Normalbetrieb     | V2: `delta(nr_throttled) / delta(nr_periods) <= 0.05`, nur bei zwei Messungen desselben Containers und positivem Nenner                                                                                                                           |
+| spaCy-Speicher im Normalbetrieb       | V2: cgroup-Spitzenwert `<= 80%` des wirksamen Limits von 1 GiB; Spitzenwert des gesamten Containers einschließlich Aufwärmphase vom abgetasteten Maximum im Messfenster unterscheiden                                                             |
+| OOM-Ereignisse                        | Kein Anstieg der erfassten `oom_kill`-Ereignisse bei gemessenen Diensten                                                                                                                                                                          |
 
-The same live budgets test H2; elevated fallback or skipped analysis slots in
-V3/V4 are outcomes to explain, not evidence that analysis remained available.
-Report V0→V1 regressions with the same limits to identify analysis-path overhead.
-If V1 already misses the absolute vote target, do not attribute that pre-existing
-failure to spaCy. Require all five complete paired repetitions to meet a rule
-before reporting that rule as met; show individual runs and their range rather
-than hiding failures in an average. No post-hoc outlier removal is allowed.
+Dieselben Live-Grenzen prüfen H2. Erhöhte Fallbackquoten oder übersprungene
+Analyseaufrufe in V3/V4 sind zu erklärende Ergebnisse und kein Nachweis einer
+weiterhin verfügbaren Analyse. Regressionen von V0 zu V1 mit denselben Grenzen
+ausweisen, um den zusätzlichen Aufwand des Analysepfads zu erkennen. Verfehlt
+bereits V1 das absolute Ziel für Quizstimmen, darf dieser bestehende Befund
+nicht spaCy zugeschrieben werden. Eine Regel gilt nur dann als erfüllt, wenn
+alle fünf vollständigen gepaarten Wiederholungen sie einhalten. Einzelne Läufe
+und ihre Spannweite zeigen, statt Fehler im Mittelwert zu verbergen. Nachträgliches
+Entfernen von Ausreißern ist nicht zulässig.
 
-These are A1 acceptance rules. The
-[capacity document](../capacity-estimate-16gb-16cores.md), section 7, proposes
-vote-latency SLOs for 50 active participants and a 15-minute error window; this
-500-arrival, five-minute experiment cannot certify those production SLOs.
+Dies sind A1-Abnahmeregeln. Die
+[Kapazitätsdokumentation](../capacity-estimate-16gb-16cores.md), Abschnitt 7,
+schlägt Latenz-SLOs für 50 aktive Teilnehmende und ein 15-minütiges Fehlerfenster
+vor. Dieser fünfminütige Versuch mit 500 Beitritten kann diese Produktions-SLOs
+nicht bestätigen.
 
-The existing
-[`compare-load-report.mjs`](../../scripts/load/compare-load-report.mjs) selects
-the larger tolerance when relative and absolute budgets share one rule. Express
-the two p95 conditions as separate rules, or use an explicitly tested evaluator
-that requires both. Apply inclusive boundaries as written above; do not inherit a
-helper's exclusive comparison accidentally.
+Das vorhandene
+[`compare-load-report.mjs`](../../scripts/load/compare-load-report.mjs) verwendet
+die größere Toleranz, wenn relative und absolute Grenzen in derselben Regel
+stehen. Die beiden p95-Bedingungen als getrennte Regeln ausdrücken oder eine
+ausdrücklich getestete Auswertung verwenden, die beide verlangt. Die oben
+angegebenen Grenzen einschließlich Gleichheit anwenden; nicht versehentlich
+den ausschließenden Vergleich einer Hilfsfunktion übernehmen.
 
-Collect container CPU/RAM/PIDs every two seconds, cgroup CPU counters before and
-after the interval, memory peaks and OOM events, plus host memory/swap and load.
-Record raw units, actual sample cadence, missing samples and collection failures.
-Use timestamped counter differences. Keep Docker's
-cache-adjusted memory display distinct from cgroup memory values.
-Capture selected `health.stats` and authenticated `health.securityStats` fields
-before/after and during the run. Existing server histograms have their own
-windows/caches; they supplement the client measurements rather than replacing
-them. The existing runtime-metrics event-loop sample describes the generator,
-not the backend. Backend event-loop instrumentation, if needed, is a separately
-declared experiment applied consistently to all compared runs.
+Container-CPU/RAM/PIDs alle zwei Sekunden erfassen, cgroup-CPU-Zähler vor und
+nach dem Intervall, dazu Speicherspitzen und OOM-Ereignisse sowie Speicher,
+Swap und Last des Hosts. Roheinheiten, tatsächliche Abtastrate, fehlende
+Stichproben und Erfassungsfehler festhalten. Zeitgestempelte Zählerdifferenzen
+verwenden. Dockers cachebereinigte Speicheranzeige von cgroup-Speicherwerten
+unterscheiden. Ausgewählte Felder aus `health.stats` und dem authentifizierten
+`health.securityStats` vor, während und nach dem Lauf erfassen. Bestehende
+Serverhistogramme haben eigene Zeitfenster und Caches; sie ergänzen die
+Clientmessungen, ersetzen sie aber nicht. Die vorhandene Event-Loop-Stichprobe
+aus runtime-metrics beschreibt den Lastgenerator, nicht das Backend. Falls eine
+Event-Loop-Instrumentierung des Backends erforderlich wird, ist sie als
+getrennter Versuch zu kennzeichnen und einheitlich auf alle verglichenen Läufe
+anzuwenden.
 
-## Evidence, invalid runs and rollback
+## Nachweise, ungültige Läufe und Rollback
 
-Store sanitized evidence under `evidenz/1A/<variant>/<run>/` with:
+Bereinigte Nachweise unter `evidenz/1A/<variant>/<run>/` speichern, einschließlich:
 
-- A manifest containing contract/tool/application revisions, approved release
-  identity, all service image IDs/digests, actual hardware/OS/Docker/cgroup
-  versions, generator placement, fixture identity, effective flags/limits,
-  timing, block number and randomization seed/order.
-- Live outcome/duration samples, analysis outcomes and schedule accounting,
-  resource time series and counter snapshots, selected diagnostic metrics and
-  the resulting budget evaluation.
-- A sanitized resolved Compose configuration built from an explicit allowlist;
-  no full environment, unrestricted `docker inspect`, raw request headers or
-  unfiltered logs. Keep tokens, secrets, credentials, IPs and runtime participant
-  identities out of committed artifacts. Use pseudonymous run-local labels.
+- Manifest mit Vertrags-, Werkzeug- und Anwendungsrevisionen, freigegebener
+  Release-Identität, IDs bzw. Digests aller Dienst-Images, tatsächlichen
+  Hardware-/OS-/Docker-/cgroup-Versionen, Ort des Lastgenerators,
+  Fixture-Identität, wirksamen Schaltern und Limits, Zeitablauf, Blocknummer
+  sowie Seed und Reihenfolge der Randomisierung.
+- Ergebnis- und Laufzeitstichproben der Live-Aktionen, Analyseergebnissen und
+  Erfassung des Aufrufzeitplans, Ressourcenzeitreihen und Zählerständen,
+  ausgewählten Diagnosemetriken und der daraus abgeleiteten Grenzwertprüfung.
+- Bereinigter, aufgelöster Compose-Konfiguration auf Basis einer ausdrücklichen
+  Positivliste. Keine vollständige Umgebung, uneingeschränkte Ausgabe von
+  `docker inspect`, rohen Anfrageheader oder ungefilterten Logs übernehmen.
+  Tokens, Secrets, Zugangsdaten, IPs und zur Laufzeit verwendete
+  Teilnehmeridentitäten aus eingecheckten Artefakten heraushalten.
+  Laufbezogene pseudonyme Bezeichnungen verwenden.
 
-Use instrumented tools with deterministic contract tests first. Then run a small
-local pilot to verify setup, corpus eligibility, timings, real spaCy calls,
-fallback paths, collection overhead and cleanup. Mark pilot data as such and
-exclude it from confirmatory comparisons. Before confirmatory runs, version any
-necessary protocol change with its reason; never silently change a threshold or
-substitute a more favorable workload after inspecting confirmatory results.
+Zunächst instrumentierte Werkzeuge mit deterministischen Vertragstests
+verwenden. Anschließend einen kleinen lokalen Vorlauf durchführen, um Aufbau,
+Analysezulässigkeit des Korpus, Zeitabläufe, tatsächliche spaCy-Aufrufe,
+Fallbackpfade, Erfassungsaufwand und Bereinigung zu prüfen. Vorlaufdaten als
+solche kennzeichnen und von bestätigenden Vergleichen ausschließen. Vor den
+bestätigenden Messläufen jede notwendige Protokolländerung mit Begründung
+versionieren. Nach Sichtung bestätigender Ergebnisse niemals stillschweigend
+eine Grenze ändern oder ein günstigeres Lastprofil einsetzen.
 
-Wrong flags/fixtures, lost outcome data, unplanned container restarts, missing
-required resource metrics or unrelated host load make a run incomplete or
-invalid. Retain it with the reason and repeat its block under the declared
-conditions. Expected V3/V4 degradation and budget failures are valid outcomes,
-not reasons to discard a run. Stop unsafe lab resource exhaustion and record the
-aborted result. Never replace a failed measurement with invented values.
+Falsche Schalter oder Fixtures, verlorene Ergebnisdaten, ungeplante
+Containerneustarts, fehlende erforderliche Ressourcenmetriken oder fremde Last
+auf dem Host machen einen Lauf unvollständig oder ungültig. Den Lauf mit
+Begründung aufbewahren und seinen Block unter den festgelegten Bedingungen
+wiederholen. Erwartete Verschlechterungen in V3/V4 und Grenzwertverletzungen
+sind gültige Ergebnisse und kein Grund, einen Lauf zu verwerfen. Bei riskanter
+Ressourcenerschöpfung im Labor abbrechen und das abgebrochene Ergebnis
+festhalten. Fehlgeschlagene Messungen niemals durch erfundene Werte ersetzen.
 
-Rollback restores the recorded baseline: stop generators and the delay proxy,
-restore the original socket path and spaCy CPU limit, set `NLP_ENABLED=false`,
-recreate the app to apply the environment, and stop spaCy. Verify application,
-PostgreSQL and Redis health plus a lexical analysis and one live-action smoke.
-Only remove data/containers belonging to this experiment's lab resources.
+Der Rollback stellt die dokumentierte Baseline wieder her: Lastgeneratoren und
+Verzögerungsproxy stoppen, ursprünglichen Socket-Pfad und spaCy-CPU-Limit
+wiederherstellen, `NLP_ENABLED=false` setzen, die App zum Übernehmen der Umgebung
+neu erzeugen und spaCy stoppen. Den Zustand von Anwendung, PostgreSQL und Redis
+sowie eine lexikalische Analyse und einen kurzen Funktionstest einer Live-Aktion
+prüfen. Ausschließlich Daten und Container der Laborressourcen dieses Versuchs
+entfernen.
 
-## Prerequisites and completion boundary
+## Voraussetzungen und Abschlussgrenze
 
-Before confirmatory measurements, resolve and record:
+Vor bestätigenden Messläufen klären und festhalten:
 
-- Examiner/lab-owner approval of the baseline commit, lab hardware and reference
-  manifest, including the assignment split where required.
-- Lab access, isolated resources, generator placement and available resource
-  counters, plus any lab-specific limitations or cost authorization.
-- Fixture seed/hash, exact room size/rankings, runner and image identities,
-  effective timing and a demonstrated recovery to the baseline.
-- Pilot and tool-test results, plus the frozen revision of this contract.
+- Freigabe von Baseline-Commit, Laborhardware und Referenzmanifest durch Prüfer
+  bzw. Laborverantwortliche, einschließlich der Auftragsaufteilung, soweit
+  erforderlich.
+- Laborzugang, isolierte Ressourcen, Ort des Lastgenerators und verfügbare
+  Ressourcenzähler sowie Laborbeschränkungen und gegebenenfalls Kostenfreigaben.
+- Fixture-Seed und -Hash, genaue Raumbezugsgröße und Bewertungen, Identitäten
+  von Versuchsskript und Images, tatsächlicher Zeitablauf und nachgewiesene
+  Wiederherstellung der Baseline.
+- Ergebnisse von Vorlauf und Werkzeugtests sowie die festgeschriebene Revision
+  dieses Vertrags.
 
-Step 1 is complete when the contract is documented and checked. It does not
-approve a release baseline, claim that the later tools exist or report measured
-capacity. The resulting decision must state whether to keep smoothing disabled,
-allow it under the measured limits, or require a further experiment, with its
-operating effort and resource consequence.
+Schritt 1 ist abgeschlossen, wenn der Vertrag dokumentiert und geprüft ist.
+Damit wird weder eine Release-Baseline freigegeben noch behauptet, dass die
+späteren Werkzeuge vorhanden sind oder Kapazitäten gemessen wurden. Die daraus
+abgeleitete Entscheidung muss benennen, ob die Glättung abgeschaltet bleibt,
+unter den gemessenen Grenzen zugelassen wird oder einen weiteren Versuch
+benötigt, jeweils mit Betriebsaufwand und Ressourcenfolge.
 
-Niklas owns the A1 experiment and the shared fixture/live-action tooling supplied
-to issues #9 and #10; mark reused contributions and data explicitly. Jonas's lab
-provision is shared infrastructure, not Niklas's measurement evidence. The later
-handout/slides must disclose AI assistance and identify the individual work.
-API timings and status fan-out indicate signal-delivery behavior; they do not
-measure browser rendering, teaching quality or the viability of an additional
-LLM on the application host.
+Niklas verantwortet den A1-Versuch und die gemeinsamen Fixture- und
+Live-Messwerkzeuge für die Issues #9 und #10. Wiederverwendete Beiträge und Daten
+ausdrücklich kennzeichnen. Die Laborbereitstellung durch Jonas ist gemeinsame
+Infrastruktur und kein eigener Messnachweis von Niklas. Das spätere Handout und
+die Folien müssen KI-Unterstützung offenlegen und den Eigenanteil ausweisen.
+API-Laufzeiten und Statusverteilung geben Hinweise auf die Zustellung von
+Signalen. Sie messen weder Browser-Rendering noch Lehrqualität oder die
+Tragfähigkeit eines zusätzlichen LLMs auf dem Anwendungshost.

@@ -825,15 +825,15 @@ docker run --rm -i \
   grafana/k6 run - < scripts/load/k6-trpc-health-50vu.js
 ```
 
-### A1 resource-isolation fixture (offline)
+### A1-Fixture zur Ressourcenisolation (offline)
 
-`npm run load:resource-isolation:fixture:test` builds shared-types and runs the
-fixture and CLI contract tests. It is also part of `npm test` and
-`npm run test:coverage`. After building shared-types,
-`npm run load:resource-isolation:fixture -- --validate` prints a reproducible
-summary without contacting a service or creating lab data. Fixture contents,
-projections and independent hash verification are documented in the
-[A1 fixture guide](referat-thema-1/1A-fixture.md).
+`npm run load:resource-isolation:fixture:test` baut Shared-Types und führt die
+Fixture- und CLI-Vertragstests aus. Der Befehl ist auch Teil von `npm test` und
+`npm run test:coverage`. Nach dem Bau von Shared-Types gibt
+`npm run load:resource-isolation:fixture -- --validate` eine reproduzierbare
+Übersicht aus, ohne einen Dienst zu kontaktieren oder Labordaten anzulegen.
+Fixture-Inhalte, Projektionen und die unabhängige Hashprüfung sind in der
+[A1-Fixture-Anleitung](referat-thema-1/1A-fixture.md) dokumentiert.
 
 ### Artillery-Lasttest (Realtime, bis 500 TN)
 
