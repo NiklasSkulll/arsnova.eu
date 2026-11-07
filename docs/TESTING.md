@@ -835,6 +835,31 @@ Fixture- und CLI-Vertragstests aus. Der Befehl ist auch Teil von `npm test` und
 Fixture-Inhalte, Projektionen und die unabhängige Hashprüfung sind in der
 [A1-Fixture-Anleitung](referat-thema-1/1A-fixture.md) dokumentiert.
 
+### A1-Analyse-Last mit festem Korpus
+
+Die Instrumentierung für `wordCloud.analyzeQa` lässt sich ohne laufende
+Anwendung prüfen:
+
+```bash
+npm run build -w @arsnova/shared-types
+npm run load:resource-isolation:analysis -- --validate
+npm run load:resource-isolation:analysis:test
+```
+
+Der Standardzeitplan umfasst fünf getrennte Host-Sessions, jeweils einen
+Aufruf alle zehn Sekunden mit Versätzen von 0/2/4/6/8 Sekunden über 300
+Sekunden. Geplante, gestartete, fehlgeschlagene, übersprungene und zum
+Fensterende offene Aufrufe bleiben getrennt sichtbar. Die tatsächliche
+Normalisierung und Fallbackgründe werden pro Antwort erfasst. Vor und nach
+einem Lauf müssen Texte, Status und Stimmen des zulässigen Korpus zur
+gemeinsamen Fixture passen. Die Tests verwenden auch echte tRPC-Aufrufe
+gegen einen lokalen HTTP-Testserver und gehören zu `npm test` sowie
+`npm run test:coverage`.
+
+Laborzuordnung, Aufruf und Grenzen des Nachweises beschreibt die
+[A1-Analyseanleitung](referat-thema-1/1A-analyse-last.md). Das Werkzeug legt
+keine Laborsessions an und startet keine weiteren Dienste.
+
 ### Artillery-Lasttest (Realtime, bis 500 TN)
 
 Unified Live-Session: Join-Welle, Quiz-Vote, Q&A (20 %), Blitzlicht, WebSocket-Status/Host-Progress, Ergebnis-Fan-out.
