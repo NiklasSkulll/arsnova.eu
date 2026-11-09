@@ -37,17 +37,17 @@ Werte aus `auswertung.mjs`; Messläufe ohne Aufwärmlauf. Zur Zählung: Messlauf
 
 ### N1 Vorschau = Nutzlast
 
-In allen **18** Messläufen mit Completion-Aufruf 0 Abweichungen in allen elf Prüfungen (Hash Vorschau = gesendet = gespeichert, `messages[2]` = Vorschau, Rollen, Instruktion v5 und Definitionen, `max_tokens` = 640, oberste Schlüssel, weitergeleitete Bytes, Token). Die Messläufe 19 und 20 hatten keinen Completion-Aufruf (`ECONNREFUSED` beim Slot-Test, Runtime im Neustart); dort schlagen die acht Prüfungen am Draht fehl, die Hash-Prüfungen nicht. **K_L1 formal nicht erfüllt** („in jedem Messlauf“), Ursache ist der OOM-Kill, nicht der Kontextpfad. Wo ein Body gesendet wurde, war er gleich der Vorschau.
+In allen **18** Messläufen mit Completion-Aufruf 0 Abweichungen in allen elf Prüfungen (Hash Vorschau = gesendet = gespeichert, `messages[2]` = Vorschau, Rollen, Instruktion v5 und Definitionen, `max_tokens` = 640, oberste Schlüssel, weitergeleitete Bytes, Token). Die Messläufe 19 und 20 hatten keinen Completion-Aufruf (`ECONNREFUSED` beim Slot-Test, Runtime im Neustart); dort schlagen die sieben Prüfungen fehl, die einen Completion-Body brauchen; die vier übrigen (zwei Hash-Gleichheiten, weitergeleitete Bytes, Token) nicht. **K_L1 formal nicht erfüllt** („in jedem Messlauf“), Ursache ist der OOM-Kill, nicht der Kontextpfad. Wo ein Body gesendet wurde, war er gleich der Vorschau.
 
 ### N2 Tokens
 
-n = 17 (Läufe mit `usage`). q = `prompt_tokens` / `packedInputTokens`: Median **0,318** (95 %-KI 0,316–0,318), Spanne 0,312–0,319; 3,15 Byte je Token. `prompt_tokens` Median 2353 (max. 2361) bei 7406 geschätzten Tokens; Ausgabe Median 469, max. 570 von 640; Kopffreiheit max. 3001 von 8192. `prompt_tokens = prompt_n + cache_n` in 17 von 17, `cache_n` Median 188. `finish_reason` 17-mal `stop`. **K_L2 erfüllt.** L5: q Median 0,336 (YESNO) und 0,335 (TEMPO), ebenfalls ≤ 1. Gegen den 2026-11-05 (q 0,320) unverändert: Die Schätzung verschenkt weiter rund zwei Drittel des Fensters ([ADR 1C-014](../../adr/1C-014-byte-schaetzung-kontextbudget-pruefen.md)).
+n = 17 (Läufe mit `usage`). q = `prompt_tokens` / `packedInputTokens`: Median **0,318** (95 %-KI 0,316–0,318), Spanne 0,312–0,319; 3,15 Byte je Token. `prompt_tokens` Median 2353 (max. 2361) bei 7406 geschätzten Tokens; Ausgabe Median 469, max. 570 von 640; Kopffreiheit max. 3001 von 8192. `prompt_tokens = prompt_n + cache_n` in 17 von 17, `cache_n` Median 188. `finish_reason` 17-mal `stop`. **K_L2 erfüllt.** L5: q Median 0,3363 (YESNO) und 0,3345 (TEMPO), ebenfalls ≤ 1. Gegen den 2026-11-05 (q 0,320) unverändert: Die Schätzung verschenkt weiter rund zwei Drittel des Fensters ([ADR 1C-014](../../adr/1C-014-byte-schaetzung-kontextbudget-pruefen.md)).
 
 ### N3 Zeiten
 
 **(a) Host wartet nicht.** `requestMs` Median 29,4 ms, max. 50,7 ms; kürzester Runtime-Austausch 195,6 s. **K_L3a erfüllt.** Anteil s = prepare (3) / `totalMs` = 0,03 % (< 5 %).
 
-**(b) Inferenzzeit gegen den 2026-11-05** (gleicher Rechner, gleiche Limits; Median mit 95 %-Bootstrap-Intervall, n = 17 bzw. 19):
+**(b) Inferenzzeit gegen den 2026-11-05** (gleicher Rechner, gleiche Limits; Median, am 2026-11-09 mit 95 %-Bootstrap-Intervall; n = 19 bzw. 17 Läufe mit Antwort):
 
 | Größe                                 | 2026-11-05 (`9f230abc`)   | 2026-11-09 (`def56700`)                  |
 | ------------------------------------- | ------------------------- | ---------------------------------------- |
@@ -84,8 +84,8 @@ k(`source_changed`) = 0 von 20 (Wilson 0–16,1 %). **Anteil `full-context` 0 vo
 
 **Qualitative Einordnung der verworfenen Antworten** (Design 5, Regel N4): Alle 28 aufgezeichneten Modellantworten (Aufwärmlauf, 17 Messläufe, 10 L5-Läufe; die direkten Läufe laufen ohne Proxy und sind nicht aufgezeichnet) wurden nachträglich mit der echten Funktion `hasAcceptableQaSummaryQuality` (Locale `de`, Stand `def56700`) geprüft: **0 von 28 bestehen.** Jede Antwort ist gültiges JSON mit `finish_reason` `stop`. Ob der Adapter einzelne Antworten schon vorher aus einem anderen Grund verwirft (etwa Quellen-IDs), ist nicht geprüft; das Gate allein verwirft jede. Zwei Muster:
 
-- **Ruhige Läufe (18 von 18):** Status `uncertain`, je 4 Aussagen, **keine einzige der 72 Aussagen hat einen Doppelpunkt**, also keine Form „Lead: Text“. Alle auf Englisch, obwohl `context.locale` `de` ist. In jeder Antwort sprechen 2–4 Aussagen über das, was v5 ausdrücklich verbietet: Moderationsstatus, angeheftete Fragen, ausgelassene Fragen, Packing, die abgeschaltete Themenklassifikation. Beispiel (Messlauf 1): „Pending moderation state detected for multiple Q&A questions requiring host review.“
-- **L5 (10 von 10):** Status `ready`. In 5 Antworten beginnen **alle vier Aussagen mit dem wörtlichen Platzhalter aus der Instruktion**, „Specific topic: …“ (v5: „Write 2 to 4 concise statements exactly as "Specific topic: Complete sentence."“); vier gleiche Leads verletzen die Regel „verschiedene Leads“. Die anderen 5 Antworten haben gar keinen Lead. Sprache gemischt, teils Deutsch, teils Englisch, teils beides.
+- **Ruhige Läufe (18 von 18):** Status der Modellausgabe `uncertain`, je 4 Aussagen, **keine einzige der 72 Aussagen hat einen Doppelpunkt**, also keine Form „Lead: Text“. Alle auf Englisch, obwohl `context.locale` `de` ist. In jeder Antwort sprechen 2–4 Aussagen (Sprache und Themen per Stichwortsuche bestimmt, Stichproben gelesen) über das, was v5 ausdrücklich verbietet: Moderationsstatus, angeheftete Fragen, ausgelassene Fragen, Packing, die abgeschaltete Themenklassifikation. Beispiel (Messlauf 1): „Pending moderation state detected for multiple Q&A questions requiring host review.“
+- **L5 (10 von 10):** Status der Modellausgabe `ready`. In 5 Antworten beginnen **alle vier Aussagen mit dem wörtlichen Platzhalter aus der Instruktion**, „Specific topic: …“ (v5: „Write 2 to 4 concise statements exactly as "Specific topic: Complete sentence."“); vier gleiche Leads verletzen die Regel „verschiedene Leads“. Die anderen 5 Antworten haben gar keinen Lead. Sprache gemischt, teils Deutsch, teils Englisch, teils beides.
 
 Das ausgelieferte Modell (Qwen3-4B-Instruct-2507, Q4_K_M) folgt der Formatvorgabe von v5 in dieser Fixture also nicht; das Gate verwirft dann zu Recht nach seinen Regeln. Upstream nimmt die Prompt-Qualität ausdrücklich aus („Prompt quality and didactic efficacy are deliberately not claimed by issue #456“, Kommentar über `QA_SUMMARY_TECHNICAL_INSTRUCTION_TEXT` in `moderationSummaryContext.ts`).
 
@@ -110,7 +110,7 @@ Das ausgelieferte Modell (Qwen3-4B-Instruct-2507, Q4_K_M) folgt der Formatvorgab
 | 15:00 Messlauf 5                | 5,262 GB               | 0,416 GB      |
 | 15:04 bis 15:51                 | 5,27–5,37 GB, am Limit | –             |
 
-Median Δ je Auftrag **0,419 GB** (Aufwärmlauf bis Messlauf 5), gegen 0,381 GB in U1 ([PC-Protokoll](2026-11-05-labor-pc.md#ursachenversuch-u1-design-15)). Ab 15:00 liegt der RAM am 5-GiB-Limit; weiteres Wachstum geht in den Swap des Containers (ohne `memswap_limit` gleich dem Limit) und ist in `podman stats` nicht sichtbar. **OOM-Kill um 15:51:45** (Kernel: `memory: usage 5242880kB, limit 5242880kB, failcnt 18090`, `anon-rss` 5,18 GB), während Messlauf 18, also im **19. Auftrag** mit Aufwärmlauf. Ein Neustart, `OOMKilled=true`. Am 2026-11-05 kam der Kill im 21. Auftrag; Näherung: 3,06 GB + 18 × 0,42 GB ≈ 10,6 GB, und 5 + 5 GiB sind 10,74 GB.
+Median Δ je Auftrag **0,419 GB** (Aufwärmlauf bis Messlauf 5), gegen 0,381 GB in U1 ([PC-Protokoll](2026-11-05-labor-pc.md#ursachenversuch-u1-design-15)). Ab 15:00 bleibt der angezeigte Wert am 5-GiB-Limit. Weiteres Wachstum, etwa in den Swap des Containers (ohne `memswap_limit` gleich dem Limit), zeigt das Protokoll nicht; dass der Kill erst 50 Minuten später kam, passt dazu, ist aber nicht gemessen. **OOM-Kill um 15:51:45** (Kernel: `memory: usage 5242880kB, limit 5242880kB, failcnt 18090`, `anon-rss` 5,18 GB), während Messlauf 18, also im **19. Auftrag** mit Aufwärmlauf. Ein Neustart, `OOMKilled=true`. Am 2026-11-05 kam der Kill im 21. Auftrag; Näherung: 3,06 GB + 18 × 0,42 GB ≈ 10,6 GB, und 5 + 5 GiB sind 10,74 GB.
 
 ## Abweichungen vom Ablauf
 
@@ -118,10 +118,10 @@ Median Δ je Auftrag **0,419 GB** (Aufwärmlauf bis Messlauf 5), gegen 0,381 GB 
 
 - **Messlauf 18:** Completion weitergeleitet, Abbruch `socket hang up` → `ready/extractive/unavailable` (`no_response`). Zählt in N1 und N4, fehlt in N2 und N3b.
 - **Messläufe 19 und 20:** Slot-Test `ECONNREFUSED`, kein Completion-Aufruf → `unavailable`.
-- **Kontrolle ohne Proxy (5 Läufe):** Lauf 1 `unavailable`, Läufe 2 und 3 `busy` (Runtime noch nicht bereit), Läufe 4 und 5 mit Antwort nach 238 und 220 s, beide `invalid_response`. **Diese Kontrolle ist wie am 2026-11-05 nicht auswertbar** (n = 2 mit Antwort); der Unterschied quiet − direkt hat keine Aussage.
+- **Kontrolle ohne Proxy (5 Läufe):** Lauf 1 `unavailable`, Läufe 2 und 3 `busy` (vermutlich Runtime kurz nach dem Neustart noch nicht bereit), Läufe 4 und 5 mit Antwort nach 238 und 220 s, beide `invalid_response`. **Diese Kontrolle ist wie am 2026-11-05 nicht auswertbar** (n = 2 mit Antwort); der Unterschied quiet − direkt hat keine Aussage.
 - L5 lief danach vollständig mit 10 Modellantworten.
 
-**2. Nebenlast.** Der Lauf startete nach der Lastregel (< 2,0). Laut Autor lief eine andere Claude-Code-Sitzung (Recherche im Hintergrund) bis etwa 15:44 aktiv und danach untätig; ab 15:00 lief die Zoom-Web-App (Chromium, bei einer Stichprobe um 15:32 etwa 0,3–0,5 Kerne, `llama-server` 3,8–3,9 Kerne). Die Lastregel aus Design 3 („andere Last nur gering“) war damit nur teilweise eingehalten. Betroffen sind nur Zeiten (N3b); Inhalt der Antworten, Speicher des Containers und Hashes hängen nicht an der Nebenlast. Die Zeiten sind deshalb nach Phasen berichtet (N3).
+**2. Nebenlast.** Der Lauf startete nach der Lastregel (< 2,0). Laut Autor lief eine andere Claude-Code-Sitzung (Recherche im Hintergrund) bis etwa 15:44 aktiv und danach untätig; ab 15:00 lief die Zoom-Web-App (Chromium, bei zwei Stichproben gegen 15:32 und 15:40 zusammen etwa 0,4–0,5 Kerne, `llama-server` 3,8–3,9 Kerne). Die Lastregel aus Design 3 („andere Last nur gering“) war damit nur teilweise eingehalten. Betroffen sind nur Zeiten (N3b); Inhalt der Antworten, Speicher des Containers und Hashes hängen nicht an der Nebenlast. Die Zeiten sind deshalb nach Phasen berichtet (N3).
 
 **3. Dateiname der Rohdaten** wie im Design-Nachtrag 7 angekündigt (`2026-11-09-labor-nachlauf.json`).
 
