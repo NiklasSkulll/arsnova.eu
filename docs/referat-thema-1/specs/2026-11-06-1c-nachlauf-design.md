@@ -2,7 +2,7 @@
 
 - **Datum:** 2026-11-06
 - **Autor:** Jonas Weirauch (Rolle Y)
-- **Status:** Entwurf, vor dem Lauf festgelegt; Freigabe durch den Autor ausstehend
+- **Status:** freigegeben (2026-11-09), vor dem Lauf festgelegt
 - **Bezug:** [Labor-Design](2026-10-25-1c-labor-design.md) (Fälle L1–L5, Regeln Abschnitt 6, Nachtrag 14), [Laptop-Lauf vom 2026-11-05](../evidenz/1C/2026-11-05-labor.md), [Trockenlauf vom 2026-11-06](../evidenz/1C/2026-11-06-trockenlauf-upstream.md), [ADR 1C-025](../adr/1C-025-codestand-auf-upstream-aktualisiert.md)
 
 ## 1. Anlass und Frage
