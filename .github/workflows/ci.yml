@@ -2349,6 +2349,34 @@ jobs:
             export DEPLOY_BRANCH="${DEPLOY_BRANCH:-main}"
             export DEPLOY_SHA="$DEPLOY_SHA"
             export DEPLOY_IMAGE="$DEPLOY_IMAGE"
+            # Der Checkout selbst braucht freien Platz. Ein volles Dateisystem
+            # darf den Server daher nicht vor deploy.sh in einem angerissenen
+            # Zustand lassen. Nur reproduzierbaren Build-Cache und unreferenzierte
+            # Images entfernen; Volumes und laufende Container bleiben unberührt.
+            echo "Speicherbelegung vor risikoarmer Deploy-Bereinigung:"
+            df -h /
+            docker system df
+            docker builder prune -af --reserved-space 10GB
+            # Aktive Images (insbesondere der laufende Last-known-good-Stand)
+            # bleiben erhalten. Der 24h-Filter bewahrt zusätzlich frisch
+            # gepullte, noch nicht gestartete Release-Kandidaten.
+            docker image prune -af --filter "until=24h"
+            echo "Speicherbelegung nach risikoarmer Deploy-Bereinigung:"
+            df -h /
+            MIN_DEPLOY_FREE_KIB=15728640
+            deploy_free_kib="$(df -Pk / | awk 'NR == 2 { print $4 }')"
+            case "$deploy_free_kib" in
+              ''|*[!0-9]*)
+                echo "Fehler: Freier Speicher auf / konnte nicht zuverlässig bestimmt werden." >&2
+                exit 1
+                ;;
+            esac
+            if [ "$deploy_free_kib" -lt "$MIN_DEPLOY_FREE_KIB" ]; then
+              deploy_free_gib="$(awk -v kib="$deploy_free_kib" 'BEGIN { printf "%.2f", kib / 1024 / 1024 }')"
+              echo "Fehler: Nach der sicheren Bereinigung sind auf / nur ${deploy_free_gib} GiB frei; für den Deploy sind mindestens 15 GiB erforderlich." >&2
+              exit 1
+            fi
+            echo "Deploy-Speicher-Gate OK: mindestens 15 GiB auf / frei."
             cd "$DEPLOY_DIR"
             # Bootstrap: Ziel-Commit AUSCHECKEN, bevor deploy.sh startet.
             # Sonst würde der erste Post-Merge-Lauf noch das alte 1B-Skript
