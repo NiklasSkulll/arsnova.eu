@@ -59,6 +59,12 @@ Es gelten die Regeln aus Labor-Design Abschnitt 6 für N1–N5 (statt L1–L5), 
 
 Wie Labor-Design Abschnitt 7 und Laptop-Lauf: ein Rechner, Laborlimits statt Produktionslimits, Timeout 300 s, lokal gebautes Image, synthetische Daten, n = 20 bzw. 5. Ein Vergleich mit dem PC-Lauf (Produktionslimits) ist nicht Ziel dieses Laufs. Zeiten gelten nur für diesen Rechner und bei geringer Nebenlast.
 
-## 7. KI-Nutzung
+## 7. Nachtrag (2026-11-09, nach der Freigabe, vor dem Lauf)
+
+- **Codestand:** Der Autor hat entschieden, vor dem Lauf upstream `def56700` (35 Commits nach `44c0a796`) über den Fork-`main` in den Branch zu mergen, damit der Branch danach in den Fork-`main` übernommen werden kann. Gemessen wird der gemergte Stand; der Commit steht im Protokoll.
+- **Kein Einfluss auf die Fälle:** Die 35 Commits ändern im Backend nur die Lernziel-Anweisung in `openWeightLlmClient.ts` (eigener Zweig; der Nachrichtenaufbau der Zusammenfassung V2 in `buildChatCompletionBody` ist unverändert) und die Leertexte in `qaSummaryExtractive.ts` für en, fr, es und it (nur bei leerer Auswahl, der deutsche Text bleibt). Instruktion v5, Grammatik, Quality-Gate, Packen, Hash und Queue sind unverändert. Fälle, Regeln und Vergleich mit dem 2026-11-05 gelten deshalb wie festgelegt.
+- **Dateiname der Rohdaten:** Das Skript schreibt `messung/<Datum des Laufs>-labor-nachlauf.json` (Bindestrich vor der Kennung), nicht wie in Abschnitt 3 angegeben.
+
+## 8. KI-Nutzung
 
 Claude Code (Opus 5.5) hat dieses Design entworfen, einschließlich Fällen, Schwellen (80 %, 0,2 GB, Lastgrenze 2,0) und Erwartungen. Vom Autor stammen die Festlegungen in Abschnitt 2 (Rechner, Limits, Cache, Codestand) und die Entscheidung für den Nachlauf.
