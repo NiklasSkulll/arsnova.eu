@@ -99,18 +99,18 @@ Bei gleichem Wert entscheiden nacheinander die Anzahl der Dafür-Stimmen, der we
 `.trim(),
     },
     en: {
-      title: 'Best questions',
+      title: 'Strong support',
       markdown: `
-This ranking favours questions with strong positive support backed by a meaningful number of votes. A single positive vote is therefore not enough to place a question at the top automatically.
+This ranking favors questions with strong positive support backed by a meaningful number of votes. A single positive vote does not automatically put a question at the top. This score does not measure the factual accuracy of a question.
 
 #### Formula
 
 Let:
 
-- \\(p\\): number of votes in favour
+- \\(p\\): number of votes in favor
 - \\(n\\): number of votes against
 - \\(N=p+n\\): total number of votes
-- \\(\\hat{p}=p/N\\): proportion of votes in favour
+- \\(\\hat{p}=p/N\\): proportion of votes in favor
 - \\(z=1.96\\): value for a 95% confidence level
 
 For \\(N>0\\), the lower bound of the Wilson confidence interval is used:
@@ -121,21 +121,21 @@ The score is 0 when no votes have been cast.
 
 #### In plain language
 
-The score considers both the level of support and how reliable that result is. Results based on only a few votes receive a larger confidence adjustment. A question with 10 votes in favour and none against therefore ranks above a question with 2 votes in favour and none against, even though both have 100% support.
+The score considers both the level of support and how reliable that result is. Results based on only a few votes receive a larger confidence adjustment. A question with 10 votes in favor and none against therefore ranks above a question with 2 votes in favor and none against, even though both have 100% support.
 
 | Votes | Support | Approximate score |
 | --- | ---: | ---: |
-| 2 in favour, 0 against | 100% | 0.34 |
-| 10 in favour, 0 against | 100% | 0.72 |
-| 8 in favour, 2 against | 80% | 0.49 |
+| 2 in favor, 0 against | 100% | 0.34 |
+| 10 in favor, 0 against | 100% | 0.72 |
+| 8 in favor, 2 against | 80% | 0.49 |
 
-If scores are equal, ties are resolved by the number of votes in favour, the additional vote value and finally the creation time. Highlighted questions are shown first regardless of this score.
+If scores are equal, ties are resolved by the number of votes in favor, the net vote count, and finally the creation time. Pinned questions are shown first regardless of this score.
 `.trim(),
     },
     fr: {
-      title: 'Meilleures questions',
+      title: 'Forte adhésion',
       markdown: `
-Ce classement privilégie les questions qui recueillent une forte adhésion, confirmée par un nombre suffisant de votes. Une seule voix favorable ne suffit donc pas automatiquement pour placer une question en tête.
+Ce classement privilégie les questions qui recueillent une forte adhésion, appuyée par un nombre suffisant de votes. Un seul vote favorable ne suffit donc pas automatiquement à placer une question en tête. Ce score ne mesure pas l’exactitude du contenu de la question.
 
 #### Formule
 
@@ -167,9 +167,9 @@ En cas d’égalité, le nombre de votes favorables, la valeur de vote compléme
 `.trim(),
     },
     es: {
-      title: 'Mejores preguntas',
+      title: 'Apoyo claro',
       markdown: `
-Esta ordenación da prioridad a las preguntas que cuentan con un amplio respaldo positivo sustentado por un número suficiente de votos. Por tanto, un único voto favorable no basta para situar automáticamente una pregunta en primer lugar.
+Esta ordenación da prioridad a las preguntas que cuentan con un amplio respaldo positivo sustentado por un número suficiente de votos. Por tanto, un único voto favorable no basta para situar automáticamente una pregunta en primer lugar. Esta puntuación no mide la exactitud del contenido.
 
 #### Fórmula
 
@@ -197,13 +197,13 @@ La puntuación tiene en cuenta tanto el nivel de apoyo como la fiabilidad del re
 | 10 a favor, 0 en contra | 100 % | 0,72 |
 | 8 a favor, 2 en contra | 80 % | 0,49 |
 
-En caso de empate, se comparan sucesivamente el número de votos a favor, el valor adicional de los votos y, por último, la fecha de creación. Las preguntas destacadas se muestran primero con independencia de esta puntuación.
+En caso de empate, se comparan sucesivamente el número de votos a favor, el saldo de votos y, por último, la fecha de creación. Las preguntas fijadas se muestran primero con independencia de esta puntuación.
 `.trim(),
     },
     it: {
-      title: 'Domande migliori',
+      title: 'Consenso solido',
       markdown: `
-Questo ordinamento privilegia le domande che ricevono un ampio consenso positivo, sostenuto da un numero sufficiente di voti. Un solo voto favorevole, quindi, non basta per portare automaticamente una domanda al primo posto.
+Questo ordinamento privilegia le domande che ricevono un ampio consenso positivo, sostenuto da un numero sufficiente di voti. Un solo voto favorevole, quindi, non basta per portare automaticamente una domanda al primo posto. Il punteggio non misura la correttezza del contenuto.
 
 #### Formula
 
@@ -231,7 +231,7 @@ Il punteggio considera sia il livello di consenso sia l’affidabilità del risu
 | 10 favorevoli, 0 contrari | 100% | 0,72 |
 | 8 favorevoli, 2 contrari | 80% | 0,49 |
 
-In caso di parità vengono confrontati, nell’ordine, il numero di voti favorevoli, il valore di voto aggiuntivo e infine la data di creazione. Le domande in evidenza vengono mostrate per prime indipendentemente da questo punteggio.
+In caso di parità vengono confrontati, nell’ordine, il numero di voti favorevoli, il saldo dei voti e infine la data di creazione. Le domande in evidenza vengono mostrate per prime indipendentemente da questo punteggio.
 `.trim(),
     },
   },
@@ -271,7 +271,7 @@ Die erste Frage gilt in diesem Beispiel als umstritten. Die Frage mit 2 zu 2 Sti
     en: {
       title: 'Controversy',
       markdown: `
-This ranking favours questions where votes in favour and against are distributed as evenly as possible. An additional threshold prevents a very small number of votes from appearing to represent a meaningful disagreement.
+This ranking favors questions where votes in favor and against are distributed as evenly as possible. An additional threshold prevents a very small number of votes from appearing to represent a meaningful disagreement.
 
 #### Formula
 
@@ -292,10 +292,10 @@ The more evenly support and opposition are split, the higher the score. A one-si
 
 | Votes | Calculation | Approximate score |
 | --- | --- | ---: |
-| 10 in favour, 10 against | \\(20/(20+10)\\) | 0.67 |
-| 18 in favour, 2 against | \\(4/(20+10)\\) | 0.13 |
-| 2 in favour, 2 against | \\(4/(4+10)\\) | 0.29 |
-| 10 in favour, 0 against | \\(0/(10+10)\\) | 0.00 |
+| 10 in favor, 10 against | \\(20/(20+10)\\) | 0.67 |
+| 18 in favor, 2 against | \\(4/(20+10)\\) | 0.13 |
+| 2 in favor, 2 against | \\(4/(4+10)\\) | 0.29 |
+| 10 in favor, 0 against | \\(0/(10+10)\\) | 0.00 |
 
 In this example, the first question qualifies as controversial. The 2–2 result is evenly split, but there are not yet enough votes for a reliable label.
 `.trim(),
