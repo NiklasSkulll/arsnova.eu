@@ -1,6 +1,6 @@
 # Issue-Entwurf: Prompt-Cache der Open-Weight-Runtime übersteigt `mem_limit` und führt zum OOM-Kill
 
-> **Status:** Entwurf, nicht angelegt. Angelegt wird erst nach Freigabe durch den Autor; Ort (kqc-real oder Fork) entscheidet er. Grundlage: [L6](2026-11-05-labor-pc.md#l6-speicher-mit-produktionslimits-design-144) und [Ursachenversuch U1](2026-11-05-labor-pc.md#ursachenversuch-u1-design-15) im PC-Protokoll. Entworfen mit Claude Code (Modell Claude Opus 5.5).
+> **Status:** _Aktualisiert 2026-11-09:_ angelegt als [#14](https://github.com/NiklasSkulll/arsnova.eu/issues/14) im Fork (englische Fassung, Unter-Issue von #10). Ursprünglich: Entwurf, nicht angelegt. Angelegt wird erst nach Freigabe durch den Autor; Ort (kqc-real oder Fork) entscheidet er. Grundlage: [L6](2026-11-05-labor-pc.md#l6-speicher-mit-produktionslimits-design-144) und [Ursachenversuch U1](2026-11-05-labor-pc.md#ursachenversuch-u1-design-15) im PC-Protokoll. Entworfen mit Claude Code (Modell Claude Opus 5.5).
 
 **Vorgeschlagener Titel:** `Open-Weight-Runtime: Prompt-Cache im RAM (--cache-ram, Standard 8192 MiB) wächst über die Aufträge und führt am mem_limit zum OOM-Kill`
 

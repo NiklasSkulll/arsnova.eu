@@ -1,6 +1,6 @@
 # Issue-Entwurf: Themen-Snapshot mit fremder Version wird still wie „keine Daten“ behandelt
 
-> **Status:** Entwurf, nicht angelegt. Angelegt wird erst nach Freigabe durch den Autor; Ort (kqc-real oder Fork) entscheidet er. Grundlage: Befund T2.3 im [Protokoll Teil 1](2026-10-24-tests.md). Entworfen mit Claude Code (Modell Claude Opus 5.5).
+> **Status:** _Aktualisiert 2026-11-09:_ angelegt als [#15](https://github.com/NiklasSkulll/arsnova.eu/issues/15) im Fork (englische Fassung, Unter-Issue von #10). Ursprünglich: Entwurf, nicht angelegt. Angelegt wird erst nach Freigabe durch den Autor; Ort (kqc-real oder Fork) entscheidet er. Grundlage: Befund T2.3 im [Protokoll Teil 1](2026-10-24-tests.md). Entworfen mit Claude Code (Modell Claude Opus 5.5).
 
 **Vorgeschlagener Titel:** `Moderationskontext: unbrauchbarer semantischer Themen-Snapshot ist nicht von fehlenden Daten unterscheidbar`
 

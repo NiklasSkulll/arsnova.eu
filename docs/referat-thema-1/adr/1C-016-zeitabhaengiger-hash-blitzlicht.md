@@ -1,6 +1,6 @@
 # 1C-016: Zeitabhängiger Hash bei live Blitzlicht-Runde beheben (T3.1)
 
-- **Status:** empfohlen (2026-11-05), nicht umgesetzt; Issue-Entwurf nicht angelegt
+- **Status:** empfohlen (2026-11-05), nicht umgesetzt; Issue-Entwurf nicht angelegt, _aktualisiert 2026-11-09:_ Issue [#18](https://github.com/NiklasSkulll/arsnova.eu/issues/18) im Fork
 - **Kategorie:** Verbesserung
 
 ## Kontext
@@ -34,6 +34,6 @@ Beobachtung: In E15 endet ein Job `source_changed`, obwohl sich nichts geändert
 - **Kosten heute:** Jede betroffene Inferenz läuft und wird verworfen; zur Größenordnung beträgt die Inferenz der Referenzfixture im Median 163,4 s (Laptop) bzw. 98,8 s (PC) ([Kennzahlen](../evidenz/1C/2026-11-05-labor-pc.md#laufrechner-pc-gegen-laptop)).
 - **Risiko bei Option 1:** Das Fenster beschreibt die Laufzeit der Runde nicht mehr; ob Kompassregeln oder das Modell die Fensterlänge nutzen, ist nicht geprüft. Ohne gespeicherten Zeitpunkt der letzten Stimme ist `to = from` nur ein Notbehelf ([Issue-Entwurf T3.1, Lösungsoptionen](../evidenz/1C/issue-t3-1-entwurf.md#lösungsoptionen)). **Rückweg:** Revert.
 - **Gültigkeitsgrenze:** getestet ist nur `YESNO`; die übrigen Nicht-TEMPO-Typen folgen aus dem Code, dynamisch geprüft sind sie nicht. Wie oft in echten Vorlesungen eine solche Runde läuft, während eine Zusammenfassung angefordert wird, ist nicht gemessen ([Befund T3.1](../evidenz/1C/2026-10-24-teil3.md#befund-t31--zeitabhängige-sourcerevision-bei-aktiver-blitzlicht-runde)).
-- **Issue-Entwurf:** [`issue-t3-1-entwurf.md`](../evidenz/1C/issue-t3-1-entwurf.md), nicht angelegt.
+- **Issue-Entwurf:** [`issue-t3-1-entwurf.md`](../evidenz/1C/issue-t3-1-entwurf.md), nicht angelegt. _Aktualisiert 2026-11-09:_ angelegt als [#18](https://github.com/NiklasSkulll/arsnova.eu/issues/18) im Fork (englisch, Unter-Issue von #10); die Optionswahl ist dort als offen markiert.
 - _Aktualisiert 2026-11-06:_ Auf upstream `44c0a796` besteht der Befund weiter. Dort entfällt der Blitzlicht-Bereich im YESNO-Arm aus Budgetgründen ganz aus dem Modellkontext, der Hash ändert sich trotzdem bei jedem Aufbau; das Modell sieht die zeitabhängige Quelle also nicht, die Antwort wird trotzdem verworfen ([Trockenlauf](../evidenz/1C/2026-11-06-trockenlauf-upstream.md#befund-t31-auch-für-einen-nicht-gesendeten-bereich), n = 1, Test-Runtime).
 - _Aktualisiert 2026-11-09:_ Auf dem echten Pfad bestätigt ([Nachlauf, N5](../evidenz/1C/2026-11-09-labor-nachlauf.md#n5-t31-auf-dem-echten-pfad)): `def56700`, echte Runtime, YESNO 5 von 5 `source_changed` bei aus Budgetgründen gekürztem Blitzlicht-Bereich, TEMPO 0 von 5.

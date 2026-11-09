@@ -1,6 +1,6 @@
 # Issue-Entwurf: Aktive Blitzlicht-Runde macht den `snapshotHash` zeitabhängig
 
-> **Status:** Entwurf, nicht angelegt. Angelegt wird erst nach Freigabe durch den Autor; Ort (kqc-real oder Fork) entscheidet er. Grundlage: [Befund T3.1 im Protokoll Teil 3](2026-10-24-teil3.md#befund-t31--zeitabhängige-sourcerevision-bei-aktiver-blitzlicht-runde). Entworfen mit Claude Code (Modell Claude Opus 5.5).
+> **Status:** _Aktualisiert 2026-11-09:_ angelegt als [#18](https://github.com/NiklasSkulll/arsnova.eu/issues/18) im Fork (englische Fassung, Unter-Issue von #10). Ursprünglich: Entwurf, nicht angelegt. Angelegt wird erst nach Freigabe durch den Autor; Ort (kqc-real oder Fork) entscheidet er. Grundlage: [Befund T3.1 im Protokoll Teil 3](2026-10-24-teil3.md#befund-t31--zeitabhängige-sourcerevision-bei-aktiver-blitzlicht-runde). Entworfen mit Claude Code (Modell Claude Opus 5.5).
 
 **Vorgeschlagener Titel:** `Q&A-Zusammenfassung: aktive Blitzlicht-Runde ändert den snapshotHash bei jedem Kontextaufbau, Modellantworten enden immer als source_changed`
 

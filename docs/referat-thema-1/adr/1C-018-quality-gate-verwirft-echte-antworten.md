@@ -1,6 +1,6 @@
 # 1C-018: Quality-Gate verwirft die echten Antworten des ausgelieferten Modells (N4)
 
-- **Status:** empfohlen (2026-11-09), nicht umgesetzt; kein Issue-Entwurf
+- **Status:** empfohlen (2026-11-09), nicht umgesetzt; Issue [#13](https://github.com/NiklasSkulll/arsnova.eu/issues/13) im Fork
 - **Kategorie:** Verbesserung
 
 ## Kontext

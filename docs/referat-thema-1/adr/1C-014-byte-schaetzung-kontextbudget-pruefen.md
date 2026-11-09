@@ -1,6 +1,6 @@
 # 1C-014: Byte-Schätzung des Kontextbudgets: Verbesserung prüfen
 
-- **Status:** empfohlen (2026-11-05), nicht umgesetzt
+- **Status:** empfohlen (2026-11-05), nicht umgesetzt; _aktualisiert 2026-11-09:_ Issue [#17](https://github.com/NiklasSkulll/arsnova.eu/issues/17) im Fork
 - **Kategorie:** Verbesserung
 
 ## Kontext

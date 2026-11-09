@@ -1,6 +1,6 @@
 # 1C-015: Unterscheidbarer Zustand für einen unbrauchbaren Themen-Snapshot (T2.3)
 
-- **Status:** empfohlen (2026-11-05), nicht umgesetzt; Issue-Entwurf nicht angelegt
+- **Status:** empfohlen (2026-11-05), nicht umgesetzt; Issue-Entwurf nicht angelegt, _aktualisiert 2026-11-09:_ Issue [#15](https://github.com/NiklasSkulll/arsnova.eu/issues/15) im Fork
 - **Kategorie:** Verbesserung
 
 ## Kontext
@@ -28,4 +28,4 @@ Empfohlen: ein eigener Grund oder eine eigene Limitation für einen vorhandenen,
 - **Kosten:** gering, ein zusätzlicher Zweig im Cache-Getter und in der Projektion, Schema-Erweiterung um einen Grund ([Issue-Entwurf T2.3, Vorschlag](../evidenz/1C/issue-t2-3-entwurf.md#vorschlag)).
 - **Risiko:** gering; neue Grundwerte müssen in Vorschau-UI und allen fünf Locales ergänzt werden. **Rückweg:** Revert.
 - **Gültigkeitsgrenze:** Unit-Ebene mit gemocktem Redis-Client, Produktivcode gleich `main` `248029dc`. Wie oft der Konflikt real auftritt, etwa bei Rolling Deployments mit gemeinsamem Redis, ist nicht gemessen ([T2.3](../evidenz/1C/2026-10-24-tests.md#t23--veralteter-themen-snapshot-in-redis-prozesskonflikt)).
-- **Issue-Entwurf:** [`issue-t2-3-entwurf.md`](../evidenz/1C/issue-t2-3-entwurf.md), nicht angelegt.
+- **Issue-Entwurf:** [`issue-t2-3-entwurf.md`](../evidenz/1C/issue-t2-3-entwurf.md), nicht angelegt. _Aktualisiert 2026-11-09:_ angelegt als [#15](https://github.com/NiklasSkulll/arsnova.eu/issues/15) im Fork (englisch, Unter-Issue von #10).

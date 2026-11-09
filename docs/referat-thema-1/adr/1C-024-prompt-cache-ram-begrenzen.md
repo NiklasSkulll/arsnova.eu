@@ -1,6 +1,6 @@
 # 1C-024: Prompt-Cache `--cache-ram` begrenzen oder abschalten (L6, U1)
 
-- **Status:** empfohlen (2026-11-05), nicht umgesetzt; Issue-Entwurf nicht angelegt
+- **Status:** empfohlen (2026-11-05), nicht umgesetzt; Issue-Entwurf nicht angelegt, _aktualisiert 2026-11-09:_ Issue [#14](https://github.com/NiklasSkulll/arsnova.eu/issues/14) im Fork
 - **Kategorie:** Konfiguration
 
 ## Kontext

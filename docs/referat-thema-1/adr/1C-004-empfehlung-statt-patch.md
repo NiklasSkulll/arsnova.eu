@@ -14,7 +14,7 @@ Mehrere Befunde aus 1C legen eine Änderung nahe, etwa die Begrenzung des Prompt
 ## Alternativen
 
 - **Befunde im Produktivcode beheben, etwa `--cache-ram` setzen oder den Hash ändern.** Verworfen: Das Prüfungsdokument verlangt es nicht (siehe Belege), und eine Korrektur braucht eine eigene PR mit eigener Prüfung ([Tests-Design, Nicht-Ziele](../specs/2026-10-24-1c-tests-design.md#2-ziele-nicht-ziele-anti-ziele)).
-- **Issues sofort anlegen.** Nicht getan: Die Issue-Entwürfe tragen den Status „Entwurf, nicht angelegt“; Anlegen und Ort entscheidet der Autor ([T2.3](../evidenz/1C/issue-t2-3-entwurf.md), [T3.1](../evidenz/1C/issue-t3-1-entwurf.md), [Cache-RAM](../evidenz/1C/issue-cache-ram-entwurf.md)).
+- **Issues sofort anlegen.** Nicht getan: Die Issue-Entwürfe tragen den Status „Entwurf, nicht angelegt“; Anlegen und Ort entscheidet der Autor ([T2.3](../evidenz/1C/issue-t2-3-entwurf.md), [T3.1](../evidenz/1C/issue-t3-1-entwurf.md), [Cache-RAM](../evidenz/1C/issue-cache-ram-entwurf.md)). _Aktualisiert 2026-11-09:_ Nach Freigabe des Autors sind die Befunde als Issues im Fork angelegt ([#13](https://github.com/NiklasSkulll/arsnova.eu/issues/13)–[#18](https://github.com/NiklasSkulll/arsnova.eu/issues/18), Unter-Issues von #10); umgesetzt ist weiterhin nichts.
 
 ## Belege
 

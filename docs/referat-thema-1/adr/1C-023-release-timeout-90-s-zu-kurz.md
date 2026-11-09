@@ -1,6 +1,6 @@
 # 1C-023: Release-Timeout von 90 s reicht für CPU-Inferenz auf beiden Laborrechnern nicht (A4)
 
-- **Status:** empfohlen (2026-11-05), nicht umgesetzt
+- **Status:** empfohlen (2026-11-05), nicht umgesetzt; _aktualisiert 2026-11-09:_ Issue [#16](https://github.com/NiklasSkulll/arsnova.eu/issues/16) im Fork
 - **Kategorie:** Betrieb
 
 ## Kontext
