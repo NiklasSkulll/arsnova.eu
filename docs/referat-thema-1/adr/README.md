@@ -81,12 +81,14 @@ Kosten, Risiken, Gültigkeitsgrenzen, offene Punkte, zugehörige Issue-Entwürfe
 | [1C-015](1C-015-themen-snapshot-unterscheidbarer-zustand.md)     | Unterscheidbarer Zustand für einen unbrauchbaren Themen-Snapshot (T2.3)                     | empfohlen      | Verbesserung  |
 | [1C-016](1C-016-zeitabhaengiger-hash-blitzlicht.md)              | Zeitabhängiger Hash bei live Blitzlicht-Runde beheben (T3.1)                                | empfohlen      | Verbesserung  |
 | [1C-017](1C-017-m7-empfehlung-zurueckgehalten.md)                | M7-Vorhersagemodell verfehlt, Empfehlung zurückgehalten                                     | zurückgehalten | Verbesserung  |
-| [1C-019](1C-019-endstatus-echter-pfad-beibehalten.md)            | Endstatus auf dem echten Pfad ohne Datenänderung beibehalten (L4)                           | angenommen     | Beibehaltung  |
+| [1C-018](1C-018-quality-gate-verwirft-echte-antworten.md)        | Quality-Gate verwirft die echten Antworten des ausgelieferten Modells (N4)                  | empfohlen      | Verbesserung  |
+| [1C-019](1C-019-endstatus-echter-pfad-beibehalten.md)            | Endstatus auf dem echten Pfad ohne Datenänderung beibehalten (L4, nur `9f230abc`)           | angenommen     | Beibehaltung  |
 | [1C-020](1C-020-timeout-300-s-und-kalibrierungsregel.md)         | Timeout 300 s im Laptop-Lauf, Kalibrierungsregel für den Zusatzlauf                         | methodisch     | Methodik      |
 | [1C-021](1C-021-zusatzlauf-produktionslimits-zweiter-rechner.md) | Zusatzlauf mit Produktionslimits auf einem zweiten Rechner                                  | methodisch     | Methodik      |
 | [1C-022](1C-022-codestand-eingefroren-9f230abc.md)               | Codestand beider Laborläufe eingefroren auf `main@9f230abc`                                 | methodisch     | Methodik      |
 | [1C-023](1C-023-release-timeout-90-s-zu-kurz.md)                 | Release-Timeout von 90 s reicht für CPU-Inferenz auf beiden Laborrechnern nicht (A4)        | empfohlen      | Betrieb       |
 | [1C-024](1C-024-prompt-cache-ram-begrenzen.md)                   | Prompt-Cache `--cache-ram` begrenzen oder abschalten (L6, U1)                               | empfohlen      | Konfiguration |
 | [1C-025](1C-025-codestand-auf-upstream-aktualisiert.md)          | Codestand auf upstream `44c0a796` aktualisiert, Test-Runtime an das Quality-Gate angepasst  | methodisch     | Methodik      |
+| [1C-026](1C-026-messstand-festhalten-upstream-nachziehen.md)     | Gemessenen Stand festhalten, upstream vor der Präsentation nur nachziehen und prüfen        | methodisch     | Methodik      |
 
-Nummern ohne Datei (1C-006–009, 1C-018, 1C-026–029) sind frei; die Lücke ist gewollt, damit der Nummernplan der Bereiche erhalten bleibt.
+Nummern ohne Datei (1C-006–009, 1C-027–029) sind frei; die Lücke ist gewollt, damit der Nummernplan der Bereiche erhalten bleibt.

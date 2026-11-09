@@ -34,5 +34,5 @@
 
 - Alle Befunde aus Teil 1–3 und den Laborläufen bleiben an ihren Commit gebunden (`248029dc`, `9f230abc`); die Protokolle werden nicht umgeschrieben.
 - Die alten Erwartungen (eine Aussage, Blitzlicht-Quelle gepackt) stehen in der Git-Historie und in den Protokollen; die Mutationsproben aus Teil 2 und 3 galten für den alten Stand.
-- Neue Laborzahlen kommen aus dem [Nachlauf](../specs/2026-11-06-1c-nachlauf-design.md); bis dahin gelten L2–L6 nur für `9f230abc`.
+- Neue Laborzahlen kommen aus dem [Nachlauf](../specs/2026-11-06-1c-nachlauf-design.md); bis dahin gelten L2–L6 nur für `9f230abc`. _Aktualisiert 2026-11-09:_ Der Nachlauf lief auf `f746ffba` (mit upstream `def56700`, [1C-026](1C-026-messstand-festhalten-upstream-nachziehen.md)); Ergebnisse im [Protokoll](../evidenz/1C/2026-11-09-labor-nachlauf.md).
 - Die Messdatei `qa.summary-measurement.pg.test.ts` (opt-in, nicht in der CI) ist nicht auf den neuen Stand geprüft; ihre Zahlen (M1–M7) gelten für `248029dc`.

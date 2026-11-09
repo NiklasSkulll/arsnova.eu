@@ -1,6 +1,6 @@
 # 1C-019: Endstatus auf dem echten Pfad ohne Datenänderung beibehalten (L4)
 
-- **Status:** angenommen (2026-11-05)
+- **Status:** angenommen (2026-11-05) für `9f230abc`; _aktualisiert 2026-11-09:_ auf upstream `def56700` nicht übertragbar, dort gilt [1C-018](1C-018-quality-gate-verwirft-echte-antworten.md)
 - **Kategorie:** Beibehaltung
 
 ## Kontext
@@ -27,3 +27,4 @@ Beibehaltung des Endstatus- und Fallbackpfads ohne Datenänderung (L4-Regel): ke
 
 - **Kosten:** keine. **Risiko:** keines neu. **Rückweg:** entfällt.
 - **Gültigkeitsgrenze:** Timeout 300 s statt 90 s, die L4-Anteile gelten für 300 s; der Release-Timeout von 90 s reicht auf keinem der beiden Rechner, die Inferenz lag im Median bei 163,4 s (Laptop) bzw. 98,8 s (PC) ([Laptop, Befund zu A4](../evidenz/1C/2026-11-05-labor.md#entscheidungen-nach-design-abschnitt-6), [PC, Kalibrierung](../evidenz/1C/2026-11-05-labor-pc.md#kalibrierung-und-wahl-des-timeouts-design-143)). Ruhige Session ohne Voting, eine Fixture, n = 20; `ready` heißt vertrags- und quellengültig, nicht inhaltlich gut ([Labor-Design 7](../specs/2026-10-25-1c-labor-design.md#7-gültigkeitsgrenzen)). Unter Voting gilt [1C-017](1C-017-m7-empfehlung-zurueckgehalten.md), bei live Nicht-TEMPO-Blitzlicht-Runde [1C-016](1C-016-zeitabhaengiger-hash-blitzlicht.md).
+- _Aktualisiert 2026-11-09:_ Im Nachlauf auf `def56700` (Instruktion v5, Quality-Gate) ist k(`source_changed`) weiter 0 von 20, der Anteil `full-context` aber **0 von 20** (Wilson 0–16,1 %): 17 × `invalid_response`, 3 × `unavailable` nach OOM ([N4](../evidenz/1C/2026-11-09-labor-nachlauf.md#n4-endstatus)). Nach der Regel ist das ein Befund, keine Beibehaltung; er steht in [1C-018](1C-018-quality-gate-verwirft-echte-antworten.md). Diese ADR gilt nur für den Stand `9f230abc`.
