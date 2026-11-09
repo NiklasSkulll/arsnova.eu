@@ -12,6 +12,7 @@
 - `kqc-real/main@44c0a796` wird über den Fork-`main` (`93bcf2e9`) in `feature-1C-context-path` gemergt (`51b39fdd`). Das Einfrieren aus 1C-022 endet hier; für die Läufe vom 2026-11-05 gilt es unverändert.
 - Die Test-Runtime (`apps/backend/src/__tests__/lib/open-weight-test-runtime.ts`) liefert jetzt **zwei** Aussagen in der Form „Lead: Text“ mit verschiedenen Leads, beide an die erste gesendete Q&A-Quelle gebunden (V2 und Legacy). Die E2E-Erwartungen sind darauf umgestellt.
 - Die Negativprobe zu T3.1 prüft jetzt, dass der Blitzlicht-Bereich der Referenzfixture aus Budgetgründen **nicht** gepackt ist und der Hash sich trotzdem bei jedem Aufbau ändert. Das ist der neue Befund aus dem Trockenlauf ([ADR 1C-016](1C-016-zeitabhaengiger-hash-blitzlicht.md)).
+- _Aktualisiert 2026-11-09:_ Der Hash-Test „ändert den Hash nach einer neuen Frage und führt sie als Quelle“ prüft die neue Frage jetzt im ungepackten Analysekontext (`buildModerationPromptContext`), nicht im gepackten. Grund: Seit `96b2e46e` behält `trimSummaryAnalysisQuestions` bei kleinem Korpus nur drei Fragen, und `forceFitQuestionCandidates` entscheidet bei gleichem Score nach `sourceId` (zufällige UUID); mit vier Fragen ohne Stimmen fiel die neue Frage zufällig heraus. Gefunden in der CI auf `83f2d1a1` (Job Migration Drift), lokal reproduziert in 3 von 10 Läufen; nach der Änderung 15 von 15 grün, Mutationsprobe (falsche ID) rot.
 - Produktivcode bleibt unverändert ([ADR 1C-004](1C-004-empfehlung-statt-patch.md)).
 
 ## Alternativen

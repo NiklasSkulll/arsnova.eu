@@ -213,7 +213,18 @@ describe.skipIf(!RUN_PG)('Q&A summary snapshot hash (PostgreSQL + Redis)', () =>
     expect(await questionVotesRevision(corpus.sessionId)).toContain(
       `qa-ranking-v1:${revisionAfter.qaRankingRevision}:`,
     );
-    expect(await sourceIds(corpus.sessionId)).toContain(`qa-question:${newQuestionId}`);
+    // Seit upstream `96b2e46e` behält das Packen bei kleinem Korpus nur drei Fragen und
+    // entscheidet bei gleichem Score nach `sourceId` (zufällige UUID). Ob die neue Frage
+    // gesendet wird, ist hier also Zufall; geprüft wird der ungepackte Analysekontext,
+    // aus dem der Hash gebildet wird.
+    const analysis = await buildModerationPromptContext({
+      sessionId: corpus.sessionId,
+      locale: 'de',
+      access: ACCESS,
+    });
+    expect(analysis.context.sources.map((source) => source.id)).toContain(
+      `qa-question:${newQuestionId}`,
+    );
   });
 
   it('ändert den Hash nach einem Beitritt und führt Teilnehmer-Revision und -Anzahl', async () => {
