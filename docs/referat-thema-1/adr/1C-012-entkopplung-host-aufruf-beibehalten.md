@@ -23,6 +23,7 @@ Die Entkopplung bleibt (`requestQaSummary`). Die Grenze aus Befund B1 bleibt bes
   - Laptop: `requestMs` Median 27,6 ms, p95 32,6 ms, max. 38,6 ms; kürzester Austausch 153,1 s ([L3 Laptop](../evidenz/1C/2026-11-05-labor.md#l3-zeiten-laptop)).
   - PC: `requestMs` Median 17,9 ms, p95 19,7 ms, max. 20,2 ms; kürzester Austausch 90,6 s ([L3 PC](../evidenz/1C/2026-11-05-labor-pc.md#l3-zeiten-pc)).
   - Auf beiden Rechnern erfüllt ([Entscheidungen Laptop](../evidenz/1C/2026-11-05-labor.md#entscheidungen-nach-design-abschnitt-6), [Entscheidungen PC](../evidenz/1C/2026-11-05-labor-pc.md#entscheidungen-nach-design-abschnitt-6-144-und-153)).
+- _Aktualisiert 2026-11-10:_ Im Nachlauf auf `def56700` bestätigt (Laptop, gleiche Limits): `requestMs` Median 29,4 ms, p95 34,2 ms, max. 50,7 ms; kürzester Austausch 195,6 s; K_L3a erfüllt, Entscheidung „Beibehaltung der Entkopplung“ ([Nachlauf, N3](../evidenz/1C/2026-11-09-labor-nachlauf.md#n3-zeiten), [Entscheidungen](../evidenz/1C/2026-11-09-labor-nachlauf.md#entscheidungen-nach-design-abschnitt-5)).
 
 ## Folgen
 

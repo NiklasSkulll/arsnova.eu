@@ -14,7 +14,7 @@ Die Queue nutzt das Maximum beider Werte, begrenzt auf 300 000 ms ([`qaSummaryCo
 
 ## Entscheidung
 
-**Befund:** Auf beiden Laborrechnern liegt die reine Inferenzzeit eines Auftrags im Median über 90 s (Laptop 19 von 19 Läufen, PC 18 von 19; der kürzeste PC-Lauf lag bei 88,8 s). Mit dem Release-Timeout wäre der Modellpfad dort nicht nutzbar.
+**Befund:** Auf beiden Laborrechnern liegt die reine Inferenzzeit eines Auftrags im Median über 90 s (_präzisiert 2026-11-10:_ Laptop 19 von 19 Läufen, PC 18 von 19; der kürzeste PC-Lauf lag bei 88,8 s). Mit dem Release-Timeout wäre der Modellpfad dort nicht nutzbar.
 
 **Empfehlung, nicht umgesetzt** (eigene Ableitung nach dem Lauf, keine vorregistrierte Regel; [Design §11 A4](../specs/2026-10-25-1c-labor-design.md#11-offene-fragen) sieht nur einen Befund vor): Den Default im Code nicht blind anheben. Stattdessen soll der Betreiber den Timeout am tatsächlichen Inferenz-Host kalibrieren, nach dem Muster von [Labor-Design 14.3](../specs/2026-10-25-1c-labor-design.md#143-kalibrierung-und-wahl-des-timeouts): eine Anfrage mit einem realen Completion-Body, I = `prompt_ms + predicted_ms` messen. Liegt I nahe an oder über 90 s, setzt er `QA_SUMMARY_TIMEOUT_MS` und `OPEN_WEIGHT_LLM_SUMMARY_TIMEOUT_MS` gemeinsam auf I plus Reserve, höchstens 300 000 ms. In der Betreiberdoku ist festzuhalten, dass 90 s nur auf einem Host reicht, der den Auftrag sicher darunter rechnet.
 
@@ -26,7 +26,7 @@ Die Queue nutzt das Maximum beider Werte, begrenzt auf 300 000 ms ([`qaSummaryCo
 
 ## Belege
 
-- **Laptop:** Inferenz-Median 163,4 s (Prefill 76,2 s, Ausgabe 86,6 s); Inferenz der Läufe 1–19 150,4–175,4 s (Ende-zu-Ende 153–178 s) ([L3 Laptop](../evidenz/1C/2026-11-05-labor.md#l3-zeiten-laptop); [Befund zu A4](../evidenz/1C/2026-11-05-labor.md#entscheidungen-nach-design-abschnitt-6)).
+- **Laptop:** Inferenz-Median 163,4 s (Prefill 76,2 s, Ausgabe 86,6 s); Inferenz der Läufe 1–19 150,4–175,4 s (Ende-zu-Ende 153–178 s; _korrigiert 2026-11-10_) ([L3 Laptop](../evidenz/1C/2026-11-05-labor.md#l3-zeiten-laptop); [Befund zu A4](../evidenz/1C/2026-11-05-labor.md#entscheidungen-nach-design-abschnitt-6)).
 - **PC mit Produktionslimits:** Inferenz-Median 98,8 s (Prefill 42,6 s, Ausgabe 55,4 s). Die kürzeste Inferenz lag bei 88,8 s, der Median rund 10 % über 90 s (98,8 / 90 = 1,098; Korrektur zum PC-Protokoll, Z. 81, das 9 % nennt) ([Kalibrierung PC](../evidenz/1C/2026-11-05-labor-pc.md#kalibrierung-und-wahl-des-timeouts-design-143), [L3 PC](../evidenz/1C/2026-11-05-labor-pc.md#l3-zeiten-pc)).
 - **Rohdaten:** Die Auswertung mit [`auswertung.mjs`](../evidenz/1C/messung/auswertung.mjs) meldet `medianInferenceMs` 163 379,7 ([Laptop-JSON](../evidenz/1C/messung/2026-11-05-labor.json.gz)) und 98 802,3 ([PC-JSON](../evidenz/1C/messung/2026-11-05-labor-pc.json.gz)). Am 2026-11-05 neu gerechnet.
 

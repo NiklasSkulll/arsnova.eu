@@ -63,7 +63,7 @@ Empfehlung des Entwurfs (Vorschlag, keine Entscheidung): Option 1 prüfen, weil 
 
 ## Gültigkeitsgrenze
 
-- Geprüft auf dem Branch `feature-1C-context-path` mit lokaler PostgreSQL- und Redis-Instanz (Podman) und einer Test-Runtime statt privater Inferenz; Produktivcode `248029dc`; Befund auf `def56700` im Nachlauf N5 bestätigt. Zeilenangaben in diesem Entwurf beziehen sich auf `248029dc`.
+- Geprüft auf dem Branch `feature-1C-context-path` mit lokaler PostgreSQL- und Redis-Instanz (Podman) und einer Test-Runtime statt privater Inferenz; Produktivcode `248029dc`; _aktualisiert 2026-11-10:_ Befund auf `def56700` im [Nachlauf N5](2026-11-09-labor-nachlauf.md#n5-t31-auf-dem-echten-pfad) bestätigt. Zeilenangaben in diesem Entwurf beziehen sich auf `248029dc`.
 - Getestet ist ein Typ (`YESNO`) auf einer synthetischen Referenzfixture. Weitere zeitabhängige Quellen sind nicht systematisch gesucht.
 - Wie oft in echten Vorlesungen eine Nicht-TEMPO-Runde läuft, während eine Zusammenfassung angefordert wird, ist nicht gemessen.
 

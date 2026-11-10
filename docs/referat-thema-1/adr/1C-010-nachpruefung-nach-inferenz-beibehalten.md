@@ -24,6 +24,7 @@ prepare (3) bleibt (Funktion `processJob`). Die Entscheidung stützt sich vor al
   - Laptop: s = 0,03 % (95 %-KI 0,03–0,04 %) ([L3 Laptop](../evidenz/1C/2026-11-05-labor.md#l3-zeiten-laptop)).
   - PC: s = 0,04 % (95 %-KI 0,04–0,04 %) ([L3 PC](../evidenz/1C/2026-11-05-labor-pc.md#l3-zeiten-pc)).
   - Beide Obergrenzen < 5 % → Entscheidung 1 auf der Kostenseite bestätigt.
+  - _Aktualisiert 2026-11-10:_ Nachlauf auf `def56700` (Laptop): s = 0,03 % (95 %-KI 0,03–0,03 %, `auswertung.mjs`) ([Nachlauf, N3](../evidenz/1C/2026-11-09-labor-nachlauf.md#n3-zeiten)). Die Regel gilt dort weiter ([Nachlauf-Design 5](../specs/2026-11-06-1c-nachlauf-design.md#5-entscheidungsregeln)); die Entscheidungstabelle des Nachlaufs führt 1C-010 aber nicht eigens auf.
 
 ## Ursachenkette
 

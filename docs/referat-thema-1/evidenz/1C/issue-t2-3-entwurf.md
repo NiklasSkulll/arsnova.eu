@@ -26,7 +26,7 @@ Die Charakterisierungstests halten das Ist-Verhalten fest. Sie liegen auf dem Br
 
 Laut #456 (Abschnitt 11: „Versionierte Adapterfähigkeit statt stiller Feldverluste“) sollte ein vorhandener, aber unbrauchbarer Snapshot unterscheidbar sein, z. B.:
 
-- eigener Grund in der Projektion (neuer Wert in `ExplicitUnavailableReasonSchema`, etwa `incompatible-version`) oder, ohne Vertragsänderung, eine Limitation mit dem bestehenden Code `analysis-stale` bzw. `analysis-failed`,
+- eigener Grund in der Projektion (_korrigiert 2026-11-10:_ neuer Wert in `ExplicitUnavailableReasonSchema`, etwa `incompatible-version`) oder, ohne Vertragsänderung, eine Limitation mit dem bestehenden Code `analysis-stale` bzw. `analysis-failed`,
 - und mindestens ein `logger.warn` mit Schlüsselbereich und gefundener Version (ohne Inhalte).
 
 ## Vorschlag
@@ -39,6 +39,6 @@ Laut #456 (Abschnitt 11: „Versionierte Adapterfähigkeit statt stiller Feldver
 
 ## Gültigkeitsgrenze
 
-Produktivcode `248029dc`, am 2026-11-10 mit dem Produktivcode von `def56700` erneut grün; geprüft mit den Unit-Tests auf dem Branch `feature-1C-context-path` (Redis gemockt). Wie häufig solche Snapshots im Betrieb vorkommen, ist nicht untersucht.
+Produktivcode `248029dc`, _Aktualisiert 2026-11-10:_ mit dem Produktivcode von `def56700` (HEAD des Branches) erneut grün (`wordCloudAnalysisCache.test.ts`, `moderationQaContext.test.ts`: 55 bestanden, 1 todo); geprüft mit den Unit-Tests auf dem Branch `feature-1C-context-path` (Redis gemockt). Wie häufig solche Snapshots im Betrieb vorkommen, ist nicht untersucht.
 
 > **Aktualisiert 2026-11-05:** Die beiden Laborläufe ([Laptop](2026-11-05-labor.md#l4-endstatus), [PC](2026-11-05-labor-pc.md#l4-endstatus)) haben diesen Befund nicht untersucht: Sie lieferten weder einen Snapshot mit fremder Version noch Redis-Zustände aus einem Deployment. L4 zeigt nur, dass in den Läufen keine `source_changed`-Endstatus auftraten. Es gibt aus dem Labor daher keinen zusätzlichen Beleg für T2.3; die Gültigkeitsgrenze oben bleibt unverändert.

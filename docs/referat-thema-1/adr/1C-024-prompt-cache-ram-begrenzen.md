@@ -17,7 +17,7 @@ Beide Laborläufe verloren den Auftrag, der in Messlauf 20 lief, durch einen OOM
 
 - **Nur das Limit des Laborpfads anheben.** Diese Verbesserung hätte die Regel vorgesehen, wäre K_L6 erfüllt gewesen ([Labor-Design 14.4](../specs/2026-10-25-1c-labor-design.md#144-fälle-und-regeln)). Verworfen: Auch mit 8 GiB plus 2 GiB Swap kam der Kill.
 - **`mem_limit` oder Swap des Inferenz-Hosts erhöhen.** Verworfen: Grundlast (etwa 3,1 GB) plus bis zu 8 GiB Cache übersteigt sowohl 8 GiB als auch 10 GiB. Swap verschiebt den Kill nur ([U1](../evidenz/1C/2026-11-05-labor-pc.md#ursachenversuch-u1-design-15)). Das Zweit-Host-Runbook sieht Swap ausdrücklich nicht als Ersatzkapazität für Inferenz vor ([Runbook 2.1](../../operations/OPEN-WEIGHT-LLM-SECOND-HOST-RUNBOOK.md#21-hardware-und-netz)).
-- **Nichts ändern, auf die Restart-Regel vertrauen.** Verworfen: Der laufende Auftrag und die Anfragen während des Neustarts enden mit Fallback (`unavailable`, vereinzelt `busy`: PC einmal, Nachlauf zweimal) ([PC, L6](../evidenz/1C/2026-11-05-labor-pc.md#l6-speicher-mit-produktionslimits-design-144)).
+- **Nichts ändern, auf die Restart-Regel vertrauen.** Verworfen: Der laufende Auftrag und die Anfragen während des Neustarts enden mit Fallback (`unavailable`, vereinzelt `busy`: PC einmal, Nachlauf zweimal; _korrigiert 2026-11-10_) ([PC, L6](../evidenz/1C/2026-11-05-labor-pc.md#l6-speicher-mit-produktionslimits-design-144)).
 
 ## Belege
 

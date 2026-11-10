@@ -205,13 +205,13 @@ Belege:
 
 Der **Produktions**-Inferenzhost `arsnova-privat` (8-Kern-ARM, privates Netz)
 ist nicht die Laborinstanz. Studierende sollen ihn nicht ansprechen
-([onboarding.md](../onboarding.md) Z. 317–322), und Produktion darf kein
+([onboarding.md](../onboarding.md) Z. 317–322; Zeilenangaben auf Stand `248029dc`, _aktualisiert 2026-11-10:_ auf `def56700` Z. 365–370), und Produktion darf kein
 Testziel sein (REFERAT-PRUEFUNG Z. 84).
 
 Erlaubte Alternativen und ihre Beweiskraft:
 
 - **Lokal auf dem Laptop:** Profil `llm-http` (`npm run docker:up:llm:http`,
-  [onboarding.md](../onboarding.md) Z. 234–322). Laut REFERAT-PRUEFUNG Z. 106
+  [onboarding.md](../onboarding.md) Z. 234–322; auf `def56700` Z. 282–370). Laut REFERAT-PRUEFUNG Z. 106
   ist das ein getrennter Nachweis. „Baseline und Leistungsurteil beruhen auf
   dem echten Releasepfad“ (Z. 192). Gut für Vorversuche, nicht als alleinige
   Baseline.

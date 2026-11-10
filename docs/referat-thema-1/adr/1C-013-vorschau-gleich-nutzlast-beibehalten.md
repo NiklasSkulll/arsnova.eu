@@ -21,6 +21,7 @@ Vorschau und Packing bleiben unverändert (`getQaSummaryContextPreview`, `buildC
 - **Regel:** K_L1 erfüllt → Beibehaltung ([Labor-Design 6](../specs/2026-10-25-1c-labor-design.md#6-entscheidungsregeln)).
 - **Laptop:** 20 von 20 Läufen, 0 Abweichungen in allen elf Prüfungen ([L1 Laptop](../evidenz/1C/2026-11-05-labor.md#l1-vorschau--draht)).
 - **PC:** ebenso 20 von 20, 0 Abweichungen ([L1 PC](../evidenz/1C/2026-11-05-labor-pc.md#l1-vorschau--draht)).
+- _Aktualisiert 2026-11-10:_ **Nachlauf auf `def56700`** (Laptop): in allen 18 Messläufen mit Completion-Aufruf 0 Abweichungen in allen elf Prüfungen; 2 Messläufe ohne Aufruf wegen des OOM-Kills, dort schlagen die sieben Prüfungen mit Completion-Body fehl. K_L1 damit formal nicht erfüllt, die Lücke liegt am OOM, nicht am Kontextpfad; Entscheidung „Beibehaltung von Vorschau und Packing auch auf `def56700`“ ([Nachlauf, N1](../evidenz/1C/2026-11-09-labor-nachlauf.md#n1-vorschau--nutzlast), [Entscheidungen](../evidenz/1C/2026-11-09-labor-nachlauf.md#entscheidungen-nach-design-abschnitt-5)).
 - **Vorlauf:** E1 mit Test-Runtime bestätigt, Mutationsprobe (Feld `feedback` entfernt) rot ([E1](../evidenz/1C/2026-10-24-teil2.md#e1--vorschau--nutzlast)).
 
 ## Folgen

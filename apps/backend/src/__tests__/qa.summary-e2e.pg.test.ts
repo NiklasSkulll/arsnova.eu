@@ -1153,6 +1153,9 @@ describe.skipIf(!RUN_PG)(
       const second = await preview(room.sessionId);
 
       // Gleicher Lesepfad, aber für TEMPO entsteht keine Blitzlicht-Quelle mit Zeitfenster.
+      // Seit `96b2e46e` fehlt die Blitzlicht-Quelle im gepackten Kontext beider Arme (bei
+      // YESNO aus Budgetgründen, Test oben); diese Prüfung trennt die Arme also nicht mehr,
+      // unterscheidend sind hier Hash, `sourceRevision` und der Cache-Treffer.
       expect(feedbackWindowEnd(first.promptContext.context)).toBeNull();
       expect(second.promptContext.snapshotHash).toBe(first.promptContext.snapshotHash);
       expect(second.promptContext.context.meta.sourceRevision).toBe(

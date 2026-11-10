@@ -5,7 +5,7 @@
 
 ## Kontext
 
-Auftragsschritt 2 fragt, was vom Kontext beim Modell ankommt. Der Packer zählt jedes UTF-8-Byte als ein Token (`estimateModerationPromptUtf8Tokens`, Schätzer `utf8-byte-upper-bound`); im Fenster von 8192 Tokens bleiben nach Instruktion, Definition, Ausgabereserve 640 und Marge 128 auf `248029dc` höchstens 6907 Byte für das Kontext-JSON, auf `def56700` (Instruktion v5: 650, Definition 203) höchstens 6571 Byte ([Dossier 5.3](../1C-kontext-und-adapterpfad.md#53-packing-budget-und-auswahl)). In E15 fielen mit vollem #456-Kontext Blitzlicht, freigegebene Ergebnisse und Kompass aus Budgetgründen heraus ([E15](../evidenz/1C/2026-10-24-teil3.md#e15--voller-456-kontext-auf-dem-draht)). Fall L2 misst, wie stark die Schätzung die echten Prompt-Tokens überschätzt ([Labor-Design 5](../specs/2026-10-25-1c-labor-design.md#5-fälle)).
+Auftragsschritt 2 fragt, was vom Kontext beim Modell ankommt. Der Packer zählt jedes UTF-8-Byte als ein Token (`estimateModerationPromptUtf8Tokens`, Schätzer `utf8-byte-upper-bound`); im Fenster von 8192 Tokens bleiben nach Instruktion, Definition, Ausgabereserve 640 und Marge 128 auf `248029dc` höchstens 6907 Byte für das Kontext-JSON, _aktualisiert 2026-11-10:_ auf `def56700` (Instruktion v5: 650, Definition 203) höchstens 6571 Byte ([Dossier 5.3](../1C-kontext-und-adapterpfad.md#53-packing-budget-und-auswahl)). In E15 fielen mit vollem #456-Kontext Blitzlicht, freigegebene Ergebnisse und Kompass aus Budgetgründen heraus ([E15](../evidenz/1C/2026-10-24-teil3.md#e15--voller-456-kontext-auf-dem-draht)). Fall L2 misst, wie stark die Schätzung die echten Prompt-Tokens überschätzt ([Labor-Design 5](../specs/2026-10-25-1c-labor-design.md#5-fälle)).
 
 ## Entscheidung
 
@@ -19,8 +19,8 @@ Befund: Die Byte-Schätzung ist sicher, verschenkt aber rund zwei Drittel des Fe
 ## Belege
 
 - **Kriterium K_L2:** max q ≤ 1 (Schätzung konservativ), q = `prompt_tokens` / `packedInputTokens` ([Labor-Design 5](../specs/2026-10-25-1c-labor-design.md#5-fälle)).
-- **Laptop:** Median q 0,320 (95 %-KI 0,319–0,321), 3,12 Byte je Token; `prompt_tokens` Median 2196 bei 6855 geschätzten Tokens; belegt max. 2857 von 8192 (`prompt_tokens` + `max_tokens` 640) ([L2 Laptop](../evidenz/1C/2026-11-05-labor.md#l2-tokens)).
-- **PC:** Median q 0,318 (95 %-KI 0,317–0,319), 3,14 Byte je Token; `prompt_tokens` Median 2182 bei 6855 geschätzten Tokens; belegt max. 2845 von 8192 (`prompt_tokens` + `max_tokens` 640) ([L2 PC](../evidenz/1C/2026-11-05-labor-pc.md#l2-tokens)).
+- **Laptop:** Median q 0,320 (95 %-KI 0,319–0,321), 3,12 Byte je Token; `prompt_tokens` Median 2196 bei 6855 geschätzten Tokens; belegt max. 2857 von 8192 (`prompt_tokens` + `max_tokens` 640; _korrigiert 2026-11-10_, vorher „Kopffreiheit“) ([L2 Laptop](../evidenz/1C/2026-11-05-labor.md#l2-tokens)).
+- **PC:** Median q 0,318 (95 %-KI 0,317–0,319), 3,14 Byte je Token; `prompt_tokens` Median 2182 bei 6855 geschätzten Tokens; belegt max. 2845 von 8192 (`prompt_tokens` + `max_tokens` 640; _korrigiert 2026-11-10_) ([L2 PC](../evidenz/1C/2026-11-05-labor-pc.md#l2-tokens)).
 - **Voller Kontext (L5):** q Median 0,339 / 0,340 (Laptop, YESNO / TEMPO) und 0,345 / 0,338 (PC); auch dort wurden Bereiche aus Budgetgründen gekürzt ([L5 Laptop](../evidenz/1C/2026-11-05-labor.md#l5-t31-auf-dem-echten-pfad), [L5 PC](../evidenz/1C/2026-11-05-labor-pc.md#l5-t31-auf-dem-echten-pfad)).
 
 ## Ursachenkette

@@ -6,10 +6,11 @@
  * auf ihn gerichtet; er leitet jede Anfrage unverändert an die Runtime weiter
  * (`upstream`) und die Antwort unverändert zurück. Unverändert heißt: dieselbe
  * Methode, derselbe Pfad, dieselben Header außer `host` (wird auf die Runtime
- * gesetzt, wie es jeder HTTP-Proxy tun muss) und **dieselben Body-Bytes** in beide
- * Richtungen. Statuscode und Antwort-Header gehen ebenfalls unverändert zurück,
- * außer den hop-by-hop-Headern `connection`, `keep-alive` und `transfer-encoding`
- * (der Body wird vollständig gepuffert und mit `content-length` ausgeliefert).
+ * gesetzt, wie es jeder HTTP-Proxy tun muss) und den hop-by-hop-Headern
+ * `connection`, `keep-alive` und `transfer-encoding`, und **dieselben Body-Bytes**
+ * in beide Richtungen. Statuscode und Antwort-Header gehen ebenfalls unverändert
+ * zurück, außer denselben hop-by-hop-Headern (der Body wird vollständig gepuffert
+ * und mit `content-length` ausgeliefert).
  *
  * Aufgezeichnet werden die rohen Bytes beider Bodys, Zeitpunkte und
  * SHA-256-Prüfsummen. **Nicht** aufgezeichnet wird der Wert des
@@ -40,7 +41,12 @@ export type ProxyExchange = {
   readonly requestBody: string;
   readonly requestBodyBytes: number;
   readonly requestBodySha256: string;
-  /** `true`, wenn die weitergeleiteten Bytes dieselben sind wie die empfangenen. */
+  /**
+   * `true`, wenn die weitergeleiteten Bytes dieselben sind wie die empfangenen. Das ist eine
+   * Invariante der Konstruktion, keine unabhängige Messung: Verglichen wird eine Kopie
+   * (`Buffer.from(body)`) mit dem Original. Dass genau diese Bytes an die Runtime gehen,
+   * folgt aus dem Code (`outgoing.end(forwarded)`), nicht aus diesem Feld.
+   */
   readonly forwardedBodyIdentical: boolean;
   readonly responseStatus: number | null;
   readonly responseContentType: string | null;
