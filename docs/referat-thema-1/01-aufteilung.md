@@ -152,6 +152,35 @@ Folgende Kriterien helfen bei der Wahl, wer X und wer Y wird:
   sinnvoll 1C.
 - **Interesse:** Betrieb und Ressourcen (X) oder Verträge und Datenfluss (Y)?
 
+## Gemeinsame Präsentation (Empfehlung, offen)
+
+Stand 2026-11-10, Empfehlung von Jonas; Entscheidung gemeinsam mit Niklas
+steht aus. Die Präsentation ist gemeinsam und deckt 1A, 1B und 1C ab; jeder
+stellt seinen Teil aus der [Entscheidung](#entscheidung-2026-10-23) vor.
+
+**Empfohlene Reihenfolge:** 1A → 1B (beide Hälften) → 1C. Sie folgt dem Weg
+der Analyse: erst die Reserve des App-Hosts, dann die Auslagerung auf den
+zweiten Host, dann der Kontextpfad bis zur Inferenz; 1C baut auf dem auf,
+was 1B zeigt.
+
+| Teil                                                 | Wer    |
+| ---------------------------------------------------- | ------ |
+| 1A Ressourcen auf dem App-Host                       | Niklas |
+| 1B Schritte 1–2 (Zwei-Host-Aufbau, echter Auftrag)   | Jonas  |
+| 1B Schritte 3–4 (Latenz, Ausfall, Betriebsaufwand)   | Niklas |
+| 1C Autorisierter Kontext und asynchroner Adapterpfad | Jonas  |
+
+- **Folge:** dreimal Sprecherwechsel; die Übergänge werden geplant (etwa
+  von 1B 1–2 zu 3–4: „Der Pfad läuft auf dem zweiten Host – was passiert,
+  wenn der langsam wird oder ausfällt?“).
+- **Verworfen:** 1B 1–2 direkt vor 1C ziehen. Dann wechselt der Sprecher
+  nur einmal statt dreimal, aber 1B wird auseinandergerissen und Schritt 3–4
+  käme vor dem Aufbau aus Schritt 1–2.
+- **Offen:** Zeitaufteilung (Vorgabe: 15 min je Prüfling, Vortrag und
+  Befragung zusammen; siehe
+  [Rahmendokument](./00-rahmen-und-pruefung.md#leistungsbestandteile-und-bewertung)),
+  wer Einstieg und Gruppensynthese übernimmt, gemeinsames Foliendesign.
+
 ## Nächste Schritte
 
 1. Option wählen und X/Y zuordnen.
