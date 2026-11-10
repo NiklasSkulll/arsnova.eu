@@ -3,25 +3,28 @@ config:
   look: neo
   flowchart:
     curve: basis
-    nodeSpacing: 14
-    rankSpacing: 20
-    wrappingWidth: 200
+    nodeSpacing: 10
+    rankSpacing: 8
+    padding: 8
+    wrappingWidth: 320
     subGraphTitleMargin:
-      top: 10
-      bottom: 14
+      top: 8
+      bottom: 8
 ---
-flowchart TB
+flowchart LR
   subgraph SHAPES["Farben und Formen"]
-    direction LR
-    h["`**Lehrperson · Anzeige**`"] ~~~ a["`**Schritt im App-Server**`"] ~~~ c["`**Vertrag · Hash**`"]
-    q["`**Job in der Warteschlange**`"] ~~~ x[["`**Externer Server**`"]] ~~~ d{{"`**Prüfung**`"}}
-    ok["`**Erfolgreiches Ergebnis**`"] ~~~ fb["`**Fallback · Fehler**`"] ~~~ fr["`**Rahmen** = Rechner oder Abschnitt`"]
+    direction TB
+    h["`**Lehrperson · Anzeige**`"] ~~~ a["`**Schritt im App-Server**`"] ~~~ c["`⠀⠀**Vertrag · Hash**⠀⠀`"]
+    q["`**Job in der Warteschlange**`"] ~~~ x[["`⠀⠀⠀**Externer Server**⠀⠀⠀`"]] ~~~ d{{"`⠀⠀⠀⠀**Prüfung**⠀⠀⠀⠀`"}}
+    ok["`⠀**Erfolgreiches Ergebnis**⠀`"] ~~~ fb["`⠀⠀⠀**Fallback · Fehler**⠀⠀⠀`"] ~~~ fr["`**Rahmen** = Host,
+    Prozessschritt oder Schicht,
+    Farbe wie bei den Feldern`"]
   end
   subgraph EDGES["Linien"]
     direction LR
-    m1[" "] e1@==> m2[" "] ~~~ t1["Hauptpfad"]
-    t1 ~~~ o1[" "] e2@==> o2[" "] ~~~ t2["Erfolg"]
-    t2 ~~~ f1[" "] e3@-.-> f2[" "] ~~~ t3["Fehler · Fallback"]
+    m1[" "] e1@==> t1["Hauptpfad⠀⠀ ⠀ ⠀"]
+    o1[" "] e2@==> t2["Erfolg⠀⠀⠀⠀⠀⠀⠀⠀"]
+    f1[" "] e3@-.-> t3["Fallback · Fehler"]
   end
   SHAPES ~~~ EDGES
   class h host
@@ -32,10 +35,10 @@ flowchart TB
   class d decision
   class ok result
   class fb fallback
-  class fr plain
-  class m1,m2,o1,o2,f1,f2 dot
+  class fr appGroup
+  class m1,o1,f1 dot
   class t1,t2,t3 plain
-  class SHAPES,EDGES storeGroup
+  class SHAPES,EDGES legendGroup
   class e1 emph
   class e2 ok
   class e3 fail

@@ -4,6 +4,7 @@
   "flowchart": {
     "htmlLabels": false
   },
+  "themeCSS": ".edgeLabel rect{opacity:1 !important} g rect.rect{stroke:none !important;filter:none !important} rect.rect[fill=\"rgba(225, 29, 72, 0.14)\"]{fill:rgba(251, 113, 133, 0.30) !important} rect.rect[fill=\"rgba(22, 163, 74, 0.16)\"]{fill:rgba(74, 222, 128, 0.26) !important} marker[id$=\"filled-head\"] path{fill:#9ca3af;stroke:#9ca3af}",
   "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Helvetica, Arial, sans-serif",
   "themeVariables": {
     "darkMode": true,
@@ -30,8 +31,8 @@
     "labelBoxBorderColor": "#6b7280",
     "labelTextColor": "#e6e6eb",
     "loopTextColor": "#e6e6eb",
-    "noteBkgColor": "#422006",
-    "noteBorderColor": "#fbbf24",
+    "noteBkgColor": "#1a1d27",
+    "noteBorderColor": "#6b7280",
     "noteTextColor": "#e6e6eb",
     "activationBkgColor": "#262a36",
     "activationBorderColor": "#9ca3af",

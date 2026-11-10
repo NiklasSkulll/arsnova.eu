@@ -20,7 +20,7 @@ Die Aussagen werden zuerst modellfrei geprüft: ausführbare Tests gegen eine Te
 
 ## Belege
 
-- Pflichtmethodik: Mutationsprobe je Testgruppe, jede Probe lokal und vorübergehend, nie committet ([Tests-Design 5.3](../specs/2026-10-24-1c-tests-design.md#53-mutationsprobe-pflicht)); Ausnahmen sind die Kontrollen und die Charakterisierung des Befunds T2.3 ([Methodenabschnitt in 1C-diagrams.md](../1C-diagrams.md#method-verification-and-ai-use)).
+- Pflichtmethodik: Mutationsprobe je Testgruppe, jede Probe lokal und vorübergehend, nie committet ([Tests-Design 5.3](../specs/2026-10-24-1c-tests-design.md#53-mutationsprobe-pflicht)); Ausnahmen sind die Kontrollen und die Charakterisierung des Befunds T2.3 ([Methodenabschnitt in 1C-diagrams.md](../1C-diagrams.md#methode-prüfung-und-ki-nutzung)).
 - Ergebnisprotokolle: [Teil 1 (T1 bis T5)](../evidenz/1C/2026-10-24-tests.md), [Teil 2 (E1 bis E9, M1 bis M5, Gegenvariante V1)](../evidenz/1C/2026-10-24-teil2.md), [Teil 3 (E10 bis E14, E15 widerlegt, T3.1, M6, M7)](../evidenz/1C/2026-10-24-teil3.md). E15 liegt als versionierter Patch vor, nicht in der Suite ([`e15-widerlegt.patch`](../evidenz/1C/e15-widerlegt.patch)).
 - Kennzeichnung der Negativproben im Design: [Tests-Design T1](../specs/2026-10-24-1c-tests-design.md#t1-inkompatible-schemaversion-lücke-g1-punkt-3) und das Teil-2-Design (E4, „Gekennzeichnete Negativprobe Vertrag“; [Teil-2-Design](../specs/2026-10-24-1c-teil2-design.md)).
 - Echtlauf: [Laptop-Protokoll](../evidenz/1C/2026-11-05-labor.md) und [PC-Protokoll](../evidenz/1C/2026-11-05-labor-pc.md).

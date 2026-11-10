@@ -2,6 +2,7 @@
   "theme": "base",
   "htmlLabels": false,
   "flowchart": { "htmlLabels": false },
+  "themeCSS": ".edgeLabel rect{opacity:1 !important} g rect.rect{stroke:none !important;filter:none !important} marker[id$=\"filled-head\"] path{fill:#475569;stroke:#475569}",
   "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Helvetica, Arial, sans-serif",
   "themeVariables": {
     "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Helvetica, Arial, sans-serif",
@@ -27,8 +28,8 @@
     "labelBoxBorderColor": "#94a3b8",
     "labelTextColor": "#0f172a",
     "loopTextColor": "#0f172a",
-    "noteBkgColor": "#fef3c7",
-    "noteBorderColor": "#d97706",
+    "noteBkgColor": "#ffffff",
+    "noteBorderColor": "#94a3b8",
     "noteTextColor": "#0f172a",
     "activationBkgColor": "#e2e8f0",
     "activationBorderColor": "#64748b",

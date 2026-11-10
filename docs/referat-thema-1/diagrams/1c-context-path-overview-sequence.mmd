@@ -2,12 +2,11 @@
 config:
   sequence:
     actorMargin: 24
-    boxMargin: 6
+    boxMargin: 9
+    noteMargin: 6
     messageMargin: 28
+    mirrorActors: false
     width: 130
-    actorFontSize: 19
-    messageFontSize: 19
-    noteFontSize: 18
 ---
 sequenceDiagram
   autonumber
@@ -18,12 +17,12 @@ sequenceDiagram
     participant A as API und Kontextaufbau
     participant Q as Warteschlange
   end
-  box rgba(13, 148, 136, 0.10) Privater Host
-    participant L as LLM
+  box rgba(13, 148, 136, 0.10) Zweiter privater Host
+    participant L as Open-Weight-LLM
   end
 
   T->>A: Zusammenfassung anfordern
-  Note over A: Rechte prüfen, Kontext aufbauen,<br/>Snapshot-Hash, Schema V2
+  Note over A: Rechte prüfen, Kontext aufbauen,<br/>Snapshot-Hash, Vertrag V2
   alt Daten ändern sich beim Aufbau
     A-->>T: Fehler (CONFLICT)
   else Aufbau erfolgreich
@@ -36,10 +35,14 @@ sequenceDiagram
   Q->>L: Anfrage
   L-->>Q: Antwort oder Fehler
   Q->>A: Kontext neu aufbauen (Hash nachher)
-  alt Hash gleich und Antwort gültig
-    Note over Q: Modell-Zusammenfassung<br/>(nur bekannte Quellen)
+  alt Hash gleich,<br/>Antwort gültig und formgerecht
+    rect rgba(22, 163, 74, 0.16)
+      Note over A,Q: Modell-Zusammenfassung (nur Quellen mit Text)
+    end
   else sonst
-    Note over Q: Fallback mit Grund
+    rect rgba(225, 29, 72, 0.14)
+      Note over A,Q: Fallback mit Grund (z. B. Antwort verworfen)
+    end
   end
 
   T->>A: Status abrufen

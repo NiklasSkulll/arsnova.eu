@@ -21,7 +21,7 @@ Beide Laborläufe messen den Codestand `main@9f230abc`, den letzten in den Branc
 
 - **Gleicher Produktcode in beiden Läufen:** Laptop-Lauf an Commit `21136323`, PC-Lauf an `36218689`, beide sauber ([Laptop](../evidenz/1C/2026-11-05-labor.md#umgebung), [PC](../evidenz/1C/2026-11-05-labor-pc.md#umgebung)). `git diff --stat 21136323 36218689 -- apps libs docker 'docker-compose*.yml' scripts package.json` ist leer (geprüft am 2026-11-05).
 - **Branch gegen Baseline:** `git diff --name-only 9f230abc 36218689 -- apps libs docker 'docker-compose*.yml'` nennt 14 Dateien, ausschließlich Tests und Testhilfen (`__tests__/…`, `*.test.ts`). Das passt zu ADR [1C-004](1C-004-empfehlung-statt-patch.md).
-- **`96b2e46e` ändert den gemessenen Pfad inhaltlich.** Geprüft am 2026-11-05 mit `git diff 9f230abc 96b2e46e` (`96b2e46e` = `upstream/main` zu diesem Zeitpunkt):
+- **`96b2e46e` ändert den gemessenen Pfad inhaltlich.** Geprüft am 2026-11-05 mit `git diff 9f230abc 96b2e46e` (`96b2e46e` = `upstream/main` zu diesem Zeitpunkt; die Änderungen stammen aus `12f1d8e4` und `a998ada0`, gemergt mit `96b2e46e`, PR #643):
   - **Instruktion:** `QA_SUMMARY_TECHNICAL_INSTRUCTION_VERSION` `qa-summary-technical-handoff-v2` → `qa-summary-technical-handoff-v5` (`libs/shared-types/src/qa-summary-v2.ts` Z. 21), mit neuem Instruktionstext in `moderationSummaryContext.ts`.
   - **Grammatik:** `statements` in `wireOutputJsonSchemaFor` (`openWeightLlmClient.ts`) von `maxItems: 3` auf `minItems: 2`, `maxItems: 4`.
   - **Quality-Gate:** neue Datei `qaSummaryQuality.ts` (`hasAcceptableQaSummaryQuality`). Im Adapter endet eine vertragsgültige Antwort, die das Gate nicht besteht, jetzt extraktiv mit `invalid_response` (`qaSummaryRuntimeAdapter.ts`).
