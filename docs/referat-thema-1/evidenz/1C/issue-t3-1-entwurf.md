@@ -1,6 +1,6 @@
 # Issue-Entwurf: Aktive Blitzlicht-Runde macht den `snapshotHash` zeitabhängig
 
-> **Status:** _Aktualisiert 2026-11-09:_ angelegt als [#18](https://github.com/NiklasSkulll/arsnova.eu/issues/18) im Fork (englische Fassung, Unter-Issue von #10). Ursprünglich: Entwurf, nicht angelegt. Angelegt wird erst nach Freigabe durch den Autor; Ort (kqc-real oder Fork) entscheidet er. Grundlage: [Befund T3.1 im Protokoll Teil 3](2026-10-24-teil3.md#befund-t31--zeitabhängige-sourcerevision-bei-aktiver-blitzlicht-runde). Entworfen mit Claude Code (Modell Claude Opus 5.5).
+> **Status:** _Aktualisiert 2026-11-09:_ angelegt als [#18](https://github.com/NiklasSkulll/arsnova.eu/issues/18) im Fork (Unter-Issue von #10; ursprünglich englisch, seit 2026-11-10 deutsch und überarbeitet, maßgeblich ist das Issue). Ursprünglich: Entwurf, nicht angelegt. Angelegt wird erst nach Freigabe durch den Autor; Ort (kqc-real oder Fork) entscheidet er. Grundlage: [Befund T3.1 im Protokoll Teil 3](2026-10-24-teil3.md#befund-t31--zeitabhängige-sourcerevision-bei-aktiver-blitzlicht-runde). Entworfen mit Claude Code (Modell Claude Opus 5.5).
 
 **Vorgeschlagener Titel:** `Q&A-Zusammenfassung: aktive Blitzlicht-Runde ändert den snapshotHash bei jedem Kontextaufbau, Modellantworten enden immer als source_changed`
 
@@ -63,7 +63,7 @@ Empfehlung des Entwurfs (Vorschlag, keine Entscheidung): Option 1 prüfen, weil 
 
 ## Gültigkeitsgrenze
 
-- Geprüft auf dem Branch `feature-1C-context-path` mit lokaler PostgreSQL- und Redis-Instanz (Podman) und einer Test-Runtime statt privater Inferenz; Produktivcode gleich `main` `248029dc`.
+- Geprüft auf dem Branch `feature-1C-context-path` mit lokaler PostgreSQL- und Redis-Instanz (Podman) und einer Test-Runtime statt privater Inferenz; Produktivcode `248029dc`; Befund auf `def56700` im Nachlauf N5 bestätigt. Zeilenangaben in diesem Entwurf beziehen sich auf `248029dc`.
 - Getestet ist ein Typ (`YESNO`) auf einer synthetischen Referenzfixture. Weitere zeitabhängige Quellen sind nicht systematisch gesucht.
 - Wie oft in echten Vorlesungen eine Nicht-TEMPO-Runde läuft, während eine Zusammenfassung angefordert wird, ist nicht gemessen.
 
