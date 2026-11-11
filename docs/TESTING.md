@@ -860,6 +860,29 @@ Laborzuordnung, Aufruf und Grenzen des Nachweises beschreibt die
 [A1-Analyseanleitung](referat-thema-1/1A-analyse-last.md). Das Werkzeug legt
 keine Laborsessions an und startet keine weiteren Dienste.
 
+### A1-Container-Metriken und Verzögerungsproxy
+
+Die Werkzeuge für Schritt 5 lassen sich ohne Dockerdaemon, Datenbank oder
+KI-Modelle prüfen:
+
+```bash
+npm run load:resource-isolation:metrics -- --validate
+npm run load:resource-isolation:delay-proxy -- --validate
+npm run load:resource-isolation:infrastructure:test
+```
+
+Die Vertragstests verwenden synthetische Docker-API-Antworten und temporäre
+cgroup-Dateien. Der Proxytest arbeitet über echte lokale Unix-Sockets und
+prüft auch das Client-Timeout mit den Vertragswerten 6000/5000 ms. Weitere
+Fälle prüfen Neustarts, nicht verfügbare Messwerte, Zählerdifferenzen,
+Parallelität, Abbruch und bereinigte JSON-/JUnit-Artefakte. Die Tests gehören
+zu `npm test` und `npm run test:coverage`.
+
+Laborkonfiguration, CLI-Aufrufe und Messgrenzen stehen in der
+[A1-Infrastrukturanleitung](referat-thema-1/1A-container-metriken-und-proxy.md).
+Die Metriken erfordern für cgroup v2 Zugriff auf den tatsächlichen
+Linux-Dockerhost. Die Messwerkzeuge ändern keine Produktionskonfiguration.
+
 ### Artillery-Lasttest (Realtime, bis 500 TN)
 
 Unified Live-Session: Join-Welle, Quiz-Vote, Q&A (20 %), Blitzlicht, WebSocket-Status/Host-Progress, Ergebnis-Fan-out.

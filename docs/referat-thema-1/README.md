@@ -18,6 +18,7 @@ Evidenzmaterial. Er gehört **nicht** in die PR an kqc-real.
 | [1A-fixture.md](./1A-fixture.md)                                             | Gemeinsame deterministische Fixture mit Referenz- und Gegenfällen, A1-Projektion und Hashprüfung |
 | [1A-live-messungen.md](./1A-live-messungen.md)                               | Artillery-Messfelder, Fehlerzählung, Gates, Lastprofil und lokale Prüfung für Schritt 3          |
 | [1A-analyse-last.md](./1A-analyse-last.md)                                   | Hostautorisierte Analyse-Last mit festem Korpus, Zeitplan, Ergebniszählung und lokaler Prüfung   |
+| [1A-container-metriken-und-proxy.md](./1A-container-metriken-und-proxy.md)   | Lesende Container-Erfassung, cgroup-Auswertung und kontrollierter Unix-Socket-Verzögerungsproxy  |
 | [1B-private-inferenz-zweiter-host.md](./1B-private-inferenz-zweiter-host.md) | Zwei-Host-Deployment, LLM-Client, Messbarkeit, Lücken für 1B                                     |
 | [1C-kontext-und-adapterpfad.md](./1C-kontext-und-adapterpfad.md)             | #456-Kontext, Verträge, Snapshot/Hash, Async-Pfad, Testlücken für 1C                             |
 
