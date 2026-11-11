@@ -55,6 +55,36 @@ Vor der Abgabe gegen den Index in `adr/README.md` prüfen. Auf keiner Folie darf
 | Laborparameter                   | Timeout 300 s, Zusatzlauf mit Produktionslimits, eingefrorener Codestand, Node 26 am PC; _aktualisiert 2026-11-10:_ Nachlauf auf upstream mit Nebenlast und OOM-Kill                         | [1C-020](adr/1C-020-timeout-300-s-und-kalibrierungsregel.md), [1C-021](adr/1C-021-zusatzlauf-produktionslimits-zweiter-rechner.md), [1C-022](adr/1C-022-codestand-eingefroren-9f230abc.md), [1C-025](adr/1C-025-codestand-auf-upstream-aktualisiert.md), [1C-026](adr/1C-026-messstand-festhalten-upstream-nachziehen.md), [Nachlauf, Abweichungen](evidenz/1C/2026-11-09-labor-nachlauf.md#abweichungen-vom-ablauf) | –                                               |
 | Eigenanteil und KI-Nutzung       | Wer hat was gemacht, welche Sitzung, welches Modell                                                                                                                                          | [`1C-eigenanteil.md`](1C-eigenanteil.md)                                                                                                                                                                                                                                                                                                                                                                             | –                                               |
 
+### Verständlich und trotzdem technisch (Ideen)
+
+Ideen zum Brainstormen beim Folienbau, nichts davon ist entschieden. Ziel: Die Analyse bleibt so technisch wie sie ist, aber jede Folie hat einen Einstieg, dem man ohne Vorwissen folgen kann. Bilder aus dem Alltag sind dabei nur eine Option unter mehreren und höchstens ein Satz, nie der Inhalt der Folie.
+
+**Mögliche Mittel** (kombinierbar):
+
+1. **Frage, Mechanismus, Zahl, Beleg:** Jede Folie beginnt mit der Frage des Auftragsschritts in einem Satz, dann folgt der Mechanismus mit den echten Begriffen, dann die Kernzahl mit Rechner und Stand, dann der Beleg (Test, Protokoll, ADR). Wer nur die erste Zeile liest, hat die Aussage; wer weiterliest, hat die Technik.
+2. **Ein Auftrag von Anfang bis Ende:** Einen echten Auftrag aus dem Nachlauf als roten Faden durch die Folien 3–9 verfolgen, mit seinen gemessenen Zeitpunkten (Einreichen, Kontextaufbau, Inferenz, Nachprüfung, Gate, Endstatus) entlang von [Abb. 2](1C-diagrams.md#abb-2-zeitablauf). Konkrete Zahlen eines Laufs sind leichter zu greifen als Mediane allein; die Mediane stehen daneben.
+3. **Echte Artefakte statt Umschreibung:** Kurze Ausschnitte zeigen, die es wirklich gibt: ein Stück der Nutzlast, die an die Runtime geht (Folie 4), zwei Hashwerte vor und nach der Inferenz (Folie 6), die Kalibrierungsanfrage mit getrenntem Prefill und Ausgabe, am Laptop 95 s plus 101 s gegen ein Limit von 90 s (Folie 8), die Begründung, mit der das Gate eine Antwort verwirft (Folie 9). Gekürzt und markiert, aber unverändert.
+4. **Was wäre, wenn es kaputt ist:** Je Zusage die Negativprobe zeigen. Beispiel Folie 4: Wird eine Vertragsschicht entfernt, wird der Test rot; E4 erst, wenn beide Schichten fehlen. Das erklärt, warum ein grüner Test etwas bedeutet, und ist zugleich die Methode.
+5. **Zahlen ins Verhältnis setzen:** Statt einzelner Werte ein Vergleich in einer Grafik: 29,4 ms Einreichen gegen 223,7 s Inferenz (rund 7.600-fach, `def56700`, Laptop); 90 s Timeout als Linie über den gemessenen Inferenzzeiten beider Rechner; q = 0,318 als zu einem Drittel gefüllter Balken; Speicher je Auftrag als Treppe bis zum OOM-Kill.
+6. **Folge für die Lehrperson:** Je Befund ein Satz, was in der App sichtbar wird. Etwa Folie 9: Die Lehrperson sieht die extraktive Zusammenfassung statt der Modellantwort, ohne Hinweis darauf. Das verbindet die Technik mit der Frage, warum sie zählt.
+7. **Begriffe einmal festlegen:** Host, Queue, Runtime, Slot, Hash, Fallback, Gate beim ersten Auftreten in je einem Halbsatz erklären und danach nur noch so nennen. Eine kleine Legende auf Abb. 1 reicht.
+8. **Etiketten:** Jede der drei Zusagen auf Folie 10 als „gemessen“ oder „nur im Code gelesen“ markieren. Für 1C stehen alle drei auf „gemessen“.
+9. **Tiefe auslagern, nicht streichen:** Was im Vortrag keine Zeit hat, steht im Handout und auf den Reservefolien. Auf der Folie ein kurzer Verweis („Detail: A3“), damit die Tiefe in der Diskussion sofort greifbar ist.
+
+**Je Folie ein Vorschlag:**
+
+| Folie                  | Einstieg (ein Satz)                                   | Technischer Kern zum Zeigen                                                                 | Optional: Bild in einem Satz               |
+| ---------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| 3 Pfad im Überblick    | Wo entsteht der Kontext, und wer wartet worauf?       | Abb. 1 mit Legende; 3 Kontextaufbauten je Auftrag plus 1 je Runtime-Lesezugriff markieren   | Paket abgeben, Quittung, Zustellung später |
+| 4 Vorschau = Draht     | Ist das, was der Host anzeigt, auch das, was ankommt? | Ausschnitt der Nutzlast; byte-gleich in L1; Mutationsprobe wird rot; Validierung 1,2 ms     | Durchschlag eines Formulars                |
+| 5 Entkopplung          | Blockiert ein langsames Modell den Host?              | Verhältnis 29,4 ms zu 223,7 s als Grafik; Grenze B1: auf den Kontextaufbau wartet er doch   | Pager statt an der Theke warten            |
+| 6 Konsistenz / Hash    | Was, wenn sich die Daten während der Inferenz ändern? | Zwei Hashwerte, `source_changed`; T3.1: Hash ändert sich ohne Datenänderung (YESNO 5 von 5) | Zwei Fotos, eine Uhr im Bild               |
+| 7 Byte-Schätzung       | Wie viel vom Kontextfenster wird genutzt?             | q = 0,318 als Balken; warum die Schätzung sicher ist (q ≤ 1) und was sie kostet             | Koffer nach Volumen gepackt                |
+| 8 Timeout und Speicher | Reicht die Standardkonfiguration für CPU-Inferenz?    | Timeout-Linie über den Inferenzzeiten; Speichertreppe +0,419 GB je Auftrag bis zum OOM-Kill | –                                          |
+| 9 Quality-Gate         | Kommt eine echte Modellantwort bei der Lehrperson an? | Gate-Begründung einer verworfenen Antwort; 0 von 28; was die Lehrperson stattdessen sieht   | –                                          |
+
+Vor der Übernahme gilt die Regel oben: Jede Zahl am ADR oder Protokoll nachprüfen und mit Rechner und Stand nennen.
+
 ## Handout (höchstens 5 Seiten, 350–1.800 Wörter)
 
 Zielumfang rund 1.500 Wörter Fließtext plus Abb. 1 und Abb. 2, die je etwa eine halbe Seite brauchen ([Druckgrößen](1C-diagrams.md#abbildungen)). Die Wortzahlen je Abschnitt sind Richtwerte.
