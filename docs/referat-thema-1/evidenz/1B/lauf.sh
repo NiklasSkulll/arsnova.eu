@@ -87,7 +87,9 @@ lauf() {
   vorbereiten
 
   log "Timeouts auf $timeout ms, App neu starten"
+  # Flags wie im Laboraufbau erzwingen (ein Trockenlauf schaltet das LLM ab).
   sed -i -e "s/^QA_SUMMARY_TIMEOUT_MS=.*/QA_SUMMARY_TIMEOUT_MS=$timeout/" \
+    -e "s/^QA_SUMMARY_ENABLED=.*/QA_SUMMARY_ENABLED=true/" -e "s/^OPEN_WEIGHT_LLM_ENABLED=.*/OPEN_WEIGHT_LLM_ENABLED=true/" \
     -e "s/^OPEN_WEIGHT_LLM_SUMMARY_TIMEOUT_MS=.*/OPEN_WEIGHT_LLM_SUMMARY_TIMEOUT_MS=$timeout/" .env.production
   bash "$EV/app-start.sh" </dev/null >"$out/app-start.log" 2>&1
   runtime_frisch
