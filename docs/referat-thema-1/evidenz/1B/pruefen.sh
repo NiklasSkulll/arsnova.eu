@@ -32,7 +32,7 @@ case "${1:-}" in
       "/srv/arsnova/models/open-weight-llm/$(jq -r .filename docker/open-weight-llm/model-manifest.json)" 2>&1)"
     pruef "GGUF Größe und SHA-256" $? "$v"
     # Flags des laufenden llama-server; nur Namen ausgeben, nie den Wert von --api-key.
-    args="$(docker top arsnova-open-weight-llm -eo args | grep llama-server | head -n 1)"
+    args="$(docker top arsnova-open-weight-llm -eo pid,args | grep llama-server | head -n 1)"
     for f in '--parallel 1' '--ctx-size 8192' '--n-predict 768' "--threads $n" '--no-webui' '--slots' \
       '--reasoning off' '--n-gpu-layers 0' '--slot-prompt-similarity 0' '--jinja' '--offline'; do
       [[ " $args " == *" $f "* ]]; pruef "Flag $f" $? ""
