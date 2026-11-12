@@ -102,6 +102,35 @@ test('Auftrag ohne Modellantwort hat inferMs null', () => {
   assert.equal(k.hB3, true);
 });
 
+test('timings müssen zum POST-Status passen und Zahlen enthalten', () => {
+  const base = {
+    appExchanges: [ex('GET', GET, 2), ex('POST', POST, 100, 503)],
+    srvExchanges: [ex('GET', GET, 1.5), ex('POST', POST, 90, 503)],
+    completed: [done(500)],
+  };
+  assert.throws(
+    () => zerlegeAuftraege({ ...base, timings: [{ prompt_ms: 1, predicted_ms: 1 }] }),
+    /Auftrag 1.*503.*timings/,
+  );
+  const ok = {
+    appExchanges: [ex('GET', GET, 2), ex('POST', POST, 100)],
+    srvExchanges: [ex('GET', GET, 1.5), ex('POST', POST, 90)],
+    completed: [done(500)],
+  };
+  assert.throws(() => zerlegeAuftraege({ ...ok, timings: [null] }), /Auftrag 1.*200.*timings/);
+  assert.throws(
+    () => zerlegeAuftraege({ ...ok, timings: [{ prompt_ms: 1 }] }),
+    /Auftrag 1.*predicted_ms/,
+  );
+});
+
+test('keine Aufträge sind ein Fehler, keine widerlegte Hypothese', () => {
+  assert.throws(
+    () => zerlegeAuftraege({ appExchanges: [], srvExchanges: [], completed: [], timings: [] }),
+    /Keine Aufträge/,
+  );
+});
+
 test('Anzahl Log-Zeilen und POSTs muss übereinstimmen', () => {
   assert.throws(
     () =>

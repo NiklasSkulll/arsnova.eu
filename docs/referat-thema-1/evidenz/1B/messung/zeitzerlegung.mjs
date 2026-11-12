@@ -140,6 +140,20 @@ export function zerlegeAuftraege({ appExchanges, srvExchanges, completed, timing
       .join(', ');
     throw new Error(`Anzahl passt nicht zusammen (${text}); keine stille Paarung.`);
   }
+  if (n === 0) {
+    throw new Error('Keine Aufträge gefunden (Log, Mitschnitt und IP-Filter prüfen).');
+  }
+  timings.forEach((t, i) => {
+    const status = appPost[i].status;
+    if ((status === 200) !== (t !== null)) {
+      throw new Error(
+        `Auftrag ${i + 1}: POST-Status ${status} passt nicht zu timings ${t === null ? 'null' : 'vorhanden'}.`,
+      );
+    }
+    if (t !== null && !(Number.isFinite(t.prompt_ms) && Number.isFinite(t.predicted_ms))) {
+      throw new Error(`Auftrag ${i + 1}: timings ohne Zahl in prompt_ms oder predicted_ms.`);
+    }
+  });
   return completed.map((log, i) => {
     const jobMs = log.latencyMs;
     const appWire = appGet[i].wireMs + appPost[i].wireMs;
