@@ -68,7 +68,7 @@ EOF
   log "Windows-VM anlegen und installieren"
   virt-install --name "$NAME" --memory 22528 --vcpus 4,sockets=1,cores=4,threads=1 \
     --cpu host-passthrough --osinfo win11 --boot uefi \
-    --disk "path=$WIN_DIR/$NAME.qcow2,size=110,format=qcow2,bus=sata" \
+    --disk "path=$WIN_DIR/$NAME.qcow2,size=60,format=qcow2,bus=sata" \
     --disk "path=$ISO,device=cdrom,bus=sata" --disk "path=$WIN_DIR/unattend.iso,device=cdrom,bus=sata" \
     --network "network=$NET,mac=$MAC,model=e1000e" \
     --graphics vnc,listen=127.0.0.1 --noautoconsole --wait 0
