@@ -1,0 +1,173 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  parseTsharkFields,
+  exchanges,
+  parseCompletedLog,
+  zerlegeAuftraege,
+  kennzahlen,
+} from './zeitzerlegung.mjs';
+
+const fr = (t, stream, fromClient, payloadBytes, method = null, uri = null, status = null) => ({
+  t,
+  stream,
+  fromClient,
+  payloadBytes,
+  method,
+  uri,
+  status,
+});
+
+test('parseTsharkFields liest tab-getrennte Zeilen', () => {
+  const text = [
+    '1700000000.100\t0\t10.0.0.1\t120\tGET\t/slots?fail_on_no_slot=1\t',
+    '1700000000.102\t0\t10.0.0.2\t300\t\t\t200',
+    '1700000000.103\t0\t10.0.0.1\t0\t\t\t',
+    '',
+  ].join('\n');
+  const f = parseTsharkFields(text, '10.0.0.1');
+  assert.equal(f.length, 3);
+  assert.deepEqual(f[0], fr(1700000000.1, 0, true, 120, 'GET', '/slots?fail_on_no_slot=1', null));
+  assert.equal(f[1].fromClient, false);
+  assert.equal(f[1].status, 200);
+  assert.equal(f[1].method, null);
+});
+
+test('exchanges trennt zwei Anfragen in einem Keep-Alive-Stream', () => {
+  const frames = [
+    fr(10.0, 0, true, 100, 'GET', '/slots?fail_on_no_slot=1'),
+    fr(10.002, 0, false, 50, null, null, 200),
+    fr(10.01, 0, true, 0), // ACK ohne Nutzdaten
+    fr(11.0, 0, true, 1400), // erstes POST-Segment
+    fr(11.001, 0, true, 1400),
+    fr(11.002, 0, true, 500, 'POST', '/v1/chat/completions'),
+    fr(21.0, 0, false, 900, null, null, 200),
+  ];
+  const ex = exchanges(frames);
+  assert.equal(ex.length, 2);
+  assert.equal(ex[0].method, 'GET');
+  assert.ok(Math.abs(ex[0].wireMs - 2) < 1e-6);
+  assert.equal(ex[1].method, 'POST');
+  assert.equal(ex[1].tStart, 11.0);
+  assert.ok(Math.abs(ex[1].wireMs - 10_000) < 1e-6);
+});
+
+const ex = (method, uri, wireMs, status = 200) => ({
+  stream: 0,
+  method,
+  uri,
+  status,
+  tStart: 0,
+  tEnd: wireMs / 1000,
+  wireMs,
+});
+const GET = '/slots?fail_on_no_slot=1';
+const POST = '/v1/chat/completions';
+const done = (latencyMs) => ({
+  latencyMs,
+  status: 'ready',
+  effectiveMode: 'open_weight',
+  fallbackReason: null,
+});
+
+test('zerlegeAuftraege rechnet Netz, Adapter und Inferenz', () => {
+  const [a] = zerlegeAuftraege({
+    appExchanges: [ex('GET', GET, 2.0), ex('POST', POST, 200_010)],
+    srvExchanges: [ex('GET', GET, 1.5), ex('POST', POST, 200_000)],
+    completed: [done(200_600)],
+    timings: [{ prompt_ms: 150_000, predicted_ms: 49_000, cache_n: 0 }],
+  });
+  assert.ok(Math.abs(a.netzMs - 10.5) < 1e-6);
+  assert.ok(Math.abs(a.adapterMs - 588) < 1e-6);
+  assert.equal(a.inferMs, 199_000);
+  assert.ok(Math.abs(a.serverOhneInferenzMs - 1000) < 1e-6);
+  assert.equal(a.jobMs, 200_600);
+  assert.equal(a.cacheN, 0);
+  assert.equal(a.status, 'ready');
+});
+
+test('Auftrag ohne Modellantwort hat inferMs null', () => {
+  const [a] = zerlegeAuftraege({
+    appExchanges: [ex('GET', GET, 2), ex('POST', POST, 100, 503)],
+    srvExchanges: [ex('GET', GET, 1.5), ex('POST', POST, 90, 503)],
+    completed: [done(500)],
+    timings: [null],
+  });
+  assert.equal(a.inferMs, null);
+  assert.equal(a.serverOhneInferenzMs, null);
+  assert.equal(a.cacheN, null);
+  const k = kennzahlen([a, { netzMs: 1, adapterMs: 1, inferMs: 95, jobMs: 100 }]);
+  assert.equal(k.n, 2);
+  assert.equal(k.inferAnteilMedian, 0.95);
+  assert.equal(k.hB3, true);
+});
+
+test('Anzahl Log-Zeilen und POSTs muss übereinstimmen', () => {
+  assert.throws(
+    () =>
+      zerlegeAuftraege({
+        appExchanges: [ex('GET', GET, 2), ex('POST', POST, 100)],
+        srvExchanges: [ex('GET', GET, 1), ex('POST', POST, 90)],
+        completed: [done(500), done(600)],
+        timings: [null],
+      }),
+    (e) => e instanceof Error && /2/.test(e.message) && /1/.test(e.message),
+  );
+});
+
+test('kennzahlen wendet die Schwellen an', () => {
+  const mk = (netzMs, adapterMs, inferMs, jobMs) => ({ netzMs, adapterMs, inferMs, jobMs });
+  let k = kennzahlen([mk(50, 2000, 95, 100), mk(50, 2000, 95, 100)]);
+  assert.equal(k.netz.medianMs, 50);
+  assert.equal(k.hB1, true);
+  assert.equal(k.hB2, true);
+  assert.equal(k.hB3, true);
+  k = kennzahlen([mk(50, 100, 95, 100), mk(201, 100, 95, 100), mk(50, 100, 95, 100)]);
+  assert.equal(k.netz.maxMs, 201);
+  assert.equal(k.hB1, false);
+  k = kennzahlen([mk(1, 2001, 90, 100)]);
+  assert.equal(k.hB2, false);
+  assert.equal(k.hB3, false);
+});
+
+test('parseCompletedLog liest nur qa_summary:completed', () => {
+  const text = [
+    "qa_summary:failed { reason: 'timeout' }",
+    "qa_summary:completed { status: 'ready', effectiveMode: 'open_weight', fallbackReason: null, latencyMs: 200600 }",
+  ].join('\n');
+  const r = parseCompletedLog(text);
+  assert.equal(r.length, 1);
+  assert.equal(r[0].latencyMs, 200600);
+  assert.equal(r[0].status, 'ready');
+});
+
+test('parseCompletedLog liest das mehrzeilige util.inspect-Format von docker logs', () => {
+  // console.info(message, obj) in Node: Objekt über 72 Zeichen wird mehrzeilig ausgegeben.
+  const text = [
+    '2026-11-12T10:00:00.000Z irgendeine andere Zeile',
+    'qa_summary:completed {',
+    "  status: 'extractive',",
+    "  effectiveMode: 'extractive',",
+    "  fallbackReason: 'timeout',",
+    '  latencyMs: 90012',
+    '}',
+    "qa_summary:completed { status: 'ready', effectiveMode: 'open_weight', fallbackReason: null, latencyMs: 12.5 }",
+    '{"msg":"qa_summary:completed","status":"invalid_response","effectiveMode":"open_weight","fallbackReason":null,"latencyMs":7}',
+  ].join('\n');
+  const r = parseCompletedLog(text);
+  assert.deepEqual(r, [
+    {
+      latencyMs: 90012,
+      status: 'extractive',
+      effectiveMode: 'extractive',
+      fallbackReason: 'timeout',
+    },
+    { latencyMs: 12.5, status: 'ready', effectiveMode: 'open_weight', fallbackReason: null },
+    {
+      latencyMs: 7,
+      status: 'invalid_response',
+      effectiveMode: 'open_weight',
+      fallbackReason: null,
+    },
+  ]);
+});
