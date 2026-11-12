@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # 1B-Labor unter Linux mit einem Befehl (ADR 1B-010):
 #   labor.sh up        Voraussetzungen, Größenwahl, VMs, llm-host, app-host, Prüfungen
+#   labor.sh groessen  nur Empfehlung und Größenwahl anzeigen, nichts anlegen
 #   labor.sh pruefen   nur die Prüfungen (Runbook §10, §11, Negativtests), Bericht schreiben
 #   labor.sh status    VMs, Pinning, Docker, Repo-Stand
 #   labor.sh destroy   VMs, Disks und Netz entfernen (fragt nach)
@@ -189,11 +190,12 @@ up() {
 
 case "${1:-}" in
   up) up ;;
+  groessen) groessen_waehlen ;;
   pruefen) pruefen ;;
   status) bash "$HERE/vm/vm-linux.sh" status ;;
   destroy)
     frage "Beide Labor-VMs mit Disks und das Labornetz löschen? [j/N]" n || exit 0
     bash "$HERE/vm/vm-linux.sh" destroy
     ;;
-  *) echo "Aufruf: $0 up|pruefen|status|destroy" >&2; exit 2 ;;
+  *) echo "Aufruf: $0 up|groessen|pruefen|status|destroy" >&2; exit 2 ;;
 esac
