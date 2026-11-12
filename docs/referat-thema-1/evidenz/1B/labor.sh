@@ -6,7 +6,8 @@
 #   labor.sh kalibrierung  eine nicht gewertete Anfrage, Timeout nach Regel (ADR 1B-005)
 #   labor.sh lauf      gewerteter Lauf (LAB_N, LAB_TAG, LAB_TIMEOUT_MS), Ergebnis nach messung/
 #                      LAB_PROFIL: performance (Standard, wie 1C gehalten) oder unveraendert;
-#                      LAB_TAG mit Präfix dev: Entwicklungslauf, kommt nicht ins Repo
+#                      LAB_TAG mit Präfix dev oder probe: kommt nicht ins Repo; Timeout ohne
+#                      LAB_TIMEOUT_MS aus der jüngsten Kalibrierung mit gleichem Energieprofil
 #   labor.sh status    VMs, Pinning, Docker, Repo-Stand
 #   labor.sh destroy   VMs, Disks und Netz entfernen (fragt nach)
 #
@@ -217,11 +218,27 @@ im_app_host() { # modus: lauf.sh im app-host mit Hülle (Ruhezustand gesperrt, E
   if command -v systemd-inhibit >/dev/null; then
     huelle=(systemd-inhibit --what=sleep:idle:handle-lid-switch --who=1B-Labor --why="1B-$1" --mode=block "${huelle[@]}")
   fi
+  local timeout="${LAB_TIMEOUT_MS:-}"
+  if [[ "$1" == lauf && -z "$timeout" ]]; then
+    # Timeout aus der jüngsten Kalibrierung, nur bei gleichem Energieprofil (ADR 1B-005).
+    local kal; kal="$(ls -t "$OUT"/kalibrierung-*.json 2>/dev/null | head -n 1)"
+    [[ -n "$kal" && "$(basename "$kal")" == kalibrierung-"$(date +%Y%m%d)"T* ]] ||
+      { echo "Keine Kalibrierung von heute in $OUT: zuerst labor.sh kalibrierung (oder LAB_TIMEOUT_MS setzen)." >&2; exit 1; }
+    [[ "$(jq -r .energieprofil "$kal")" == "$ist" ]] ||
+      { echo "Kalibrierung $kal lief mit Profil $(jq -r .energieprofil "$kal"), dieser Lauf mit $ist: neu kalibrieren." >&2; exit 1; }
+    timeout="$(jq -r .timeoutMs "$kal")"
+    echo "Timeout $timeout ms aus $kal"
+  fi
   local rechner; rechner="$(lscpu | sed -n 's/^Model name: *//p'), $(nproc) Threads, $(free -g | awk '/^Mem:/ {print $2}') GiB"
   local env; env="$(printf 'LAB_N=%q LAB_TAG=%q LAB_TIMEOUT_MS=%q LAB_PROFIL_IST=%q LAB_RECHNER=%q' \
-    "${LAB_N:-10}" "${LAB_TAG:-}" "${LAB_TIMEOUT_MS:-90000}" "$ist" "$rechner")"
+    "${LAB_N:-10}" "${LAB_TAG:-}" "$timeout" "$ist" "$rechner")"
   local ausgabe
-  ausgabe="$("${huelle[@]}" "${SSH[@]}" "labor@$APP" "$env bash arsnova.eu/$EV/lauf.sh $1" | tee /dev/stderr)"
+  local rc=0
+  ausgabe="$("${huelle[@]}" "${SSH[@]}" "labor@$APP" "$env bash arsnova.eu/$EV/lauf.sh $1" | tee /dev/stderr)" || rc=$?
+  if ((rc != 0)); then
+    echo "lauf.sh $1 fehlgeschlagen ($rc). Rohdaten im app-host: ssh labor@$APP 'ls -t ~/labor-1b | head -3'" >&2
+    exit "$rc"
+  fi
   if [[ "$1" == kalibrierung ]]; then
     local datei; datei="$(tail -n 1 <<<"$ausgabe")"
     scp -q -o UserKnownHostsFile="$VMDIR/known_hosts" "labor@$APP:$datei" "$OUT/"
@@ -231,8 +248,9 @@ im_app_host() { # modus: lauf.sh im app-host mit Hülle (Ruhezustand gesperrt, E
     local dir; dir="$(tail -n 1 <<<"$ausgabe")"
     scp -q -r -o UserKnownHostsFile="$VMDIR/known_hosts" "labor@$APP:$dir" "$OUT/"
     echo "Rohdaten (nie einchecken, Mitschnitte enthalten den Token): $OUT/$(basename "$dir")"
-    if [[ "${LAB_TAG:-}" != dev* ]]; then
-      local ziel; ziel="$HERE/messung/$(date +%F)-lauf${LAB_TAG:+-$LAB_TAG}.json"
+    if [[ "${LAB_TAG:-}" != dev* && "${LAB_TAG:-}" != probe* ]]; then
+      local ziel; ziel="$HERE/messung/$(date +%F)-lauf${LAB_TAG:+-$LAB_TAG}.json" i=2
+      while [[ -e "$ziel" ]]; do ziel="$HERE/messung/$(date +%F)-lauf${LAB_TAG:+-$LAB_TAG}-$i.json"; i=$((i + 1)); done
       cp "$OUT/$(basename "$dir")/ergebnis.json" "$ziel"
       echo "Ergebnis: $ziel"
     fi

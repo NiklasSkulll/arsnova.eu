@@ -34,12 +34,14 @@ Reihenfolge, jeweils vom Rechner aus:
 
 1. Einen Prompt-Body erzeugen, falls noch keiner da ist: `LAB_TAG=dev-body LAB_N=1 LAB_PROFIL=unveraendert labor.sh lauf`.
 2. Kalibrierung: `labor.sh kalibrierung` → I = `prompt_ms + predicted_ms` und Timeout (90 000 oder 300 000 ms; über 270 s Abbruch).
-3. Probelauf: `LAB_TAG=probe LAB_N=2 LAB_TIMEOUT_MS=<Timeout> labor.sh lauf`.
-4. Gewerteter Lauf: `LAB_N=10 LAB_TIMEOUT_MS=<Timeout> labor.sh lauf`.
+3. Probelauf: `LAB_TAG=probe LAB_N=2 labor.sh lauf`.
+4. Gewerteter Lauf: `LAB_N=10 labor.sh lauf`.
 
-Windows: `labor.ps1 -Mode kalibrierung`, `labor.ps1 -Mode lauf -LabN 10 -LabTimeoutMs <Timeout>` usw.
+Ohne `LAB_TIMEOUT_MS` nimmt `lauf` den Timeout aus der jüngsten Kalibrierung von heute und bricht ab, wenn deren Energieprofil nicht zum Lauf passt. Bricht ein Lauf ab, stoppt ein `trap` Mitschnitte und Speicherprotokoll; die Rohdaten bleiben im app-host unter `~/labor-1b/`.
 
-Ein Lauf startet die Runtime frisch (höchstens 10 Aufträge je Runtime, [ADR 1B-007](../../adr/1B-007-umgang-mit-1c-fallen.md)), schneidet auf beiden Hosts mit, legt per Treiber eine Session mit dem 1C-Referenzszenario an (200 Teilnehmende über die API) und löst die Aufträge mit 31 s Abstand aus (Cooldown 30 s, sonst Cache). Danach Zeitzerlegung und Kontrolle C0 an einer frischen Runtime. Rohdaten: `~/labor-1b/<Lauf>/`; Ergebnis: `evidenz/1B/messung/<Datum>-lauf[-Tag].json` (nicht bei Tag `dev…`).
+Windows: `labor.ps1 -Mode kalibrierung`, `labor.ps1 -Mode lauf -LabN 10` usw.
+
+Ein Lauf startet die Runtime frisch (höchstens 10 Aufträge je Runtime, [ADR 1B-007](../../adr/1B-007-umgang-mit-1c-fallen.md)), schneidet auf beiden Hosts mit, legt per Treiber eine Session mit dem 1C-Referenzszenario an (200 Teilnehmende über die API) und löst die Aufträge mit 31 s Abstand aus (Cooldown 30 s, sonst Cache). Danach Zeitzerlegung und Kontrolle C0 an einer frischen Runtime. Rohdaten: `~/labor-1b/<Lauf>/`; Ergebnis: `evidenz/1B/messung/<Datum>-lauf[-Tag].json` (nicht bei Tag `dev…` oder `probe…`; ein zweiter Lauf am selben Tag bekommt die Endung `-2`).
 
 ## 4. Energieprofil
 

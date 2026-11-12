@@ -64,14 +64,19 @@ kalibrierung() {
   echo "$f"
 }
 
+aufraeumen() { # Mitschnitte und Speicherschleife stoppen; auch nach Abbruch (trap)
+  sudo pkill -INT -f '^tcpdump .*-w .*labor-1b/.*/app\.pcap' 2>/dev/null || true
+  "${LLM[@]}" "sudo pkill -INT -f '^tcpdump .*-w /tmp/1b-srv\.pcap' 2>/dev/null; [ -f /tmp/1b-mem.pid ] && kill \$(cat /tmp/1b-mem.pid) 2>/dev/null; pkill -f '1b-mem\.csv' 2>/dev/null; rm -f /tmp/1b-mem.pid; true" 2>/dev/null || true
+}
+
 mitschnitt_start() { # wo datei
   local filt="host $LLM_IP and tcp port 8080 and host $APP_IP"
-  local cmd="IF=\$(ip -o route get $LLM_IP | awk '{for(i=1;i<=NF;i++) if(\$i==\"dev\") print \$(i+1)}'); [ \"\$IF\" = lo ] && IF=\$(ip -o route get $APP_IP | awk '{for(i=1;i<=NF;i++) if(\$i==\"dev\") print \$(i+1)}'); sudo nohup tcpdump -Z labor -i \"\$IF\" -s 0 -U -w $2 '$filt' >/dev/null 2>&1 & sleep 2; pgrep -f 'tcpdump .*-w $2' >/dev/null"
+  local cmd="IF=\$(ip -o route get $LLM_IP | awk '{for(i=1;i<=NF;i++) if(\$i==\"dev\") print \$(i+1)}'); [ \"\$IF\" = lo ] && IF=\$(ip -o route get $APP_IP | awk '{for(i=1;i<=NF;i++) if(\$i==\"dev\") print \$(i+1)}'); sudo nohup tcpdump -Z labor -i \"\$IF\" -s 0 -U -w $2 '$filt' >/dev/null 2>&1 & sleep 2; pgrep -f '^tcpdump .*-w $2' >/dev/null"
   if [[ "$1" == app ]]; then bash -c "$cmd"; else "${LLM[@]}" "$cmd"; fi
 }
 
 mitschnitt_stop() { # wo datei
-  local cmd="sudo pkill -INT -f 'tcpdump .*-w $2' || true; sleep 2"
+  local cmd="sudo pkill -INT -f '^tcpdump .*-w $2' || true; sleep 2"
   if [[ "$1" == app ]]; then bash -c "$cmd"; else "${LLM[@]}" "$cmd"; fi
 }
 
@@ -96,7 +101,9 @@ auswerten() { # Rohdatenverzeichnis eines Laufs → timings, body, zerlegung
 }
 
 lauf() {
-  local n="${LAB_N:-10}" tag="${LAB_TAG:-}" timeout="${LAB_TIMEOUT_MS:-90000}"
+  local n="${LAB_N:-10}" tag="${LAB_TAG:-}" timeout="${LAB_TIMEOUT_MS:-}"
+  [[ "$timeout" == 90000 || "$timeout" == 300000 ]] ||
+    { echo "LAB_TIMEOUT_MS fehlt oder ist nicht 90000/300000 (Ergebnis der Kalibrierung, ADR 1B-005)." >&2; exit 1; }
   ((n >= 1 && n <= 10)) || { echo "LAB_N muss 1..10 sein (höchstens 10 Aufträge je frischer Runtime)." >&2; exit 1; }
   local id; id="$(date +%Y%m%dT%H%M%S)${tag:+-$tag}"
   local out="$OUTBASE/$id"
@@ -111,6 +118,9 @@ lauf() {
   bash "$EV/app-start.sh" </dev/null >"$out/app-start.log" 2>&1
   runtime_frisch
 
+  aufraeumen
+  "${LLM[@]}" 'rm -f /tmp/1b-srv.pcap /tmp/1b-mem.csv'
+  trap aufraeumen EXIT
   log "Speicherlog (15 s) und Mitschnitte starten"
   "${LLM[@]}" "c=\$(docker inspect -f '{{.Id}}' arsnova-open-weight-llm); m=/sys/fs/cgroup/system.slice/docker-\$c.scope/memory.current; echo zeit,mem_bytes,restarts,oom_killed > /tmp/1b-mem.csv; nohup bash -c \"while :; do echo \\\$(date +%s),\\\$(cat \$m),\\\$(docker inspect -f '{{.RestartCount}},{{.State.OOMKilled}}' arsnova-open-weight-llm); sleep 15; done >> /tmp/1b-mem.csv\" >/dev/null 2>&1 & echo \$! > /tmp/1b-mem.pid"
   mitschnitt_start app "$out/app.pcap"
@@ -127,12 +137,16 @@ lauf() {
   "${LLM[@]}" 'cat /tmp/1b-srv.pcap; rm -f /tmp/1b-srv.pcap' >"$out/srv.pcap"
   docker logs --since "$start" arsnova-v3-app >"$out/app.log" 2>&1
 
-  auswerten "$out"
+  local auswertung=ok
+  auswerten "$out" || { auswertung=fehlgeschlagen; log "Auswertung fehlgeschlagen; Rohdaten bleiben, später: lauf.sh auswerten $out"; }
+  [[ -f "$out/zerlegung.json" && "$auswertung" == ok ]] || echo '{"fehler":"Auswertung fehlgeschlagen"}' >"$out/zerlegung.json"
 
   # Kontrolle C0 (Design 5) an einer frischen Runtime: sonst bekäme sie n + 1 Anfragen (ADR 1B-007).
   runtime_frisch
   log "Kontrolle C0: erster Prompt direkt im llm-host"
-  local c0; c0="$(direkt <"$out/body.json")"
+  local c0='' c0t=null
+  if [[ -s "$out/body.json" ]]; then c0="$(direkt <"$out/body.json")" || c0=''; fi
+  jq -e . >/dev/null 2>&1 <<<"$(tail -n 1 <<<"$c0")" && c0t="$(tail -n 1 <<<"$c0")"
 
   local llm_info app_img
   llm_info="$("${LLM[@]}" "docker inspect -f '{{json .Config.Image}} {{json .Args}}' arsnova-open-weight-llm; nproc; free -g | awk '/^Mem:/ {print \$2}'")"
@@ -143,14 +157,14 @@ lauf() {
     --arg appImage "$app_img" --arg llmInfo "$llm_info" --arg appVcpu "$(nproc)" \
     --arg modellSha "$(jq -r .sha256 docker/open-weight-llm/model-manifest.json)" \
     --slurpfile treiber "$out/treiber.json" --slurpfile zerlegung "$out/zerlegung.json" \
-    --arg c0curl "$(head -n 1 <<<"$c0")" --argjson c0timings "$(tail -n 1 <<<"$c0")" \
+    --arg c0curl "$(head -n 1 <<<"$c0")" --argjson c0timings "$c0t" --arg auswertung "$auswertung" \
     --rawfile speicher "$out/speicher.csv" \
-    '{lauf: $id, tag: $tag, n: $n, timeoutMs: $timeout, commit: $commit, rechner: $rechner, energieprofil: $profil,
+    '{lauf: $id, tag: $tag, n: $n, auswertung: $auswertung, timeoutMs: $timeout, commit: $commit, rechner: $rechner, energieprofil: $profil,
       appHost: {vcpu: ($appVcpu | tonumber), image: $appImage},
       llmHost: {info: $llmInfo, modellSha256: $modellSha},
       treiber: $treiber[0], zerlegung: $zerlegung[0],
       kontrolleC0: {curl: $c0curl, hinweis: "time_starttransfer time_total http_code; frische Runtime", timings: $c0timings},
-      speicher: ($speicher | split("\n") | map(select(. != "" and (startswith("zeit") | not))) | map(split(",")) |
+      speicher: ($speicher | split("\n") | map(select(. != "" and (startswith("zeit") | not))) | map(split(",")) | map(select(.[1] != "")) |
         {proben: length, maxBytes: (map(.[1] | tonumber) | max), restartsMax: (map(.[2] | tonumber) | max),
          oomKilled: (map(.[3]) | any(. == "true"))})}' >"$out/ergebnis.json"
   log "fertig: $out/ergebnis.json"

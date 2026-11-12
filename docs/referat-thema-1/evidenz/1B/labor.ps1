@@ -10,7 +10,8 @@
     labor.ps1 -Mode pruefen   nur die Pruefungen (Runbook 10, 11, Negativtests), Bericht schreiben
     labor.ps1 -Mode kalibrierung  eine nicht gewertete Anfrage, Timeout nach Regel (ADR 1B-005)
     labor.ps1 -Mode lauf      gewerteter Lauf (-LabN, -LabTag, -LabTimeoutMs), Ergebnis nach messung\
-                              -LabTag mit Praefix dev: Entwicklungslauf, kommt nicht ins Repo
+                              -LabTag mit Praefix dev oder probe: kommt nicht ins Repo; ohne
+                              -LabTimeoutMs gilt die juengste Kalibrierung von heute
     labor.ps1 -Mode status    VMs, Reserve, Docker, Repo-Stand
     labor.ps1 -Mode destroy   VMs, Disks, NAT und Switch entfernen (fragt nach)
 
@@ -35,7 +36,7 @@ param(
   [switch]$Ja,
   [ValidateRange(1, 10)][int]$LabN = 10,
   [ValidatePattern('^[a-z0-9-]*$')][string]$LabTag = '',
-  [ValidateSet(90000, 300000)][int]$LabTimeoutMs = 90000,
+  [ValidateSet(0, 90000, 300000)][int]$LabTimeoutMs = 0,
   [ValidateRange(0, 64)][int]$LlmCpus = 0,
   [ValidateRange(0, 512)][int]$LlmRamGB = 0,
   [ValidateRange(0, 64)][int]$AppCpus = 0,
@@ -220,7 +221,18 @@ function Invoke-ImAppHost([string]$LaufMode) {
   $profil = ((& powercfg.exe /getactivescheme) -join ' ') -replace '[^A-Za-z0-9 ()._:-]', ''
   $r = Get-LaborRechner
   $rechner = "$((Get-CimInstance Win32_Processor | Select-Object -First 1).Name), $($r.Threads) Threads, $($r.RamGib) GB" -replace "'", ''
-  $envText = "LAB_N=$LabN LAB_TAG='$LabTag' LAB_TIMEOUT_MS=$LabTimeoutMs LAB_PROFIL_IST='$profil' LAB_RECHNER='$rechner'"
+  $timeout = $LabTimeoutMs
+  if ($LaufMode -eq 'lauf' -and $timeout -eq 0) {
+    # Timeout aus der juengsten Kalibrierung von heute mit gleichem Energieschema (ADR 1B-005).
+    $kal = Get-ChildItem -Path $OutDir -Filter ('kalibrierung-{0:yyyyMMdd}T*.json' -f (Get-Date)) -ErrorAction SilentlyContinue |
+      Sort-Object LastWriteTime -Descending | Select-Object -First 1
+    if (-not $kal) { throw "Keine Kalibrierung von heute in ${OutDir}: zuerst -Mode kalibrierung (oder -LabTimeoutMs setzen)." }
+    $k = Get-Content -Raw $kal.FullName | ConvertFrom-Json
+    if ($k.energieprofil -ne $profil) { throw "Kalibrierung lief mit '$($k.energieprofil)', dieser Lauf mit '$profil': neu kalibrieren." }
+    $timeout = [int]$k.timeoutMs
+    Write-Host "Timeout $timeout ms aus $($kal.Name)"
+  }
+  $envText = "LAB_N=$LabN LAB_TAG='$LabTag' LAB_TIMEOUT_MS=$timeout LAB_PROFIL_IST='$profil' LAB_RECHNER='$rechner'"
   $ausgabe = @(& ssh.exe @o "labor@$AppIp" "$envText bash arsnova.eu/$Ev/lauf.sh $LaufMode")
   $ausgabe | Out-Host
   if ($LASTEXITCODE -ne 0) { throw "lauf.sh $LaufMode fehlgeschlagen ($LASTEXITCODE)" }
@@ -238,9 +250,11 @@ function Invoke-ImAppHost([string]$LaufMode) {
     finally { Pop-Location }
     $lokal = Join-Path $OutDir (Split-Path $dir -Leaf)
     Write-Host "Rohdaten (nie einchecken, Mitschnitte enthalten den Token): $lokal"
-    if (-not $LabTag.StartsWith('dev')) {
-      $name = '{0:yyyy-MM-dd}-lauf{1}.json' -f (Get-Date), $(if ($LabTag) { "-$LabTag" } else { '' })
-      $ziel = Join-Path (Join-Path $PSScriptRoot 'messung') $name
+    if (-not ($LabTag.StartsWith('dev') -or $LabTag.StartsWith('probe'))) {
+      $basis = '{0:yyyy-MM-dd}-lauf{1}' -f (Get-Date), $(if ($LabTag) { "-$LabTag" } else { '' })
+      $ziel = Join-Path (Join-Path $PSScriptRoot 'messung') "$basis.json"
+      $i = 2
+      while (Test-Path $ziel) { $ziel = Join-Path (Join-Path $PSScriptRoot 'messung') "$basis-$i.json"; $i++ }
       Copy-Item (Join-Path $lokal 'ergebnis.json') $ziel
       Write-Host "Ergebnis: $ziel"
     }
