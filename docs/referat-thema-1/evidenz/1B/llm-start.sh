@@ -9,8 +9,10 @@ set -euo pipefail
 REPO="$(git -C "$(dirname "$(readlink -f "$0")")" rev-parse --show-toplevel)"
 cd "$REPO"
 [[ -f .env.llm ]] || { echo ".env.llm fehlt (Runbook §8.3)" >&2; exit 1; }
-# Der Wrapper braucht dotenv; Abhängigkeiten wie Runbook §6.
-[[ -d node_modules/dotenv ]] || npm ci --omit=dev --ignore-scripts
+# Der Wrapper importiert dotenv aus dem Wurzel-node_modules. Dort liegt es nur als
+# Dev-Abhängigkeit; Runbook §6 (npm ci --omit=dev) lässt es weg und der Wrapper bricht
+# mit ERR_MODULE_NOT_FOUND ab (Befund 2026-11-12). Darum hier ohne --omit=dev.
+[[ -d node_modules/dotenv ]] || npm ci --ignore-scripts
 
 echo "== Wrapper-Prüfungen (Trockenlauf)"
 node scripts/open-weight-llm/prod-compose.mjs --dry-run up -d
