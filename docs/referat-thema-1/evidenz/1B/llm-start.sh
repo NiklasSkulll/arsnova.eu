@@ -26,8 +26,12 @@ docker start registry >/dev/null 2>&1 ||
   docker run -d --restart=always --name registry -p 127.0.0.1:5000:5000 registry:2.8.3 >/dev/null
 # Tag nach dem letzten Commit, der den Build-Kontext geändert hat.
 TAG="$REG:server-b10524-$(git log -1 --format=%h --abbrev=12 -- docker/open-weight-llm)"
-docker image inspect "$TAG" >/dev/null 2>&1 ||
-  docker build --pull --file docker/open-weight-llm/Dockerfile --tag "$TAG" docker/open-weight-llm
+for i in 1 2 3; do
+  docker image inspect "$TAG" >/dev/null 2>&1 && break
+  docker build --pull --file docker/open-weight-llm/Dockerfile --tag "$TAG" docker/open-weight-llm ||
+    echo "Build $i fehlgeschlagen" >&2
+done
+docker image inspect "$TAG" >/dev/null
 # Push großer Layer in registry:2 läuft gelegentlich in einen Timeout; Wiederholung hilft.
 for i in 1 2 3 4 5; do docker push -q "$TAG" >/dev/null && break; echo "Push $i fehlgeschlagen" >&2; sleep 5; done
 docker pull -q "$TAG" >/dev/null

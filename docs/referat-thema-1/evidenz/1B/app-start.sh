@@ -19,9 +19,12 @@ docker start registry >/dev/null 2>&1 ||
   docker run -d --restart=always --name registry -p 127.0.0.1:5000:5000 registry:2.8.3 >/dev/null
 # Tag nach dem letzten Commit außerhalb von docs/; Doku-Commits bauen nicht neu.
 TAG="$REG:$(git log -1 --format=%h --abbrev=12 -- . ":(exclude)docs")"
-if ! docker image inspect "$TAG" >/dev/null 2>&1; then
-  docker build --pull --file Dockerfile --tag "$TAG" .
-fi
+# Netzfehler beim npm ci im Build sind vorübergehend (Befund 2026-11-12): bis zu 3 Versuche.
+for i in 1 2 3; do
+  docker image inspect "$TAG" >/dev/null 2>&1 && break
+  docker build --pull --file Dockerfile --tag "$TAG" . || echo "Build $i fehlgeschlagen" >&2
+done
+docker image inspect "$TAG" >/dev/null
 for i in 1 2 3 4 5; do docker push -q "$TAG" >/dev/null && break; echo "Push $i fehlgeschlagen" >&2; sleep 5; done
 docker pull -q "$TAG" >/dev/null
 IMAGE="$(docker image inspect --format '{{range .RepoDigests}}{{println .}}{{end}}' "$TAG" | grep -F "$REG@sha256:" | head -n 1)"
