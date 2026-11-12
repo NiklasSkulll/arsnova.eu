@@ -154,8 +154,8 @@ Folgende Kriterien helfen bei der Wahl, wer X und wer Y wird:
 
 ## Gemeinsame Präsentation (Empfehlung, offen)
 
-Stand 2026-11-10, Empfehlung von Jonas; Entscheidung gemeinsam mit Niklas
-steht aus. Die Präsentation ist gemeinsam und deckt 1A, 1B und 1C ab; jeder
+Stand 2026-11-10, Empfehlung von Jonas; _aktualisiert 2026-11-12:_ mit Niklas so gut
+wie vereinbart, endgültig steht es noch nicht fest. Die Präsentation ist gemeinsam und deckt 1A, 1B und 1C ab; jeder
 stellt seinen Teil aus der [Entscheidung](#entscheidung-2026-10-23) vor.
 
 **Empfohlene Reihenfolge:** 1A → 1B (beide Hälften) → 1C. Sie folgt dem Weg

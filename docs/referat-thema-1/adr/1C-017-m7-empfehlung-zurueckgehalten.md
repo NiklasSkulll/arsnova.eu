@@ -9,7 +9,7 @@ Auftragsschritt 4: Jede angenommene Q&A-Stimme ändert den `snapshotHash` ([Doss
 
 ## Entscheidung
 
-Zeile 3 der Regel: Vorhersagemodell verfehlt, Empfehlung zurückgestellt. Die Kandidaten K1–K4 sind benannt und bewertet, aber nicht empfohlen. Ob die nachträgliche Einordnung als Ursachenklärung genügt, entscheidet allein der Autor ([Entscheidung zu M7](../evidenz/1C/2026-10-24-teil3.md#entscheidung)).
+Zeile 3 der Regel: Vorhersagemodell verfehlt, Empfehlung zurückgestellt. Die Kandidaten K1–K4 sind benannt und bewertet, aber nicht empfohlen. Ob die nachträgliche Einordnung als Ursachenklärung genügt, entscheidet allein der Autor ([Entscheidung zu M7](../evidenz/1C/2026-10-24-teil3.md#entscheidung)). _Aktualisiert 2026-11-12:_ Der Autor hat entschieden, dass sie nicht genügt; die Empfehlung bleibt zurückgehalten ([Stand der Autorenprüfung](../1C-eigenanteil.md#stand-der-autorenprüfung)).
 
 ## Alternativen
 
