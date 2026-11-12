@@ -2,7 +2,9 @@
 # groessen-faelle.json. Hyper-V kennt kein Pinning, daher ohne cpuset.
 # Aufruf: Invoke-Pester docs/referat-thema-1/evidenz/1B/groessen.Tests.ps1
 BeforeDiscovery {
-  $script:faelle = (Get-Content -Raw (Join-Path $PSScriptRoot 'groessen-faelle.json') | ConvertFrom-Json).faelle
+  $script:daten = Get-Content -Raw (Join-Path $PSScriptRoot 'groessen-faelle.json') | ConvertFrom-Json
+  $script:faelle = $daten.faelle
+  $script:pruefFaelle = $daten.pruefFaelle
 }
 
 BeforeAll {
@@ -25,5 +27,15 @@ Describe 'Get-LaborGroesse' {
       $ist.app.ramGib | Should -Be $erwartet.app.ramGib
       @($ist.warnungen) -join ',' | Should -Be (@($erwartet.warnungen) -join ',')
     }
+  }
+}
+
+Describe 'Test-LaborGroesse' {
+  It 'PowerShell pruefen: <_.name>' -ForEach $pruefFaelle {
+    $r = $_.rechner
+    $w = $_.werte
+    $ist = Test-LaborGroesse -Kerne $r.kerne -Threads $r.threads -RamGib $r.ramGib `
+      -LlmVcpu $w.llmVcpu -LlmRamGib $w.llmRamGib -AppVcpu $w.appVcpu -AppRamGib $w.appRamGib
+    "$ist" | Should -Be $_.fehler
   }
 }

@@ -36,34 +36,10 @@ groessen_empfehlung() {
   ((llm_ram < 12)) && warn+=(llm-ram-10)
   ((ram - llm_ram - app_ram < 4)) && warn+=(host-ram-2)
 
-  local llm_set=null app_set=null
+  local llm_set=null app_set=null sets
   if [[ -n "$topo" ]]; then
-    local -a kern_von=() erster=() zweiter=()
-    IFS=, read -r -a kern_von <<<"$topo"
-    # Erster und zweiter Thread je Kern, Kerne in Reihenfolge ihres ersten Auftretens.
-    local -a reihe=()
-    local cpu k
-    for cpu in "${!kern_von[@]}"; do
-      k=${kern_von[$cpu]}
-      if [[ -z "${erster[$k]:-}" ]]; then
-        erster[k]=$cpu
-        reihe+=("$k")
-      elif [[ -z "${zweiter[$k]:-}" ]]; then
-        zweiter[k]=$cpu
-      fi
-    done
-    local -a l=() a=()
-    local i
-    for ((i = 0; i < llm_cpu; i++)); do l+=("${erster[${reihe[$i]}]}"); done
-    for ((i = 0; i < app_cpu; i++)); do
-      if ((smt)); then
-        a+=("${zweiter[${reihe[$i]}]}")
-      else
-        a+=("${erster[${reihe[$((llm_cpu + i))]}]}")
-      fi
-    done
-    llm_set="\"$(IFS=,; echo "${l[*]}")\""
-    app_set="\"$(IFS=,; echo "${a[*]}")\""
+    sets="$(groessen_pinning "$llm_cpu" "$app_cpu" "$topo")"
+    llm_set="\"${sets% *}\"" app_set="\"${sets#* }\""
   fi
 
   local w=""
@@ -87,4 +63,48 @@ groessen_rechner() {
   echo "${#ids[@]}"
   echo $(($(awk '/^MemTotal:/ {print $2}' /proc/meminfo) / 1024 / 1024))
   (IFS=,; echo "${ids[*]}")
+}
+
+# groessen_pinning LLM_VCPU APP_VCPU KERN_JE_CPU_CSV → "LLM_CPUSET APP_CPUSET"
+# llm-host: erster Thread der ersten LLM_VCPU Kerne. app-host: unter SMT die Geschwister-
+# Threads der ersten Kerne, sonst die ersten Threads der folgenden Kerne.
+groessen_pinning() {
+  local llm_cpu=$1 app_cpu=$2 topo=$3
+  local -a kern_von=() erster=() zweiter=() reihe=() l=() a=()
+  local cpu k i smt=0
+  IFS=, read -r -a kern_von <<<"$topo"
+  for cpu in "${!kern_von[@]}"; do
+    k=${kern_von[$cpu]}
+    if [[ -z "${erster[$k]:-}" ]]; then
+      erster[k]=$cpu
+      reihe+=("$k")
+    elif [[ -z "${zweiter[$k]:-}" ]]; then
+      zweiter[k]=$cpu
+      smt=1
+    fi
+  done
+  if ((llm_cpu > ${#reihe[@]} || (smt == 0 && llm_cpu + app_cpu > ${#reihe[@]}) || (smt && app_cpu > ${#reihe[@]}))); then
+    echo "groessen_pinning: zu wenige Kerne für $llm_cpu + $app_cpu vCPU" >&2
+    return 1
+  fi
+  for ((i = 0; i < llm_cpu; i++)); do l+=("${erster[${reihe[$i]}]}"); done
+  for ((i = 0; i < app_cpu; i++)); do
+    if ((smt)); then a+=("${zweiter[${reihe[$i]}]}"); else a+=("${erster[${reihe[$((llm_cpu + i))]}]}"); fi
+  done
+  echo "$(IFS=,; echo "${l[*]}") $(IFS=,; echo "${a[*]}")"
+}
+
+# groessen_pruefen KERNE THREADS RAM_GIB LLM_VCPU LLM_RAM_GIB APP_VCPU APP_RAM_GIB
+# Prüft eigene Werte; gibt nichts aus, wenn sie gültig sind, sonst den ersten Fehlercode.
+groessen_pruefen() {
+  local threads=$2 ram=$3 lv=$4 lr=$5 av=$6 ar=$7 max=$1
+  ((max > 8)) && max=8
+  if ((lv < 2 || lv > max)); then echo llm-vcpu
+  elif ((av < 1)); then echo app-vcpu
+  elif ((lv + av > threads)); then echo vcpu-summe
+  elif ((lr < 10)); then echo llm-ram
+  elif ((ar < 4)); then echo app-ram
+  elif ((lr + ar > ram - 2)); then echo ram-summe
+  fi
+  return 0
 }

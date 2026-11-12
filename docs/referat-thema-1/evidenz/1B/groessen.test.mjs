@@ -38,3 +38,22 @@ for (const fall of faelle) {
     assert.deepEqual(ist, fall.erwartet);
   });
 }
+
+const { pruefFaelle } = JSON.parse(readFileSync(join(here, 'groessen-faelle.json'), 'utf8'));
+for (const fall of pruefFaelle) {
+  test(`Bash prüfen: ${fall.name}`, () => {
+    const { kerne, threads, ramGib } = fall.rechner;
+    const w = fall.werte;
+    const out = execFileSync(
+      'bash',
+      [
+        '-c',
+        'source "$0"; groessen_pruefen "$@"',
+        join(here, 'groessen.sh'),
+        ...[kerne, threads, ramGib, w.llmVcpu, w.llmRamGib, w.appVcpu, w.appRamGib].map(String),
+      ],
+      { encoding: 'utf8' },
+    );
+    assert.equal(out.trim(), fall.fehler);
+  });
+}

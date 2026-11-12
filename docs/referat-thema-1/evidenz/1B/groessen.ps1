@@ -45,3 +45,26 @@ function Get-LaborRechner {
     RamGib  = [int][math]::Floor($ram / 1GB)
   }
 }
+
+# Prueft eigene Werte; leer = gueltig, sonst der erste Fehlercode (wie groessen_pruefen).
+function Test-LaborGroesse {
+  [CmdletBinding()]
+  [OutputType([string])]
+  param(
+    [Parameter(Mandatory)][int]$Kerne,
+    [Parameter(Mandatory)][int]$Threads,
+    [Parameter(Mandatory)][int]$RamGib,
+    [Parameter(Mandatory)][int]$LlmVcpu,
+    [Parameter(Mandatory)][int]$LlmRamGib,
+    [Parameter(Mandatory)][int]$AppVcpu,
+    [Parameter(Mandatory)][int]$AppRamGib
+  )
+  $max = [math]::Min(8, $Kerne)
+  if ($LlmVcpu -lt 2 -or $LlmVcpu -gt $max) { return 'llm-vcpu' }
+  if ($AppVcpu -lt 1) { return 'app-vcpu' }
+  if ($LlmVcpu + $AppVcpu -gt $Threads) { return 'vcpu-summe' }
+  if ($LlmRamGib -lt 10) { return 'llm-ram' }
+  if ($AppRamGib -lt 4) { return 'app-ram' }
+  if ($LlmRamGib + $AppRamGib -gt $RamGib - 2) { return 'ram-summe' }
+  return ''
+}
