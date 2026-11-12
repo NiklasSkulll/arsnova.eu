@@ -9,6 +9,8 @@ set -euo pipefail
 REPO="$(git -C "$(dirname "$(readlink -f "$0")")" rev-parse --show-toplevel)"
 cd "$REPO"
 [[ -f .env.llm ]] || { echo ".env.llm fehlt (Runbook §8.3)" >&2; exit 1; }
+# Der Wrapper braucht dotenv; Abhängigkeiten wie Runbook §6.
+[[ -d node_modules/dotenv ]] || npm ci --omit=dev --ignore-scripts
 
 echo "== Wrapper-Prüfungen (Trockenlauf)"
 node scripts/open-weight-llm/prod-compose.mjs --dry-run up -d
