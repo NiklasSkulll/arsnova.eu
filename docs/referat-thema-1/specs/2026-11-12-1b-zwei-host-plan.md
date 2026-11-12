@@ -266,3 +266,24 @@ Muss vor jedem Lauf committet sein (Nachweiskette).
 - [ ] **Step 4:** Volle Prüfung: `npx prettier --check docs/referat-thema-1/**/*.md`, `git diff --check`, `node --test docs/referat-thema-1/evidenz/1B/messung/`, Links in den neuen Dateien prüfen (Ziele existieren).
 - [ ] **Step 5:** Commit `docs(referat): add the 1B result for steps 1-2`.
 - [ ] **Step 6:** PR gegen Fork-`main` erst nach Freigabe durch den Autor, mit vollständigem `.github/pull_request_template.md`.
+
+---
+
+## Nachtrag 2026-11-12: Aufbau voll automatisiert, Linux und Windows
+
+Auftrag des Autors nach Task 4: Der Aufbau soll am Ende mit einem Befehl laufen, unter Linux (KVM) und unter Windows (Hyper-V) gleich, mit interaktiver Auswahl der VM-Größen und einer Empfehlung aus Kernen, Threads und RAM des Rechners. Der gewertete Lauf am ThinkPad P50 bleibt bei den festgelegten Größen (ADR 1B-002); die Empfehlung ergibt dort genau diese Werte.
+
+### Task 12: Ein Befehl für den Aufbau, mit Größenempfehlung
+
+**Files:**
+
+- Create: `evidenz/1B/labor.sh`, `evidenz/1B/labor.ps1`, `evidenz/1B/groessen-faelle.json`, `evidenz/1B/groessen.test.mjs`, `evidenz/1B/groessen.Tests.ps1`, ADR `1B-010-aufbau-automatisiert-mit-groessenempfehlung.md`
+- Modify: `vm-linux.sh`, `vm-windows.ps1` (Größen als Parameter), `llm-vm.override.yml` (`cpus` und `THREADS` aus `LAB_LLM_CPUS`, Standard 4)
+
+- [ ] **Step 1:** Größenregel als Testfälle in `groessen-faelle.json` (Eingabe: physische Kerne, logische Threads, RAM in GiB; Ausgabe: vCPU und RAM je VM, Pinning-Liste unter Linux, Abbruchgrund). Fälle mindestens: P50 (4/8/31 → llm 4 vCPU 12 GiB, app 2 vCPU 6 GiB, Pinning 0–3 und 4–5), 8/16/32, 6/6/16 ohne SMT, 4/4/16 (knapp), 2/4/8 (Abbruch).
+- [ ] **Step 2:** Tests für beide Umsetzungen gegen dieselbe Datei schreiben und rot sehen: `node --test` ruft die Bash-Funktion, Pester im pwsh-Container die PowerShell-Funktion.
+- [ ] **Step 3:** Regel umsetzen, je einmal in Bash und PowerShell. Grundsätze: llm-host höchstens 8 vCPU (Release-Wert), je vCPU ein physischer Kern; app-host 2 vCPU; RAM llm 12 GiB (mindestens 10: `mem_limit` 8g plus System), app 6 GiB (mindestens 4), Rest für den Host mindestens 4 GiB. Windows: kein Pinning möglich; stattdessen statischer Speicher, `Set-VMProcessor -Reserve 100` und `-RelativeWeight` (Microsoft Learn, Set-VMProcessor). Interaktiv: Empfehlung anzeigen, übernehmen oder ändern; nicht interaktiv per Parameter.
+- [ ] **Step 4:** `labor.sh up|status|destroy` und `labor.ps1 -Mode up|status|destroy`: Größenwahl → VMs → `llm-start.sh` → `app-start.sh` (Token nur per Pipe) → Prüfungen Runbook §10, §11 und Negativtests → Aufbaubericht ohne Secrets nach `LAB_OUTDIR`.
+- [ ] **Step 5:** Test Linux: `labor.sh destroy`, dann `labor.sh up` von null bis healthy, vor der Kalibrierung (Task 8).
+- [ ] **Step 6:** Test Windows nach dem gewerteten Lauf (Task 9): Windows-11-Evaluierungs-VM in KVM mit verschachtelter Virtualisierung, darin `labor.ps1 -Mode up` komplett. Ergebnis und Abweichungen ins Aufbauprotokoll; bis dahin „ungetestet, Niklas prüft“.
+- [ ] **Step 7:** ADR 1B-010, Runbook (Task 10) auf `labor.sh`/`labor.ps1` umstellen; Prettier + `git diff --check`; Commits je Schritt.
