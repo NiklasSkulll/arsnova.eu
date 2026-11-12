@@ -17,6 +17,7 @@ export LIBVIRT_DEFAULT_URI=qemu:///system
 WIN_DIR="${WIN_DIR:-/var/lib/libvirt/images/arsnova-1b/win}"
 WIN_OUT="${WIN_OUT:-$HOME/labor-1b/windows-test}"
 ISO="${WIN_ISO:-$WIN_DIR/win11-eval-de.iso}"
+# WIN_RAM_MIB (18432): 22 GiB ließen dem Rechner (31 GiB) nur 1 GiB, Windows belegt beim Setup alles.
 NAME=arsnova-1b-win NET=arsnova-1b-win IP=192.168.151.10 MAC=52:54:00:1b:01:10
 KEY="${LAB_SSH_KEY:-$HOME/.ssh/id_ed25519.pub}"
 SSH=(ssh -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile="$WIN_DIR/known_hosts" -o ConnectTimeout=5 -o BatchMode=yes "labor@$IP")
@@ -66,7 +67,7 @@ EOF
   rm -rf "$t"
 
   log "Windows-VM anlegen und installieren"
-  virt-install --name "$NAME" --memory 22528 --vcpus 4,sockets=1,cores=4,threads=1 \
+  virt-install --name "$NAME" --memory "${WIN_RAM_MIB:-18432}" --vcpus 4,sockets=1,cores=4,threads=1 \
     --cpu host-passthrough --osinfo win11 --boot uefi \
     --disk "path=$WIN_DIR/$NAME.qcow2,size=60,format=qcow2,bus=sata" \
     --disk "path=$ISO,device=cdrom,bus=sata" --disk "path=$WIN_DIR/unattend.iso,device=cdrom,bus=sata" \
