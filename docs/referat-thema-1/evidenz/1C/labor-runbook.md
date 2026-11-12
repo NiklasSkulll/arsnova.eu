@@ -16,6 +16,8 @@ _Ergänzt 2026-11-12:_ Für neue Läufe genügt das Skript [`labor-lauf.sh`](lab
 | `LABOR_TAG=nachlauf LABOR_OVERRIDE= LABOR_TIMEOUT_MS=300000 docs/referat-thema-1/evidenz/1C/labor-lauf.sh lauf` | Variante des Nachlaufs vom 2026-11-09 ([Nachlauf-Design 3](../../specs/2026-11-06-1c-nachlauf-design.md#3-aufbau-ki-vorschlag-mit-diesem-design-freigegeben)): Laborlimits, 300 s, ohne neue Kalibrierung |
 | `LABOR_CACHE_ARM=standard\|aus docs/referat-thema-1/evidenz/1C/labor-lauf.sh cacheversuch`                      | Ursachenversuch U1 (Design 15), je Arm mit frisch gestarteter Runtime                                                                                                                                     |
 
+Schlaf und Deckel sperrt das Skript selbst über `systemd-inhibit` (nur solange es läuft, `labor-lauf.sh:36-37`). Beim Aufräumen nach `lauf` stoppt es zusätzlich die User-Unit `labor-1c-keepawake.service` (`labor-lauf.sh:80`). Diese Unit gehört nicht zum Repository: Für den per Timer gestarteten Laptop-Lauf vom 2026-11-05 lief sie als vorübergehend gestartete User-Unit ohne Unit-Datei vom Vorabend (2026-11-04, 21:18) bis zum Laufende (08:08) und hielt den Rechner wach, bis der Lauf selbst den Inhibitor übernahm. Fehlt sie, ist der Aufruf wirkungslos (`|| true`).
+
 Weitere Variablen: `LABOR_TAG` (Kennung im Dateinamen), `LABOR_CLI` (`podman` oder `docker`), `LABOR_OUTDIR` (Logs und Speicherprotokoll, Standard `~/labor-1c`, nie einchecken). Das Lauf-JSON schreibt das Skript nach `evidenz/1C/messung/<DATUM>-labor.json` bzw. mit `LABOR_TAG` nach `<DATUM>-labor-<TAG>.json`; danach Abschnitt 7 und die Stolperfalle in Abschnitt 9.
 
 ## 1. Voraussetzungen
