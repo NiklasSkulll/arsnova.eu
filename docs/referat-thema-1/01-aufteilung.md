@@ -142,6 +142,18 @@ Test-Runtime für Latenz und Ausfall
 von der vorgeschlagenen Zuordnung ab; ob X die Helfer für 1A/1B übernimmt, ist
 mit Niklas abzustimmen.
 
+_Aktualisiert 2026-11-12:_ Die Test-Runtime ist kein Ersatz für den
+vorgeschlagenen Fake-`llama-server`. Sie läuft im Vitest-Prozess
+(`node:http`-Server auf `127.0.0.1` mit freiem Port, verdrahtet per
+`vi.stubEnv`), bildet nur `GET /slots?fail_on_no_slot=1` (Status per
+`slotsStatus`, Standard 200 mit Antwort `[]`) und `POST /v1/chat/completions` sowie den
+Legacy-Text-Pfad nach;
+`/health` oder `/props` gibt es nur, wenn ein Test sie als zusätzliche Route
+übergibt. Als eigenständiger Fake-Server für einen zweiten Host (1B) taugt sie
+so nicht. Für Latenz und Ausfall auf dem echten Pfad wäre der aufzeichnende
+Proxy (`apps/backend/src/__tests__/lib/recording-proxy.ts`) der Ort; er hat
+aber noch keine Option für Verzögerung oder Fehler.
+
 ## Wer übernimmt was
 
 Folgende Kriterien helfen bei der Wahl, wer X und wer Y wird:

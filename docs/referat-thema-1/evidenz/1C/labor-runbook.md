@@ -4,6 +4,20 @@ Ablauf für den Laborlauf aus dem [Design-Entwurf](../../specs/2026-10-25-1c-lab
 
 Stand: 2026-10-25, auf den eigenen Rechner umgestellt am 2026-11-04. Werkzeug: `apps/backend/src/__tests__/qa.summary-labor.pg.test.ts` mit `lib/recording-proxy.ts`; Auswertung: [`messung/auswertung.mjs`](messung/auswertung.mjs). Runtime: lokaler Laborpfad `llm-http` ([Onboarding](../../../onboarding.md#optional-lokale-text-ki-qwen3-4b), [Vertrag](../../../features/open-weight-llm-runtime.md#same-host-labor)).
 
+## Aktueller Ablauf
+
+_Ergänzt 2026-11-12:_ Für neue Läufe genügt das Skript [`labor-lauf.sh`](labor-lauf.sh); es fasst die Abschnitte 2–6 zusammen. Die Abschnitte 1–9 bleiben als Einzelschritte und für die Vorbereitung stehen. Vorher gilt [ADR 1C-026](../../adr/1C-026-messstand-festhalten-upstream-nachziehen.md): Der gemessene Stand bleibt festgehalten; vor der Präsentation wird upstream nur nachgezogen und geprüft, kein neuer Modelllauf.
+
+| Aufruf (aus dem Repository-Wurzelverzeichnis)                                                                   | Zweck                                                                                                                                                                                                     |
+| --------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs/referat-thema-1/evidenz/1C/labor-lauf.sh kalibrierung`                                                    | eine nicht gewertete Anfrage, druckt nur Zeiten (Design 10.1 und 14.3); Body siehe Abschnitt 9, Schritt 1                                                                                                 |
+| `docs/referat-thema-1/evidenz/1C/labor-lauf.sh lauf`                                                            | vollständiger Lauf L1–L5 mit Speicherprotokoll; Standard: Produktionslimits-Override, Timeout 90 000 ms                                                                                                   |
+| `LABOR_OVERRIDE= docs/referat-thema-1/evidenz/1C/labor-lauf.sh lauf`                                            | Laborlimits: `LABOR_OVERRIDE` leer setzen, dann gelten die Limits des Laborpfads (4 CPUs, 5 GiB)                                                                                                          |
+| `LABOR_TAG=nachlauf LABOR_OVERRIDE= LABOR_TIMEOUT_MS=300000 docs/referat-thema-1/evidenz/1C/labor-lauf.sh lauf` | Variante des Nachlaufs vom 2026-11-09 ([Nachlauf-Design 3](../../specs/2026-11-06-1c-nachlauf-design.md#3-aufbau-ki-vorschlag-mit-diesem-design-freigegeben)): Laborlimits, 300 s, ohne neue Kalibrierung |
+| `LABOR_CACHE_ARM=standard\|aus docs/referat-thema-1/evidenz/1C/labor-lauf.sh cacheversuch`                      | Ursachenversuch U1 (Design 15), je Arm mit frisch gestarteter Runtime                                                                                                                                     |
+
+Weitere Variablen: `LABOR_TAG` (Kennung im Dateinamen), `LABOR_CLI` (`podman` oder `docker`), `LABOR_OUTDIR` (Logs und Speicherprotokoll, Standard `~/labor-1c`, nie einchecken). Das Lauf-JSON schreibt das Skript nach `evidenz/1C/messung/<DATUM>-labor.json` bzw. mit `LABOR_TAG` nach `<DATUM>-labor-<TAG>.json`; danach Abschnitt 7 und die Stolperfalle in Abschnitt 9.
+
 ## 1. Voraussetzungen
 
 | Was      | Anforderung                                                                                                                                                                    |
@@ -65,7 +79,7 @@ mise exec node@24.18.0 -- npm ci
 mise exec node@24.18.0 -- npm run prisma:generate
 ```
 
-Hat sich upstream seit `70c74002` (upstream `9f230abc`) geändert, die Tabelle in Design 3.4 vor dem Lauf für den neuen Stand prüfen und ergänzen.
+Hat sich upstream seit dem gemessenen Stand geändert, nach [ADR 1C-026](../../adr/1C-026-messstand-festhalten-upstream-nachziehen.md#entscheidung) prüfen, ob die neuen Commits den Pfad der Zusammenfassung berühren (_aktualisiert 2026-11-12:_ früher: Tabelle in Design 3.4 ergänzen; das Vorgehen steht jetzt im ADR und im [Nachlauf-Design, Nachtrag 7](../../specs/2026-11-06-1c-nachlauf-design.md#7-nachtrag-2026-11-09-nach-der-freigabe-vor-dem-lauf)).
 
 Eigene PostgreSQL- und Redis-Instanz nur für den Lauf, an Loopback gebunden, getrennt von der Entwicklungsdatenbank. Das Datenbank-Passwort ist ein Wegwerfwert:
 
@@ -98,11 +112,19 @@ cd apps/backend
 env -u QA_SUMMARY_LABOR_RUNTIME_URL -u QA_SUMMARY_LABOR_RUNTIME_TOKEN \
   RUN_QA_SUMMARY_LABOR=1 QA_SUMMARY_LABOR_FAKE_RUNTIME=1 QA_SUMMARY_LABOR_RUNS=2 QA_SUMMARY_LABOR_DIRECT_RUNS=1 \
   QA_SUMMARY_LABOR_OUT=/tmp/labor-dry.json \
-  mise exec node@24.18.0 -- npx vitest run src/__tests__/qa.summary-labor.pg.test.ts
+  mise exec node@24.18.0 -- env PATH="$(mise where node@24.18.0)/bin:$PATH" npx vitest run src/__tests__/qa.summary-labor.pg.test.ts
 cd ../..
 ```
 
 Die Datei `/tmp/labor-dry.json` ist **keine Evidenz** (`dryRun: true`) und wird nicht eingecheckt.
+
+_Ergänzt 2026-11-12:_ Der `PATH`-Vorsatz entspricht [`labor-lauf.sh`](labor-lauf.sh) (Variable `NODE`): Unter `mise exec` allein fand `npx` am PC die System-Node, Vitest lief dort unter Node 26 ([ADR 1C-021](../../adr/1C-021-zusatzlauf-produktionslimits-zweiter-rechner.md)). Mit dem Vorsatz finden auch `npx` und Shebangs Node 24.18.0.
+
+Steuergrößen der Harness ([`qa.summary-labor.pg.test.ts`](../../../../apps/backend/src/__tests__/qa.summary-labor.pg.test.ts)): Variablen, Standardwerte und Abweichungsregeln stehen in [Labor-Design 3.2](../../specs/2026-10-25-1c-labor-design.md#32-umgebungsvariablen). Dort nicht aufgeführt ist nur:
+
+| Variable                         | Standard | Bedeutung                                                    |
+| -------------------------------- | -------- | ------------------------------------------------------------ |
+| `QA_SUMMARY_LABOR_FAKE_DELAY_MS` | 200      | Antwortverzögerung der Test-Runtime bei `..._FAKE_RUNTIME=1` |
 
 ## 5. Lauf
 
@@ -112,7 +134,7 @@ Aus `apps/backend`. L5 ist freigegeben (A2), der Timeout von 300 s ebenfalls (A4
 cd apps/backend
 LABOR_OUT="$PWD/../../docs/referat-thema-1/evidenz/1C/messung/$(date +%F)-labor.json"
 RUN_QA_SUMMARY_LABOR=1 \
-QA_SUMMARY_LABOR_BASELINE="main@$(git rev-parse --short upstream/main)" \
+QA_SUMMARY_LABOR_BASELINE="main@$(git rev-parse --short "$(git merge-base HEAD upstream/main)")" \
 QA_SUMMARY_LABOR_GIT_SHA="$(git rev-parse HEAD)" \
 QA_SUMMARY_LABOR_GIT_DIRTY="$([ -z "$(git status --porcelain)" ] && echo false || echo true)" \
 QA_SUMMARY_LABOR_RUNTIME_IMAGE='<RUNTIME_IMAGE aus Abschnitt 2>' \
@@ -120,7 +142,7 @@ QA_SUMMARY_LABOR_MODEL_SHA256='<MODEL_SHA256 aus Abschnitt 2>' \
 QA_SUMMARY_LABOR_L5_RUNS=5 \
 QA_SUMMARY_LABOR_TIMEOUT_MS=300000 \
 QA_SUMMARY_LABOR_OUT="$LABOR_OUT" \
-  mise exec node@24.18.0 -- npx vitest run src/__tests__/qa.summary-labor.pg.test.ts --reporter=verbose \
+  mise exec node@24.18.0 -- env PATH="$(mise where node@24.18.0)/bin:$PATH" npx vitest run src/__tests__/qa.summary-labor.pg.test.ts --reporter=verbose \
   2>&1 | tee ~/labor-1c-vitest.log
 cd ../..
 ```
@@ -159,7 +181,7 @@ git diff --cached --stat
 git commit -m 'docs(referat): record the 1C lab run against the private runtime'
 ```
 
-Anschließend die Ergebnisse nach den Regeln des Designs (Abschnitt 6) in einem eigenen Protokoll `evidenz/1C/<DATUM>-labor.md` festhalten: Umgebung (Hardware, Commit, Image-ID, Basisimage-Digest, GGUF-SHA, `build_info`), Abweichungen vom Ablauf, je Fall H/G/K mit Wert, Entscheidung, Gültigkeitsgrenzen. Die Statuszeile „Offen“ in [`1C-diagrams.md`](../../1C-diagrams.md#aufgabenabdeckung-prüfungsdokument-43-1c) danach aktualisieren. Die JSON-Datei wird nach dem Commit nicht mehr verändert.
+Anschließend die Ergebnisse nach den Regeln des Designs (Abschnitt 6) in einem eigenen Protokoll `evidenz/1C/<DATUM>-labor.md` festhalten: Umgebung (Hardware, Commit, Image-ID, Basisimage-Digest, GGUF-SHA, `build_info`), Abweichungen vom Ablauf, je Fall H/G/K mit Wert, Entscheidung, Gültigkeitsgrenzen. Die JSON-Datei wird nach dem Commit nicht mehr verändert. _Aktualisiert 2026-11-12:_ Die Aufgabenabdeckung steht inzwischen im [Ergebnisbericht](../../1C-ergebnis.md); nach einem neuen Lauf dort nachtragen. Der einmalige Schritt, die Statuszeile „Offen“ in `1C-diagrams.md` zu aktualisieren, ist erledigt (historisch).
 
 ## 8. Was an den Prüfer geht
 
@@ -179,14 +201,14 @@ Vorbereitung auf dem Rechner (einmalig; Abschnitt 2 für das Modell, Abschnitt 3
 ```bash
 git clone https://github.com/NiklasSkulll/arsnova.eu.git && cd arsnova.eu
 git remote add upstream https://github.com/kqc-real/arsnova.eu.git && git fetch --all
-git switch --track origin/feature-1C-context-path   # --track nötig, wenn mehrere Fork-Remotes den Branch haben
+git switch --track origin/feature-1C-context-path   # _aktualisiert 2026-11-12:_ nach dem Merge in den Fork-main: git switch main
 systemctl --user start podman.socket                # nur Podman: docker-compose als Provider braucht den API-Socket
 mise exec node@24.18.0 -- npm ci
 mise exec node@24.18.0 -- npm run prisma:generate
 # Modell laden und prüfen wie Abschnitt 2 (curl …, verify-model.mjs)
 ```
 
-**Schritt 1, Kalibrierung** (etwa 2–5 min, nicht gewertet). Druckt `prompt_ms`, `predicted_ms`, Durchsätze und die Inferenzzeit I; der Antworttext wird verworfen:
+**Schritt 1, Kalibrierung** (etwa 2–5 min, nicht gewertet). Druckt `prompt_ms`, `predicted_ms`, Durchsätze und die Inferenzzeit I; der Antworttext wird verworfen. _Ergänzt 2026-11-12:_ Gesendet wird der gespeicherte v2-Body des ersten Messlaufs aus `messung/2026-11-05-labor.json.gz` (`labor-lauf.sh`, Kalibrierungszweig), nicht die aktuelle Instruktion; auf einem neueren Codestand misst die Kalibrierung deshalb nur Rechner und Runtime, nicht den neuen Body ([Nachlauf-Design 3](../../specs/2026-11-06-1c-nachlauf-design.md#3-aufbau-ki-vorschlag-mit-diesem-design-freigegeben)):
 
 ```bash
 LABOR_TAG=pc docs/referat-thema-1/evidenz/1C/labor-lauf.sh kalibrierung
@@ -214,5 +236,7 @@ Zeitgesteuert, ohne offene Sitzung (Beispiel 06:45 am nächsten Tag; der Rechner
 systemd-run --user --unit=labor-1c-run --on-calendar='<DATUM> 06:45:00' --timer-property=AccuracySec=1s \
   --setenv=LABOR_TAG=pc "$PWD/docs/referat-thema-1/evidenz/1C/labor-lauf.sh" lauf
 ```
+
+**Stolperfalle** (_ergänzt 2026-11-12_): `lauf` schreibt das JSON unversioniert nach `evidenz/1C/messung/`. Vor dem nächsten Modus (etwa `cacheversuch` nach `lauf`) die Datei einchecken (Abschnitt 7) oder aus dem Repository verschieben; sonst bricht das Skript mit „Arbeitsbaum nicht sauber“ ab (Prüfung des Referenzstands in `labor-lauf.sh`). Speicherprotokoll, Logs und Auswertung liegen unter `LABOR_OUTDIR` und stören nicht.
 
 Danach Einchecken und Protokoll wie Abschnitt 7, mit eigener Datei `evidenz/1C/<DATUM>-labor-pc.md`; die Hardware-Tabelle als zweite Spalte neben dem Laptop ([Laptop-Protokoll](2026-11-05-labor.md#laufrechner-laptop)), L6 aus dem Speicherprotokoll und `OOMKilled`.

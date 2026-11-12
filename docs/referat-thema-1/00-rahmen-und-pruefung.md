@@ -36,11 +36,11 @@ Basis: ADR-0035, Stories 1.14b/c und 8.9a–d, #456. Für das Deployment zusätz
 `docker-compose.prod.yml`, `.env.production.example` und `scripts/deploy.sh` am
 festgelegten Commit.
 
-| Auftrag | Kurzfrage                                                                                      | Dossier                                                                      |
-| ------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| 1A      | Welche Ressourcenreserve hat der App-Host für optionale Analyse, ohne Live-Signale zu bremsen? | [1A-ressourcenisolation-app-host.md](./1A-ressourcenisolation-app-host.md)   |
-| 1B      | Welchen messbaren Isolationsgewinn und Betriebsaufwand bringt die zweite private Serverrolle?  | [1B-private-inferenz-zweiter-host.md](./1B-private-inferenz-zweiter-host.md) |
-| 1C      | Hält der Kontextpfad seine Vertrags-, Konsistenz- und Entkopplungszusagen bis zur Inferenz?    | [1C-kontext-und-adapterpfad.md](./1C-kontext-und-adapterpfad.md)             |
+| Auftrag | Kurzfrage                                                                                      | Dossier                                                                                                                                                                     |
+| ------- | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1A      | Welche Ressourcenreserve hat der App-Host für optionale Analyse, ohne Live-Signale zu bremsen? | [1A-ressourcenisolation-app-host.md](./1A-ressourcenisolation-app-host.md)                                                                                                  |
+| 1B      | Welchen messbaren Isolationsgewinn und Betriebsaufwand bringt die zweite private Serverrolle?  | [1B-private-inferenz-zweiter-host.md](./1B-private-inferenz-zweiter-host.md)                                                                                                |
+| 1C      | Hält der Kontextpfad seine Vertrags-, Konsistenz- und Entkopplungszusagen bis zur Inferenz?    | [1C-kontext-und-adapterpfad.md](./1C-kontext-und-adapterpfad.md) (_aktualisiert 2026-11-12:_ überholter Recherche-Stand; maßgeblich ist [1C-ergebnis.md](./1C-ergebnis.md)) |
 
 **Gruppensynthese:** A bewertet die Ressourcengrenze des App-Hosts, B die
 Isolation der privaten Inferenzrolle, C den realen Kontextübergang. Zusammen

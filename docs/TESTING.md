@@ -194,6 +194,33 @@ eine laufende Frage dagegen nicht. Die Test-Runtime
 speichert den rohen Body und antwortet mit einer festen, vertragsgültigen
 Ausgabe. Gemockt ist nur die Host-Tokenprüfung.
 
+Weitere Fälle derselben Suite: ein belegter Inferenz-Slot (`busy`, ohne
+Completion-Aufruf), eine volle Queue (`queue_full` für den dritten Auftrag),
+`CONFLICT` ohne angelegten Job, wenn während des Kontextaufbaus eine
+Q&A-Stimme eingeht, der Legacy-Text-Pfad bei abgeschaltetem
+Open-Weight-Pfad (einschließlich unbekannter Quellen-IDs) und ein
+abgelaufener Packing-Cache, nach dem der gesendete Kontext weiter der
+Host-Vorschau entspricht.
+
+Achtung: Der Test „Negativprobe: … Blitzlicht-Runde vom Typ YESNO …“
+(Befund T3.1) hält das heutige, fehlerhafte Verhalten fest: Ohne
+Datenänderung entsteht bei jedem Kontextaufbau ein neuer `snapshotHash`, und
+die Modellaussage wird als `source_changed` verworfen. Wird der Befund
+behoben ([Fork-Issue #18](https://github.com/NiklasSkulll/arsnova.eu/issues/18)),
+wird dieser Test rot; dann ist er umzukehren (gleicher Hash, `ready`), wie die
+Kontrolle mit `TEMPO` daneben.
+
+Nicht Teil der CI sind die Mess- und Laborsuiten der Q&A-Zusammenfassung; sie
+laufen nur auf ausdrücklichen Wunsch:
+`qa.summary-measurement.pg.test.ts` mit `RUN_QA_SUMMARY_MEASUREMENT=1`
+(Suite „Q&A summary local measurement“) bzw. unabhängig davon
+`RUN_QA_SUMMARY_MEASUREMENT_M6=1` und `RUN_QA_SUMMARY_MEASUREMENT_M7=1` (Suite
+„Q&A summary local measurement with full context and voting“) und
+`qa.summary-labor.pg.test.ts` mit `RUN_QA_SUMMARY_LABOR=1`, gegen eine echte
+private Runtime oder zusätzlich mit `QA_SUMMARY_LABOR_FAKE_RUNTIME=1` als
+Trockenlauf. Ablauf und Variablen:
+[Labor-Runbook](referat-thema-1/evidenz/1C/labor-runbook.md).
+
 ### tRPC-DoD-Non-Regression-Gate
 
 Für jede neue Query/Mutation und jede Query/Mutation mit geändertem
