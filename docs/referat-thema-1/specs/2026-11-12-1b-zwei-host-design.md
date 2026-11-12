@@ -175,3 +175,14 @@ Ohne Eingriff in den Release-Pfad. Der aufzeichnende Proxy aus 1C passt nicht: E
 ## 11. Was den Bauenden überlassen ist
 
 Hypervisor-Werkzeug unter Linux und Windows (3.2), Weg zum Image-Digest (3.1), Fixture-Befüllung und Treiberskript (4), Zuordnung der Mitschnitte (5), Größe der app-host-VM, Ablageort der Skripte, ADR-Zuschnitt (9).
+
+## Nachtrag 2026-11-12: beim Aufbau dazugekommen
+
+Festgehalten nach dem Aufbau, vor Kalibrierung und gewertetem Lauf (Belege: [Aufbauprotokoll](../evidenz/1B/2026-11-12-aufbau.md)).
+
+- **Abhängigkeiten im llm-host:** `npm ci --ignore-scripts` ohne `--omit=dev`, weil der Produktionswrapper sonst `dotenv` nicht findet (Abweichung von Runbook §6, Befund für C).
+- **App-Start:** bis zu 3 min Warten auf den automatischen Neustart der App, wenn der Entrypoint an der Redis-Bestätigung scheitert; Release-Verhalten unverändert.
+- **Laufsteuerung im app-host:** Mitschnitt, Neustart der Runtime und Kontrolle C0 steuert `lauf.sh` im app-host; dafür ein Labor-SSH-Schlüssel app-host → llm-host im privaten Netz.
+- **Kontrolle C0 an frischer Runtime:** vor C0 wird die Runtime neu gestartet, damit keine Runtime mehr als 10 Anfragen sieht (ADR 1B-007).
+- **Cooldown zwischen Aufträgen:** 31 s Pause, weil ein Auftrag mit gleichem Inhalt innerhalb von 30 s aus dem Cache käme (`requestQaSummary`).
+- **Offen, vom Autor vor dem gewerteten Lauf zu entscheiden:** Ab dem zweiten Auftrag auf derselben Runtime kommt der Prompt aus dem KV-Cache des Slots (Entwicklungslauf: `cache_n` 2346, Prefill 0,26 s statt 85 s). Vorschlag: wie festgelegt 10 Aufträge je frischer Runtime, zusätzlich Auftrag 1 (kalt) und 2–10 (warm) getrennt berichten; Schwellen unverändert.
