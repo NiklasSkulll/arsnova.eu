@@ -82,8 +82,8 @@ $BaseVhdx = 'ubuntu-24.04-base.vhdx'
 $KnownHosts = (Join-Path $VmDir 'known_hosts') -replace '\\', '/'
 
 $Vms = @(
-  @{ Name = 'arsnova-1b-app'; Ip = '192.168.150.10'; Mac = '00155D1B0010'; Cpus = $AppCpus; RamGB = $AppRamGB; DiskGB = 25; UserData = 'app-host.user-data.yaml' },
-  @{ Name = 'arsnova-1b-llm'; Ip = '192.168.150.20'; Mac = '00155D1B0020'; Cpus = $LlmCpus; RamGB = $LlmRamGB; DiskGB = 30; UserData = 'llm-host.user-data.yaml' }
+  @{ Name = 'arsnova-1b-app'; Ip = '192.168.150.10'; Mac = '00155D1B0010'; Cpus = $AppCpus; RamGB = $AppRamGB; Reserve = 0; Weight = 100; DiskGB = 25; UserData = 'app-host.user-data.yaml' },
+  @{ Name = 'arsnova-1b-llm'; Ip = '192.168.150.20'; Mac = '00155D1B0020'; Cpus = $LlmCpus; RamGB = $LlmRamGB; Reserve = 100; Weight = 200; DiskGB = 30; UserData = 'llm-host.user-data.yaml' }
 )
 
 # Hilfsskript fuer WSL. Nur einfache Argumente ohne Anfuehrungszeichen gehen an wsl.exe,
@@ -381,7 +381,15 @@ ethernets:
 
 function Initialize-Vm($Vm) {
   $n = $Vm.Name
-  if (Get-VM -Name $n -ErrorAction SilentlyContinue) { Write-Host "$n existiert schon"; return }
+  $ist = Get-VM -Name $n -ErrorAction SilentlyContinue
+  if ($ist) {
+    Write-Host "$n existiert schon"
+    if ($ist.ProcessorCount -ne $Vm.Cpus -or $ist.MemoryStartup -ne ([int64]$Vm.RamGB * 1GB)) {
+      throw "$n hat $($ist.ProcessorCount) vCPU und $([Math]::Round($ist.MemoryStartup / 1GB)) GB, gewuenscht $($Vm.Cpus) und $($Vm.RamGB); zuerst -Mode destroy"
+    }
+    if ($ist.State -ne 'Running') { Start-VM -Name $n }
+    return
+  }
   Write-Step "VM $n ($($Vm.Cpus) vCPU, $($Vm.RamGB) GB RAM, $($Vm.DiskGB) GB Disk, $($Vm.Ip))"
   $vhdx = Join-Path $VmDir "$n.vhdx"
   Copy-Plain (Join-Path $VmDir $BaseVhdx) $vhdx
@@ -391,8 +399,9 @@ function Initialize-Vm($Vm) {
   New-VM -Name $n -Generation 2 -MemoryStartupBytes ([int64]$Vm.RamGB * 1GB) -VHDPath $vhdx -SwitchName $Net -Path $VmDir | Out-Null
   # Statischer Speicher und keine automatischen Checkpoints (sonst .avhdx neben der Disk).
   Set-VM -Name $n -StaticMemory -AutomaticCheckpointsEnabled $false
-  # Nur die Anzahl; Hyper-V kennt hier kein Pinning (Gueltigkeitsgrenze, siehe WINDOWS.md).
-  Set-VMProcessor -VMName $n -Count $Vm.Cpus
+  # Hyper-V kennt kein Pinning (Gueltigkeitsgrenze, siehe WINDOWS.md). Ersatz (ADR 1B-010):
+  # llm-host bekommt 100 % Reserve je vCPU und doppeltes Gewicht gegenueber dem app-host.
+  Set-VMProcessor -VMName $n -Count $Vm.Cpus -Reserve $Vm.Reserve -RelativeWeight $Vm.Weight
   Set-VMNetworkAdapter -VMName $n -StaticMacAddress $Vm.Mac
   Add-VMDvdDrive -VMName $n -Path $iso
   $disk = Get-VMHardDiskDrive -VMName $n | Select-Object -First 1
@@ -477,7 +486,8 @@ function Invoke-Status {
     if (-not $v) { Write-Host "== $($vm.Name) ($($vm.Ip)): fehlt"; continue }
     $cpu = (Get-VMProcessor -VMName $vm.Name).Count
     $ips = (Get-VMNetworkAdapter -VMName $vm.Name).IPAddresses -join ', '
-    Write-Host "== $($vm.Name) ($($vm.Ip)): $($v.State), $cpu vCPU ohne Pinning, $([Math]::Round($v.MemoryStartup / 1GB)) GB RAM, gemeldete IPs: $ips"
+    $p = Get-VMProcessor -VMName $vm.Name
+    Write-Host "== $($vm.Name) ($($vm.Ip)): $($v.State), $cpu vCPU ohne Pinning (Reserve $($p.Reserve) %, Gewicht $($p.RelativeWeight)), $([Math]::Round($v.MemoryStartup / 1GB)) GB RAM, gemeldete IPs: $ips"
     $rc = Invoke-Ssh $vm.Ip 'docker version --format ''docker {{.Server.Version}}''; node --version; curl -fsSI https://deb.debian.org >/dev/null && echo ''ausgehend: ok''; git -C arsnova.eu log --oneline -1 2>/dev/null'
     # ssh meldet Verbindungsfehler mit 255; andere Codes stammen vom letzten Befehl in der VM.
     if ($rc -eq 255) { Write-Host 'SSH nicht erreichbar' }

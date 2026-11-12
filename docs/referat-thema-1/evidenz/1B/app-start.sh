@@ -31,6 +31,8 @@ export ARSNOVA_IMAGE="$IMAGE"
 if [[ ! -f .env.production ]]; then
   echo "== .env.production erzeugen"
   read -r LLM_TOKEN || true
+  # Windows PowerShell 5.1 hängt beim Pipen in ssh.exe CRLF an (labor.ps1).
+  LLM_TOKEN="${LLM_TOKEN%$'\r'}"
   [[ "$LLM_TOKEN" =~ ^[A-Za-z0-9._~-]{32,512}$ ]] || { echo "LLM-Token fehlt auf stdin" >&2; exit 1; }
   pg="$(openssl rand -hex 24)"
   b64() { openssl rand -base64 "$1" | tr -d '\n'; }
