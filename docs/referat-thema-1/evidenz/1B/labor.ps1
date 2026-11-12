@@ -224,6 +224,12 @@ function Invoke-ImAppHost([string]$LaufMode) {
   $ausgabe = @(& ssh.exe @o "labor@$AppIp" "$envText bash arsnova.eu/$Ev/lauf.sh $LaufMode")
   $ausgabe | Out-Host
   if ($LASTEXITCODE -ne 0) { throw "lauf.sh $LaufMode fehlgeschlagen ($LASTEXITCODE)" }
+  if ($LaufMode -eq 'kalibrierung') {
+    New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
+    Push-Location $OutDir
+    try { & scp.exe -q @o "labor@${AppIp}:$("$($ausgabe[-1])".Trim())" '.' }
+    finally { Pop-Location }
+  }
   if ($LaufMode -eq 'lauf') {
     $dir = "$($ausgabe[-1])".Trim()
     New-Item -ItemType Directory -Force -Path $OutDir | Out-Null

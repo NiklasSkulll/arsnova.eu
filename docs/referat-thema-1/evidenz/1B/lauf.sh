@@ -61,6 +61,7 @@ kalibrierung() {
     '{commit: $commit, rechner: $rechner, energieprofil: $profil, timings: $t, curl: $zeit, I_ms: $i, timeoutMs: $timeout,
       regel: "I <= 75 s: 90000; 75 s < I <= 270 s: 300000; sonst Abbruch (ADR 1B-005)"}' | tee "$f"
   [[ "$timeout" != abbruch ]] || { echo "I > 270 s: Abbruch, der Autor entscheidet." >&2; exit 3; }
+  echo "$f"
 }
 
 mitschnitt_start() { # wo datei

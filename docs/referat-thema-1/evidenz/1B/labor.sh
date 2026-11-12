@@ -222,6 +222,11 @@ im_app_host() { # modus: lauf.sh im app-host mit Hülle (Ruhezustand gesperrt, E
     "${LAB_N:-10}" "${LAB_TAG:-}" "${LAB_TIMEOUT_MS:-90000}" "$ist" "$rechner")"
   local ausgabe
   ausgabe="$("${huelle[@]}" "${SSH[@]}" "labor@$APP" "$env bash arsnova.eu/$EV/lauf.sh $1" | tee /dev/stderr)"
+  if [[ "$1" == kalibrierung ]]; then
+    local datei; datei="$(tail -n 1 <<<"$ausgabe")"
+    scp -q -o UserKnownHostsFile="$VMDIR/known_hosts" "labor@$APP:$datei" "$OUT/"
+    echo "Kalibrierung: $OUT/$(basename "$datei")"
+  fi
   if [[ "$1" == lauf ]]; then
     local dir; dir="$(tail -n 1 <<<"$ausgabe")"
     scp -q -r -o UserKnownHostsFile="$VMDIR/known_hosts" "labor@$APP:$dir" "$OUT/"
