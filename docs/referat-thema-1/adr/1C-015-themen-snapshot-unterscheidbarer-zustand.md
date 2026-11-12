@@ -9,7 +9,7 @@ Auftragsschritt 3 verlangt „kein stiller Feldverlust“. Liegt in Redis ein st
 
 ## Entscheidung
 
-Empfohlen: ein eigener Grund oder eine eigene Limitation für einen vorhandenen, aber unbrauchbaren Snapshot und mindestens ein `logger.warn` mit Schlüsselbereich und gefundener Version, ohne Inhalte. Nicht umgesetzt (kein Produktivcode in 1C); Vorschlag als Issue, anzulegen nur mit Freigabe des Autors.
+Empfohlen: ein eigener Grund oder eine eigene Limitation für einen vorhandenen, aber unbrauchbaren Snapshot und mindestens ein `logger.warn` mit Schlüsselbereich und gefundener Version, ohne Inhalte. Nicht umgesetzt (kein Produktivcode in 1C); Vorschlag als Issue, anzulegen nur mit Freigabe des Autors. _Aktualisiert 2026-11-09:_ angelegt als [#15](https://github.com/NiklasSkulll/arsnova.eu/issues/15).
 
 ## Alternativen
 

@@ -43,4 +43,5 @@ Alle stehen im [PC-Protokoll, Abweichungen](../evidenz/1C/2026-11-05-labor-pc.md
   - Laufprozess und Runtime teilen sich weiterhin einen Rechner.
   - L6 belegt das Speicherverhalten dieses Images mit diesen Limits, nicht das des Produktionshosts.
 - Weil die Kalibrierung über 90 s lag, lief auch der Zusatzlauf mit 300 s (ADR [1C-020](1C-020-timeout-300-s-und-kalibrierungsregel.md)). Ein Release-Lauf auf Produktionslimits fehlt deshalb weiterhin.
+- _Ergänzt 2026-11-12:_ Die Teststrategie, in der L1 bis L5 auf beiden Rechnern und L6 nur am PC laufen, beschreibt [1C-003](1C-003-teststrategie-modellfrei.md).
 - Kosten: 53 min Lauf, dazu die Kalibrierung (14:37–14:40) und U1 (17:11–17:46) ([PC-Protokoll, Kopf](../evidenz/1C/2026-11-05-labor-pc.md)).

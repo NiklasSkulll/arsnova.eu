@@ -22,13 +22,15 @@ keinen Patch (siehe [ADR 1C-004](1C-004-empfehlung-statt-patch.md)).
 
 ## Nummernplan
 
-| Bereich           | Inhalt                                   | Verantwortlich                                                                     |
-| ----------------- | ---------------------------------------- | ---------------------------------------------------------------------------------- |
-| `1C-001`–`1C-009` | Methodik (Baseline, Laborinstanz, Tests) | Laptop-Sitzung                                                                     |
-| `1C-010`–`1C-019` | Fachliche Befunde aus Teil 1–3 und Labor | Laptop-Sitzung                                                                     |
-| `1C-020`–`1C-029` | Labor (Läufe, Limits, Laufzeitbefunde)   | PC-Sitzung geplant; erstellt am Laptop (siehe [Eigenanteil](../1C-eigenanteil.md)) |
+| Bereich           | Inhalt                                                                                                               | Verantwortlich                                                                                                  |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `1C-001`–`1C-009` | Methodik (Baseline, Laborinstanz, Tests, Ergebnisform, Umgang mit Befunden)                                          | Laptop-Sitzung                                                                                                  |
+| `1C-010`–`1C-019` | Fachliche Befunde aus Teil 1–3 und den Laborläufen, auch aus dem Nachlauf (1C-018)                                   | Laptop-Sitzung                                                                                                  |
+| `1C-020`–`1C-029` | Labor und Codestand der Läufe (Timeout, Zusatzlauf, Codestand, Laufzeit- und Speicherbefunde, Abgleich mit upstream) | PC-Sitzung geplant; erstellt am Laptop, 1C-025 und 1C-026 ebenfalls (siehe [Eigenanteil](../1C-eigenanteil.md)) |
 
 Dateiname: `1C-NNN-<kurztitel-kebab>.md`.
+
+_Aktualisiert 2026-11-12:_ Die Bereiche beschreiben den Inhalt grob; Nummern werden nicht umvergeben. 1C-018 (Befund aus dem Nachlauf) steht deshalb unter den fachlichen Befunden, 1C-025 und 1C-026 (Codestand) im Laborbereich.
 
 ## Vorlage
 

@@ -34,3 +34,4 @@ Beobachtung: In E15 bleiben Blitzlicht, freigegebene Ergebnisse und Kompass `ava
 - **Gültigkeitsgrenze:** ein Modell, ein Tokenizer, eine Sprache (`de`), Referenzfixture und L5 exemplarisch. Ob die gekürzten Bereiche mit genauerer Zählung tatsächlich passen würden, zeigt keiner der Läufe ([Entscheidungen Laptop](../evidenz/1C/2026-11-05-labor.md#entscheidungen-nach-design-abschnitt-6)). Kein Qualitätsurteil über die Modellausgabe.
 - Zugehöriger Befund: Widerlegung von E15, siehe [1C-005](1C-005-e15-widerlegung-bleibt-stehen.md).
 - _Aktualisiert 2026-11-09:_ Auf `def56700` unverändert: q Median 0,318 (max. 0,319), 7406 geschätzte gegen 2353 echte Prompt-Tokens ([Nachlauf, N2](../evidenz/1C/2026-11-09-labor-nachlauf.md#n2-tokens)).
+- _Ergänzt 2026-11-12:_ Vorschau und Packing bleiben nach [1C-013](1C-013-vorschau-gleich-nutzlast-beibehalten.md) unverändert; eine genauere Zählung änderte nur das Budget, die Gleichheit von Vorschau und Nutzlast muss erhalten bleiben.

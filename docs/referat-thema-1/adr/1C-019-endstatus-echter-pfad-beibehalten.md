@@ -1,6 +1,6 @@
 # 1C-019: Endstatus auf dem echten Pfad ohne Datenänderung beibehalten (L4)
 
-- **Status:** angenommen (2026-11-05) für `9f230abc`; _aktualisiert 2026-11-09:_ auf upstream `def56700` nicht übertragbar, dort gilt [1C-018](1C-018-quality-gate-verwirft-echte-antworten.md)
+- **Status:** angenommen (2026-11-05) für `9f230abc`; _aktualisiert 2026-11-09:_ auf upstream `def56700` nicht übertragbar, dort gilt [1C-018](1C-018-quality-gate-verwirft-echte-antworten.md); _präzisiert 2026-11-12:_ teilweise, denn „kein `source_changed` ohne Datenänderung“ ist dort bestätigt (N4, 0 von 20)
 - **Kategorie:** Beibehaltung
 
 ## Kontext
@@ -20,7 +20,7 @@ Beibehaltung des Endstatus- und Fallbackpfads ohne Datenänderung (L4-Regel): ke
 
 - **Laptop:** 19 × `ready/full-context` (Prüfstufe `ok`), 1 × `ready/extractive/unavailable` (`no_response`); k(`source_changed`) = 0 von 20 (Wilson 0–16,1 %), Anteil `full-context` 95 % (Wilson 76,4–99,1 %) ([L4 Laptop](../evidenz/1C/2026-11-05-labor.md#l4-endstatus)).
 - **PC:** identische Verteilung und Intervalle ([L4 PC](../evidenz/1C/2026-11-05-labor-pc.md#l4-endstatus)).
-- **Der eine Ausfall** ist auf beiden Rechnern Messlauf 20, getroffen vom OOM-Kill der Runtime; das Produkt schaltete korrekt auf den extraktiven Fallback ([Laptop, Abweichung 1](../evidenz/1C/2026-11-05-labor.md#abweichungen-vom-ablauf), [PC, L6](../evidenz/1C/2026-11-05-labor-pc.md#l6-speicher-mit-produktionslimits-design-144)). Die Ursache des OOM ist Gegenstand der Labor-ADRs (1C-020 bis 1C-024).
+- **Der eine Ausfall** ist auf beiden Rechnern Messlauf 20, getroffen vom OOM-Kill der Runtime; das Produkt schaltete korrekt auf den extraktiven Fallback ([Laptop, Abweichung 1](../evidenz/1C/2026-11-05-labor.md#abweichungen-vom-ablauf), [PC, L6](../evidenz/1C/2026-11-05-labor-pc.md#l6-speicher-mit-produktionslimits-design-144)). Die Ursache des OOM ist Gegenstand der Labor-ADRs (1C-020 bis 1C-024). _Korrigiert 2026-11-12:_ Den OOM behandeln nur [1C-021](1C-021-zusatzlauf-produktionslimits-zweiter-rechner.md) und [1C-024](1C-024-prompt-cache-ram-begrenzen.md).
 - **Modellausgabe:** `finish_reason` 19-mal `stop` auf beiden Rechnern ([L2 Laptop](../evidenz/1C/2026-11-05-labor.md#l2-tokens), [L2 PC](../evidenz/1C/2026-11-05-labor-pc.md#l2-tokens)).
 
 ## Folgen

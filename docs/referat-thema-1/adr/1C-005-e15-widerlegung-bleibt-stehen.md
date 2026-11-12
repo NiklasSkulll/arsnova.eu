@@ -9,7 +9,7 @@ Auftragsschritte 1 und 2 verlangen den vollständigen #456-Kontext auf dem Draht
 
 ## Entscheidung
 
-Die Widerlegung bleibt stehen. Der vorregistrierte Fall wird nicht nachträglich umformuliert, etwa auf ein größeres Profil oder weniger Bereiche. Getroffen hat das die KI-gestützte Steuerung; der Autor hat es am 2026-11-12 bestätigt ([Stand der Autorenprüfung](../1C-eigenanteil.md#stand-der-autorenprüfung), [E15](../evidenz/1C/2026-10-24-teil3.md#e15--voller-456-kontext-auf-dem-draht), [KI-Nutzung Teil 3](../evidenz/1C/2026-10-24-teil3.md#ki-nutzung)).
+Die Widerlegung bleibt stehen. Der vorregistrierte Fall wird nicht nachträglich umformuliert, etwa auf ein größeres Profil oder weniger Bereiche. Getroffen hat das die KI-gestützte Steuerung; vom Autor ist es noch zu bestätigen ([E15](../evidenz/1C/2026-10-24-teil3.md#e15--voller-456-kontext-auf-dem-draht), [KI-Nutzung Teil 3](../evidenz/1C/2026-10-24-teil3.md#ki-nutzung)). _Aktualisiert 2026-11-12:_ Der Autor hat die Entscheidung bestätigt ([Stand der Autorenprüfung](../1C-eigenanteil.md#stand-der-autorenprüfung)).
 
 ## Alternativen
 

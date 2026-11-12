@@ -1,7 +1,7 @@
 # 1C-017: M7-Vorhersagemodell verfehlt, Empfehlung zurückgehalten
 
 - **Status:** zurückgehalten (2026-11-05)
-- **Kategorie:** Verbesserung (Kandidaten benannt, nicht empfohlen); bis dahin bleibt die Hashgrenze unverändert
+- **Kategorie:** Verbesserung (Kandidaten benannt, nicht empfohlen); bis dahin bleibt die Hashgrenze unverändert. _Aktualisiert 2026-11-12:_ Der Autor hält die Einordnung nicht für eine Ursachenklärung; die Empfehlung bleibt zurückgehalten (siehe Entscheidung).
 
 ## Kontext
 
