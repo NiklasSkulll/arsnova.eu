@@ -883,6 +883,21 @@ Laborkonfiguration, CLI-Aufrufe und Messgrenzen stehen in der
 Die Metriken erfordern für cgroup v2 Zugriff auf den tatsächlichen
 Linux-Dockerhost. Die Messwerkzeuge ändern keine Produktionskonfiguration.
 
+### A1-Versuchsreihe
+
+```bash
+npm run load:resource-isolation:experiment -- --validate
+npm run load:resource-isolation:experiment:test
+```
+
+Die Ablauf-, CLI- und Isolationsprüfungen benötigen keine Laborcontainer und
+gehören zu `npm test` und `npm run test:coverage`. Reale Laborläufe sind
+ausdrücklich getrennt: `--pilot` prüft jede Variante mit verkürztem Profil;
+`--run` erfordert dessen vollständigen Abschluss und führt fünf Blöcke V0–V4
+aus. Sie benötigen die festgehaltenen Baseline-Images, Dockerhost-Zähler und
+eine private Konfigurationsdatei. Anleitung, Zeitbedarf und Nachweisgrenzen
+stehen in der [A1-Versuchsreihe](referat-thema-1/1A-versuchsreihe.md).
+
 ### Artillery-Lasttest (Realtime, bis 500 TN)
 
 Unified Live-Session: Join-Welle, Quiz-Vote, Q&A (20 %), Blitzlicht, WebSocket-Status/Host-Progress, Ergebnis-Fan-out.

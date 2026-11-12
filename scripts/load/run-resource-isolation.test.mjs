@@ -1,0 +1,123 @@
+import assert from 'node:assert/strict';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { gunzipSync } from 'node:zlib';
+import test from 'node:test';
+import {
+  pruefeVersuchsKonfiguration,
+  waehleDiagnosefelder,
+  pruefeVorlaufNachweis,
+  schreibeLaufNachweis,
+} from './run-resource-isolation.mjs';
+
+const exec = promisify(execFile);
+const config = {
+  labAlias: 'eigener-rechner',
+  baselineCommit: 'a'.repeat(40),
+  baselineDirectory: '/tmp/baseline',
+  applicationImage: `sha256:${'b'.repeat(64)}`,
+  spacyImage: `sha256:${'c'.repeat(64)}`,
+  generatorLocation: 'same-host',
+};
+
+test('validiert ohne Docker oder Backend genau 25 Pflichtläufe mit festem Zeitvertrag', async () => {
+  const { stdout } = await exec(
+    process.execPath,
+    ['scripts/load/run-resource-isolation.mjs', '--validate'],
+    {
+      env: { ...process.env, DOCKER_HOST: 'ungueltig', TRPC_URL: 'ungueltig' },
+      timeout: 15000,
+    },
+  );
+  const plan = JSON.parse(stdout);
+  assert.equal(plan.runs.length, 25);
+  assert.equal(plan.profile.durationMs, 300000);
+  assert.equal(plan.profile.revealAtMs, 270000);
+  assert.equal(plan.profile.warmupMs, 60000);
+  assert.equal(plan.profile.participants, 500);
+  assert.doesNotMatch(stdout, /ungueltig|hostToken|sessionCode/);
+});
+
+test('weist veränderliche Images, fehlende Baseline und unklare Generatorzuordnung zurück', () => {
+  assert.doesNotThrow(() => pruefeVersuchsKonfiguration(config));
+  for (const aenderung of [
+    { applicationImage: 'latest' },
+    { spacyImage: 'arsnova-spacy:latest' },
+    { baselineCommit: 'main' },
+    { baselineDirectory: 'relativ' },
+    { labAlias: 'http://intern' },
+    { generatorLocation: '' },
+    { generatorLocation: 'separate-host' },
+  ])
+    assert.throws(() => pruefeVersuchsKonfiguration({ ...config, ...aenderung }));
+});
+
+test('übernimmt aus Betriebsdiagnosen ausschließlich freigegebene numerische Felder', () => {
+  const diagnose = waehleDiagnosefelder(
+    {
+      qaWordCloud: { sidecarCalls: 7, textHits: 0, lastLatencyMs: 3, secret: 'geheim' },
+      qaNlp: { completed: 0, token: 'geheim' },
+      sensitive: 'http://interne-adresse',
+    },
+    { uptime: 13, activeSessions: 2, address: 'geheim' },
+  );
+  assert.equal(diagnose.qaWordCloud.sidecarCalls, 7);
+  assert.equal(diagnose.qaWordCloud.textHits, 0);
+  assert.doesNotMatch(JSON.stringify(diagnose), /geheim|interne-adresse|secret|token/);
+  assert.throws(() => waehleDiagnosefelder({ qaWordCloud: { sidecarCalls: '7' } }, {}));
+});
+
+test('lässt bestätigende Läufe nur nach vollständigem Vorlauf derselben Werkzeuge und Bedingungen zu', () => {
+  const identitaet = {
+    baselineCommit: 'a',
+    applicationImage: 'b',
+    spacyImage: 'c',
+    toolsSha256: 'd',
+    contractSha256: 'e',
+    fixtureSha256: 'f',
+    orderSeed: 7,
+  };
+  const nachweis = { ...identitaet, complete: true };
+  assert.doesNotThrow(() => pruefeVorlaufNachweis(nachweis, identitaet));
+  for (const feld of Object.keys(identitaet))
+    assert.throws(() =>
+      pruefeVorlaufNachweis({ ...nachweis, [feld]: 'anderer-stand' }, identitaet),
+    );
+  assert.throws(() => pruefeVorlaufNachweis({ ...nachweis, complete: false }, identitaet));
+});
+
+test('bewahrt Ressourcen verlustfrei komprimiert und verhindert das Überschreiben vorhandener Nachweise', async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), 'a1-nachweise-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const resources = {
+    snapshots: [
+      { atMs: 0, containers: [] },
+      { atMs: 300000, containers: [] },
+    ],
+    plannedSamples: 2,
+  };
+  const report = {
+    complete: true,
+    manifest: { variant: 'V1' },
+    rollback: { verified: true },
+    resources,
+    warmup: { resources: { snapshots: [], plannedSamples: 0 } },
+  };
+  const lauf = { variant: 'V1', run: 'block-01' };
+  await schreibeLaufNachweis(dir, lauf, report);
+  const gespeichert = JSON.parse(await readFile(join(dir, 'V1/block-01/lauf.json'), 'utf8'));
+  assert.equal(gespeichert.resources.sampleCount, 2);
+  assert.equal(gespeichert.resources.snapshots, undefined);
+  const komprimiert = await readFile(join(dir, 'V1/block-01/ressourcen.json.gz'));
+  assert.deepEqual(JSON.parse(gunzipSync(komprimiert)), resources);
+  assert.equal(
+    report.resources.snapshots.length,
+    2,
+    'Das ursprüngliche Ergebnis bleibt unverändert.',
+  );
+  assert.match(await readFile(join(dir, 'V1/block-01/report.xml'), 'utf8'), /failures="0"/);
+  await assert.rejects(() => schreibeLaufNachweis(dir, lauf, report));
+});

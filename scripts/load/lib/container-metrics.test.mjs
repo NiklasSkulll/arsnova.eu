@@ -210,6 +210,19 @@ async function umgebung(t, { ohneVorherigeCpu = false, cpuNull = false } = {}) {
   };
 }
 
+test('richtet Container- und Zählerzeitpunkte am gemeinsamen Messfensterbeginn aus', async (t) => {
+  const env = await umgebung(t);
+  const collector = erstelleContainerMetriken({
+    ...env.config,
+    startAtMs: 900,
+    uhr: { now: () => 1000 },
+  });
+  const messung = await collector.sample('BEFORE');
+  assert.equal(messung.atMs, 100);
+  assert.equal(messung.containers[0].atMs, 100);
+  assert.equal(messung.containers[0].cgroup.metrics.cpuStat.observedAtMs, 100);
+});
+
 test('erfasst echte Docker-HTTP-Antworten und cgroup-Dateien ohne private Metadaten im Report', async (t) => {
   const env = await umgebung(t);
   const vorher = await env.collector.sample('BEFORE');

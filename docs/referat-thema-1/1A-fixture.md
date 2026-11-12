@@ -28,9 +28,9 @@ node scripts/load/resource-isolation-fixture.mjs --print > /tmp/arsnova-1a-fixtu
 
 Beide Betriebsarten arbeiten ohne Netzwerk, Datenbank, Modelldownloads oder
 Zugangsdaten aus der Umgebung. Sie legen keine Sessions an, befüllen keine
-Datenbank und führen keinen Lasttest aus. Die Laborvorbereitung im späteren
-Versuchsskript muss aus derselben Fixture fünf getrennte Analysesessions anlegen
-und die Live-Session davon getrennt halten.
+Datenbank und führen keinen Lasttest aus. Das
+[Versuchsskript aus Schritt 6](./1A-versuchsreihe.md) importiert dieselbe Fixture
+in fünf getrennte Analysesessions und hält die Live-Session davon getrennt.
 
 ## Inhalt und Projektionen
 
@@ -50,8 +50,8 @@ In der A1-Analyseprojektion bleibt `PINNED` angeheftet; andere Status der
 Referenzfragen werden zu `ACTIVE`. Positive und negative Stimmenzahlen bleiben
 erhalten; `upvoteCount` enthält den vorzeichenbehafteten Stimmensaldo. Die
 Teilnehmerbezugsgröße bleibt 200 und ist unabhängig vom Live-Lastprofil mit
-500 Beitritten. Sobald später ein Werkzeug zur Laborbefüllung implementiert
-wird, muss es die Ausschlusskontrollen mit ihrem angegebenen Status speichern.
+500 Beitritten. Das Versuchsskript aus Schritt 6 speichert die
+Ausschlusskontrollen mit ihrem angegebenen Status.
 Damit enthält der gespeicherte A1-Datensatz 503 Fragen; für die Analyse zulässig
 bleiben 500.
 

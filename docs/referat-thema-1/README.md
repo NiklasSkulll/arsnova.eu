@@ -4,8 +4,8 @@ Arbeitsordner von Jonas und Niklas für **Thema 1: KI-Inferenz für den
 Moderationskompass – Systemgrenzen und entkoppelte Architektur**. Wir
 bearbeiten alle drei Aufträge 1A, 1B und 1C.
 
-Der Ordner liegt auf dem Branch `referat/thema-1-notes` und ist Arbeits- und
-Evidenzmaterial. Er gehört **nicht** in die PR an kqc-real.
+Der Ordner enthält Arbeits- und Evidenzmaterial. Er gehört **nicht** in die PR
+an kqc-real.
 
 ## Inhalt
 
@@ -19,11 +19,14 @@ Evidenzmaterial. Er gehört **nicht** in die PR an kqc-real.
 | [1A-live-messungen.md](./1A-live-messungen.md)                               | Artillery-Messfelder, Fehlerzählung, Gates, Lastprofil und lokale Prüfung für Schritt 3          |
 | [1A-analyse-last.md](./1A-analyse-last.md)                                   | Hostautorisierte Analyse-Last mit festem Korpus, Zeitplan, Ergebniszählung und lokaler Prüfung   |
 | [1A-container-metriken-und-proxy.md](./1A-container-metriken-und-proxy.md)   | Lesende Container-Erfassung, cgroup-Auswertung und kontrollierter Unix-Socket-Verzögerungsproxy  |
+| [1A-versuchsreihe.md](./1A-versuchsreihe.md)                                 | Isolierter Laboraufbau, randomisierte V0–V4-Blöcke, Vorlauf, Messung und geprüfter Rollback      |
 | [1B-private-inferenz-zweiter-host.md](./1B-private-inferenz-zweiter-host.md) | Zwei-Host-Deployment, LLM-Client, Messbarkeit, Lücken für 1B                                     |
 | [1C-kontext-und-adapterpfad.md](./1C-kontext-und-adapterpfad.md)             | #456-Kontext, Verträge, Snapshot/Hash, Async-Pfad, Testlücken für 1C                             |
 
-Geplant: `evidenz/` für Rohdaten, Skripte und Messprotokolle je Auftrag (ohne
-Secrets, nur synthetische Daten).
+Unter `evidenz/1A/` liegen die A1-Messnachweise mit synthetischen Daten.
+Die erste Reihe bleibt nach ihrem angeforderten Abbruch erhalten; der erneute
+vollständige Durchlauf liegt getrennt unter `evidenz/1A/reihe-2026-11-12/`.
+Ablauf und Zuordnung beschreibt die [Versuchsreihe](./1A-versuchsreihe.md).
 
 ## Arbeitsweise im Fork
 
@@ -49,7 +52,8 @@ Wegen des knappen Zeitrahmens gilt:
 - **1A, Ressourcen auf dem App-Host:**
   - Nur die Sidecars haben Limits. App, Postgres und Redis haben keine.
   - spaCy bearbeitet immer nur eine Anfrage gleichzeitig.
-  - Kein vorhandenes Lastskript belastet spaCy.
+  - Die ursprünglichen Lastskripte belasteten spaCy nicht. Die A1-Werkzeuge
+    ergänzen dafür hostautorisierte Analyseanfragen und Ressourcenmessungen.
 - **1B, zweiter Host für die private Inferenz:**
   - Wie das Zwei-Host-Deployment und der LLM-Client aufgebaut sind.
   - Gemessen wird bisher nur die Gesamtzeit. Die Detailzeiten von llama.cpp
@@ -77,8 +81,10 @@ Alle Dossiers enthalten Code-Stellen (Datei:Zeile), Versuchsideen und Lücken.
 - Fragen an den Prüfer klären (siehe
   [00-rahmen-und-pruefung.md](./00-rahmen-und-pruefung.md#offene-fragen-an-den-prüfer)),
   vor allem diese:
-  - Darf der aktuelle `main` die Baseline sein statt `v1.3.0`?
-  - Was ist beim zweiten Host bereitgestellt, und wie bekommen wir Zugang?
+  - Für 1A geklärt: aktueller `main` als Baseline und eigener Rechner als Labor
+    gemäß [Issue #6, Stand 2026-11-10](https://github.com/NiklasSkulll/arsnova.eu/issues/6).
+  - Für 1B offen: Wie wird der zweite Host auf eigener Hardware reproduziert
+    (siehe [Issue #8](https://github.com/NiklasSkulll/arsnova.eu/issues/8))?
 - **Aufteilung 1A/1B/1C:** Am 2026-10-23 festgelegt (Option 1). Niklas ist X
   (1A und 1B Schritte 3–4), Jonas ist Y (1C und 1B Schritte 1–2). Die
   Abstimmung mit dem Prüfer steht noch aus. Details in

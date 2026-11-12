@@ -5,7 +5,8 @@ Schritt 4 des [Umsetzungsplans](1A-umsetzungsplan.md) ergänzt
 Generator ruft die vorhandene tRPC-Mutation `wordCloud.analyzeQa` mit regulären
 Host-Tokens auf. Er legt keine Sessions an und verändert keine Fragen oder
 Stimmen. Das gemeinsame Anlegen der Laborressourcen, Aufwärmen und Starten
-mit der Live-Last folgt in Schritt 6.
+mit der Live-Last ist in der [Versuchsreihe aus Schritt 6](./1A-versuchsreihe.md)
+beschrieben.
 
 ## Ohne Labor nachvollziehen
 
@@ -119,17 +120,14 @@ normalization: LEMMA, limit: 500, refresh: true
 
 `refresh: true` umgeht im
 [`wordCloud`-Router](../../apps/backend/src/routers/wordCloud.ts) den
-Snapshot-Cache. Der
-[`Normalisierer`](../../apps/backend/src/lib/wordCloudNormalizer.ts) fragt
-seinen Text-Cache dagegen weiterhin ab und kann `LEMMA` ohne erneuten
-Sidecar-Aufruf liefern. Der feste Korpus und die Aufwärmphase können deshalb
-spätere spaCy-Arbeit reduzieren. Die angewandte Normalisierung und der
-Fallbackgrund beschreiben die API-Antwort; sie belegen keine kontinuierliche
-Sidecar-Last. In Schritt 6 müssen tatsächliche Sidecar-Aufrufe und
-Cachetreffer anhand der Backenddiagnostik geprüft werden. Falls dafür ein
-anderer Cachezustand nötig ist, muss die Versuchsregel vor bestätigenden
-Messungen ausdrücklich angepasst werden. Dieses Werkzeug ändert weder
-Produktivcode noch Cachevorgaben.
+Snapshot-Cache. Ein Normalisiereraufruf allein belegt noch keine neue
+Sidecar-Arbeit: Dafür ist zusätzlich die tatsächlich verwendete
+Cacheimplementierung maßgeblich. In der für Schritt 6 festgehaltenen
+`main`-Baseline liefert `createRedisWordCloudAnalysisCache().getText()`
+aus Datenschutzgründen immer `null`; `setText()` persistiert keine Tokens.
+Die [Versuchsreihe](./1A-versuchsreihe.md) prüft trotzdem den tatsächlichen
+Anstieg von `sidecarCalls` sowie Cachetreffer in der Backenddiagnostik.
+Dieses Werkzeug ändert weder Produktivcode noch Cachevorgaben.
 
 Der Generator prüft den zulässigen Analysekorpus, aber nicht den vollständigen
 physischen Bestand einschließlich Ausschlusskontrollen oder die

@@ -10,6 +10,45 @@ import test from 'node:test';
 const execFileAsync = promisify(execFile);
 const prozessorUrl = new URL('./processor.mjs', import.meta.url).href;
 
+test('friert laufende Aktionen vor einem späten erfolgreichen Abschluss ein', async (t) => {
+  const server = createServer(async (anfrage, antwort) => {
+    await Array.fromAsync(anfrage);
+    await new Promise((fertig) => setTimeout(fertig, 50));
+    antwort.setHeader('content-type', 'application/json');
+    antwort.end(JSON.stringify({ result: { data: { ok: true } } }));
+  });
+  await new Promise((fertig) => server.listen(0, '127.0.0.1', fertig));
+  t.after(
+    () =>
+      new Promise((fertig) => {
+        server.closeAllConnections();
+        server.close(fertig);
+      }),
+  );
+  const umgebung = await pruefumgebung(t, `http://127.0.0.1:${server.address().port}/trpc`);
+  const { stdout } = await execFileAsync(
+    process.execPath,
+    [
+      '--input-type=module',
+      '-e',
+      `
+    const p = await import(${JSON.stringify(prozessorUrl)});
+    const aufgabe = p.submitVote({vars:{participantId:'person',rejoinToken:'synthetisch'}},{emit(){}});
+    const vorher = p.snapshotRuntimeState();
+    await aufgabe;
+    console.log(JSON.stringify({vorher,nachher:p.snapshotRuntimeState()}));
+  `,
+    ],
+    { env: umgebung.env, timeout: 15000 },
+  );
+  const { vorher, nachher } = JSON.parse(stdout);
+  assert.equal(vorher.voteAttempts, 1);
+  assert.equal(vorher.votes, 0);
+  assert.equal(vorher.voteDurationMs.length, 0);
+  assert.equal(nachher.votes, 1);
+  assert.equal(vorher.votes, 0, 'Der frühere Snapshot darf nicht nachträglich verändert werden.');
+});
+
 async function pruefumgebung(t, trpcUrl) {
   const ordner = await mkdtemp(join(tmpdir(), 'arsnova-artillery-messung-'));
   t.after(() => rm(ordner, { recursive: true, force: true }));

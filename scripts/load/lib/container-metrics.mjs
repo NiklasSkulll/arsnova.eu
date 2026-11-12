@@ -253,6 +253,7 @@ export function erstelleContainerMetriken({
   procRoot = '/proc',
   requestTimeoutMs = 1500,
   uhr = monotoneUhr,
+  startAtMs,
 } = {}) {
   if (
     !Array.isArray(containers) ||
@@ -271,13 +272,14 @@ export function erstelleContainerMetriken({
     ) ||
     !Number.isSafeInteger(requestTimeoutMs) ||
     requestTimeoutMs < 1 ||
-    requestTimeoutMs > 60_000
+    requestTimeoutMs > 60_000 ||
+    (startAtMs !== undefined && !Number.isFinite(startAtMs))
   ) {
     throw new Error('Ungültige Containerzuordnung, lokale Pfade oder Anfragefrist.');
   }
   const zustand = new Map();
   const snapshots = [];
-  const start = uhr.now();
+  const start = startAtMs ?? uhr.now();
   let aktiv = false;
   async function cgroupLesen(info) {
     try {

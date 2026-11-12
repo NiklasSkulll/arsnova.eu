@@ -99,6 +99,11 @@ function flushRuntimeState() {
   return next;
 }
 
+/** Getrennter Messfenster-Snapshot; späte Abschlüsse ändern ihn nicht. */
+export function snapshotRuntimeState() {
+  return structuredClone(flushRuntimeState());
+}
+
 function scheduleRuntimeFlush() {
   if (runtimeFlushTimer) return;
   runtimeFlushTimer = setTimeout(() => {

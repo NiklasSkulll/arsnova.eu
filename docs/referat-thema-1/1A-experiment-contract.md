@@ -1,8 +1,17 @@
 # 1A-Versuchsvertrag: Ressourcenisolation auf dem Anwendungshost
 
-**Verantwortlich:** Niklas (Rolle X). **Vertragsversion:** 1.
-**Festgehalten am:** 2026-11-07. **Status:** festgelegt; Voraussetzungen für Messungen noch offen.
+**Verantwortlich:** Niklas (Rolle X). **Vertragsversion:** 2.
+**Festgehalten am:** 2026-11-07; vor den bestätigenden Läufen am 2026-11-11 aktualisiert.
+**Status:** Schwellen unverändert; Baseline und Labor gemäß aktualisiertem Issue geklärt.
 **Auftrag:** [Issue #6 im Fork](https://github.com/NiklasSkulll/arsnova.eu/issues/6).
+
+Die Aktualisierung von [Issue #6 vom 2026-11-10](https://github.com/NiklasSkulll/arsnova.eu/issues/6)
+bestätigt den eigenen Rechner als Labor und den aktuellen `main` als Baseline
+(Prüfer-E-Mail, im Issue auf 2026-11-04 datiert). Für Schritt 6 wurde am
+2026-11-11 der Commit `8f91e0417bc5aace461c3644a0b6b26c9284035b` abgerufen.
+Das ersetzt die nachfolgenden historischen Angaben zur noch offenen Freigabe.
+Der Stand ist Version 1.4.0; die ursprüngliche Releasebezeichnung 1.3 bezeichnet
+den Aufgabenkontext, nicht das tatsächlich gemessene Image.
 
 Dieses Dokument legt die vorgesehenen Vergleiche und Entscheidungsregeln vor den
 bestätigenden Messläufen fest. Es setzt Schritt 1 des vereinbarten siebenteiligen
@@ -50,16 +59,16 @@ handelt es sich um Versuchsentscheidungen und nicht um bereits nachgewiesene
 Leistungseigenschaften. Implementierungsdetails müssen erneut gegen die
 gewählte Baseline geprüft werden.
 
-| Punkt                          | Festgehaltener Stand oder Anforderung                                                                                                      |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| Lokaler Vorbereitungsbranch    | `feature-1A-resource-isolation`                                                                                                            |
-| Geprüfter Quellcode-Commit     | `93bcf2e9288f66efafe809b617a93e70ba14de27`                                                                                                 |
-| Ziel des lokalen Tags `v1.3.0` | `87c39334619fbcb0c5782b061da1ba0df0ba3142`                                                                                                 |
-| Freigegebene Messbaseline      | Bestätigung durch Prüfer bzw. Laborverantwortliche steht aus; keine der obigen lokalen Referenzen ist automatisch ausgewählt               |
-| Laborbereitstellung            | Abhängigkeit von [Issue #8](https://github.com/NiklasSkulll/arsnova.eu/issues/8); tatsächliche Hardware und Zugang sind noch nicht geprüft |
-| Vorgesehener Anwendungshost    | 8 vCPU / 16 GB RAM gemäß ADR-0035; tatsächliche Hardware muss erfasst werden                                                               |
-| Laufzeit für die Vorbereitung  | Node 24.18.0 gemäß `.nvmrc`; tatsächliche Laufzeiten von Lastgenerator und Anwendung getrennt erfassen                                     |
-| Kosten                         | Dieser Vertrag autorisiert keine neuen kostenpflichtigen Ressourcen; zusätzliche Kosten vor einer Bereitstellung bestätigen lassen         |
+| Punkt                          | Festgehaltener Stand oder Anforderung                                                                                              |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Lokaler Vorbereitungsbranch    | `feature-1A-resource-isolation`                                                                                                    |
+| Geprüfter Quellcode-Commit     | `93bcf2e9288f66efafe809b617a93e70ba14de27`                                                                                         |
+| Ziel des lokalen Tags `v1.3.0` | `87c39334619fbcb0c5782b061da1ba0df0ba3142`                                                                                         |
+| Freigegebene Messbaseline      | Aktueller Fork-`main`, für diese Reihe auf `8f91e0417bc5aace461c3644a0b6b26c9284035b` festgehalten; Freigabe gemäß Issue #6        |
+| Laborbereitstellung            | Eigener Rechner gemäß Issue #6; für A1 besteht keine Abhängigkeit mehr von Issue #8                                                |
+| Vorgesehener Anwendungshost    | 8 vCPU / 16 GB RAM gemäß ADR-0035; tatsächliche Hardware muss erfasst werden                                                       |
+| Laufzeit für die Vorbereitung  | Node 24.18.0 gemäß `.nvmrc`; tatsächliche Laufzeiten von Lastgenerator und Anwendung getrennt erfassen                             |
+| Kosten                         | Dieser Vertrag autorisiert keine neuen kostenpflichtigen Ressourcen; zusätzliche Kosten vor einer Bereitstellung bestätigen lassen |
 
 Vor dem ersten bestätigenden Messlauf den freigegebenen Anwendungscommit,
 Release-Tag, Image-Identitäten, Umgebung, Fixture-Hash und Vertragsrevision
@@ -156,6 +165,31 @@ und höchstens 60 Sekunden zum Auslaufen gewähren. Danach verbleibende Arbeit
 abbrechen und Lastgeneratoren bzw. Proxy des Laufs beenden. Die Bereinigung
 getrennt ausweisen und diese Regel für jede Variante anwenden. Späte Abschlüsse
 verbessern die Verfügbarkeitsquote des Messfensters nicht.
+
+### Präzisierung der Ablaufsteuerung für Schritt 6
+
+Die Ausführung verwendet die vorhandenen exportierten Artillery-Szenariofunktionen
+in einem einzelnen Node-Lastprozess je Phase. Die installierte Artillery-Version
+verteilt lokal standardmäßig auf mehrere Worker; die vorhandene gemeinsame
+Zustandsdatei und lokale Teilnehmernummerierung wären dafür ungeeignet.
+Szenarioaktionen, Denkzeiten, 500 Beitritte über 90 Sekunden und die Freigabe bei
+Sekunde 270 bleiben erhalten. Verpasste Beitrittszeitfenster werden nicht nachgeholt
+und bleiben in der geplanten Abdeckung sichtbar. Das ist im Manifest ausdrücklich
+als eigene Ablaufsteuerung auf Basis des bestehenden Prozessors gekennzeichnet.
+
+Die Aufwärmphase verwendet 30 Teilnehmende über fünf Sekunden mit denselben
+Szenariotypen, fünf getrennten Analysesessions und 60 Sekunden Gesamtdauer.
+Die Ergebnisfreigabe erfolgt bei Sekunde 56; Aufwärmdaten gehören nicht zu den
+Messstichproben. Ein verkürzter Vorlauf mit 30 Teilnehmenden, zehn Sekunden
+Aufwärmung und 30 Sekunden Messdauer prüft die Werkzeuge und ersetzt keinen
+der 25 bestätigenden Läufe.
+
+Der lokale Dockerhost hat 16 logische CPUs und etwa 16 GiB RAM. Der Lastgenerator
+läuft auf demselben Rechner; diese Abweichungen von 8 vCPU und einem externen
+Lastgenerator müssen in jeder späteren Kapazitätsaussage berücksichtigt werden.
+Die Produktionslimits der Dienste bleiben bis auf V3 erhalten. Neu gestartete
+Baseline-Prozesse verwenden laut Implementierung keinen persistenten Textcache;
+die Messung prüft zusätzlich den tatsächlichen Anstieg von `sidecarCalls` in V2–V4.
 
 ## Varianten
 
