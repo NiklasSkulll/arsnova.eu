@@ -6,6 +6,7 @@
   Status: ungetestet, Niklas prueft. Anleitung und offene Punkte: WINDOWS.md in diesem Ordner.
 
     vm-windows.ps1 -Mode up        Netz, Image, VMs anlegen und starten; Repo-Stand per git bundle kopieren
+    vm-windows.ps1 -Mode sync      nur den Repo-Stand per git bundle in beide VMs bringen
     vm-windows.ps1 -Mode status    Zustand, IPs, SSH, docker version, ausgehendes NAT
     vm-windows.ps1 -Mode destroy   VMs, Disks, Seeds, NAT und Switch entfernen (nur arsnova-1b)
 
@@ -52,7 +53,7 @@
   Justification = 'Fehlalarm: die Skriptparameter werden in den Funktionen unten gelesen; die Regel prueft nur den Skriptkoerper.')]
 param(
   [Parameter(Mandatory = $true)]
-  [ValidateSet('up', 'status', 'destroy')]
+  [ValidateSet('up', 'sync', 'status', 'destroy')]
   [string]$Mode,
   [string]$SshKey = (Join-Path $env:USERPROFILE '.ssh\id_ed25519.pub'),
   [string]$VmDir = 'C:\ProgramData\arsnova-1b',
@@ -452,6 +453,11 @@ function Invoke-Up {
   Initialize-Image
   foreach ($vm in $Vms) { Initialize-Vm $vm }
 
+  Invoke-Sync
+  Invoke-Status
+}
+
+function Invoke-Sync {
   Write-Step "git bundle aus $($script:RepoPath) (HEAD)"
   $sha = [string](Invoke-Helper @('bundle', $script:RepoPath, $Commit, "$($script:VmDirWsl)/repo.bundle") | Select-Object -Last 1)
   $sha = $sha.Trim()
@@ -471,7 +477,6 @@ function Invoke-Up {
     $rc = Invoke-Ssh $vm.Ip "test -d arsnova.eu || git clone -q /tmp/repo.bundle arsnova.eu; cd arsnova.eu && git fetch -q /tmp/repo.bundle && git checkout -q --detach $sha && git log --oneline -1"
     if ($rc -ne 0) { throw "Checkout in $($vm.Name) fehlgeschlagen" }
   }
-  Invoke-Status
 }
 
 function Invoke-Status {
@@ -519,6 +524,7 @@ function Invoke-Destroy {
 try {
   switch ($Mode) {
     'up' { Invoke-Up }
+    'sync' { Assert-HyperV; Initialize-Wsl; Invoke-Sync }
     'status' { Invoke-Status }
     'destroy' { Invoke-Destroy }
   }

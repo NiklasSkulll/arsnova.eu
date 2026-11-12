@@ -2,6 +2,7 @@
 # 1B-Labor: zwei KVM-VMs unter Linux (libvirt), ADR 1B-002, 1B-003.
 #
 #   vm-linux.sh up        Netz, Image, VMs anlegen und starten; Repo-Stand per git bundle kopieren
+#   vm-linux.sh sync      nur den Repo-Stand in beide VMs bringen
 #   vm-linux.sh status    IPs, SSH, docker version, ausgehendes NAT
 #   vm-linux.sh destroy   VMs, Disks und Netz entfernen
 #
@@ -110,6 +111,11 @@ up() {
     for cpu in ${cpuset//,/ }; do virsh vcpupin "$name" "$i" "$cpu" --config --live >/dev/null; i=$((i + 1)); done
   done
 
+  sync
+  status
+}
+
+sync() { # Repo-Stand LAB_COMMIT (HEAD) per git bundle in beide VMs
   bundle="$VMDIR/repo.bundle"
   # Bündel aus HEAD; LAB_COMMIT muss darin enthalten sein (Vorfahre von HEAD).
   git -C "$REPO" merge-base --is-ancestor "$COMMIT" HEAD || { echo "LAB_COMMIT ist kein Vorfahre von HEAD" >&2; exit 1; }
@@ -120,7 +126,6 @@ up() {
     scp -q -o UserKnownHostsFile="$VMDIR/known_hosts" "$bundle" "labor@$ip:/tmp/repo.bundle"
     "${SSH[@]}" "labor@$ip" "test -d arsnova.eu || git clone -q /tmp/repo.bundle arsnova.eu; cd arsnova.eu && git fetch -q /tmp/repo.bundle && git checkout -q --detach $COMMIT && git log --oneline -1"
   done
-  status
 }
 
 status() {
@@ -147,7 +152,8 @@ destroy() {
 
 case "$MODE" in
   up) up ;;
+  sync) sync ;;
   status) status ;;
   destroy) destroy ;;
-  *) echo "Aufruf: $0 up|status|destroy" >&2; exit 2 ;;
+  *) echo "Aufruf: $0 up|sync|status|destroy" >&2; exit 2 ;;
 esac

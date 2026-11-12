@@ -205,6 +205,7 @@ schluessel_app_llm() { # app-host darf für Mitschnitt und Neustart per SSH in d
 }
 
 im_app_host() { # modus: lauf.sh im app-host mit Hülle (Ruhezustand gesperrt, Energieprofil)
+  bash "$HERE/vm/vm-linux.sh" sync
   schluessel_app_llm
   local wunsch="${LAB_PROFIL:-performance}" ist
   ist="$(powerprofilesctl get 2>/dev/null || echo unbekannt)"

@@ -211,6 +211,7 @@ function Invoke-LaborUp {
 }
 
 function Invoke-ImAppHost([string]$LaufMode) {
+  Invoke-VmScript $null 'sync'
   $o = Get-SshArg
   $pub = (& ssh.exe @o "labor@$AppIp" 'test -f ~/.ssh/labor-llm || ssh-keygen -q -t ed25519 -N "" -C labor-app-zu-llm -f ~/.ssh/labor-llm; cat ~/.ssh/labor-llm.pub' | Select-Object -Last 1)
   if ("$pub" -notmatch '^ssh-ed25519 [A-Za-z0-9+/=]+ labor-app-zu-llm$') { throw 'unerwarteter Schluessel im app-host' }

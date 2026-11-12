@@ -154,9 +154,10 @@ async function szenarioAnlegen() {
     if (!q) throw new Error(`Frage ${r.key} fehlt in qa.list`);
     if (q.status !== r.status)
       throw new Error(`Frage ${r.key}: Status ${q.status}, erwartet ${r.status}`);
-    log(
-      `  Frage ${r.key}: ${q.status}, Stimmen laut API ${q.upvoteCount ?? '?'}/${q.downvoteCount ?? '?'} (Fixture ${r.positive}/${r.negative})`,
-    );
+    // upvoteCount ist der Nettowert (positiv minus negativ), wie net in der Fixture.
+    if (q.upvoteCount !== r.net) {
+      throw new Error(`Frage ${r.key}: netto ${q.upvoteCount}, Fixture ${r.net}`);
+    }
   }
   return { host, sessionId, stimmen };
 }
