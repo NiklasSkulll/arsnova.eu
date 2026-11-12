@@ -67,7 +67,16 @@ echo "== Migrationen (wie scripts/deploy.sh)"
   /app/node_modules/.bin/prisma migrate deploy --schema /app/prisma/schema.prisma
 
 echo "== Start ohne Profile (kein nlp, encoder, llm)"
-"${C[@]}" up -d --wait app pdf-worker
+# Der Entrypoint bricht ab, wenn Redis die AOF-Bestätigung (WAITAOF) beim Rollout-Purge nicht
+# rechtzeitig liefert (WORD_CLOUD_PURGE_DURABILITY_UNAVAILABLE, Befund 2026-11-12); restart: always
+# startet die App neu. Darum bis zu 3 min auf healthy warten statt beim ersten unhealthy abzubrechen.
+"${C[@]}" up -d --wait app pdf-worker || echo "App beim ersten Start nicht healthy, warte auf Neustart" >&2
+for _ in $(seq 1 36); do
+  [[ "$(docker inspect -f '{{.State.Health.Status}}' arsnova-v3-app)" == healthy ]] && break
+  sleep 5
+done
+[[ "$(docker inspect -f '{{.State.Health.Status}}' arsnova-v3-app)" == healthy ]] || { echo "App nicht healthy" >&2; exit 1; }
+echo "Neustarts der App: $(docker inspect -f '{{.RestartCount}}' arsnova-v3-app)"
 echo "healthy; Image: $(docker inspect -f '{{.Config.Image}}' arsnova-v3-app)"
 docker exec arsnova-v3-app wget -qO- http://localhost:3000/trpc/health.check
 echo
