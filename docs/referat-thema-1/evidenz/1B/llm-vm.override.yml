@@ -1,0 +1,8 @@
+# 1B-Labor (ADR 1B-005): erzwungene Abweichung vom Release. Die llm-host-VM hat 4 vCPUs;
+# Docker lehnt cpus über der Kernzahl ab, und OPEN_WEIGHT_LLM_THREADS aus environment:
+# schlägt .env.llm. mem_limit 8g und memswap_limit 10g bleiben wie in docker-compose.llm.yml.
+services:
+  open-weight-llm:
+    cpus: '4.0'
+    environment:
+      OPEN_WEIGHT_LLM_THREADS: '4'
