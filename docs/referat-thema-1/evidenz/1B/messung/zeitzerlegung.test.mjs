@@ -200,3 +200,51 @@ test('parseCompletedLog liest das mehrzeilige util.inspect-Format von docker log
     },
   ]);
 });
+
+test('exchanges führt eine am Ende offene Anfrage ohne Antwort mit status null', () => {
+  const frames = [
+    fr(10.0, 0, true, 100, 'GET', GET),
+    fr(10.002, 0, false, 50, null, null, 200),
+    fr(11.0, 0, true, 1400, 'POST', POST),
+    fr(12.0, 1, true, 100, 'GET', GET),
+    fr(12.002, 1, false, 50, null, null, 200),
+  ];
+  const e = exchanges(frames);
+  assert.deepEqual(
+    e.map((x) => [x.method, x.status, x.wireMs === null]),
+    [
+      ['GET', 200, false],
+      ['POST', null, true],
+      ['GET', 200, false],
+    ],
+  );
+});
+
+test('Auftrag mit unbeantwortetem POST bleibt im Ergebnis, Netz und Adapter null', () => {
+  const offen = { ...ex('POST', POST, 0, null), wireMs: null, tEnd: null };
+  const r = zerlegeAuftraege({
+    appExchanges: [ex('GET', GET, 2), ex('POST', POST, 100_010), ex('GET', GET, 2), offen],
+    srvExchanges: [ex('GET', GET, 1.5), ex('POST', POST, 100_000), ex('GET', GET, 1.5), offen],
+    completed: [done(100_500), { ...done(300_000), status: 'ready', fallbackReason: 'timeout' }],
+    timings: [{ prompt_ms: 50_000, predicted_ms: 49_000, cache_n: 0 }, null],
+  });
+  assert.equal(r.length, 2);
+  assert.equal(r[1].netzMs, null);
+  assert.equal(r[1].adapterMs, null);
+  assert.equal(r[1].inferMs, null);
+  assert.equal(r[1].fallbackReason, 'timeout');
+  const k = kennzahlen(r);
+  assert.equal(k.n, 2);
+  assert.equal(k.unvollstaendig, 1);
+  assert.ok(Math.abs(k.netz.medianMs - 10.5) < 1e-6);
+});
+
+test('kennzahlen trennt kalte und warme Aufträge nach cacheN', () => {
+  const mk = (inferMs, jobMs, cacheN) => ({ netzMs: 1, adapterMs: 100, inferMs, jobMs, cacheN });
+  const k = kennzahlen([mk(200, 201, 0), mk(110, 111, 2346), mk(120, 121, 2346)]);
+  assert.equal(k.kalt.n, 1);
+  assert.equal(k.kalt.inferMsMedian, 200);
+  assert.equal(k.warm.n, 2);
+  assert.equal(k.warm.inferMsMedian, 115);
+  assert.equal(k.warm.jobMsMedian, 116);
+});

@@ -70,7 +70,22 @@ export function exchanges(frames) {
       s.uri = null;
     }
   }
-  return result;
+  // Am Ende offene Anfragen (Timeout, Abbruch, Neustart der Runtime) bleiben als Auftrag
+  // ohne Antwort erhalten, damit die Zählung nicht still auseinanderläuft.
+  for (const [stream, s] of open) {
+    if (s.tStart !== null && s.method !== null) {
+      result.push({
+        stream,
+        method: s.method,
+        uri: s.uri,
+        status: null,
+        tStart: s.tStart,
+        tEnd: null,
+        wireMs: null,
+      });
+    }
+  }
+  return result.sort((a, b) => a.tStart - b.tStart);
 }
 
 // Die App loggt über console.info(message, objekt). In `docker logs` steht das
@@ -156,15 +171,16 @@ export function zerlegeAuftraege({ appExchanges, srvExchanges, completed, timing
   });
   return completed.map((log, i) => {
     const jobMs = log.latencyMs;
-    const appWire = appGet[i].wireMs + appPost[i].wireMs;
-    const srvWire = srvGet[i].wireMs + srvPost[i].wireMs;
+    const offen = [appGet[i], appPost[i], srvGet[i], srvPost[i]].some((e) => e.wireMs === null);
+    const appWire = offen ? null : appGet[i].wireMs + appPost[i].wireMs;
+    const srvWire = offen ? null : srvGet[i].wireMs + srvPost[i].wireMs;
     const t = timings[i];
     const inferMs = t ? t.prompt_ms + t.predicted_ms : null;
     return {
-      netzMs: appWire - srvWire,
-      adapterMs: jobMs - appWire,
+      netzMs: offen ? null : appWire - srvWire,
+      adapterMs: offen ? null : jobMs - appWire,
       inferMs,
-      serverOhneInferenzMs: inferMs === null ? null : srvPost[i].wireMs - inferMs,
+      serverOhneInferenzMs: inferMs === null || offen ? null : srvPost[i].wireMs - inferMs,
       jobMs,
       cacheN: t && t.cache_n !== undefined ? t.cache_n : null,
       status: log.status,
@@ -175,20 +191,36 @@ export function zerlegeAuftraege({ appExchanges, srvExchanges, completed, timing
 }
 
 export function kennzahlen(auftraege) {
-  const netz = auftraege.map((a) => a.netzMs);
-  const adapter = auftraege.map((a) => a.adapterMs);
+  const voll = auftraege.filter((a) => a.netzMs !== null && a.adapterMs !== null);
+  const netz = voll.map((a) => a.netzMs);
+  const adapter = voll.map((a) => a.adapterMs);
   const anteile = auftraege.filter((a) => a.inferMs !== null).map((a) => a.inferMs / a.jobMs);
-  const netzMedianMs = median(netz);
-  const netzMaxMs = Math.max(...netz);
-  const adapterMedianMs = median(adapter);
+  const netzMedianMs = netz.length ? median(netz) : null;
+  const netzMaxMs = netz.length ? Math.max(...netz) : null;
+  const adapterMedianMs = adapter.length ? median(adapter) : null;
   const inferAnteilMedian = anteile.length ? median(anteile) : null;
+  // Kalt: Prompt nicht aus dem KV-Cache des Slots (cacheN 0); warm: cacheN > 0.
+  const gruppe = (liste) => {
+    const mitInferenz = liste.filter((a) => a.inferMs !== null);
+    return {
+      n: liste.length,
+      inferMsMedian: mitInferenz.length ? median(mitInferenz.map((a) => a.inferMs)) : null,
+      jobMsMedian: liste.length ? median(liste.map((a) => a.jobMs)) : null,
+      inferAnteilMedian: mitInferenz.length
+        ? median(mitInferenz.map((a) => a.inferMs / a.jobMs))
+        : null,
+    };
+  };
   return {
     n: auftraege.length,
+    unvollstaendig: auftraege.length - voll.length,
     netz: { medianMs: netzMedianMs, maxMs: netzMaxMs },
     adapter: { medianMs: adapterMedianMs },
     inferAnteilMedian,
-    hB1: netzMedianMs <= 50 && netzMaxMs <= 200,
-    hB2: adapterMedianMs <= 2000,
+    kalt: gruppe(auftraege.filter((a) => a.cacheN === 0)),
+    warm: gruppe(auftraege.filter((a) => a.cacheN > 0)),
+    hB1: netzMedianMs !== null && netzMedianMs <= 50 && netzMaxMs <= 200,
+    hB2: adapterMedianMs !== null && adapterMedianMs <= 2000,
     hB3: inferAnteilMedian !== null && inferAnteilMedian >= 0.95,
   };
 }
