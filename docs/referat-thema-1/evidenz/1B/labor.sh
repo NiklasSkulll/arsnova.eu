@@ -3,6 +3,10 @@
 #   labor.sh up        Voraussetzungen, Größenwahl, VMs, llm-host, app-host, Prüfungen
 #   labor.sh groessen  nur Empfehlung und Größenwahl anzeigen, nichts anlegen
 #   labor.sh pruefen   nur die Prüfungen (Runbook §10, §11, Negativtests), Bericht schreiben
+#   labor.sh kalibrierung  eine nicht gewertete Anfrage, Timeout nach Regel (ADR 1B-005)
+#   labor.sh lauf      gewerteter Lauf (LAB_N, LAB_TAG, LAB_TIMEOUT_MS), Ergebnis nach messung/
+#                      LAB_PROFIL: performance (Standard, wie 1C gehalten) oder unveraendert;
+#                      LAB_TAG mit Präfix dev: Entwicklungslauf, kommt nicht ins Repo
 #   labor.sh status    VMs, Pinning, Docker, Repo-Stand
 #   labor.sh destroy   VMs, Disks und Netz entfernen (fragt nach)
 #
@@ -193,14 +197,51 @@ up() {
   pruefen
 }
 
+schluessel_app_llm() { # app-host darf für Mitschnitt und Neustart per SSH in den llm-host
+  local pub
+  pub="$("${SSH[@]}" "labor@$APP" 'test -f ~/.ssh/labor-llm || ssh-keygen -q -t ed25519 -N "" -C labor-app-zu-llm -f ~/.ssh/labor-llm; cat ~/.ssh/labor-llm.pub')"
+  [[ "$pub" =~ ^ssh-ed25519\ [A-Za-z0-9+/=]+\ labor-app-zu-llm$ ]] || { echo "unerwarteter Schlüssel" >&2; exit 1; }
+  "${SSH[@]}" "labor@$LLM" "grep -qxF '$pub' ~/.ssh/authorized_keys || echo '$pub' >> ~/.ssh/authorized_keys"
+}
+
+im_app_host() { # modus: lauf.sh im app-host mit Hülle (Ruhezustand gesperrt, Energieprofil)
+  schluessel_app_llm
+  local wunsch="${LAB_PROFIL:-performance}" ist
+  ist="$(powerprofilesctl get 2>/dev/null || echo unbekannt)"
+  local -a huelle=()
+  if [[ "$wunsch" == performance ]] && command -v powerprofilesctl >/dev/null; then
+    huelle=(powerprofilesctl launch -p performance -r "1B-$1" --)
+    ist=performance
+  fi
+  if command -v systemd-inhibit >/dev/null; then
+    huelle=(systemd-inhibit --what=sleep:idle:handle-lid-switch --who=1B-Labor --why="1B-$1" --mode=block "${huelle[@]}")
+  fi
+  local rechner; rechner="$(lscpu | sed -n 's/^Model name: *//p'), $(nproc) Threads, $(free -g | awk '/^Mem:/ {print $2}') GiB"
+  local env; env="$(printf 'LAB_N=%q LAB_TAG=%q LAB_TIMEOUT_MS=%q LAB_PROFIL_IST=%q LAB_RECHNER=%q' \
+    "${LAB_N:-10}" "${LAB_TAG:-}" "${LAB_TIMEOUT_MS:-90000}" "$ist" "$rechner")"
+  local ausgabe
+  ausgabe="$("${huelle[@]}" "${SSH[@]}" "labor@$APP" "$env bash arsnova.eu/$EV/lauf.sh $1" | tee /dev/stderr)"
+  if [[ "$1" == lauf ]]; then
+    local dir; dir="$(tail -n 1 <<<"$ausgabe")"
+    scp -q -r -o UserKnownHostsFile="$VMDIR/known_hosts" "labor@$APP:$dir" "$OUT/"
+    echo "Rohdaten (nie einchecken, Mitschnitte enthalten den Token): $OUT/$(basename "$dir")"
+    if [[ "${LAB_TAG:-}" != dev* ]]; then
+      local ziel; ziel="$HERE/messung/$(date +%F)-lauf${LAB_TAG:+-$LAB_TAG}.json"
+      cp "$OUT/$(basename "$dir")/ergebnis.json" "$ziel"
+      echo "Ergebnis: $ziel"
+    fi
+  fi
+}
+
 case "${1:-}" in
   up) up ;;
   groessen) groessen_waehlen ;;
+  kalibrierung | lauf) im_app_host "$1" ;;
   pruefen) pruefen ;;
   status) bash "$HERE/vm/vm-linux.sh" status ;;
   destroy)
     frage "Beide Labor-VMs mit Disks und das Labornetz löschen? [j/N]" n || exit 0
     bash "$HERE/vm/vm-linux.sh" destroy
     ;;
-  *) echo "Aufruf: $0 up|groessen|pruefen|status|destroy" >&2; exit 2 ;;
+  *) echo "Aufruf: $0 up|groessen|pruefen|kalibrierung|lauf|status|destroy" >&2; exit 2 ;;
 esac

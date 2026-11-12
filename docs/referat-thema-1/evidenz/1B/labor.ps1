@@ -8,6 +8,9 @@
     labor.ps1 -Mode up        Groessenwahl, VMs (vm-windows.ps1), llm-host, app-host, Pruefungen
     labor.ps1 -Mode groessen  nur Empfehlung und Groessenwahl anzeigen, nichts anlegen
     labor.ps1 -Mode pruefen   nur die Pruefungen (Runbook 10, 11, Negativtests), Bericht schreiben
+    labor.ps1 -Mode kalibrierung  eine nicht gewertete Anfrage, Timeout nach Regel (ADR 1B-005)
+    labor.ps1 -Mode lauf      gewerteter Lauf (-LabN, -LabTag, -LabTimeoutMs), Ergebnis nach messung\
+                              -LabTag mit Praefix dev: Entwicklungslauf, kommt nicht ins Repo
     labor.ps1 -Mode status    VMs, Reserve, Docker, Repo-Stand
     labor.ps1 -Mode destroy   VMs, Disks, NAT und Switch entfernen (fragt nach)
 
@@ -27,9 +30,12 @@
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '',
   Justification = 'Fehlalarm: die Skriptparameter werden in den Funktionen unten gelesen.')]
 param(
-  [ValidateSet('up', 'groessen', 'pruefen', 'status', 'destroy')]
+  [ValidateSet('up', 'groessen', 'pruefen', 'kalibrierung', 'lauf', 'status', 'destroy')]
   [string]$Mode = 'groessen',
   [switch]$Ja,
+  [ValidateRange(1, 10)][int]$LabN = 10,
+  [ValidatePattern('^[a-z0-9-]*$')][string]$LabTag = '',
+  [ValidateSet(90000, 300000)][int]$LabTimeoutMs = 90000,
   [ValidateRange(0, 64)][int]$LlmCpus = 0,
   [ValidateRange(0, 512)][int]$LlmRamGB = 0,
   [ValidateRange(0, 64)][int]$AppCpus = 0,
@@ -204,12 +210,44 @@ function Invoke-LaborUp {
   Invoke-Pruefen
 }
 
+function Invoke-ImAppHost([string]$LaufMode) {
+  $o = Get-SshArg
+  $pub = (& ssh.exe @o "labor@$AppIp" 'test -f ~/.ssh/labor-llm || ssh-keygen -q -t ed25519 -N "" -C labor-app-zu-llm -f ~/.ssh/labor-llm; cat ~/.ssh/labor-llm.pub' | Select-Object -Last 1)
+  if ("$pub" -notmatch '^ssh-ed25519 [A-Za-z0-9+/=]+ labor-app-zu-llm$') { throw 'unerwarteter Schluessel im app-host' }
+  & ssh.exe @o "labor@$LlmIp" "grep -qxF '$pub' ~/.ssh/authorized_keys || echo '$pub' >> ~/.ssh/authorized_keys" | Out-Host
+  # Windows aendert das Energieprofil nicht; das aktive Schema wird nur festgehalten.
+  $profil = ((& powercfg.exe /getactivescheme) -join ' ') -replace '[^A-Za-z0-9 ()._:-]', ''
+  $r = Get-LaborRechner
+  $rechner = "$((Get-CimInstance Win32_Processor | Select-Object -First 1).Name), $($r.Threads) Threads, $($r.RamGib) GB" -replace "'", ''
+  $envText = "LAB_N=$LabN LAB_TAG='$LabTag' LAB_TIMEOUT_MS=$LabTimeoutMs LAB_PROFIL_IST='$profil' LAB_RECHNER='$rechner'"
+  $ausgabe = @(& ssh.exe @o "labor@$AppIp" "$envText bash arsnova.eu/$Ev/lauf.sh $LaufMode")
+  $ausgabe | Out-Host
+  if ($LASTEXITCODE -ne 0) { throw "lauf.sh $LaufMode fehlgeschlagen ($LASTEXITCODE)" }
+  if ($LaufMode -eq 'lauf') {
+    $dir = "$($ausgabe[-1])".Trim()
+    New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
+    Push-Location $OutDir
+    try { & scp.exe -q -r @o "labor@${AppIp}:$dir" '.'; if ($LASTEXITCODE -ne 0) { throw 'scp der Ergebnisse fehlgeschlagen' } }
+    finally { Pop-Location }
+    $lokal = Join-Path $OutDir (Split-Path $dir -Leaf)
+    Write-Host "Rohdaten (nie einchecken, Mitschnitte enthalten den Token): $lokal"
+    if (-not $LabTag.StartsWith('dev')) {
+      $name = '{0:yyyy-MM-dd}-lauf{1}.json' -f (Get-Date), $(if ($LabTag) { "-$LabTag" } else { '' })
+      $ziel = Join-Path (Join-Path $PSScriptRoot 'messung') $name
+      Copy-Item (Join-Path $lokal 'ergebnis.json') $ziel
+      Write-Host "Ergebnis: $ziel"
+    }
+  }
+}
+
 # Hauptteil nur bei direktem Aufruf, nicht beim Dot-Sourcing (Tests).
 if ($MyInvocation.InvocationName -ne '.') {
   switch ($Mode) {
     'up' { Invoke-LaborUp }
     'groessen' { Select-LaborGroesse | Out-Null }
     'pruefen' { Invoke-Pruefen }
+    'kalibrierung' { Invoke-ImAppHost 'kalibrierung' }
+    'lauf' { Invoke-ImAppHost 'lauf' }
     'status' { Invoke-VmScript $null 'status' }
     'destroy' {
       if (Test-Ja 'Beide Labor-VMs mit Disks, NAT und Switch loeschen? [j/N]' $false) { Invoke-VmScript $null 'destroy' }
