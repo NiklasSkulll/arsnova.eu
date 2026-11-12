@@ -397,7 +397,9 @@ Der Worker-Smoke prüft im echten Compose-Service Netzwerk-/Secret-Abwesenheit,
 UID, Capabilities, `NoNewPrivs`, read-only Rootfs, Socketmodus und die
 PID-/RAM-/CPU-/`tmpfs`-Grenzen. Der App-Smoke prüft den read-only Socket-Mount
 und rendert einen 200-Fragen-/500-Teilnehmenden-Bericht im `pdfUa`-Profil über
-den Unix-Socket. CI beendet den Worker dazwischen einmal hart und erwartet einen
+den Unix-Socket. Der Smoke prüft, dass das Ergebnis mehrere Seiten enthält. CI
+prüft während dieses Render-Tests zusätzlich, dass der PID-Limit-Zähler des
+Workers nicht steigt. CI beendet den Worker zuvor einmal hart und erwartet einen
 healthy `restart: always`, bevor der PDF-Smoke Socket-Cleanup und
 Wiederanbindung bestätigt; die exakte Policy wird am laufenden Container
 assertiert und deckt auch Host-/Daemon-Neustarts ab. Der Unit-Test mit einem nie
@@ -661,7 +663,7 @@ Beim allerersten manuellen Cutover muss der Ziel-Commit inline per `git fetch`, 
 | `a11y:axe:static`                  | axe für statische Kernrouten/-zustände                                                                                      |
 | `a11y:layout`                      | Reflow, Fokus, 24px-Ziele, Skip-Link, Join-Fokus und mobiles Disclosure                                                     |
 | `check:viewport`                   | Alias/älterer 320px-Reflow-Smoke                                                                                            |
-| `smoke:host-present-auth`          | Host/Present-Auth-Smoke                                                                                                     |
+| `smoke:host-present-auth`          | Host-/Presenter-Zugriff, Live-Beitritt und nativer Schließdialog nach dem Ansichtswechsel während der Abstimmung            |
 | `smoke:host-pairing-security`      | Story 2.10: Host / Smartphone / Presenter, Missbrauch + Lifecycle + Widerruf                                                |
 | `smoke:presenter-viewports`        | Gefüllte Presenter-Lobby in vier Tablet-/Beamer-Viewports                                                                   |
 | `smoke:host-music`                 | Host-Musik-/Sound-Smoke                                                                                                     |
@@ -1119,12 +1121,15 @@ BASE_URL=http://localhost:4200 TRPC_URL=http://localhost:3000/trpc \
 Die Skripte erzeugen ausschließlich Test-Sessions auf der angegebenen Instanz.
 Nicht gegen Produktion ausführen. Sie prüfen 720p, 1080p und 1920 × 1200 in beiden
 Presets. Das erste prüft den vollständigen Text einschließlich Code, die
-Host-gesteuerte Navigation und Wiederherstellung nach Reload. Das zweite prüft
+Navigation per Host-Befehl und Presenter-Tastaturbedienung sowie die
+Wiederherstellung nach Reload. Zusätzlich prüft
+es acht gleichzeitig sichtbare Antwortoptionen in Abstimmung und Ergebnisansicht
+einschließlich Schriftgröße, Ergebnisbalken und Korrektheitsmarkierung. Das zweite prüft
 Lobby 0/10/200, Schätzverteilung mit Statistik, Freitext-Wortwolke, angeheftete
 Q&A-Frage mit Warteschlange, verborgenes/freigegebenes Blitzlicht und Rangliste.
 Screenshots liegen unter `tmp/projection-pages` bzw. `tmp/presenter-scenarios`
 (im Arbeitsverzeichnis); `SMOKE_ARTIFACT_DIR` überschreibt den Pfad.
-`PROJECTION_DELAYED_MEDIA=1` hält drei Bildantworten bis nach der ersten
+`PROJECTION_DELAYED_MEDIA=1` hält drei Bilder im Fragetext bis nach der ersten
 Seitenberechnung zurück und prüft Neumessung sowie vollständige Bilddarstellung.
 `PROJECTION_THEME=dark` prüft das dunkle Theme. `PROJECTION_PRESETS` und
 `PROJECTION_SIZES` begrenzen den ersten Lauf; `PROJECTION_SCENARIOS` wählt im
