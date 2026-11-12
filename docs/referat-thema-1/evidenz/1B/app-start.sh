@@ -17,11 +17,12 @@ REG=127.0.0.1:5000/arsnova
 echo "== Registry und App-Image"
 docker start registry >/dev/null 2>&1 ||
   docker run -d --restart=always --name registry -p 127.0.0.1:5000:5000 registry:2.8.3 >/dev/null
-TAG="$REG:$(git rev-parse --short=12 HEAD)"
+# Tag nach dem letzten Commit außerhalb von docs/; Doku-Commits bauen nicht neu.
+TAG="$REG:$(git log -1 --format=%h --abbrev=12 -- . ":(exclude)docs")"
 if ! docker image inspect "$TAG" >/dev/null 2>&1; then
   docker build --pull --file Dockerfile --tag "$TAG" .
 fi
-for i in 1 2 3; do docker push -q "$TAG" >/dev/null && break; echo "Push $i fehlgeschlagen" >&2; sleep 5; done
+for i in 1 2 3 4 5; do docker push -q "$TAG" >/dev/null && break; echo "Push $i fehlgeschlagen" >&2; sleep 5; done
 docker pull -q "$TAG" >/dev/null
 IMAGE="$(docker image inspect --format '{{range .RepoDigests}}{{println .}}{{end}}' "$TAG" | grep -F "$REG@sha256:" | head -n 1)"
 [[ -n "$IMAGE" ]] || { echo "Kein Registry-Digest für $TAG" >&2; exit 1; }
@@ -50,7 +51,7 @@ if [[ ! -f .env.production ]]; then
     .env.production.example >.env.production
   unset LLM_TOKEN pg
   chmod 600 .env.production
-  ! grep -q '<' .env.production || { echo "Platzhalter übrig in .env.production" >&2; exit 1; }
+  ! grep -qE '^[^#].*<' .env.production || { echo "Platzhalter übrig in .env.production" >&2; exit 1; }
 fi
 grep -E '^(PUBLIC_FRONTEND_URL|QA_SUMMARY_ENABLED|QA_SUMMARY_TIMEOUT_MS|OPEN_WEIGHT_LLM_(ENABLED|URL|SUMMARY_TIMEOUT_MS))=' .env.production
 
