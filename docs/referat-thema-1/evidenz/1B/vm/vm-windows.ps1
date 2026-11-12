@@ -422,7 +422,8 @@ function Invoke-Ssh([string]$Ip, [string]$RemoteCommand, [switch]$Quiet) {
     try { & ssh.exe @o "labor@$Ip" $RemoteCommand 2>$null | Out-Null } finally { $ErrorActionPreference = $old }
   }
   else {
-    & ssh.exe @o "labor@$Ip" $RemoteCommand
+    # Ausgabe direkt anzeigen; sonst landet sie im Rueckgabewert neben dem Exitcode.
+    & ssh.exe @o "labor@$Ip" $RemoteCommand | Out-Host
   }
   return $LASTEXITCODE
 }

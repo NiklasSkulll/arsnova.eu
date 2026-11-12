@@ -24,7 +24,7 @@ export LIBVIRT_DEFAULT_URI=qemu:///system
 NET=arsnova-1b
 VMDIR="${LAB_VMDIR:-/var/lib/libvirt/images/arsnova-1b}"
 KEY="${LAB_SSH_KEY:-$HOME/.ssh/id_ed25519.pub}"
-COMMIT="${LAB_COMMIT:-$(git -C "$REPO" rev-parse HEAD)}"
+COMMIT="$(git -C "$REPO" rev-parse --verify "${LAB_COMMIT:-HEAD}^{commit}")"
 IMG_URL=https://cloud-images.ubuntu.com/releases/24.04/release
 IMG=ubuntu-24.04-server-cloudimg-amd64.img
 SSH=(ssh -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile="$VMDIR/known_hosts" -o ConnectTimeout=5)
@@ -78,13 +78,17 @@ up() {
 
   if [[ ! -f "$VMDIR/$IMG" ]]; then
     curl -fL -o "$VMDIR/$IMG" "$IMG_URL/$IMG"
-    curl -fsSL -o "$VMDIR/SHA256SUMS" "$IMG_URL/SHA256SUMS"
   fi
+  [[ -s "$VMDIR/SHA256SUMS" ]] || curl -fsSL -o "$VMDIR/SHA256SUMS" "$IMG_URL/SHA256SUMS"
   (cd "$VMDIR" && grep " \*\?$IMG\$" SHA256SUMS | sha256sum -c -)
 
   for vm in "${VMS[@]}"; do
     read -r name ip mac vcpus ram disk cpuset ud <<<"$vm"
-    if virsh dominfo "$name" >/dev/null 2>&1; then echo "$name existiert schon"; continue; fi
+    if virsh dominfo "$name" >/dev/null 2>&1; then
+      echo "$name existiert schon"
+      [[ "$(virsh domstate "$name")" == running ]] || virsh start "$name"
+      continue
+    fi
     qemu-img create -q -f qcow2 -F qcow2 -b "$VMDIR/$IMG" "$VMDIR/$name.qcow2" "${disk}G"
     seed_iso "$VMDIR/$name-seed.iso" "$ud" "$name"
     virt-install --name "$name" --memory "$ram" --vcpus "$vcpus" --cpuset "$cpuset" \
