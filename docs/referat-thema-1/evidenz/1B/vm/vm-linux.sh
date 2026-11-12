@@ -29,10 +29,13 @@ IMG_URL=https://cloud-images.ubuntu.com/releases/24.04/release
 IMG=ubuntu-24.04-server-cloudimg-amd64.img
 SSH=(ssh -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile="$VMDIR/known_hosts" -o ConnectTimeout=5)
 
+# Größen und Pinning: Standard = Messrechner; labor.sh setzt sie aus der Größenregel (ADR 1B-010).
+APP_VCPU="${LAB_APP_VCPU:-2}" APP_RAM="${LAB_APP_RAM_GIB:-6}" APP_SET="${LAB_APP_CPUSET:-4,5}"
+LLM_VCPU="${LAB_LLM_VCPU:-4}" LLM_RAM="${LAB_LLM_RAM_GIB:-12}" LLM_SET="${LAB_LLM_CPUSET:-0,1,2,3}"
 # name ip mac vcpus ram_mib disk_gb cpuset user-data
 VMS=(
-  "arsnova-1b-app 192.168.150.10 52:54:00:1b:00:10 2 6144 25 4,5 app-host.user-data.yaml"
-  "arsnova-1b-llm 192.168.150.20 52:54:00:1b:00:20 4 12288 30 0,1,2,3 llm-host.user-data.yaml"
+  "arsnova-1b-app 192.168.150.10 52:54:00:1b:00:10 $APP_VCPU $((APP_RAM * 1024)) 25 $APP_SET app-host.user-data.yaml"
+  "arsnova-1b-llm 192.168.150.20 52:54:00:1b:00:20 $LLM_VCPU $((LLM_RAM * 1024)) 30 $LLM_SET llm-host.user-data.yaml"
 )
 
 need() { command -v "$1" >/dev/null || { echo "Fehlt: $1" >&2; exit 1; }; }
@@ -86,6 +89,11 @@ up() {
     read -r name ip mac vcpus ram disk cpuset ud <<<"$vm"
     if virsh dominfo "$name" >/dev/null 2>&1; then
       echo "$name existiert schon"
+      ist="$(virsh dominfo "$name" | awk '/^CPU\(s\)/ {c=$2} /^Max memory/ {m=$3/1024} END {print c, m}')"
+      [[ "$ist" == "$vcpus $ram" ]] || {
+        echo "$name hat $ist (vCPU MiB), gewünscht $vcpus $ram; zuerst: $0 destroy" >&2
+        exit 1
+      }
       [[ "$(virsh domstate "$name")" == running ]] || virsh start "$name"
       continue
     fi
