@@ -2,14 +2,18 @@
 
 **Status: ungetestet, Niklas prüft** · Stand: 2026-11-12
 
+_Ergänzt 2026-11-12:_ Der Weg mit einem Befehl ist jetzt `..\labor.ps1 -Mode up` (Größenwahl, VMs, Einrichtung beider Hosts, Prüfungen) und `-Mode lauf` für den Lauf; Ablauf im [Runbook](../runbook.md), Entscheidung in [ADR 1B-010](../../../adr/1B-010-aufbau-automatisiert-mit-groessenempfehlung.md). `vm-windows.ps1` bleibt die VM-Schicht darunter.
+
 Ziel: dasselbe Zwei-VM-Labor wie unter Linux (`vm-linux.sh`, libvirt), nur mit anderer Startschicht (Hyper-V). Die cloud-init-Dateien sind identisch: `app-host.user-data.yaml` und `llm-host.user-data.yaml` in diesem Ordner.
 
 |            | app-host       | llm-host       |
 | ---------- | -------------- | -------------- |
 | IP         | 192.168.150.10 | 192.168.150.20 |
 | vCPU / RAM | 2 / 6 GiB      | 4 / 12 GiB     |
-| Disk       | 25 GB          | 30 GB          |
-| MAC        | 00155D1B0010   | 00155D1B0020   |
+
+vCPU und RAM: Werte des Messrechners; `labor.ps1` empfiehlt sie je Rechner nach der Regel aus ADR 1B-010.
+| Disk | 25 GB | 30 GB |
+| MAC | 00155D1B0010 | 00155D1B0020 |
 
 Netz `192.168.150.0/24`, Gateway `.1` auf dem Host, ausgehend NAT erlaubt, von außen nicht erreichbar (kein Port-Forwarding, keine Bridge auf die physische Netzkarte, [ADR 1B-003](../../../adr/1B-003-laborregel-virtuelles-netz.md)). SSH-Nutzer: `labor`.
 
@@ -181,7 +185,7 @@ app-host: `-MemoryStartupBytes 6GB`, `-Count 2`, MAC `00155D1B0010`, eigene VHDX
 
 ## 4. CPU-Pinning
 
-Ziel wäre: llm-host auf je einem Thread jedes physischen Kerns. In der Doku zu `Set-VMProcessor` fand ich nur Anzahl, Reserve, Limit und Gewicht, **keine Affinität**; das Skript setzt deshalb nur die Anzahl. Hyper-V kennt CPU-Gruppen mit Prozessor-Affinität ([Resource Controls](https://learn.microsoft.com/windows-server/virtualization/hyper-v/manage/manage-hyper-v-cpugroups#isolating-vm-groups-to-specific-host-processors)); diese Doku ist für Windows Server geschrieben, ob sie auf Windows 11 Pro nutzbar ist, ist **nicht verifiziert**. Ohne Pinning: `Set-VMProcessor -Maximum`/`-Reserve` als Näherung und im Protokoll als Abweichung zum Linux-Lauf vermerken.
+Ziel wäre: llm-host auf je einem Thread jedes physischen Kerns. In der Doku zu `Set-VMProcessor` fand ich nur Anzahl, Reserve, Limit und Gewicht, **keine Affinität**; das Skript setzt deshalb die Anzahl und als Näherung (ergänzt 2026-11-12) für den llm-host `-Reserve 100` und `-RelativeWeight 200`, für den app-host `-RelativeWeight 100`. Hyper-V kennt CPU-Gruppen mit Prozessor-Affinität ([Resource Controls](https://learn.microsoft.com/windows-server/virtualization/hyper-v/manage/manage-hyper-v-cpugroups#isolating-vm-groups-to-specific-host-processors)); diese Doku ist für Windows Server geschrieben, ob sie auf Windows 11 Pro nutzbar ist, ist **nicht verifiziert**. Ohne Pinning: `Set-VMProcessor -Maximum`/`-Reserve` als Näherung und im Protokoll als Abweichung zum Linux-Lauf vermerken.
 
 ## 5. Alternativen
 
