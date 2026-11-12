@@ -63,6 +63,7 @@ EOF
   sed "s|__PASSWORT__|$(cat "$WIN_DIR/passwort")|g" "$HERE/autounattend.xml" >"$t/autounattend.xml"
   cp "$HERE/setup.ps1" "$t/"
   cp "$KEY" "$t/authorized_keys"
+  rm -f "$WIN_DIR/unattend.iso" # libvirt übernimmt die Datei beim Start (dynamic_ownership)
   xorriso -as mkisofs -quiet -o "$WIN_DIR/unattend.iso" -V UNATTEND -J -joliet-long -r "$t"
   rm -rf "$t"
 
