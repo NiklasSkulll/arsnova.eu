@@ -22,6 +22,8 @@ SSH=(ssh -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile="$VMDIR/known
 mkdir -p "$OUT"
 
 interaktiv() { [[ -t 0 && "${LAB_JA:-}" != 1 ]]; }
+# sudo nur, wenn es ohne Rückfrage geht oder ein Terminal das Passwort abfragen kann.
+sudo_moeglich() { [[ -t 0 ]] || sudo -n true 2>/dev/null; }
 frage() { # text standard(j|n) → 0 bei ja
   local a
   [[ "${LAB_JA:-}" == 1 ]] && return 0
@@ -77,12 +79,15 @@ voraussetzungen() {
   fi
   if [[ ! -w "$VMDIR" ]]; then
     echo "VM-Verzeichnis $VMDIR fehlt oder ist nicht beschreibbar (libvirt-qemu muss es lesen können)."
-    frage "Mit sudo anlegen? [J/n]" j && sudo install -d -o "$USER" -m 755 "$VMDIR"
+    sudo_moeglich && frage "Mit sudo anlegen? [J/n]" j && sudo install -d -o "$USER" -m 755 "$VMDIR"
     [[ -w "$VMDIR" ]] || exit 1
   fi
   if systemctl is-active -q ufw 2>/dev/null; then
     echo "Host-ufw ist aktiv; ohne Freigabe auf virbr-1b bekommen die VMs keine IP."
-    if frage "Freigaben nur für die Labor-Bridge setzen (sudo ufw, DHCP/DNS/Weiterleitung)? [J/n]" j; then
+    if ! sudo_moeglich; then
+      echo "  Ohne Terminal kein sudo; falls nötig von Hand (einmalig, bleibt gesetzt):"
+      echo "  sudo ufw allow in on virbr-1b to any port 67 proto udp; sudo ufw allow in on virbr-1b to any port 53; sudo ufw route allow in on virbr-1b"
+    elif frage "Freigaben nur für die Labor-Bridge setzen (sudo ufw, DHCP/DNS/Weiterleitung)? [J/n]" j; then
       sudo ufw allow in on virbr-1b to any port 67 proto udp
       sudo ufw allow in on virbr-1b to any port 53
       sudo ufw route allow in on virbr-1b
