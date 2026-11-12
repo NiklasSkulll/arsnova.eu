@@ -5,6 +5,7 @@
 #   lauf.sh vorbereiten    Treiber-Abhängigkeiten, SSH-Schlüssel app-host → llm-host prüfen
 #   lauf.sh kalibrierung   eine nicht gewertete Anfrage an eine frische Runtime, Timeout nach Regel
 #   lauf.sh lauf           Mitschnitt auf beiden Hosts, n Aufträge, Zeitzerlegung, Kontrolle C0
+#   lauf.sh auswerten DIR  nur die Auswertung auf vorhandenen Rohdaten wiederholen
 #
 # Umgebung (Standard): LAB_N (10, höchstens 10 je frischer Runtime, ADR 1B-007), LAB_TAG,
 # LAB_TIMEOUT_MS (90000), LAB_OUTDIR (~/labor-1b), LAB_BODY (Prompt-Body für die Kalibrierung,
@@ -78,6 +79,21 @@ felder() { # pcap → tshark-Felder für zeitzerlegung.mjs
     -e http.request.method -e http.request.uri -e http.response.code
 }
 
+auswerten() { # Rohdatenverzeichnis eines Laufs → timings, body, zerlegung
+  local out="$1"
+  log "Auswertung $out"
+  felder "$out/app.pcap" >"$out/app.tsv"
+  felder "$out/srv.pcap" >"$out/srv.tsv"
+  # -2: zweiter Durchlauf, sonst bleibt http.response_in in tshark 4.2 leer.
+  tshark -2 -r "$out/app.pcap" -Y 'http.request.method == "POST" || http.response' -T fields -E separator=/t \
+    -e frame.number -e http.request.method -e http.response_in -e http.file_data >"$out/http.tsv"
+  node "$EV/messung/timings.mjs" timings "$out/http.tsv" >"$out/timings.json"
+  node "$EV/messung/timings.mjs" body "$out/http.tsv" >"$out/body.json"
+  node "$EV/messung/zeitzerlegung.mjs" --app "$out/app.tsv" --srv "$out/srv.tsv" --log "$out/app.log" \
+    --timings "$out/timings.json" --app-ip "$APP_IP" --out "$out/zerlegung.json" >&2
+
+}
+
 lauf() {
   local n="${LAB_N:-10}" tag="${LAB_TAG:-}" timeout="${LAB_TIMEOUT_MS:-90000}"
   ((n >= 1 && n <= 10)) || { echo "LAB_N muss 1..10 sein (höchstens 10 Aufträge je frischer Runtime)." >&2; exit 1; }
@@ -110,15 +126,7 @@ lauf() {
   "${LLM[@]}" 'cat /tmp/1b-srv.pcap; rm -f /tmp/1b-srv.pcap' >"$out/srv.pcap"
   docker logs --since "$start" arsnova-v3-app >"$out/app.log" 2>&1
 
-  log "Auswertung"
-  felder "$out/app.pcap" >"$out/app.tsv"
-  felder "$out/srv.pcap" >"$out/srv.tsv"
-  tshark -r "$out/app.pcap" -Y 'http.request.method == "POST" || http.response' -T fields -E separator=/t \
-    -e frame.number -e http.request.method -e http.response_in -e http.file_data >"$out/http.tsv"
-  node "$EV/messung/timings.mjs" timings "$out/http.tsv" >"$out/timings.json"
-  node "$EV/messung/timings.mjs" body "$out/http.tsv" >"$out/body.json"
-  node "$EV/messung/zeitzerlegung.mjs" --app "$out/app.tsv" --srv "$out/srv.tsv" --log "$out/app.log" \
-    --timings "$out/timings.json" --app-ip "$APP_IP" --out "$out/zerlegung.json" >&2
+  auswerten "$out"
 
   # Kontrolle C0 (Design 5) an einer frischen Runtime: sonst bekäme sie n + 1 Anfragen (ADR 1B-007).
   runtime_frisch
@@ -152,5 +160,6 @@ case "${1:-}" in
   vorbereiten) vorbereiten ;;
   kalibrierung) kalibrierung ;;
   lauf) lauf ;;
-  *) echo "Aufruf: $0 vorbereiten|kalibrierung|lauf" >&2; exit 2 ;;
+  auswerten) auswerten "${2:?Verzeichnis fehlt}" ;;
+  *) echo "Aufruf: $0 vorbereiten|kalibrierung|lauf|auswerten DIR" >&2; exit 2 ;;
 esac

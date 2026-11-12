@@ -25,6 +25,22 @@ case "${1:-}" in
     [[ "$3" == "$((n * 1000000000))" ]]; pruef "CPU-Limit = vCPUs" $? "NanoCpus=$3 vCPU=$n"
     [[ "$4" == 0 && "$5" == healthy ]]; pruef "Container" $? "Restarts=$4 Health=$5"
     [[ "$6" =~ @sha256:[a-f0-9]{64}$ ]]; pruef "Image per Digest" $? "$6"
+    [[ "$(stat -c %a .env.llm)" == 600 ]]; pruef ".env.llm Modus 600" $? "$(stat -c %a .env.llm)"
+    a="$(uname -m)" frei="$(df -BG --output=avail / | tail -1 | tr -dc 0-9)"
+    [[ "$a" == x86_64 || "$a" == aarch64 ]] && ((frei >= 10)); pruef "64 Bit, mindestens 10 GiB frei" $? "$a, ${frei} GiB frei"
+    v="$(node scripts/open-weight-llm/verify-model.mjs docker/open-weight-llm/model-manifest.json \
+      "/srv/arsnova/models/open-weight-llm/$(jq -r .filename docker/open-weight-llm/model-manifest.json)" 2>&1)"
+    pruef "GGUF Größe und SHA-256" $? "$v"
+    # Flags des laufenden llama-server; nur Namen ausgeben, nie den Wert von --api-key.
+    args="$(docker top arsnova-open-weight-llm -eo args | grep llama-server | head -n 1)"
+    for f in '--parallel 1' '--ctx-size 8192' '--n-predict 768' "--threads $n" '--no-webui' '--slots' \
+      '--reasoning off' '--n-gpu-layers 0' '--slot-prompt-similarity 0' '--jinja' '--offline'; do
+      [[ " $args " == *" $f "* ]]; pruef "Flag $f" $? ""
+    done
+    [[ " $args " == *" --api-key "* ]]; pruef "Flag --api-key gesetzt" $? "(Wert nicht ausgegeben)"
+    for f in '--embedding' '--props' '--metrics'; do
+      [[ " $args " != *" $f"* ]]; pruef "kein $f" $? ""
+    done
     th="$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' arsnova-open-weight-llm | sed -n 's/^OPEN_WEIGHT_LLM_THREADS=//p')"
     [[ "$th" == "$n" ]]; pruef "Threads = vCPUs" $? "THREADS=$th"
     c="$(code -H "Authorization: Bearer $T" "http://$LLM_IP:8080/health")"
