@@ -48,7 +48,7 @@ sequenceDiagram
       Q-->>R: aktuelles ausstehendes Ergebnis
     else zu wenige Fragen
       Q-->>R: gespeichertes Ergebnis (gleicher Hash, ready/uncertain) oder regelbasiert context_unavailable
-    else Cooldown greift (gleicher Hash, nicht failed, kein Fallback mit retry manual)
+    else Cooldown greift (gleicher Hash, nicht failed, nicht extraktiv/regelbasiert + retry manual)
       Q-->>R: gespeichertes Ergebnis
     else Queue voll (Default 8, alle Sitzungen)
       Q-->>R: extraktiver Fallback queue_full

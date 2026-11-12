@@ -1,6 +1,6 @@
 # Diagramme
 
-Quellen und gerenderte Bilder der Diagramme in `docs/referat-thema-1/`. Zu jeder `<name>.mmd` gibt es eine `<name>.light.svg` und eine `<name>.dark.svg`; ein SVG nie von Hand bearbeiten.
+Quellen und gerenderte Bilder der Diagramme in `docs/referat-thema-1/`. Zu jeder `<name>.mmd` (außer `palette.*.mmd`) gibt es eine `<name>.light.svg` und eine `<name>.dark.svg`; ein SVG nie von Hand bearbeiten.
 
 | Datei                                   | Enthält                                                               |
 | --------------------------------------- | --------------------------------------------------------------------- |
@@ -29,7 +29,7 @@ Farbe kommt nur aus Klassen, nie aus `style`-Zeilen. Ein Flussdiagramm endet mit
 | `dot`, `plain`                | Hilfen für Legenden: unsichtbare Ankerknoten und reiner Text |
 | `legendGroup`                 | neutrale Rahmen: Legendenfelder und gemischte Bänder         |
 
-Sequenzdiagramme verwenden `box rgba(...)` mit denselben Farbtönen. Keine Klammern in Box-Namen, weil Mermaid die Farbe sonst als Text liest. Notizen sind neutral (Theme); nur Ergebnisnotizen stehen in einem `rect`: grün (`rgba(22, 163, 74, 0.16)`) für die Modell-Zusammenfassung, rot (`rgba(225, 29, 72, 0.14)`) für jedes Fallback-Ergebnis, extraktiv wie regelbasiert. Eine Ergebnisnotiz spannt zwei benachbarte Teilnehmer (`Note over A,Q` bzw. `Note over P,Q`), damit die Flächen gleich breit sind. `theme.dark.json` hebt genau diese zwei Farben über `themeCSS` an; eine neue `rect`-Farbe braucht dort eine eigene Regel.
+Sequenzdiagramme verwenden `box rgba(...)` mit denselben Farbtönen. Keine Klammern in Box-Namen, weil Mermaid die Farbe sonst als Text liest. Notizen sind neutral (Theme); nur Ergebnisnotizen stehen in einem `rect`: grün (`rgba(22, 163, 74, 0.16)`) für die Modell-Zusammenfassung, rot (`rgba(225, 29, 72, 0.14)`) für jedes Fallback-Ergebnis, extraktiv wie regelbasiert. A2 (`1c-context-path-sequence`) setzt nur die Fallback-Notizen in ein `rect`, die Notiz der Modell-Zusammenfassung bleibt neutral. Eine Ergebnisnotiz spannt zwei benachbarte Teilnehmer (`Note over A,Q` bzw. `Note over P,Q`), damit die Flächen gleich breit sind. `theme.dark.json` hebt genau diese zwei Farben über `themeCSS` an; eine neue `rect`-Farbe braucht dort eine eigene Regel.
 
 Hinweise zum Layout:
 
