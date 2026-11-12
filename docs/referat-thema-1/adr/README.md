@@ -1,4 +1,4 @@
-# Entscheidungsprotokolle (ADRs) zu Auftrag 1C
+# Entscheidungsprotokolle (ADRs) zu den Aufträgen 1C und 1B
 
 Diese ADRs halten jede Entscheidung aus Auftrag 1C (Kontext- und Adapterpfad der
 Q&A-Zusammenfassung) fest: fachliche Ergebnisse, Labor-Befunde und methodische
@@ -94,3 +94,19 @@ Kosten, Risiken, Gültigkeitsgrenzen, offene Punkte, zugehörige Issue-Entwürfe
 | [1C-026](1C-026-messstand-festhalten-upstream-nachziehen.md)     | Gemessenen Stand festhalten, upstream vor der Präsentation nur nachziehen und prüfen        | methodisch                 | Methodik      |
 
 Nummern ohne Datei (1C-006–009, 1C-027–029) sind frei; die Lücke ist gewollt, damit der Nummernplan der Bereiche erhalten bleibt.
+
+## ADRs zu 1B
+
+_Ergänzt 2026-11-12._ Nummernkreis `1B-001`–`1B-019` für Jonas (Schritte 1–2), `1B-020`–`1B-039` für Niklas (Schritte 3–4). Statuswerte und Vorlage wie oben, Dateiname `1B-NNN-<kurztitel-kebab>.md`. Grundlage: [1B-Design](../specs/2026-11-12-1b-zwei-host-design.md).
+
+| ADR                                                 | Titel                                                              | Status     | Kategorie |
+| --------------------------------------------------- | ------------------------------------------------------------------ | ---------- | --------- |
+| [1B-001](1B-001-baseline-fork-main-a19ca70f.md)     | Baseline ist Fork-`main` `a19ca70f`                                | methodisch | Methodik  |
+| [1B-002](1B-002-topologie-zwei-vms-ein-rechner.md)  | Zwei-Host-Deployment als zwei VMs auf einem Rechner                | methodisch | Methodik  |
+| [1B-003](1B-003-laborregel-virtuelles-netz.md)      | Laborregel für das virtuelle Netz zwischen den VMs                 | methodisch | Methodik  |
+| [1B-004](1B-004-summary-auftrag-referenzfixture.md) | Echter Auftrag ist Summary V2 mit der 1C-Referenzfixture           | methodisch | Methodik  |
+| [1B-005](1B-005-abweichungen-vom-release.md)        | Abweichungen des Laboraufbaus vom Release                          | methodisch | Methodik  |
+| [1B-006](1B-006-zeitmessung-per-mitschnitt.md)      | Zeitmessung per Paketmitschnitt auf beiden Hosts                   | methodisch | Methodik  |
+| [1B-007](1B-007-umgang-mit-1c-fallen.md)            | Umgang mit den bekannten Fallen aus 1C                             | methodisch | Methodik  |
+| [1B-008](1B-008-kernaussagen-und-schwellen.md)      | Kernaussagen und Schwellen für die Schritte 1–2                    | methodisch | Methodik  |
+| [1B-009](1B-009-portabilitaet-linux-windows.md)     | Portabler Aufbau, unter Linux getestet, unter Windows dokumentiert | methodisch | Methodik  |

@@ -46,7 +46,10 @@ ihn zu wiederholen.
 - `AGENTS.md` im Wurzelverzeichnis und `.serena/` gehören upstream; für das
   Referat nicht ändern. Produktionscode bleibt unverändert; Tests, Testhelfer, ihre
   CI-Schritte und ihre Doku in `docs/TESTING.md` sind erlaubt.
-- Laborinstanzen nur auf `127.0.0.1`.
+- Laborinstanzen nur auf `127.0.0.1` oder in einem privaten virtuellen Netz
+  zwischen Labor-VMs auf demselben Rechner, das von außen nicht erreichbar ist
+  (keine Portweiterleitung, kein Bridging); ausgehendes NAT für die Einrichtung
+  ist erlaubt ([ADR 1B-003](adr/1B-003-laborregel-virtuelles-netz.md)).
 - Markdown prüfen: `npx prettier --check <dateien>` und `git diff --check`.
 
 ## Wiederverwendbar aus 1C
