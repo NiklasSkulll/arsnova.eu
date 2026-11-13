@@ -55,7 +55,7 @@ Hypothesenschwellen, Messmethode per Mitschnitt und Zeitzerlegung sind KI-Vorsch
 
 ### Prüfung durch den Autor
 
-Offen.
+Am 2026-11-13 hat der Autor die Ergebnisse der Schritte 1–2 geprüft (Ergebnisbericht und Protokolle einschließlich des Nachtrags M1–M4); Einwände hatte er keine. Vermerkt ist das in der Kopfzeile jedes Protokolls; dort ist es die einzige spätere Änderung.
 
 ### Was dieses Dokument nicht aussagt
 

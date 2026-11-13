@@ -1,6 +1,6 @@
 # 1B: Windows-Test von `labor.ps1`
 
-Stand: 2026-11-13 · Rechner: ThinkPad P50 (i7-6820HQ, 4 Kerne/8 Threads, 31 GiB), Host-Kernel 7.2.15 (`linux-omarchy`), libvirt/KVM · Prüfung durch den Autor: offen
+Stand: 2026-11-13 · Rechner: ThinkPad P50 (i7-6820HQ, 4 Kerne/8 Threads, 31 GiB), Host-Kernel 7.2.15 (`linux-omarchy`), libvirt/KVM · Prüfung durch den Autor: 2026-11-13, ohne Einwände
 
 Ziel (Plan, Nachtrag Task 12 Step 6): `labor.ps1` auf echtem Windows mit Hyper-V testen, in einer Windows-VM mit verschachtelter Virtualisierung. Skripte: [`vm/windows-test/`](vm/windows-test/).
 
