@@ -53,13 +53,25 @@ Describe 'Select-LaborGroesse' {
 
 Describe 'Test-LaborNetz' {
   It 'meldet keinen Fehler bei internem Switch, ohne Weiterleitung, llm-host gesperrt' {
+    Mock Test-LaborAdmin { $true }
     Mock Get-VMSwitch { [pscustomobject]@{ Name = 'arsnova-1b'; SwitchType = 'Internal' } }
     Mock Get-NetNatStaticMapping { }
     Mock Test-LlmOffen { $false }
     Test-LaborNetz | Should -Be 0
   }
 
+  It 'behauptet ohne Admin-Rechte kein OK fuer das NAT' {
+    Mock Get-VMSwitch { [pscustomobject]@{ Name = 'arsnova-1b'; SwitchType = 'Internal' } }
+    Mock Get-NetNatStaticMapping { }
+    Mock Test-LlmOffen { $false }
+    Mock Test-LaborAdmin { $false }
+    Test-LaborNetz | Should -Be 0
+    Should -Invoke Write-Host -ParameterFilter { "$Object" -like '*NAT ohne Portweiterleitung*' } -Times 0
+    Should -Invoke Write-Host -ParameterFilter { "$Object" -like 'HINWEIS*NAT*nicht geprueft*' } -Times 1
+  }
+
   It 'zaehlt externen Switch, Portweiterleitung und offenen Port' {
+    Mock Test-LaborAdmin { $true }
     Mock Get-VMSwitch { [pscustomobject]@{ Name = 'arsnova-1b'; SwitchType = 'External' } }
     Mock Get-NetNatStaticMapping { [pscustomobject]@{ ExternalPort = 8080 } }
     Mock Test-LlmOffen { $true }

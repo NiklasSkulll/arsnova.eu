@@ -7,6 +7,7 @@
 
     labor.ps1 -Mode vorpruefung  nur pruefen, ob dieser Rechner bereit ist (aendert nichts)
     labor.ps1 -Mode umgebung  Rechner, Hyper-V und VMs als JSON (steht auch in jedem Ergebnis)
+    labor.ps1 -Mode sync      Repo-Stand (HEAD oder -Commit) in beide VMs bringen
     labor.ps1 -Mode up        Groessenwahl, VMs (vm-windows.ps1), llm-host, app-host, Pruefungen
                               -NurVorbereiten: alles anlegen, aber keine VM starten
     labor.ps1 -Mode groessen  nur Empfehlung und Groessenwahl anzeigen, nichts anlegen
@@ -38,7 +39,7 @@
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '',
   Justification = 'Fehlalarm: die Skriptparameter werden in den Funktionen unten gelesen.')]
 param(
-  [ValidateSet('up', 'vorpruefung', 'umgebung', 'groessen', 'pruefen', 'kalibrierung', 'lauf', 'status', 'stop', 'start', 'destroy')]
+  [ValidateSet('up', 'vorpruefung', 'umgebung', 'sync', 'groessen', 'pruefen', 'kalibrierung', 'lauf', 'status', 'stop', 'start', 'destroy')]
   [string]$Mode = 'groessen',
   [switch]$Ja,
   [ValidateRange(1, 10)][int]$LabN = 10,
@@ -222,14 +223,23 @@ function Test-LlmOffen {
 }
 
 # Negativtests vom Windows-Rechner; gibt die Zahl der Fehler zurueck.
+function Test-LaborAdmin {
+  $id = [Security.Principal.WindowsIdentity]::GetCurrent()
+  return (New-Object Security.Principal.WindowsPrincipal $id).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+
 function Test-LaborNetz {
   $fehler = 0
   $sw = Get-VMSwitch -Name 'arsnova-1b' -ErrorAction SilentlyContinue
   if ($sw -and "$($sw.SwitchType)" -eq 'Internal') { Write-Host 'OK      Switch arsnova-1b ist intern (keine physische Netzkarte)' }
   else { Write-Host "FEHLER  Switch arsnova-1b: $(if ($sw) { $sw.SwitchType } else { 'fehlt' })"; $fehler++ }
-  $map = @(Get-NetNatStaticMapping -NatName 'arsnova-1b' -ErrorAction SilentlyContinue)
-  if ($map.Count -eq 0) { Write-Host 'OK      NAT ohne Portweiterleitung' }
-  else { Write-Host "FEHLER  NAT hat $($map.Count) Portweiterleitung(en)"; $fehler++ }
+  # Ohne Admin liefert Get-NetNatStaticMapping still nichts; dann kein OK behaupten.
+  if (Test-LaborAdmin) {
+    $map = @(Get-NetNatStaticMapping -NatName 'arsnova-1b' -ErrorAction SilentlyContinue)
+    if ($map.Count -eq 0) { Write-Host 'OK      NAT ohne Portweiterleitung' }
+    else { Write-Host "FEHLER  NAT hat $($map.Count) Portweiterleitung(en)"; $fehler++ }
+  }
+  else { Write-Host 'HINWEIS NAT-Portweiterleitung nicht geprueft (nur als Administrator abfragbar)' }
   if (-not (Test-LlmOffen)) { Write-Host 'OK      Rechner -> llm-host:8080 gesperrt: keine Antwort' }
   else { Write-Host 'FEHLER  Rechner -> llm-host:8080 erreichbar'; $fehler++ }
   return $fehler
@@ -505,6 +515,7 @@ if ($MyInvocation.InvocationName -ne '.') {
       if (-not $e.abbruch) { Show-RamVorschau ($e.llm.ramGib + $e.app.ramGib) }
     }
     'umgebung' { Get-LaborUmgebung }
+    'sync' { Invoke-VmScript $null 'sync' }
     'up' { Invoke-LaborUp }
     'groessen' { Select-LaborGroesse | Out-Null }
     'pruefen' { Invoke-Pruefen }
