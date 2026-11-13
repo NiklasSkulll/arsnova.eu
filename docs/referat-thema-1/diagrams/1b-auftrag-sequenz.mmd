@@ -25,12 +25,13 @@ sequenceDiagram
   Note over Q: laufender Job? Kontext bauen,<br/>genug Fragen? Cooldown 30 s,<br/>Warteschlange voll?
   Note right of Q: Job einreihen
   A-->>T: pending
-  par Treiber fragt nach je 1 s Pause
+  par je 1 s Pause
     loop bis zum Endstatus
+      Note over T,A: Statusabfrage
       T->>A: qa.summaryRuntime
       A-->>T: pending
     end
-  and Job startet per setImmediate
+  and Job per setImmediate
     Note over Q: Messpunkt: T_job beginnt
     Note right of Q: Kontext vorher
     Q->>AD: runPreparedQaSummary

@@ -11,7 +11,7 @@ config:
       top: 10
       bottom: 10
 ---
-flowchart TB
+flowchart LR
   subgraph LAP["Laptop · KVM · 4 Kerne, 8 Threads, 31 GiB<br/>privates Netz 192.168.150.0/24"]
     direction TB
     app["`**app-host** · 192.168.150.10
@@ -32,7 +32,7 @@ flowchart TB
 
   class app app
   class llm runtime
-  class net legendGroup
+  class net plain
   class LAP legendGroup
   class e1 emph
   class e2 muted
