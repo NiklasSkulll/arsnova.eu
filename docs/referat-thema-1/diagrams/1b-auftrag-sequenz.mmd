@@ -20,7 +20,7 @@ sequenceDiagram
   end
 
   T->>A: qa.requestSummary
-  Note over A: Host-Token, Q&A in der Session,<br/>Zusammenfassung eingeschaltet
+  Note over A: Host-Token, Sessionzustand,<br/>Q&A aktiv, Zusammenfassung an
   A->>Q: requestQaSummary
   Note over Q: laufender Job? Kontext bauen,<br/>genug Fragen? Cooldown 30 s,<br/>Queue voll?
   Q-)Q: Job einreihen
@@ -30,7 +30,7 @@ sequenceDiagram
       T->>A: qa.summaryRuntime
       A-->>T: pending
     end
-  and Job startet im nächsten Event-Loop-Durchlauf
+  and Job startet per setImmediate
     Note over Q: T_job beginnt
     Q->>Q: Kontext vorher
     Q->>AD: runPreparedQaSummary
