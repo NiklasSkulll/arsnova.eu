@@ -5,6 +5,9 @@
 #   labor.sh pruefen   nur die Prüfungen (Runbook §10, §11, Negativtests), Bericht schreiben
 #   labor.sh kalibrierung  eine nicht gewertete Anfrage, Timeout nach Regel (ADR 1B-005)
 #   labor.sh lauf      gewerteter Lauf (LAB_N, LAB_TAG, LAB_TIMEOUT_MS), Ergebnis nach messung/
+#                      LAB_RUNTIME_AUS=1: B0, Aufträge bei gestoppter Runtime
+#   labor.sh kontrolle C0: kurze Anfrage je 30-mal vom llm-host und vom app-host
+#   labor.sh belege    ufw, ss -ltnp, chrony, tcpdump zur NAT-Annahme, .env ohne Secrets, Manifest
 #                      LAB_PROFIL: performance (Standard, wie 1C gehalten) oder unveraendert;
 #                      LAB_TAG mit Präfix dev oder probe: kommt nicht ins Repo; Timeout ohne
 #                      LAB_TIMEOUT_MS aus der jüngsten Kalibrierung mit gleichem Energieprofil
@@ -275,8 +278,8 @@ im_app_host() { # modus: lauf.sh im app-host mit Hülle (Ruhezustand gesperrt, E
     echo "Timeout $timeout ms aus $kal"
   fi
   local rechner; rechner="$(lscpu | sed -n 's/^Model name: *//p'), $(nproc) Threads, $(free -g | awk '/^Mem:/ {print $2}') GiB"
-  local env; env="$(printf 'LAB_N=%q LAB_TAG=%q LAB_TIMEOUT_MS=%q LAB_PROFIL_IST=%q LAB_RECHNER=%q' \
-    "${LAB_N:-10}" "${LAB_TAG:-}" "$timeout" "$ist" "$rechner")"
+  local env; env="$(printf 'LAB_N=%q LAB_TAG=%q LAB_TIMEOUT_MS=%q LAB_PROFIL_IST=%q LAB_RECHNER=%q LAB_RUNTIME_AUS=%q' \
+    "${LAB_N:-10}" "${LAB_TAG:-}" "$timeout" "$ist" "$rechner" "${LAB_RUNTIME_AUS:-}")"
   local ausgabe
   local rc=0
   ausgabe="$("${huelle[@]}" "${SSH[@]}" "labor@$APP" "$env bash arsnova.eu/$EV/lauf.sh $1" | tee -a /dev/stderr)" || rc=$?
@@ -289,6 +292,22 @@ im_app_host() { # modus: lauf.sh im app-host mit Hülle (Ruhezustand gesperrt, E
     scp -q -o UserKnownHostsFile="$VMDIR/known_hosts" "labor@$APP:$datei" "$OUT/"
     umgebung_einbetten "$OUT/$(basename "$datei")"
     echo "Kalibrierung: $OUT/$(basename "$datei")"
+  fi
+  if [[ "$1" == kontrolle || "$1" == belege ]]; then
+    local dir; dir="$(tail -n 1 <<<"$ausgabe")"
+    scp -q -r -o UserKnownHostsFile="$VMDIR/known_hosts" "labor@$APP:$dir" "$OUT/"
+    local lokal="$OUT/$(basename "$dir")"
+    if [[ "$1" == kontrolle ]]; then
+      umgebung_einbetten "$lokal/ergebnis.json"
+      cp "$lokal/ergebnis.json" "$HERE/messung/$(date +%F)-kontrolle-c0.json"
+      echo "Ergebnis: $HERE/messung/$(date +%F)-kontrolle-c0.json"
+    else
+      # Belege sind ohne Secrets (env-ohne-secrets.sh, Token-Gegenprobe in lauf.sh) und kommen ins Repo.
+      mkdir -p "$HERE/messung/$(date +%F)-belege"
+      cp "$lokal"/*.txt "$lokal"/manifest.json "$HERE/messung/$(date +%F)-belege/"
+      LAB_VMDIR="$VMDIR" bash "$HERE/umgebung.sh" >"$HERE/messung/$(date +%F)-belege/umgebung.json"
+      echo "Belege: $HERE/messung/$(date +%F)-belege/"
+    fi
   fi
   if [[ "$1" == lauf ]]; then
     local dir; dir="$(tail -n 1 <<<"$ausgabe")"
@@ -341,7 +360,7 @@ case "${1:-}" in
   stop) vms_stop ;;
   start) vms_start ;;
   groessen) groessen_waehlen ;;
-  kalibrierung | lauf) im_app_host "$1" ;;
+  kalibrierung | lauf | kontrolle | belege) im_app_host "$1" ;;
   pruefen) pruefen ;;
   status) bash "$HERE/vm/vm-linux.sh" status ;;
   umgebung) LAB_VMDIR="$VMDIR" bash "$HERE/umgebung.sh" ;;

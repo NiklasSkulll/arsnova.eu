@@ -6,6 +6,9 @@
 #   lauf.sh kalibrierung   eine nicht gewertete Anfrage an eine frische Runtime, Timeout nach Regel
 #   lauf.sh lauf           Mitschnitt auf beiden Hosts, n Aufträge, Zeitzerlegung, Kontrolle C0
 #   lauf.sh auswerten DIR  nur die Auswertung auf vorhandenen Rohdaten wiederholen
+#   lauf.sh kontrolle      C0: kurze Anfrage je 30-mal vom llm-host und vom app-host (Nachtrag M2)
+#   lauf.sh belege         ufw, ss -ltnp, chrony, tcpdump zur NAT-Annahme, .env ohne Secrets, Manifest (M1)
+#   LAB_RUNTIME_AUS=1 lauf.sh lauf   B0: Aufträge bei gestoppter Runtime (Nachtrag M3)
 #
 # Umgebung (Standard): LAB_N (10, höchstens 10 je frischer Runtime, ADR 1B-007), LAB_TAG,
 # LAB_TIMEOUT_MS (90000), LAB_OUTDIR (~/labor-1b), LAB_BODY (Prompt-Body für die Kalibrierung,
@@ -70,6 +73,93 @@ kalibrierung() {
   echo "$f"
 }
 
+# Kurze Anfrage für C0 (Design-Nachtrag 2026-11-13, M2): misst Strecke und Server, kaum Inferenz.
+KURZ='{"model":"qwen3-4b-instruct-2507-q4_k_m","messages":[{"role":"system","content":"Antworte nur mit dem Wort bereit."},{"role":"user","content":"Kurzer technischer Bereitschaftstest."}],"temperature":0,"max_tokens":16,"stream":false,"reasoning_effort":"none","chat_template_kwargs":{"enable_thinking":false}}'
+C0_FORMAT='%{time_connect} %{time_starttransfer} %{time_total} %{http_code}'
+
+kontrolle() { # M2: dieselbe kurze Anfrage je 30-mal vom llm-host an sich selbst und vom app-host, abwechselnd
+  vorbereiten
+  local n="${LAB_N_C0:-30}" id out i
+  id="$(date +%Y%m%dT%H%M%S)-kontrolle-c0"
+  out="$OUTBASE/$id"
+  mkdir -p "$out"
+  runtime_frisch
+  local t_app; t_app="$(sed -n 's/^OPEN_WEIGHT_LLM_TOKEN=//p' .env.production)"
+  log "C0: $n kurze Anfragen je Seite, abwechselnd"
+  for ((i = 1; i <= n; i++)); do
+    "${LLM[@]}" "T=\$(sed -n 's/^OPEN_WEIGHT_LLM_TOKEN=//p' arsnova.eu/.env.llm); curl -sS -o /dev/null -w '$C0_FORMAT' -H \"Authorization: Bearer \$T\" -H 'Content-Type: application/json' --data-binary @- http://$LLM_IP:8080/v1/chat/completions; echo" <<<"$KURZ" >>"$out/llm.txt"
+    curl -sS -o /dev/null -w "$C0_FORMAT" -H "Authorization: Bearer $t_app" -H 'Content-Type: application/json' \
+      --data-binary "$KURZ" "http://$LLM_IP:8080/v1/chat/completions" >>"$out/app.txt"
+    echo >>"$out/app.txt"
+  done
+  # Sekunden → ms; Median wie zeitzerlegung.mjs (gerade Anzahl: Mittel der beiden mittleren Werte).
+  jq -n --arg id "$id" --arg commit "$(git rev-parse HEAD)" --arg profil "${LAB_PROFIL_IST:-unbekannt}" \
+    --rawfile app "$out/app.txt" --rawfile llm "$out/llm.txt" '
+    def zeilen: split("\n") | map(select(length > 0) | split(" ") | {connectMs: (.[0] | tonumber * 1000), ttfbMs: (.[1] | tonumber * 1000), totalMs: (.[2] | tonumber * 1000), http: (.[3] | tonumber)});
+    def median: sort | if length % 2 == 1 then .[length / 2 | floor] else (.[length / 2 - 1] + .[length / 2]) / 2 end;
+    ($app | zeilen) as $a | ($llm | zeilen) as $l |
+    {lauf: $id, art: "kontrolle-c0", commit: $commit, energieprofil: $profil, n: ($a | length),
+     anfrage: "kurz, max_tokens 16 (Design-Nachtrag 2026-11-13, M2)",
+     vomAppHost: $a, vomLlmHost: $l,
+     kennzahlen: {medianAppMs: ($a | map(.totalMs) | median), medianLlmMs: ($l | map(.totalMs) | median),
+       differenzMs: (($a | map(.totalMs) | median) - ($l | map(.totalMs) | median)),
+       alleHttp200: (($a + $l) | all(.http == 200)),
+       hC0: ((($a | map(.totalMs) | median) - ($l | map(.totalMs) | median)) <= 5 and (($a + $l) | all(.http == 200)))}}' \
+    >"$out/ergebnis.json"
+  jq '.kennzahlen' "$out/ergebnis.json" >&2
+  runtime_frisch
+  echo "$out"
+}
+
+belege() { # M1: Netz-, Uhren- und Reproduktionsbelege ohne Secrets (Dossier 10.6)
+  vorbereiten
+  local id out
+  id="$(date +%Y%m%dT%H%M%S)-belege"
+  out="$OUTBASE/$id"
+  mkdir -p "$out"
+  log "Belege nach $out"
+  { sudo ufw status verbose 2>&1 || echo "(ufw nicht aktiv oder nicht installiert)"; } >"$out/app-ufw.txt"
+  "${LLM[@]}" 'sudo ufw status verbose' >"$out/llm-ufw.txt" 2>&1
+  sudo ss -ltnp >"$out/app-ss-ltnp.txt" 2>&1
+  "${LLM[@]}" 'sudo ss -ltnp' >"$out/llm-ss-ltnp.txt" 2>&1
+  chronyc tracking >"$out/app-chrony.txt" 2>&1 || true
+  "${LLM[@]}" 'chronyc tracking' >"$out/llm-chrony.txt" 2>&1 || true
+  # NAT-Annahme: eine Anfrage aus dem App-Container erscheint am llm-host mit der Adresse des app-hosts.
+  # Nur Kopfzeilen (-q, keine Nutzdaten), ohne Token (die Antwort 401 genügt für die Adressen).
+  "${LLM[@]}" "IF=\$(ip -o route get $APP_IP | awk '{for(i=1;i<=NF;i++) if(\$i==\"dev\") print \$(i+1)}'); sudo timeout 25 tcpdump -nn -q -l -c 6 -i \"\$IF\" 'tcp port 8080' > /tmp/1b-nat.txt 2>/dev/null &"
+  sleep 3
+  docker exec arsnova-v3-app node -e "fetch('http://$LLM_IP:8080/health').then(r => console.log('HTTP ' + r.status)).catch(e => console.log(String(e)))" >"$out/app-container-anfrage.txt" 2>&1
+  sleep 5
+  "${LLM[@]}" 'sleep 2; cat /tmp/1b-nat.txt; rm -f /tmp/1b-nat.txt' >"$out/llm-tcpdump-nat.txt" 2>&1
+  bash "$EV/env-ohne-secrets.sh" <.env.production >"$out/app-env-production-ohne-secrets.txt"
+  "${LLM[@]}" 'cat arsnova.eu/.env.llm' | bash "$EV/env-ohne-secrets.sh" >"$out/llm-env-llm-ohne-secrets.txt"
+  local llm_img llm_args
+  llm_img="$("${LLM[@]}" "docker inspect -f '{{.Config.Image}}' arsnova-open-weight-llm")"
+  llm_args="$("${LLM[@]}" "docker inspect -f '{{json .Args}}' arsnova-open-weight-llm" | sed 's/"--api-key","[^"]*"/"--api-key","(nicht ausgegeben)"/')"
+  jq -n --arg commit "$(git rev-parse HEAD)" --arg appImage "$(docker inspect -f '{{.Config.Image}}' arsnova-v3-app)" \
+    --arg llmImage "$llm_img" --argjson llmArgs "$llm_args" --slurpfile modell docker/open-weight-llm/model-manifest.json \
+    '{commit: $commit, appImage: $appImage, llmImage: $llmImage, llamaServerArgs: $llmArgs,
+      modell: {datei: $modell[0].filename, sha256: $modell[0].sha256}}' >"$out/manifest.json"
+  # Kein Token darf in den Belegen stehen (Gegenprobe gegen beide Token-Werte).
+  local t1 t2
+  t1="$(sed -n 's/^OPEN_WEIGHT_LLM_TOKEN=//p' .env.production)"
+  t2="$("${LLM[@]}" "sed -n 's/^OPEN_WEIGHT_LLM_TOKEN=//p' arsnova.eu/.env.llm")"
+  if grep -rqF -e "$t1" -e "$t2" "$out"; then echo "Token in den Belegen gefunden: Abbruch" >&2; rm -rf "$out"; exit 1; fi
+  log "Belege fertig (Token-Gegenprobe ok)"
+  echo "$out"
+}
+
+b0_auswerten() { # app.log → je Auftrag effectiveMode, fallbackReason, latencyMs (Runtime aus, M3)
+  node -e '
+    const t = require("fs").readFileSync(process.argv[1], "utf8");
+    const r = [...t.matchAll(/qa_summary:completed \{([^}]*)\}/g)].map((m) => ({
+      effectiveMode: (m[1].match(/effectiveMode: .([a-z-]+)/) || [])[1] ?? null,
+      fallbackReason: (m[1].match(/fallbackReason: .([a-z_]+)/) || [])[1] ?? null,
+      latencyMs: Number((m[1].match(/latencyMs: (\d+)/) || [])[1]),
+    }));
+    console.log(JSON.stringify(r));' "$1"
+}
+
 aufraeumen() { # Mitschnitte und Speicherschleife stoppen; auch nach Abbruch (trap)
   sudo pkill -INT -f '^tcpdump .*-w .*labor-1b/.*/app\.pcap' 2>/dev/null || true
   "${LLM[@]}" "sudo pkill -INT -f '^tcpdump .*-w /tmp/1b-srv\.pcap' 2>/dev/null; [ -f /tmp/1b-mem.pid ] && kill \$(cat /tmp/1b-mem.pid) 2>/dev/null; pkill -f '1b-mem\.csv' 2>/dev/null; rm -f /tmp/1b-mem.pid; true" 2>/dev/null || true
@@ -123,6 +213,8 @@ lauf() {
     -e "s/^OPEN_WEIGHT_LLM_SUMMARY_TIMEOUT_MS=.*/OPEN_WEIGHT_LLM_SUMMARY_TIMEOUT_MS=$timeout/" .env.production
   bash "$EV/app-start.sh" </dev/null >"$out/app-start.log" 2>&1
   runtime_frisch
+  local aus="${LAB_RUNTIME_AUS:-}"
+  if [[ -n "$aus" ]]; then log "B0: Runtime stoppen"; "${LLM[@]}" 'docker stop arsnova-open-weight-llm' >&2; fi
 
   aufraeumen
   "${LLM[@]}" 'rm -f /tmp/1b-srv.pcap /tmp/1b-mem.csv'
@@ -143,16 +235,26 @@ lauf() {
   "${LLM[@]}" 'cat /tmp/1b-srv.pcap; rm -f /tmp/1b-srv.pcap' >"$out/srv.pcap"
   docker logs --since "$start" arsnova-v3-app >"$out/app.log" 2>&1
 
-  local auswertung=ok
-  auswerten "$out" || { auswertung=fehlgeschlagen; log "Auswertung fehlgeschlagen; Rohdaten bleiben, später: lauf.sh auswerten $out"; }
-  [[ -f "$out/zerlegung.json" && "$auswertung" == ok ]] || echo '{"fehler":"Auswertung fehlgeschlagen"}' >"$out/zerlegung.json"
+  local auswertung=ok c0='' c0t=null b0='null'
+  if [[ -n "$aus" ]]; then
+    # B0: ohne Runtime gibt es keine POSTs und keine timings; ausgewertet wird das App-Log.
+    auswertung=b0
+    b0="$(b0_auswerten "$out/app.log" | jq '{auftraege: ., kennzahlen: {n: length,
+      medianJobMs: (map(.latencyMs) | sort | if length % 2 == 1 then .[length / 2 | floor] else (.[length / 2 - 1] + .[length / 2]) / 2 end),
+      alleUnavailable: all(.effectiveMode == "extractive" and .fallbackReason == "unavailable")}}
+      | .kennzahlen.hB0 = (.kennzahlen.alleUnavailable and .kennzahlen.medianJobMs <= 2000)')"
+    echo '{"hinweis":"B0: Runtime aus, keine Zeitzerlegung"}' >"$out/zerlegung.json"
+    runtime_frisch
+  else
+    auswerten "$out" || { auswertung=fehlgeschlagen; log "Auswertung fehlgeschlagen; Rohdaten bleiben, später: lauf.sh auswerten $out"; }
+    [[ -f "$out/zerlegung.json" && "$auswertung" == ok ]] || echo '{"fehler":"Auswertung fehlgeschlagen"}' >"$out/zerlegung.json"
 
-  # Kontrolle C0 (Design 5) an einer frischen Runtime: sonst bekäme sie n + 1 Anfragen (ADR 1B-007).
-  runtime_frisch
-  log "Kontrolle C0: erster Prompt direkt im llm-host"
-  local c0='' c0t=null
-  if [[ -s "$out/body.json" ]]; then c0="$(direkt <"$out/body.json")" || c0=''; fi
-  jq -e 'type == "object"' >/dev/null 2>&1 <<<"$(tail -n 1 <<<"$c0")" && c0t="$(tail -n 1 <<<"$c0")"
+    # Kontrolle C0 (Design 5) an einer frischen Runtime: sonst bekäme sie n + 1 Anfragen (ADR 1B-007).
+    runtime_frisch
+    log "Kontrolle C0: erster Prompt direkt im llm-host"
+    if [[ -s "$out/body.json" ]]; then c0="$(direkt <"$out/body.json")" || c0=''; fi
+    jq -e 'type == "object"' >/dev/null 2>&1 <<<"$(tail -n 1 <<<"$c0")" && c0t="$(tail -n 1 <<<"$c0")"
+  fi
 
   local llm_info app_img
   llm_info="$("${LLM[@]}" "docker inspect -f '{{json .Config.Image}} {{json .Args}}' arsnova-open-weight-llm; nproc; free -g | awk '/^Mem:/ {print \$2}'")"
@@ -164,8 +266,8 @@ lauf() {
     --arg modellSha "$(jq -r .sha256 docker/open-weight-llm/model-manifest.json)" \
     --slurpfile treiber "$out/treiber.json" --slurpfile zerlegung "$out/zerlegung.json" \
     --arg c0curl "$(head -n 1 <<<"$c0")" --argjson c0timings "$c0t" --arg auswertung "$auswertung" \
-    --rawfile speicher "$out/speicher.csv" \
-    '{lauf: $id, tag: $tag, n: $n, auswertung: $auswertung, timeoutMs: $timeout, commit: $commit, rechner: $rechner, energieprofil: $profil,
+    --rawfile speicher "$out/speicher.csv" --argjson b0 "$b0" \
+    '{lauf: $id, tag: $tag, n: $n, auswertung: $auswertung, b0: $b0, timeoutMs: $timeout, commit: $commit, rechner: $rechner, energieprofil: $profil,
       appHost: {vcpu: ($appVcpu | tonumber), image: $appImage},
       llmHost: {info: $llmInfo, modellSha256: $modellSha},
       treiber: $treiber[0], zerlegung: $zerlegung[0],
@@ -181,6 +283,8 @@ case "${1:-}" in
   vorbereiten) vorbereiten ;;
   kalibrierung) kalibrierung ;;
   lauf) lauf ;;
+  kontrolle) kontrolle ;;
+  belege) belege ;;
   auswerten) auswerten "${2:?Verzeichnis fehlt}" ;;
-  *) echo "Aufruf: $0 vorbereiten|kalibrierung|lauf|auswerten DIR" >&2; exit 2 ;;
+  *) echo "Aufruf: $0 vorbereiten|kalibrierung|lauf|kontrolle|belege|auswerten DIR" >&2; exit 2 ;;
 esac
