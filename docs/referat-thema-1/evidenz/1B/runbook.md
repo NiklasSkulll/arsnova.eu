@@ -99,13 +99,13 @@ _Ergänzt 2026-11-13, aktualisiert am selben Tag._ Stand für Störversuche und 
 
 **Vorbereitung (einmal):**
 
-1. Repo aktualisieren, Branch `feature-1B-two-host` (bis zum Merge). Es darf ein Clone unter Windows sein oder der vorhandene in WSL; WSL selbst braucht das Labor nicht.
-2. **PowerShell als Administrator** öffnen (Rechtsklick > „Als Administrator ausführen“) und in den Ordner `docs\referat-thema-1\evidenz\1B` des Clones wechseln, etwa `cd \\wsl.localhost\Ubuntu\home\<nutzer>\arsnova.eu\docs\referat-thema-1\evidenz\1B`.
-3. `powershell -ExecutionPolicy Bypass -File .\labor.ps1 -Mode vorpruefung`: prüft alles, ändert nichts, und sagt zu jedem `FEHLER`, was zu tun ist. Typisch beim ersten Mal: Hyper-V ist aus. Dann denselben Befehl mit `-EnableHyperV` am Ende, Windows **neu starten**, Schritt 3 wiederholen.
+1. Repo aktualisieren, Branch `feature-1B-two-host` (bis zum Merge). Liegt der Clone in WSL unter `/mnt/d/…`, ist das unter Windows einfach `D:\…`; WSL selbst braucht das Labor nicht.
+2. **PowerShell als Administrator** öffnen (Rechtsklick > „Als Administrator ausführen“) und in den Ordner `docs\referat-thema-1\evidenz\1B` des Clones wechseln, etwa `cd D:\<projekte>\arsnova.eu\docs\referat-thema-1\evidenz\1B` (ein Clone nur im WSL-Dateisystem geht auch über `\\wsl.localhost\Ubuntu\…`).
+3. `powershell -ExecutionPolicy Bypass -File .\labor.ps1 -Mode vorpruefung`: fragt zuerst, wohin die VM-Disks sollen (zeigt den freien Platz je Laufwerk und empfiehlt das mit dem meisten, etwa `D:\arsnova-1b`; die Wahl gilt für alle späteren Aufrufe, ändern mit `-VmDir`), prüft dann alles, ändert nichts, und sagt zu jedem `FEHLER`, was zu tun ist. Typisch beim ersten Mal: Hyper-V ist aus. Dann denselben Befehl mit `-EnableHyperV` am Ende, Windows **neu starten**, Schritt 3 wiederholen.
 
 **Aufbau:**
 
-4. `powershell -ExecutionPolicy Bypass -File .\labor.ps1 -Mode up`: zeigt die Empfehlung und was dem Rechner bleibt, fragt einmal, dann läuft es allein (etwa 45–60 min; jeder Schritt mit `[n/8]` und Zeit). Wer erst sehen will, was angelegt wird: zuerst mit `-NurVorbereiten` (startet keine VM).
+4. `powershell -ExecutionPolicy Bypass -File .\labor.ps1 -Mode up`: zeigt die Empfehlung und was dem Rechner bleibt, fragt einmal, dann läuft es allein (etwa 45–60 min; jeder Schritt mit `[n/11]`, Zeit seit Beginn und geschätzter Restzeit). Solange das Fenster offen ist, geht der Rechner nicht in den Ruhezustand; Netzteil anschließen. Wer erst sehen will, was angelegt wird: zuerst mit `-NurVorbereiten` (startet keine VM).
 5. Bricht es ab, steht da, in welchem Schritt, warum und was zu tun ist, dazu der Pfad zum Log. Nach dem Beheben denselben Befehl erneut aufrufen; Fertiges wird übersprungen. Bei Fragen das Log schicken (enthält keine Tokens).
 6. Am Ende muss der Bericht nur `OK`-Zeilen enthalten; ihn aus `%USERPROFILE%\labor-1b\` ins eigene Aufbauprotokoll übernehmen. Der Start der VMs unter Hyper-V läuft hier zum ersten Mal auf echter Hardware; jede Abweichung notieren.
 

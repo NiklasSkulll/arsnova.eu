@@ -51,6 +51,7 @@ param(
   [ValidateRange(25, 2048)][int]$AppDiskGB = 25,
   [ValidateRange(2, 64)][int]$RamReserveGB = 4,
   [switch]$NurVorbereiten,
+  [ValidateRange(0, 20)][int]$GesamtSchritte = 0,   # labor.ps1 zaehlt weiter (9-11)
   [switch]$EnableHyperV,
   [switch]$NoSecureBoot
 )
@@ -83,14 +84,17 @@ $script:Beginn = Get-Date
 $script:Schritt = 0
 $script:Schritte = 1
 $script:SchrittName = ''
+$script:Plan = $null
 
 function Write-Step([string]$Text, [string]$Dauer = '') {
   $script:Schritt++
   $script:SchrittName = $Text
   $z = Format-Dauer ((Get-Date) - $script:Beginn)
   $d = if ($Dauer) { " (dauert $Dauer)" } else { '' }
+  $r = ''
+  if ($script:Plan) { $r = ", noch etwa $(Format-Dauer (Get-Restzeit -Plan $script:Plan -Erledigt ($script:Schritt - 1)))" }
   Write-Host ''
-  Write-Host "[$($script:Schritt)/$($script:Schritte)] $Text$d   - seit Beginn $z" -ForegroundColor Cyan
+  Write-Host "[$($script:Schritt)/$($script:Schritte)] $Text$d   - seit Beginn $z$r" -ForegroundColor Cyan
 }
 function Write-Info([string]$Text) { Write-Host "      $Text" }
 function Write-Warn([string]$Text) { Write-Host "      HINWEIS: $Text" -ForegroundColor Yellow }
@@ -138,7 +142,16 @@ function Get-Fakten {
       ForEach-Object { @{ Name = $_.Name; Prefix = $_.InternalIPInterfaceAddressPrefix } })
   $clash = @(Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
       Where-Object { $_.InterfaceAlias -ne $NetAdapter -and (Test-Overlap "$($_.IPAddress)/32" $NetPrefix) }) | Select-Object -First 1
-  $drive = Get-PSDrive -Name $VmDir.Substring(0, 1)
+  $ort = @{ Pfad = $VmDir; Lokal = $false; Dateisystem = '' }
+  $frei = 0
+  if ($VmDir -match '^([A-Za-z]):\\') {
+    $vol = Get-Volume -DriveLetter $Matches[1] -ErrorAction SilentlyContinue
+    if ($vol) {
+      $ort.Lokal = ([string]$vol.DriveType -eq 'Fixed'); $ort.Dateisystem = [string]$vol.FileSystem
+      $frei = [int][Math]::Floor($vol.SizeRemaining / 1GB)
+    }
+  }
+  $akku = [bool](@(Get-CimInstance Win32_Battery -ErrorAction SilentlyContinue) | Where-Object { $_.BatteryStatus -eq 1 }).Count
   $plan = $LlmDiskGB + $AppDiskGB
   # Beim Fortsetzen belegen vorhandene VMs ihren Platz schon; dann keine Plattenschwelle.
   $vorhanden = (Get-Command Get-VM -ErrorAction SilentlyContinue) -and (Get-VM -Name 'arsnova-1b-*' -ErrorAction SilentlyContinue)
@@ -152,8 +165,8 @@ function Get-Fakten {
     Ssh = [bool]((Get-Command ssh.exe -ErrorAction SilentlyContinue) -and (Get-Command scp.exe -ErrorAction SilentlyContinue))
     Tar = [bool](Get-Command tar.exe -ErrorAction SilentlyContinue)
     AndereNat = $nats; Adresskonflikt = $(if ($clash) { "$($clash.IPAddress) auf '$($clash.InterfaceAlias)'" } else { $null })
-    PlatteFreiGib = [int][Math]::Floor($drive.Free / 1GB); PlatteNoetigGib = $(if ($vorhanden) { 0 } else { [Math]::Min(31, $plan) + 10 })
-    Internet = $internet; DnsExtern = $dns
+    PlatteFreiGib = $frei; PlatteNoetigGib = $(if ($vorhanden) { 0 } else { [Math]::Min(31, $plan) + 10 })
+    Internet = $internet; DnsExtern = $dns; Speicherort = $ort; Akku = $akku
   }
 }
 
@@ -180,6 +193,7 @@ function Invoke-Vorpruefung {
   if ($fatal.Count -gt 0) {
     throw "Vorpruefung: $($fatal.Count) Punkt(e) muessen behoben werden (siehe -> oben). Es wurde nichts veraendert."
   }
+  New-Item -ItemType Directory -Force -Path $VmDir | Out-Null
   Initialize-SshKey
 }
 
@@ -515,8 +529,10 @@ function Invoke-Start {
 }
 
 function Invoke-Up {
-  $script:Schritte = if ($NurVorbereiten) { 5 } else { 8 }
-  New-Item -ItemType Directory -Force -Path $VmDir | Out-Null
+  $script:Schritte = if ($NurVorbereiten) { 5 } elseif ($GesamtSchritte) { $GesamtSchritte } else { 8 }
+  $voll = Get-LaborPlan
+  $script:Plan = $voll[0..([Math]::Min($script:Schritte, $voll.Count) - 1)]
+  Write-Host "Ablauf: $($script:Schritte) Schritte, geschaetzt etwa $(Format-Dauer (Get-Restzeit -Plan $script:Plan -Erledigt 0)) (langsame Rechner oder Downloads: mehr). VM-Ordner: $VmDir"
   Invoke-Vorpruefung
   Initialize-Network
   Initialize-Image

@@ -203,6 +203,21 @@ function Get-VorpruefungUrteil {
     }
   }
 
+  if ($f.ContainsKey('Akku') -and $f.Akku) {
+    Add 'Strom' 'HINWEIS' 'Der Rechner laeuft auf Akku' 'Netzteil anschliessen: Aufbau und Laeufe dauern lange, im Akkubetrieb drosselt Windows die CPU.'
+  }
+
+  if ($f.ContainsKey('Speicherort') -and $f.Speicherort) {
+    $o = $f.Speicherort
+    if (-not $o.Lokal) {
+      Add 'Speicherort' 'FEHLER' "VM-Ordner $($o.Pfad) liegt nicht auf einem lokalen Laufwerk" 'Hyper-V braucht ein lokales Laufwerk: -VmDir auf z. B. D:\arsnova-1b setzen.'
+    }
+    elseif ($o.Dateisystem -notin @('NTFS', 'ReFS')) {
+      Add 'Speicherort' 'FEHLER' "VM-Ordner $($o.Pfad) liegt auf $($o.Dateisystem)" 'Hyper-V-Disks brauchen NTFS oder ReFS (nicht exFAT/FAT32): anderes Laufwerk mit -VmDir waehlen.'
+    }
+    else { Add 'Speicherort' 'OK' "VM-Ordner $($o.Pfad) ($($o.Dateisystem))" }
+  }
+
   if ($f.PlatteFreiGib -lt $f.PlatteNoetigGib) {
     Add 'Platte' 'FEHLER' "Nur $($f.PlatteFreiGib) GB frei" "Mindestens $($f.PlatteNoetigGib) GB frei machen (erwarteter Bedarf plus Reserve)."
   }
@@ -219,6 +234,49 @@ function Get-VorpruefungUrteil {
     else { Add 'Internet' 'FEHLER' "$h nicht erreichbar" "Internetverbindung pruefen; Proxy oder Firewall muss $h (HTTPS) erlauben." }
   }
   return $e.ToArray()
+}
+
+function Get-SpeicherortEmpfehlung {
+  # Laufwerke: @{ Buchstabe; FreiGib; Dateisystem; Typ }. Hyper-V braucht ein lokales NTFS- oder ReFS-Laufwerk.
+  # Empfehlung: das geeignete mit dem meisten freien Platz (C: unter ProgramData, sonst <L>:\arsnova-1b).
+  param([Parameter(Mandatory)][object[]]$Laufwerke)
+  $gut = @($Laufwerke | Where-Object { $_.Typ -eq 'Fixed' -and $_.Dateisystem -in @('NTFS', 'ReFS') } |
+      Sort-Object { $_.FreiGib } -Descending)
+  $schlecht = @($Laufwerke | Where-Object { -not ($_.Typ -eq 'Fixed' -and $_.Dateisystem -in @('NTFS', 'ReFS')) })
+  $empf = $null
+  if ($gut.Count -gt 0) {
+    $b = $gut[0].Buchstabe
+    $empf = if ($b -eq 'C') { 'C:\ProgramData\arsnova-1b' } else { "${b}:\arsnova-1b" }
+  }
+  [pscustomobject]@{ Empfehlung = $empf; Geeignet = $gut; Ungeeignet = $schlecht }
+}
+
+function Get-Restzeit {
+  # Restzeit = Summe der geschaetzten Sekunden aller noch offenen Schritte.
+  param([Parameter(Mandatory)][int[]]$Plan, [Parameter(Mandatory)][int]$Erledigt)
+  $rest = 0
+  for ($i = $Erledigt; $i -lt $Plan.Count; $i++) { $rest += $Plan[$i] }
+  return [TimeSpan]::FromSeconds($rest)
+}
+
+function Get-LaborPlan {
+  # Geschaetzte Sekunden je Schritt von labor.ps1 -Mode up (ThinkPad P50 als Massstab, eher grosszuegig):
+  # 1 Vorpruefung, 2 Netz, 3 Image, 4-5 VMs anlegen, 6 Start, 7 Repo und cloud-init, 8 Stand,
+  # 9 llm-host einrichten, 10 app-host einrichten, 11 Pruefen.
+  return , @(45, 15, 300, 45, 45, 15, 720, 15, 900, 1500, 180)
+}
+
+function Set-WachHalten {
+  # Verhindert Ruhezustand und Standby, solange dieser Prozess laeuft (SetThreadExecutionState,
+  # ES_CONTINUOUS | ES_SYSTEM_REQUIRED). Endet automatisch mit dem Prozess. Nur Windows.
+  [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '',
+    Justification = 'Gilt nur fuer diesen Prozess und endet mit ihm; -WhatIf ist hier nicht vorgesehen.')]
+  param([bool]$An = $true)
+  if (-not ('LaborWach' -as [type])) {
+    Add-Type -Namespace '' -Name 'LaborWach' -MemberDefinition '[DllImport("kernel32.dll")] public static extern uint SetThreadExecutionState(uint esFlags);'
+  }
+  $flags = if ($An) { [uint32]0x80000001 } else { [uint32]0x80000000 }
+  [void][LaborWach]::SetThreadExecutionState($flags)
 }
 
 function Format-Dauer([TimeSpan]$Dauer) {

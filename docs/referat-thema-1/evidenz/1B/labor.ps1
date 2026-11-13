@@ -51,7 +51,7 @@ param(
   [ValidateRange(0, 2048)][int]$AppDiskGB = 0,
   [ValidateRange(2, 64)][int]$RamReserveGB = 4,
   [string]$SshKey = (Join-Path $env:USERPROFILE '.ssh\arsnova-1b_ed25519.pub'),
-  [string]$VmDir = 'C:\ProgramData\arsnova-1b',
+  [string]$VmDir = '',   # leer = gemerkter Ort aus einstellungen.json, beim ersten up wird gefragt
   [switch]$EnableHyperV,
   [switch]$NurVorbereiten,
   [switch]$NoSecureBoot,
@@ -60,6 +60,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'groessen.ps1')
+. (Join-Path $PSScriptRoot 'vm\windows-lib.ps1')
 $VmScript = Join-Path $PSScriptRoot 'vm\vm-windows.ps1'
 $AppIp = '192.168.150.10'
 $LlmIp = '192.168.150.20'
@@ -164,6 +165,7 @@ function Invoke-Vm([string]$Ip, [string]$Command) {
 
 function Invoke-VmScript([hashtable]$Groesse, [string]$VmMode) {
   $a = @{ Mode = $VmMode; SshKey = $SshKey; VmDir = $VmDir }
+  if ($VmMode -eq 'up' -and -not $NurVorbereiten) { $a.GesamtSchritte = 11 }
   if ($EnableHyperV) { $a.EnableHyperV = $true }
   if ($NurVorbereiten -and $VmMode -eq 'up') { $a.NurVorbereiten = $true }
   $a.RamReserveGB = $RamReserveGB
@@ -221,24 +223,66 @@ function Invoke-Pruefen {
   if ($f -ne 0) { throw 'Pruefungen fehlgeschlagen' }
 }
 
+# Speicherort der VM-Disks: gemerkt in einstellungen.json, damit stop/start/destroy ihn wiederfinden.
+function Get-EinstellungenPfad { Join-Path $OutDir 'einstellungen.json' }
+
+function Resolve-LaborVmDir([bool]$Waehlen) {
+  if ($script:VmDir) { return }
+  $p = Get-EinstellungenPfad
+  if (Test-Path $p) {
+    $e = Get-Content -Raw $p | ConvertFrom-Json
+    if ($e.VmDir) { $script:VmDir = [string]$e.VmDir; return }
+  }
+  # Gibt es die VMs schon (aelterer Aufbau), liegt der Ordner dort.
+  if (Get-Command Get-VM -ErrorAction SilentlyContinue) {
+    $v = Get-VM -Name 'arsnova-1b-app' -ErrorAction SilentlyContinue
+    if ($v) { $script:VmDir = [string]$v.Path; return }
+  }
+  if (-not $Waehlen) { $script:VmDir = 'C:\ProgramData\arsnova-1b'; return }
+  $lw = @(Get-Volume -ErrorAction SilentlyContinue | Where-Object { $_.DriveLetter } | ForEach-Object {
+      @{ Buchstabe = [string]$_.DriveLetter; FreiGib = [int][Math]::Floor($_.SizeRemaining / 1GB); Dateisystem = [string]$_.FileSystem; Typ = [string]$_.DriveType } })
+  $e = Get-SpeicherortEmpfehlung -Laufwerke $lw
+  Write-Host ''
+  Write-Host 'Wohin sollen die VM-Disks? (bis etwa 45 GB, real rund 25 GB; Image und Zwischendateien ~8 GB)'
+  foreach ($l in $e.Geeignet) { Write-Host ("  {0}:  {1,5} GB frei  ({2})" -f $l.Buchstabe, $l.FreiGib, $l.Dateisystem) }
+  foreach ($l in $e.Ungeeignet) { Write-Host ("  {0}:  {1,5} GB frei  ({2}, {3}) - ungeeignet fuer Hyper-V" -f $l.Buchstabe, $l.FreiGib, $l.Dateisystem, $l.Typ) }
+  if (-not $e.Empfehlung) { throw 'Kein lokales NTFS- oder ReFS-Laufwerk gefunden; -VmDir angeben.' }
+  $wahl = $e.Empfehlung
+  if (-not $Ja) {
+    $a = Read-Host "Ordner [$wahl]"
+    if (-not [string]::IsNullOrWhiteSpace($a)) { $wahl = $a.Trim() }
+  }
+  $script:VmDir = $wahl
+  Write-Host "VM-Ordner: $wahl (gemerkt in $p; aendern: -VmDir angeben)"
+}
+
+function Save-LaborVmDir {
+  New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
+  @{ VmDir = $script:VmDir } | ConvertTo-Json | Set-Content -Encoding ascii (Get-EinstellungenPfad)
+}
+
+function Write-LaborSchritt([int]$Nr, [string]$Text, [string]$Dauer) {
+  $rest = Format-Dauer (Get-Restzeit -Plan (Get-LaborPlan) -Erledigt ($Nr - 1))
+  Write-Host ''
+  Write-Host "[$Nr/11] $Text (dauert $Dauer) - noch etwa $rest" -ForegroundColor Cyan
+}
+
 function Invoke-LaborUp {
   $g = Select-LaborGroesse
+  Resolve-LaborVmDir $true
+  Save-LaborVmDir
   Invoke-VmScript $g 'up'
   if ($NurVorbereiten) { return }
-  $t0 = Get-Date
-  Write-Host ''
-  Write-Host '[Einrichtung 1/3] llm-host: Runtime-Image bauen, Modell (2,4 GB) laden und pruefen, starten (dauert 5-20 min)' -ForegroundColor Cyan
+  Write-LaborSchritt 9 'llm-host einrichten: Runtime-Image bauen, Modell (2,4 GB) laden und pruefen, starten' '5-20 min'
   if ((Invoke-Vm $LlmIp "bash arsnova.eu/$Ev/llm-start.sh") -ne 0) {
     throw "llm-start.sh im llm-host fehlgeschlagen (Ausgabe oben). Erneut: labor.ps1 -Mode up (setzt fort)."
   }
-  Write-Host ''
-  Write-Host "[Einrichtung 2/3] app-host: App-Image bauen, Datenbank, Start (dauert 15-30 min) - seit Beginn der Einrichtung $([int]((Get-Date) - $t0).TotalMinutes) min" -ForegroundColor Cyan
+  Write-LaborSchritt 10 'app-host einrichten: App-Image bauen, Datenbank, Start' '15-30 min'
   $o = Get-SshArg
   & ssh.exe @o "labor@$LlmIp" "sed -n 's/^OPEN_WEIGHT_LLM_TOKEN=//p' arsnova.eu/.env.llm" |
     & ssh.exe @o "labor@$AppIp" "bash arsnova.eu/$Ev/app-start.sh" | Out-Host
   if ($LASTEXITCODE -ne 0) { throw 'app-start.sh im app-host fehlgeschlagen (Ausgabe oben). Erneut: labor.ps1 -Mode up (setzt fort).' }
-  Write-Host ''
-  Write-Host "[Einrichtung 3/3] alles pruefen - Einrichtung dauerte $([int]((Get-Date) - $t0).TotalMinutes) min" -ForegroundColor Cyan
+  Write-LaborSchritt 11 'alles pruefen' '1-3 min'
   Invoke-Pruefen
   Write-Host ''
   Write-Host 'Fertig. Zwischen den Sitzungen: labor.ps1 -Mode stop; danach -Mode start.' -ForegroundColor Green
@@ -328,6 +372,11 @@ if ($MyInvocation.InvocationName -ne '.') {
   if ($mitLog) { Start-Transcript -Path $log | Out-Null }
   $code = 0
   try {
+  # Vor vorpruefung und up den Speicherort waehlen (Empfehlung: Laufwerk mit dem meisten Platz) und merken.
+  Resolve-LaborVmDir ($Mode -in @('up', 'vorpruefung'))
+  if ($Mode -eq 'vorpruefung') { Save-LaborVmDir }
+  # Kein Ruhezustand, solange Aufbau oder Messung laeuft (endet mit diesem Fenster).
+  if ($Mode -in @('up', 'start', 'kalibrierung', 'lauf')) { try { Set-WachHalten $true } catch { Write-Host "HINWEIS: Ruhezustand nicht gesperrt ($($_.Exception.Message))" } }
   switch ($Mode) {
     'vorpruefung' { Invoke-VmScript $null 'pruefen' }
     'up' { Invoke-LaborUp }

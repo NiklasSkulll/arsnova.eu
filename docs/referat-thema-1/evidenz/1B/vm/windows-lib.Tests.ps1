@@ -182,6 +182,13 @@ Describe 'Get-VorpruefungUrteil' {
     ($e | Where-Object { $_.Pruefung -eq $pruefung -and $_.Status -eq 'FEHLER' }).Abhilfe | Should -BeLike $abhilfe
   }
 
+  It 'weist auf Akkubetrieb hin, ohne abzubrechen' {
+    $e = Get-VorpruefungUrteil (Fakten @{ Akku = $true })
+    Fatal $e | Should -Be ''
+    ($e | Where-Object { $_.Pruefung -eq 'Strom' }).Status | Should -Be 'HINWEIS'
+    ($e | Where-Object { $_.Pruefung -eq 'Strom' }).Abhilfe | Should -BeLike '*Netzteil*'
+  }
+
   It 'warnt bei einem anderen, nicht ueberlappenden NAT nur' {
     $e = Get-VorpruefungUrteil (Fakten @{ AndereNat = @(@{ Name = 'docker'; Prefix = '172.20.0.0/16' }) })
     Fatal $e | Should -Be ''
@@ -227,5 +234,53 @@ Describe 'ConvertFrom-Qcow2' {
     [IO.File]::WriteAllBytes($p, [byte[]]::new(4096))
     try { { ConvertFrom-Qcow2 -Pfad $p -Ziel "$p.raw" } | Should -Throw '*kein qcow2*' }
     finally { Remove-Item -Force $p, "$p.raw" -ErrorAction SilentlyContinue }
+  }
+}
+
+Describe 'Get-SpeicherortEmpfehlung' {
+  It 'empfiehlt das lokale NTFS-Laufwerk mit dem meisten Platz' {
+    $l = @(
+      @{ Buchstabe = 'C'; FreiGib = 20; Dateisystem = 'NTFS'; Typ = 'Fixed' }
+      @{ Buchstabe = 'D'; FreiGib = 300; Dateisystem = 'NTFS'; Typ = 'Fixed' }
+      @{ Buchstabe = 'E'; FreiGib = 900; Dateisystem = 'exFAT'; Typ = 'Removable' }
+    )
+    $e = Get-SpeicherortEmpfehlung -Laufwerke $l
+    $e.Empfehlung | Should -Be 'D:\arsnova-1b'
+    @($e.Geeignet | ForEach-Object { $_.Buchstabe }) -join ',' | Should -Be 'D,C'
+    @($e.Ungeeignet | ForEach-Object { $_.Buchstabe }) -join ',' | Should -Be 'E'
+  }
+
+  It 'nimmt C mit ProgramData, wenn C das beste Laufwerk ist' {
+    $e = Get-SpeicherortEmpfehlung -Laufwerke @(@{ Buchstabe = 'C'; FreiGib = 200; Dateisystem = 'NTFS'; Typ = 'Fixed' })
+    $e.Empfehlung | Should -Be 'C:\ProgramData\arsnova-1b'
+  }
+
+  It 'akzeptiert ReFS und meldet, wenn kein Laufwerk taugt' {
+    $e = Get-SpeicherortEmpfehlung -Laufwerke @(@{ Buchstabe = 'F'; FreiGib = 100; Dateisystem = 'ReFS'; Typ = 'Fixed' })
+    $e.Empfehlung | Should -Be 'F:\arsnova-1b'
+    (Get-SpeicherortEmpfehlung -Laufwerke @(@{ Buchstabe = 'G'; FreiGib = 100; Dateisystem = 'FAT32'; Typ = 'Fixed' })).Empfehlung | Should -BeNullOrEmpty
+  }
+}
+
+Describe 'Get-VorpruefungUrteil Speicherort' {
+  It 'lehnt <name> ab' -ForEach @(
+    @{ name = 'Netzpfad'; ort = @{ Pfad = '\\server\share\vm'; Lokal = $false; Dateisystem = 'NTFS' }; abhilfe = '*lokales Laufwerk*' }
+    @{ name = 'exFAT'; ort = @{ Pfad = 'E:\arsnova-1b'; Lokal = $true; Dateisystem = 'exFAT' }; abhilfe = '*NTFS*' }
+  ) {
+    $f = @{ Admin = $true; Edition = 'Professional'; HyperV = 'Enabled'; HypervisorLaeuft = $true; VirtualisierungFirmware = $null
+      HyperVModul = $true; Ssh = $true; Tar = $true; AndereNat = @(); Adresskonflikt = $null; PlatteFreiGib = 120; PlatteNoetigGib = 41
+      Internet = @{}; Speicherort = $ort }
+    $e = Get-VorpruefungUrteil $f
+    ($e | Where-Object { $_.Pruefung -eq 'Speicherort' }).Status | Should -Be 'FEHLER'
+    ($e | Where-Object { $_.Pruefung -eq 'Speicherort' }).Abhilfe | Should -BeLike $abhilfe
+  }
+}
+
+Describe 'Get-Restzeit' {
+  It 'summiert die Schaetzungen der noch offenen Schritte' {
+    $plan = @(60, 120, 600, 1200)
+    Get-Restzeit -Plan $plan -Erledigt 0 | Should -Be ([TimeSpan]::FromSeconds(1980))
+    Get-Restzeit -Plan $plan -Erledigt 2 | Should -Be ([TimeSpan]::FromSeconds(1800))
+    Get-Restzeit -Plan $plan -Erledigt 4 | Should -Be ([TimeSpan]::Zero)
   }
 }
