@@ -20,6 +20,7 @@ import {
 } from '@arsnova/shared-types';
 import { createHttpTrpcSingle } from '../../../../scripts/load/lib/trpc-runtime.mjs';
 import { configureQaSessionIfNeeded } from '../../../../scripts/load/lib/configure-qa-if-needed.mjs';
+import { hostZugang } from './hostzugang.mjs';
 
 const { values: arg } = parseArgs({
   options: {
@@ -49,17 +50,18 @@ const log = (text) => process.stderr.write(`${jetzt()} ${text}\n`);
 
 async function szenarioAnlegen() {
   const oeffentlich = createHttpTrpcSingle(arg.trpc);
-  const { code, hostToken, sessionId } = await oeffentlich.session.create.mutate({
-    type: 'Q_AND_A',
-    title: `1B Referenzszenario ${Date.now()}`,
-    moderationMode: false,
-    qaModerationMode: false,
-    quickFeedbackEnabled: false,
-    allowCustomNicknames: true,
-    nicknameTheme: 'HIGH_SCHOOL',
-    anonymousMode: false,
-    teamMode: false,
-  });
+  const { code, hostToken, hostBrowserCapability, sessionId } =
+    await oeffentlich.session.create.mutate({
+      type: 'Q_AND_A',
+      title: `1B Referenzszenario ${Date.now()}`,
+      moderationMode: false,
+      qaModerationMode: false,
+      quickFeedbackEnabled: false,
+      allowCustomNicknames: true,
+      nicknameTheme: 'HIGH_SCHOOL',
+      anonymousMode: false,
+      teamMode: false,
+    });
   const host = createHttpTrpcSingle(arg.trpc, hostToken);
   await configureQaSessionIfNeeded(host, code, { qaTitle: '1B Referenzszenario' });
 
@@ -159,20 +161,40 @@ async function szenarioAnlegen() {
       throw new Error(`Frage ${r.key}: netto ${q.upvoteCount}, Fixture ${r.net}`);
     }
   }
-  return { host, sessionId, stimmen };
+  // Host-Tokens laufen nach 15 min ab; nach 10 min ein neues wie das Frontend (hostzugang.mjs).
+  const zugang = hostZugang({
+    start: hostToken,
+    erneuern: async () => {
+      const r = await oeffentlich.session.issueHostAccessToken.mutate({
+        code,
+        browserCapability: hostBrowserCapability,
+      });
+      log('Host-Token erneuert');
+      return r.hostToken;
+    },
+    jetztMs: () => performance.now(),
+    maxAlterMs: 10 * 60_000,
+  });
+  let aktuell = { token: hostToken, client: host };
+  const hostClient = async () => {
+    const token = await zugang();
+    if (token !== aktuell.token) aktuell = { token, client: createHttpTrpcSingle(arg.trpc, token) };
+    return aktuell.client;
+  };
+  return { hostClient, sessionId, stimmen };
 }
 
-async function auftrag(host, sessionId, index) {
+async function auftrag(hostClient, sessionId, index) {
   const requestedAt = jetzt();
   const t0 = performance.now();
-  const r0 = await host.qa.requestSummary.mutate({ sessionId, locale: arg.locale });
+  const r0 = await (await hostClient()).qa.requestSummary.mutate({ sessionId, locale: arg.locale });
   const hostReturnMs = Math.round(performance.now() - t0);
   let rt = r0;
   while (rt.result?.status === 'pending' || rt.result === null) {
     if (performance.now() - t0 > warteMaxMs)
       throw new Error(`Auftrag ${index}: kein Endstatus nach ${warteMaxMs} ms`);
     await schlafe(1000);
-    rt = await host.qa.summaryRuntime.query({ sessionId });
+    rt = await (await hostClient()).qa.summaryRuntime.query({ sessionId });
   }
   const e = rt.result.execution;
   return {
@@ -193,13 +215,13 @@ async function auftrag(host, sessionId, index) {
 }
 
 const startedAt = jetzt();
-const { host, sessionId, stimmen } = await szenarioAnlegen();
+const { hostClient, sessionId, stimmen } = await szenarioAnlegen();
 log(`Szenario fertig: ${TEXTE.length} Fragen, ${stimmen} Stimmen`);
 const ergebnisse = [];
 for (let i = 1; i <= auftraege; i += 1) {
   if (i > 1) await schlafe(pauseMs);
   log(`Auftrag ${i}/${auftraege}`);
-  const r = await auftrag(host, sessionId, i);
+  const r = await auftrag(hostClient, sessionId, i);
   log(`  ${r.status} ${r.effectiveMode} ${r.fallbackReason ?? ''} ${r.clientWaitMs} ms`);
   ergebnisse.push(r);
   writeFileSync(
