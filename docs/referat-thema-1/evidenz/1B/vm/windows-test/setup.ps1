@@ -1,5 +1,7 @@
 # 1B-Windows-Test: einmal nach der ersten Anmeldung (autounattend.xml, FirstLogonCommands).
-# OpenSSH-Server nur mit dem Schluessel aus authorized_keys, Hyper-V, WSL-Grundlage, Neustart.
+# OpenSSH-Server nur mit dem Schluessel aus authorized_keys, Hyper-V, Neustart.
+# Ohne WSL: labor.ps1 braucht es nicht mehr, und WSL 2 (eine VM in der VM) haengt verschachtelt
+# mit Host-Kernel 7.2 (Windows-Test 2026-11-13, Versuch 3).
 # Reines ASCII wegen Windows PowerShell 5.1. Gruppen per SID, weil die Namen lokalisiert sind.
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingWriteHost', '', Justification = 'Testskript.')]
 param()
@@ -37,7 +39,7 @@ if (Get-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -ErrorAction SilentlyConti
     -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22 -Profile Any | Out-Null
 }
 
-foreach ($f in 'Microsoft-Hyper-V', 'VirtualMachinePlatform', 'Microsoft-Windows-Subsystem-Linux') {
+foreach ($f in 'Microsoft-Hyper-V') {
   Enable-WindowsOptionalFeature -Online -FeatureName $f -All -NoRestart | Out-Null
 }
 New-Item -ItemType File -Force -Path C:\1b-setup.done | Out-Null
