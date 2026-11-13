@@ -158,8 +158,12 @@ export function zerlegeAuftraege({ appExchanges, srvExchanges, completed, timing
   if (n === 0) {
     throw new Error('Keine Aufträge gefunden (Log, Mitschnitt und IP-Filter prüfen).');
   }
+  // Brach die App den Auftrag per Timeout ab, kann der Server später noch (abgeschnitten) antworten;
+  // der Auftrag gilt dann als unvollständig (Labor 2026-11-13), statt die Auswertung abzubrechen.
+  const appTimeout = completed.map((log) => log.fallbackReason === 'timeout');
   timings.forEach((t, i) => {
     const status = appPost[i].status;
+    if (appTimeout[i]) return;
     if ((status === 200) !== (t !== null)) {
       throw new Error(
         `Auftrag ${i + 1}: POST-Status ${status} passt nicht zu timings ${t === null ? 'null' : 'vorhanden'}.`,
@@ -171,11 +175,13 @@ export function zerlegeAuftraege({ appExchanges, srvExchanges, completed, timing
   });
   return completed.map((log, i) => {
     const jobMs = log.latencyMs;
-    const offen = [appGet[i], appPost[i], srvGet[i], srvPost[i]].some((e) => e.wireMs === null);
+    const offen =
+      appTimeout[i] ||
+      [appGet[i], appPost[i], srvGet[i], srvPost[i]].some((e) => e.wireMs === null);
     const appWire = offen ? null : appGet[i].wireMs + appPost[i].wireMs;
     const srvWire = offen ? null : srvGet[i].wireMs + srvPost[i].wireMs;
     const t = timings[i];
-    const inferMs = t ? t.prompt_ms + t.predicted_ms : null;
+    const inferMs = t && !appTimeout[i] ? t.prompt_ms + t.predicted_ms : null;
     return {
       netzMs: offen ? null : appWire - srvWire,
       adapterMs: offen ? null : jobMs - appWire,

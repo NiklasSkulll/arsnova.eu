@@ -259,3 +259,19 @@ test('kennzahlen bewertet keine Hypothese, wenn ein Auftrag unvollständig ist',
   assert.equal(k.hB2, null);
   assert.equal(k.hB3, null);
 });
+
+test('Auftrag mit App-Timeout bleibt unvollständig, auch wenn der Server später 200 sendet', () => {
+  // Labor 2026-11-13: App bricht nach 300 s ab, llama-server antwortet danach (200, Antwort abgeschnitten).
+  const r = zerlegeAuftraege({
+    appExchanges: [ex('GET', GET, 2), ex('POST', POST, 400_000)],
+    srvExchanges: [ex('GET', GET, 1.5), ex('POST', POST, 399_000)],
+    completed: [{ ...done(300_777), fallbackReason: 'timeout', effectiveMode: 'extractive' }],
+    timings: [null],
+  });
+  assert.equal(r.length, 1);
+  assert.equal(r[0].netzMs, null);
+  assert.equal(r[0].adapterMs, null);
+  assert.equal(r[0].inferMs, null);
+  assert.equal(r[0].fallbackReason, 'timeout');
+  assert.equal(kennzahlen(r).unvollstaendig, 1);
+});
