@@ -285,6 +285,18 @@ Describe 'Get-Restzeit' {
   }
 }
 
+Describe 'Format-SchrittZeile' {
+  It 'zeigt Schritt, Dauer, Zeit seit Beginn, Restzeit und Ende wie labor.sh (fortschritt.sh)' {
+    $jetzt = [datetime]'2026-11-13T17:10:00'
+    $z = Format-SchrittZeile -Nr 3 -Gesamt 11 -Text 'Ubuntu-Image' -Dauer '2-10 min' -SeitBeginn ([TimeSpan]::FromMinutes(10)) -Rest ([TimeSpan]::FromSeconds(2910)) -Jetzt $jetzt
+    $z | Should -Be '[3/11] Ubuntu-Image (dauert 2-10 min) - seit Beginn 10:00, noch etwa 48:30, fertig gegen 17:58'
+  }
+  It 'laesst die Dauer weg, wenn keine angegeben ist' {
+    $z = Format-SchrittZeile -Nr 8 -Gesamt 11 -Text 'Stand der VMs' -Dauer '' -SeitBeginn ([TimeSpan]::FromSeconds(5)) -Rest ([TimeSpan]::FromHours(1)) -Jetzt ([datetime]'2026-11-13T23:30:00')
+    $z | Should -Be '[8/11] Stand der VMs - seit Beginn 0:05, noch etwa 1:00:00, fertig gegen 00:30'
+  }
+}
+
 Describe 'Add-JsonFeld' {
   It 'haengt ein Feld an, ohne den uebrigen Text zu veraendern' {
     $alt = "{`n  `"lauf`": `"x`",`n  `"wert`": 0.1234567890123`n}`n"

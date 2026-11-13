@@ -26,6 +26,8 @@ HERE="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 REPO="$(git -C "$HERE" rev-parse --show-toplevel)"
 # shellcheck source=groessen.sh
 source "$HERE/groessen.sh"
+# shellcheck source=fortschritt.sh
+source "$HERE/fortschritt.sh"
 VMDIR="${LAB_VMDIR:-/var/lib/libvirt/images/arsnova-1b}"
 OUT="${LAB_OUTDIR:-$HOME/labor-1b}"
 APP=192.168.150.10 LLM=192.168.150.20
@@ -234,15 +236,21 @@ pruefen() {
 }
 
 up() {
+  # Fortschritt wie labor.ps1: [n/7] Text (dauert …) - seit Beginn …, noch etwa …, fertig gegen … (fortschritt.sh)
+  fs_schritt 1 'Voraussetzungen prüfen' 'Sekunden'
   voraussetzungen
+  fs_schritt 2 'Größen wählen' 'Sekunden'
   groessen_waehlen anlegen
+  fs_schritt 3 'VMs anlegen und einrichten (cloud-init, Docker)' '5-15 min'
   bash "$HERE/vm/vm-linux.sh" up
+  fs_schritt 4 'Modell (2,4 GB) vom Rechner in den llm-host kopieren, falls vorhanden' '1-3 min'
   modell_kopieren
-  echo "== llm-host einrichten"
+  fs_schritt 5 'llm-host einrichten: Runtime-Image bauen, Modell prüfen, starten' '5-20 min'
   "${SSH[@]}" "labor@$LLM" "bash arsnova.eu/$EV/llm-start.sh" 2>&1 | tee "$OUT/llm-start.log"
-  echo "== app-host einrichten (Token nur per Pipe von VM zu VM)"
+  fs_schritt 6 'app-host einrichten: App-Image bauen, Datenbank, Start (Token nur per Pipe von VM zu VM)' '15-30 min'
   "${SSH[@]}" "labor@$LLM" "sed -n 's/^OPEN_WEIGHT_LLM_TOKEN=//p' arsnova.eu/.env.llm" |
     "${SSH[@]}" "labor@$APP" "bash arsnova.eu/$EV/app-start.sh" 2>&1 | tee "$OUT/app-start.log"
+  fs_schritt 7 'alles prüfen' '1-3 min'
   pruefen
 }
 

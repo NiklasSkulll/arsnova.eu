@@ -24,7 +24,7 @@ powershell -ExecutionPolicy Bypass -File .\docs\referat-thema-1\evidenz\1B\labor
 powershell -ExecutionPolicy Bypass -File .\docs\referat-thema-1\evidenz\1B\labor.ps1 -Mode up
 ```
 
-`up` zeigt die Größenempfehlung für den Rechner und fragt, ob sie übernommen wird. Danach baut es die VMs, richtet den llm-host ein (Runtime-Image in lokaler Registry, GGUF prüfen oder laden, `.env.llm` mit Token nur in der VM, Wrapper-Prüfungen, Start), dann den app-host (App-Image, `.env.production`, Migrationen, Start), und prüft zuletzt alles. Ohne Rückfragen: `LAB_JA=1` bzw. `-Ja`. Dauer am ThinkPad P50 im Energiesparprofil: etwa 45 min, davon rund 20 min App-Build.
+`up` zeigt die Größenempfehlung für den Rechner und fragt, ob sie übernommen wird. Danach baut es die VMs, richtet den llm-host ein (Runtime-Image in lokaler Registry, GGUF prüfen oder laden, `.env.llm` mit Token nur in der VM, Wrapper-Prüfungen, Start), dann den app-host (App-Image, `.env.production`, Migrationen, Start), und prüft zuletzt alles. _Ergänzt 2026-11-13:_ Jeder Schritt zeigt unter Linux und Windows dieselbe Zeile, etwa `[5/7] llm-host einrichten … (dauert 5-20 min) - seit Beginn 25:00, noch etwa 37:00, fertig gegen 20:40` (Linux 7 Schritte, Windows 11; Schätzung aus den Aufbauten am ThinkPad P50). `up` startet keine Messung; Kalibrierung und Läufe nur auf eigenen Befehl (Abschnitt 3). Ohne Rückfragen: `LAB_JA=1` bzw. `-Ja`. Dauer am ThinkPad P50 im Energiesparprofil: etwa 45 min, davon rund 20 min App-Build.
 
 **Schutz für den Rechner** (_ergänzt 2026-11-13_): Vor dem Anlegen zeigt `up`, was es belegt und was dem Rechner bleibt, und **bricht ab, ohne etwas anzulegen**, wenn
 
@@ -105,7 +105,7 @@ _Ergänzt 2026-11-13, aktualisiert am selben Tag._ Stand für Störversuche und 
 
 **Aufbau:**
 
-4. Vorher `wsl --shutdown` und Docker Desktop beenden: WSL 2 reserviert sich bis zur Hälfte des RAMs (im Task-Manager `VmmemWSL`), dann reicht er für die VMs nicht. Danach `powershell -ExecutionPolicy Bypass -File .\labor.ps1 -Mode up`: zeigt die Empfehlung und was dem Rechner bleibt, fragt einmal, dann läuft es allein (etwa 45–60 min; jeder Schritt mit `[n/11]`, Zeit seit Beginn und geschätzter Restzeit). Solange das Fenster offen ist, geht der Rechner nicht in den Ruhezustand; Netzteil anschließen. Wer erst sehen will, was angelegt wird: zuerst mit `-NurVorbereiten` (startet keine VM).
+4. Vorher `wsl --shutdown` und Docker Desktop beenden: WSL 2 reserviert sich bis zur Hälfte des RAMs (im Task-Manager `VmmemWSL`), dann reicht er für die VMs nicht. Danach `powershell -ExecutionPolicy Bypass -File .\labor.ps1 -Mode up`: zeigt die Empfehlung und was dem Rechner bleibt, fragt einmal, dann läuft es allein (etwa 45–60 min; jeder Schritt mit `[n/11]`, Zeit seit Beginn, geschätzter Restzeit und voraussichtlichem Ende). Solange das Fenster offen ist, geht der Rechner nicht in den Ruhezustand; Netzteil anschließen. Wer erst sehen will, was angelegt wird: zuerst mit `-NurVorbereiten` (startet keine VM).
 5. Bricht es ab, steht da, in welchem Schritt, warum und was zu tun ist, dazu der Pfad zum Log. Nach dem Beheben denselben Befehl erneut aufrufen; Fertiges wird übersprungen. Bei Fragen das Log schicken (enthält keine Tokens).
 6. Am Ende muss der Bericht nur `OK`-Zeilen enthalten; ihn aus `%USERPROFILE%\labor-1b\` ins eigene Aufbauprotokoll übernehmen. Der Start der VMs unter Hyper-V läuft hier zum ersten Mal auf echter Hardware; jede Abweichung notieren.
 

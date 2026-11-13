@@ -307,9 +307,10 @@ function Save-LaborVmDir {
 }
 
 function Write-LaborSchritt([int]$Nr, [string]$Text, [string]$Dauer) {
-  $rest = Format-Dauer (Get-Restzeit -Plan (Get-LaborPlan) -Erledigt ($Nr - 1))
+  # Schritte 9-11 nach vm-windows.ps1 (1-8); seit Beginn zaehlt ab dem Start von vm-windows.ps1.
+  $rest = Get-Restzeit -Plan (Get-LaborPlan) -Erledigt ($Nr - 1)
   Write-Host ''
-  Write-Host "[$Nr/11] $Text (dauert $Dauer) - noch etwa $rest" -ForegroundColor Cyan
+  Write-Host (Format-SchrittZeile -Nr $Nr -Gesamt 11 -Text $Text -Dauer $Dauer -SeitBeginn ((Get-Date) - $script:LaborBeginn) -Rest $rest) -ForegroundColor Cyan
 }
 
 function Invoke-LaborUp {
@@ -320,6 +321,7 @@ function Invoke-LaborUp {
   }
   Resolve-LaborVmDir $true
   Save-LaborVmDir
+  $script:LaborBeginn = Get-Date
   Invoke-VmScript $g 'up'
   if ($NurVorbereiten) { return }
   Write-LaborSchritt 9 'llm-host einrichten: Runtime-Image bauen, Modell (2,4 GB) laden und pruefen, starten' '5-20 min'

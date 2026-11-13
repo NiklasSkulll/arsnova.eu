@@ -330,6 +330,14 @@ function Format-Dauer([TimeSpan]$Dauer) {
   return '{0}:{1:00}' -f [int][Math]::Floor($Dauer.TotalMinutes), $Dauer.Seconds
 }
 
+function Format-SchrittZeile {
+  # Eine Fortschrittszeile, gleich wie labor.sh (fortschritt.sh):
+  # [n/N] Text (dauert ...) - seit Beginn M:SS, noch etwa M:SS, fertig gegen HH:mm
+  param([int]$Nr, [int]$Gesamt, [string]$Text, [string]$Dauer, [TimeSpan]$SeitBeginn, [TimeSpan]$Rest, [datetime]$Jetzt = (Get-Date))
+  $d = if ($Dauer) { " (dauert $Dauer)" } else { '' }
+  return "[$Nr/$Gesamt] $Text$d - seit Beginn $(Format-Dauer $SeitBeginn), noch etwa $(Format-Dauer $Rest), fertig gegen $($Jetzt.Add($Rest).ToString('HH:mm'))"
+}
+
 function ConvertFrom-Qcow2 {
   # qcow2 (v2/v3, zlib) -> Rohdisk, ohne qemu-img. Nach der Spezifikation docs/interop/qcow2.txt (QEMU):
   # Header, L1/L2-Tabellen, komprimierte Cluster als rohes Deflate. Lehnt ab, was hier nicht vorkommt

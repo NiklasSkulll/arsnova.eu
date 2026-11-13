@@ -90,12 +90,17 @@ $script:Plan = $null
 function Write-Step([string]$Text, [string]$Dauer = '') {
   $script:Schritt++
   $script:SchrittName = $Text
-  $z = Format-Dauer ((Get-Date) - $script:Beginn)
-  $d = if ($Dauer) { " (dauert $Dauer)" } else { '' }
-  $r = ''
-  if ($script:Plan) { $r = ", noch etwa $(Format-Dauer (Get-Restzeit -Plan $script:Plan -Erledigt ($script:Schritt - 1)))" }
+  $seit = (Get-Date) - $script:Beginn
   Write-Host ''
-  Write-Host "[$($script:Schritt)/$($script:Schritte)] $Text$d   - seit Beginn $z$r" -ForegroundColor Cyan
+  if ($script:Plan) {
+    $rest = Get-Restzeit -Plan $script:Plan -Erledigt ($script:Schritt - 1)
+    Write-Host (Format-SchrittZeile -Nr $script:Schritt -Gesamt $script:Schritte -Text $Text -Dauer $Dauer -SeitBeginn $seit -Rest $rest) -ForegroundColor Cyan
+  }
+  else {
+    # Einzelmodi (pruefen, sync) ohne Plan: keine Restzeit
+    $d = if ($Dauer) { " (dauert $Dauer)" } else { '' }
+    Write-Host "[$($script:Schritt)/$($script:Schritte)] $Text$d - seit Beginn $(Format-Dauer $seit)" -ForegroundColor Cyan
+  }
 }
 function Write-Info([string]$Text) { Write-Host "      $Text" }
 function Write-Warn([string]$Text) { Write-Host "      HINWEIS: $Text" -ForegroundColor Yellow }
