@@ -1,6 +1,6 @@
 # 1B-Labor: Nachbau und Lauf
 
-Zwei VMs auf einem Rechner: app-host `192.168.150.10` (App aus `docker-compose.prod.yml`) und llm-host `192.168.150.20` (Runtime aus `docker-compose.llm.yml`). Entscheidungen: [ADR 1B-002](../../adr/1B-002-topologie-zwei-vms-ein-rechner.md) bis [ADR 1B-010](../../adr/1B-010-aufbau-automatisiert-mit-groessenempfehlung.md). Linux ist getestet; Windows ist statisch und mit Pester geprüft, ein echter Hyper-V-Lauf steht noch aus („ungetestet, Niklas prüft“).
+Zwei VMs auf einem Rechner: app-host `192.168.150.10` (App aus `docker-compose.prod.yml`) und llm-host `192.168.150.20` (Runtime aus `docker-compose.llm.yml`). Entscheidungen: [ADR 1B-002](../../adr/1B-002-topologie-zwei-vms-ein-rechner.md) bis [ADR 1B-010](../../adr/1B-010-aufbau-automatisiert-mit-groessenempfehlung.md). Linux ist getestet. Windows ist mit Pester geprüft und auf echtem Windows 11 (PowerShell 5.1) teilweise getestet: Größenwahl, `status`, `pruefen` und die Vorprüfungen von `up`. Ein Aufbau mit echtem Hyper-V steht noch aus ([Windows-Test](2026-11-13-windows-test.md)).
 
 ## 1. Voraussetzungen
 
@@ -69,3 +69,15 @@ Ein Lauf startet die Runtime frisch (höchstens 10 Aufträge je Runtime, [ADR 1B
 ## 7. Datenregeln
 
 Mitschnitte enthalten den Runtime-Token im `Authorization`-Header und bleiben in `~/labor-1b`. Ins Repo kommen nur Ergebnis-JSON, Berichte ohne Secrets und Protokolle. Die Szenariodaten sind synthetisch (1C-Fixture).
+
+## 8. Übergabe an Niklas (Schritte 3–4)
+
+_Ergänzt 2026-11-13._ Stand für Störversuche und Betriebsaufwand auf dem eigenen Rechner:
+
+1. Fork und Clone aktualisieren, Branch `feature-1B-two-host` (bis zum Merge).
+2. Windows: Hyper-V und WSL mit Ubuntu einrichten ([WINDOWS.md](vm/WINDOWS.md)), SSH-Schlüssel ohne Passphrase anlegen. In Windows PowerShell 5.1 geht das leere Argument nur so: `ssh-keygen -t ed25519 -N '""' -f "$env:USERPROFILE\.ssh\id_ed25519"`.
+3. `labor.ps1 -Mode groessen`, dann `-Mode up` in einer Admin-PowerShell. Bitte jede Abweichung notieren: Der Hyper-V-Teil (VMs, NAT, WSL zum internen Switch) ist der ungetestete Rest.
+4. `-Mode pruefen` muss nur `OK`-Zeilen liefern; den Bericht aus `%USERPROFILE%\labor-1b\` ins eigene Aufbauprotokoll übernehmen.
+5. Eigene Läufe mit `-LabTag` (z. B. `stoerung-…`), damit sie nicht mit den Läufen von Jonas kollidieren; ADR-Nummern 1B-020 bis 1B-039.
+
+Wiederverwendbar für Schritt 3: `lauf.sh` (Mitschnitt auf beiden Hosts, Speicher-CSV, Zeitzerlegung), `pruefen.sh` (Limits, Flags, Bind) und der Treiber `treiber.mjs`. Die Runtime im llm-host lässt sich für Ausfälle mit `docker stop arsnova-open-weight-llm` bzw. `docker compose … up -d` steuern; die Werte aus Schritt 2 stehen unter `messung/`.
