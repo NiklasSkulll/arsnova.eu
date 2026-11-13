@@ -259,6 +259,18 @@ function Get-Restzeit {
   return [TimeSpan]::FromSeconds($rest)
 }
 
+function Get-RamVorschau {
+  # Reicht der gerade verfuegbare RAM fuer den Start der VMs plus Reserve? Fuer groessen und vor up,
+  # damit niemand 15 min vorbereitet und dann am RAM-Schutz scheitert (Windows-Test 2026-11-13).
+  param([Parameter(Mandatory)][int]$VerfuegbarGib, [Parameter(Mandatory)][int]$PlanGib, [Parameter(Mandatory)][int]$ReserveGib)
+  $rest = $VerfuegbarGib - $PlanGib
+  $reicht = $rest -ge $ReserveGib
+  $t = "RAM fuer den Start: jetzt verfuegbar $VerfuegbarGib GB, die VMs belegen $PlanGib GB, danach blieben $rest GB (noetig: $ReserveGib GB)"
+  if ($reicht) { $t += ' - reicht.' }
+  else { $t += ' - so startet das Labor nicht. Programme schliessen (auch WSL/Docker Desktop), kleinere Groessen waehlen oder einen Rechner mit mehr RAM nehmen (realistisch ab 24 GB).' }
+  [pscustomobject]@{ Reicht = $reicht; RestGib = $rest; Text = $t }
+}
+
 function Get-LaborPlan {
   # Geschaetzte Sekunden je Schritt von labor.ps1 -Mode up (ThinkPad P50 als Massstab, eher grosszuegig):
   # 1 Vorpruefung, 2 Netz, 3 Image, 4-5 VMs anlegen, 6 Start, 7 Repo und cloud-init, 8 Stand,

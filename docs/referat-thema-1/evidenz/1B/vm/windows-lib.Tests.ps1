@@ -319,3 +319,17 @@ Describe 'Strict-Mode-Falle .Count' {
     @($treffer | ForEach-Object { $_.Value }) | Should -BeNullOrEmpty
   }
 }
+
+Describe 'Get-RamVorschau' {
+  It 'meldet <name>' -ForEach @(
+    @{ name = 'reicht bei 32 GB'; verf = 26; plan = 18; res = 4; reicht = $true; rest = 8 }
+    @{ name = 'reicht knapp genau bei der Reserve'; verf = 22; plan = 18; res = 4; reicht = $true; rest = 4 }
+    @{ name = 'reicht nicht bei 16 GB'; verf = 11; plan = 14; res = 4; reicht = $false; rest = -3 }
+  ) {
+    $v = Get-RamVorschau -VerfuegbarGib $verf -PlanGib $plan -ReserveGib $res
+    $v.Reicht | Should -Be $reicht
+    $v.RestGib | Should -Be $rest
+    $v.Text | Should -BeLike "*$verf GB*"
+    if (-not $reicht) { $v.Text | Should -BeLike '*startet das Labor nicht*' }
+  }
+}

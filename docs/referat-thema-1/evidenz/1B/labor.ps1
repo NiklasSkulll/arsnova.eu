@@ -72,8 +72,8 @@ function Get-LaborText([string]$Code) {
     'llm-unter-4' { 'llm-host unter 4 vCPU: Inferenz deutlich langsamer, Zahlen nicht mit dem Messrechner vergleichbar.' }
     'app-ram-4' { 'app-host nur 4 GB: der App-Build in der VM wird knapp und langsam.' }
     'llm-ram-10' { 'llm-host nur 10 GB: Container-Limit 8 GB bleibt, wenig Puffer fuer das System der VM.' }
-    'host-ram-2' { 'Dem Rechner bleiben etwa 2 GB: andere Programme waehrend des Laufs schliessen.' }
-    'ram-zu-klein' { 'Zu wenig RAM: mindestens 16 GB noetig (llm 10 + app 4 + Rechner 2).' }
+    'host-ram-2' { 'Rechnerisch blieben Windows nur ~2 GB; Windows braucht selbst 3-5 GB, und der Start verlangt 4 GB Reserve auf den verfuegbaren RAM. So startet das Labor hier voraussichtlich nicht (siehe RAM-Vorschau unten).' }
+    'ram-zu-klein' { 'Zu wenig RAM: die VMs brauchen mindestens 14 GB (llm 10 + app 4), dazu Windows selbst und 4 GB Reserve; realistisch ab 24 GB.' }
     'kerne-zu-wenig' { 'Zu wenige Kerne: der llm-host braucht mindestens 2 physische Kerne (ohne SMT 4).' }
     'llm-vcpu' { 'llm-host: 2 bis hoechstens min(8, physische Kerne) vCPU.' }
     'app-vcpu' { 'app-host: mindestens 1 vCPU.' }
@@ -146,7 +146,25 @@ function Select-LaborGroesse {
   if ($f) { throw "Ungueltige Groessen: $(Get-LaborText $f)" }
   Write-Host ("Gewaehlt: llm-host $($w.LlmCpus) vCPU, $($w.LlmRamGB) GB, Platte $($w.LlmDiskGB) GB; " +
     "app-host $($w.AppCpus) vCPU, $($w.AppRamGB) GB, Platte $($w.AppDiskGB) GB")
+  $script:RamVorschau = $null
+  $frei = Get-VerfuegbarRamGib
+  if ($null -ne $frei -and -not (Test-LaborVmsLaufen)) {
+    $script:RamVorschau = Get-RamVorschau -VerfuegbarGib $frei -PlanGib ($w.LlmRamGB + $w.AppRamGB) -ReserveGib $RamReserveGB
+    $farbe = if ($script:RamVorschau.Reicht) { 'Green' } else { 'Yellow' }
+    Write-Host $script:RamVorschau.Text -ForegroundColor $farbe
+  }
   return $w
+}
+
+# Verfuegbarer RAM wie im Task-Manager (frei plus Standby); $null ausserhalb von Windows (Tests).
+function Get-VerfuegbarRamGib {
+  try { return [int][Math]::Floor((Get-CimInstance Win32_PerfFormattedData_PerfOS_Memory -ErrorAction Stop).AvailableMBytes / 1024) }
+  catch { return $null }
+}
+
+function Test-LaborVmsLaufen {
+  if (-not (Get-Command Get-VM -ErrorAction SilentlyContinue)) { return $false }
+  return [bool]@(Get-VM -Name 'arsnova-1b-*' -ErrorAction SilentlyContinue | Where-Object { $_.State -eq 'Running' }).Count
 }
 
 function Get-SshArg {
@@ -272,6 +290,10 @@ function Write-LaborSchritt([int]$Nr, [string]$Text, [string]$Dauer) {
 
 function Invoke-LaborUp {
   $g = Select-LaborGroesse
+  if (-not $NurVorbereiten -and $script:RamVorschau -and -not $script:RamVorschau.Reicht) {
+    throw ('Abbruch vor dem Aufbau: der RAM reicht nicht fuer den Start (siehe RAM-Vorschau oben). ' +
+      'Erst Programme schliessen und erneut aufrufen; wer trotzdem schon alles vorbereiten will: -NurVorbereiten.')
+  }
   Resolve-LaborVmDir $true
   Save-LaborVmDir
   Invoke-VmScript $g 'up'

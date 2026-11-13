@@ -47,7 +47,7 @@ text() {
     llm-unter-4) echo "llm-host unter 4 vCPU: Inferenz deutlich langsamer, Zahlen nicht mit dem Messrechner vergleichbar." ;;
     app-ram-4) echo "app-host nur 4 GiB: der App-Build in der VM wird knapp und langsam." ;;
     llm-ram-10) echo "llm-host nur 10 GiB: Container-Limit 8 GiB bleibt, wenig Puffer für das System der VM." ;;
-    host-ram-2) echo "Dem Rechner bleiben etwa 2 GiB: andere Programme während des Laufs schließen." ;;
+    host-ram-2) echo "Rechnerisch blieben dem Rechner nur ~2 GiB; der Start verlangt ${LAB_RAM_RESERVE_GIB:-4} GiB Reserve auf den verfügbaren RAM. Andere Programme schließen; sonst bricht up vor dem Anlegen ab." ;;
     ram-zu-klein) echo "Zu wenig RAM: mindestens 16 GiB nötig (llm 10 + app 4 + Rechner 2)." ;;
     kerne-zu-wenig) echo "Zu wenige Kerne: der llm-host braucht mindestens 2 physische Kerne (ohne SMT 4)." ;;
     llm-vcpu) echo "llm-host: 2 bis höchstens min(8, physische Kerne) vCPU." ;;

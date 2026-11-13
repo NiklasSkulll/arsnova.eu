@@ -262,9 +262,9 @@ function Save-Datei([string]$Url, [string]$Ziel) {
 }
 
 function Initialize-Image {
-  Write-Step 'Ubuntu-Image laden, pruefen, fuer Hyper-V umwandeln' '2-10 min, ~600 MB Download'
   $base = Join-Path $VmDir $BaseVhdx
-  if (Test-Path $base) { Write-Info "vorhanden: $base"; return }
+  if (Test-Path $base) { Write-Step 'Ubuntu-Image'; Write-Info "vorhanden: $base"; return }
+  Write-Step 'Ubuntu-Image laden, pruefen, fuer Hyper-V umwandeln' '2-10 min, ~600 MB Download'
   $img = Join-Path $VmDir $ImgFile
   $sums = Join-Path $VmDir 'SHA256SUMS'
   Save-Datei "$ImgUrl/SHA256SUMS" $sums
