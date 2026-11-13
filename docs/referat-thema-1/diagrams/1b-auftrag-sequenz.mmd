@@ -23,17 +23,16 @@ sequenceDiagram
   Note over A: Host-Token, Sessionzustand,<br/>Q&A aktiv, Zusammenfassung an
   A->>Q: requestQaSummary
   Note over Q: laufender Job? Kontext bauen,<br/>genug Fragen? Cooldown 30 s,<br/>Warteschlange voll?
-  Note right of Q: Job einreihen
+  Note over Q: Job einreihen
   A-->>T: pending
-  par je 1 s Pause
-    loop bis zum Endstatus
-      Note over T,A: Statusabfrage
+  par Statusabfrage
+    loop je 1 s Pause, bis zum Endstatus
       T->>A: qa.summaryRuntime
       A-->>T: pending
     end
   and Job per setImmediate
     Note over Q: Messpunkt: T_job beginnt
-    Note right of Q: Kontext vorher
+    Note over Q: Kontext vorher
     Q->>AD: runPreparedQaSummary
     AD->>L: GET /slots
     L-->>AD: 200
@@ -44,7 +43,7 @@ sequenceDiagram
     Note over AD,L: Messpunkt: Drahtzeit POST
     Note over AD: timings verworfen, Quality-Gate
     AD-->>Q: Ergebnis
-    Note right of Q: Kontext nachher, Hash
+    Note over Q: Kontext nachher, Hash
     Note over Q: Messpunkt: T_job endet,<br/>latencyMs
   end
   T->>A: qa.summaryRuntime

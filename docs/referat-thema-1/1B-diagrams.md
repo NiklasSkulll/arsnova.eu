@@ -15,7 +15,7 @@ Quellen: [ADR 1B-002](adr/1B-002-topologie-zwei-vms-ein-rechner.md), [ADR 1B-003
   <img alt="Ein Laptop mit KVM, 4 Kernen, 8 Threads und 31 GiB trägt ein privates Netz 192.168.150.0/24 mit zwei VMs: dem app-host 192.168.150.10 (2 vCPU, 6 GiB) mit App, postgres, redis und pdf-worker, deren App-Ports nur auf 127.0.0.1 liegen, und dem llm-host 192.168.150.20 (4 vCPU, 12 GiB) mit llama-server nur auf Port 8080 und Bearer-Token. Der app-host ruft den llm-host per HTTP auf Port 8080 mit Bearer-Token auf. Nach außen gibt es nur ausgehendes NAT (gebraucht für die Einrichtung, bleibt aktiv), keine Portweiterleitung." src="diagrams/1b-topologie.light.svg">
 </picture>
 
-_Abb. 1: Topologie des 1B-Labors. Eigene Darstellung (Jonas Weirauch, Auftrag 1B), KI-gestützt erstellt (Claude Code)._
+_Abb. 1: Topologie des 1B-Labors (auf schmalen Bildschirmen [in voller Größe öffnen](diagrams/1b-topologie.light.svg)). Eigene Darstellung (Jonas Weirauch, Auftrag 1B), KI-gestützt erstellt (Claude Code)._
 
 Abweichungen und Grenzen, jeweils nach der Quelle:
 
