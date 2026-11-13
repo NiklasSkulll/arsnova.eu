@@ -1,6 +1,6 @@
 # Issue-Entwurf: Ablehnung durch das Qualitätstor der Zusammenfassung schreibt keine Logzeile
 
-> **Status:** Entwurf, nicht angelegt. Angelegt wird erst nach Freigabe durch den Autor; Ort (kqc-real oder Fork) entscheidet er. Ergänzt [#13](https://github.com/NiklasSkulll/arsnova.eu/issues/13) (Qualitätstor verwirft echte Antworten, [ADR 1C-018](../../adr/1C-018-quality-gate-verwirft-echte-antworten.md)) um die Beobachtbarkeit. Grundlage: [Laufprotokoll, Befund](2026-11-13-lauf.md#befund-jede-modellantwort-verworfen). Entworfen mit Claude Code (Modell Claude Opus 5.5). _Korrigiert 2026-11-13:_ Quellen von `invalid_response` vollständig aufgezählt (Branch-Review).
+> **Status:** _Aktualisiert 2026-11-13:_ angelegt als [#20](https://github.com/NiklasSkulll/arsnova.eu/issues/20) im Fork (Unter-Issue von #8); maßgeblich ist das Issue. Ursprünglich: Entwurf, nicht angelegt. Angelegt wird erst nach Freigabe durch den Autor; Ort (kqc-real oder Fork) entscheidet er. Ergänzt [#13](https://github.com/NiklasSkulll/arsnova.eu/issues/13) (Qualitätstor verwirft echte Antworten, [ADR 1C-018](../../adr/1C-018-quality-gate-verwirft-echte-antworten.md)) um die Beobachtbarkeit. Grundlage: [Laufprotokoll, Befund](2026-11-13-lauf.md#befund-jede-modellantwort-verworfen). Entworfen mit Claude Code (Modell Claude Opus 5.5). _Korrigiert 2026-11-13:_ Quellen von `invalid_response` vollständig aufgezählt (Branch-Review).
 
 **Vorgeschlagener Titel:** `Q&A-Zusammenfassung: Grund eines Fallbacks mit invalid_response protokollieren`
 

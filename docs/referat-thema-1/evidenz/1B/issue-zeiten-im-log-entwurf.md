@@ -1,6 +1,6 @@
 # Issue-Entwurf: Summary-Log zeigt nicht, wohin die Zeit eines Auftrags geht
 
-> **Status:** Entwurf, nicht angelegt. Angelegt wird erst nach Freigabe durch den Autor; Ort (kqc-real oder Fork) entscheidet er. Grundlage: [Aufbauprotokoll, Befund 6](2026-11-12-aufbau.md#befunde-für-kernaussage-c), [Laufprotokoll, Befund C](2026-11-13-lauf.md#befund-c-was-der-betrieb-sieht). Entworfen mit Claude Code (Modell Claude Opus 5.5). _Korrigiert 2026-11-13:_ Vorschlag 2 verlangte, `elapsedMs` neu zu messen; der Client misst es schon (Branch-Review).
+> **Status:** _Aktualisiert 2026-11-13:_ angelegt als [#19](https://github.com/NiklasSkulll/arsnova.eu/issues/19) im Fork (Unter-Issue von #8); maßgeblich ist das Issue. Ursprünglich: Entwurf, nicht angelegt. Angelegt wird erst nach Freigabe durch den Autor; Ort (kqc-real oder Fork) entscheidet er. Grundlage: [Aufbauprotokoll, Befund 6](2026-11-12-aufbau.md#befunde-für-kernaussage-c), [Laufprotokoll, Befund C](2026-11-13-lauf.md#befund-c-was-der-betrieb-sieht). Entworfen mit Claude Code (Modell Claude Opus 5.5). _Korrigiert 2026-11-13:_ Vorschlag 2 verlangte, `elapsedMs` neu zu messen; der Client misst es schon (Branch-Review).
 
 **Vorgeschlagener Titel:** `Q&A-Zusammenfassung: vorhandene Laufzeit und Runtime-timings im Log ausweisen`
 

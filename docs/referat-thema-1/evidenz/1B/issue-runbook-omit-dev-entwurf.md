@@ -1,6 +1,6 @@
 # Issue-Entwurf: Runbook §6 installiert ohne Dev-Abhängigkeiten, der Compose-Wrapper braucht aber `dotenv` aus der Wurzel
 
-> **Status:** Entwurf, nicht angelegt. Angelegt wird erst nach Freigabe durch den Autor; Ort (kqc-real oder Fork) entscheidet er. Grundlage: [Aufbauprotokoll, Befund 2](2026-11-12-aufbau.md#befunde-für-kernaussage-c). Entworfen mit Claude Code (Modell Claude Opus 5.5).
+> **Status:** _Aktualisiert 2026-11-13:_ angelegt als [#21](https://github.com/NiklasSkulll/arsnova.eu/issues/21) im Fork (Unter-Issue von #8); maßgeblich ist das Issue. Ursprünglich: Entwurf, nicht angelegt. Angelegt wird erst nach Freigabe durch den Autor; Ort (kqc-real oder Fork) entscheidet er. Grundlage: [Aufbauprotokoll, Befund 2](2026-11-12-aufbau.md#befunde-für-kernaussage-c). Entworfen mit Claude Code (Modell Claude Opus 5.5).
 
 **Vorgeschlagener Titel:** `Second-Host-Runbook: npm ci --omit=dev bricht scripts/open-weight-llm/prod-compose.mjs`
 

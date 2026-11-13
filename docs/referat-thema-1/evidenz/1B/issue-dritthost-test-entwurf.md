@@ -1,6 +1,6 @@
 # Issue-Entwurf: Runbook §11 verlangt einen Negativtest von einem Dritthost, nennt aber keinen Befehl
 
-> **Status:** Entwurf, nicht angelegt. Angelegt wird erst nach Freigabe durch den Autor; Ort (kqc-real oder Fork) entscheidet er. Grundlage: [Aufbauprotokoll, Befund 3](2026-11-12-aufbau.md#befunde-für-kernaussage-c). Entworfen mit Claude Code (Modell Claude Opus 5.5).
+> **Status:** _Aktualisiert 2026-11-13:_ angelegt als [#22](https://github.com/NiklasSkulll/arsnova.eu/issues/22) im Fork (Unter-Issue von #8); maßgeblich ist das Issue. Ursprünglich: Entwurf, nicht angelegt. Angelegt wird erst nach Freigabe durch den Autor; Ort (kqc-real oder Fork) entscheidet er. Grundlage: [Aufbauprotokoll, Befund 3](2026-11-12-aufbau.md#befunde-für-kernaussage-c). Entworfen mit Claude Code (Modell Claude Opus 5.5).
 
 **Vorgeschlagener Titel:** `Second-Host-Runbook: prüfbaren Befehl für „anderer Host erreicht Port 8080 nicht“ ergänzen`
 
