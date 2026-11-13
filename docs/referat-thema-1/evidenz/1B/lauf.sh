@@ -28,7 +28,13 @@ vorbereiten() {
     echo "app-host erreicht den llm-host nicht per SSH; Schlüssel $KEY.pub dort eintragen (labor.sh macht das)." >&2
     exit 1
   }
-  [[ -d node_modules/@trpc/client ]] || npm ci --ignore-scripts --no-audit --no-fund
+  # Nur beim ersten Lauf; Wiederholung, weil npm am 2026-11-13 mit ETIMEDOUT abbrach.
+  local i
+  for i in 1 2 3 4 5; do
+    [[ -d node_modules/@trpc/client ]] && break
+    npm ci --ignore-scripts --no-audit --no-fund || { echo "npm ci $i fehlgeschlagen" >&2; sleep 30; }
+  done
+  [[ -d node_modules/@trpc/client ]] || { echo "npm ci fünfmal fehlgeschlagen" >&2; exit 1; }
   [[ -f libs/shared-types/dist/index.js ]] || npm run build -w @arsnova/shared-types
   log "vorbereitet"
 }
