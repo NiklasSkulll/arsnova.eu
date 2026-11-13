@@ -23,5 +23,5 @@ Gemessen wird Fork-`main` `a19ca70f` (upstream am 2026-11-12 nachgezogen, Sync-C
 
 ## Folgen
 
-- Alle 1B-Zahlen gelten für `a19ca70f` und die im Protokoll genannten Artefakte.
+- Alle 1B-Zahlen gelten für `a19ca70f` und die im Protokoll genannten Artefakte. _Ergänzt 2026-11-13:_ Gemessen wurde am Branch-Commit `8e9d1317`; `git diff --stat a19ca70f 8e9d1317 -- apps libs docker docker-compose*.yml package.json package-lock.json scripts` ist leer, der Produktionscode ist also der von `a19ca70f`.
 - Die Zeilenangaben des Dossiers (Stand `27966e75`) werden am Laufstand nachgeprüft, bevor sie zitiert werden.

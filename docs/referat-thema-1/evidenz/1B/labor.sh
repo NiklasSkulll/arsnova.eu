@@ -305,6 +305,7 @@ im_app_host() { # modus: lauf.sh im app-host mit Hülle (Ruhezustand gesperrt, E
       # Belege sind ohne Secrets (env-ohne-secrets.sh, Token-Gegenprobe in lauf.sh) und kommen ins Repo.
       mkdir -p "$HERE/messung/$(date +%F)-belege"
       cp "$lokal"/*.txt "$lokal"/manifest.json "$HERE/messung/$(date +%F)-belege/"
+      sed -i 's/[[:space:]]*$//' "$HERE/messung/$(date +%F)-belege/"*.txt   # git diff --check
       LAB_VMDIR="$VMDIR" bash "$HERE/umgebung.sh" >"$HERE/messung/$(date +%F)-belege/umgebung.json"
       echo "Belege: $HERE/messung/$(date +%F)-belege/"
     fi
