@@ -20,9 +20,9 @@ sequenceDiagram
   end
 
   T->>A: qa.requestSummary
-  Note over A: Host-Token, Q&A aktiv
+  Note over A: Host-Token, Q&A in der Session,<br/>Zusammenfassung eingeschaltet
   A->>Q: requestQaSummary
-  Note over Q: Kontext bauen, laufender Job?<br/>Cooldown 30 s: gleicher Hash<br/>liefert das alte Ergebnis
+  Note over Q: laufender Job? Kontext bauen,<br/>genug Fragen? Cooldown 30 s,<br/>Queue voll?
   Q-)Q: Job einreihen
   A-->>T: pending
   par Treiber fragt nach je 1 s Pause
@@ -30,7 +30,7 @@ sequenceDiagram
       T->>A: qa.summaryRuntime
       A-->>T: pending
     end
-  and Job läuft sofort an
+  and Job startet im nächsten Event-Loop-Durchlauf
     Note over Q: T_job beginnt
     Q->>Q: Kontext vorher
     Q->>AD: runPreparedQaSummary
@@ -47,5 +47,5 @@ sequenceDiagram
     Note over Q: T_job endet: latencyMs
   end
   T->>A: qa.summaryRuntime
-  Note over A,Q: Kontext erneut, Hash-Vergleich
+  Note over A,Q: Kontext zum vierten Mal, Hash-Vergleich
   A-->>T: Endstatus
