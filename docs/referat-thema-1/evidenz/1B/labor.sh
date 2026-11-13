@@ -234,7 +234,7 @@ im_app_host() { # modus: lauf.sh im app-host mit Hülle (Ruhezustand gesperrt, E
     "${LAB_N:-10}" "${LAB_TAG:-}" "$timeout" "$ist" "$rechner")"
   local ausgabe
   local rc=0
-  ausgabe="$("${huelle[@]}" "${SSH[@]}" "labor@$APP" "$env bash arsnova.eu/$EV/lauf.sh $1" | tee /dev/stderr)" || rc=$?
+  ausgabe="$("${huelle[@]}" "${SSH[@]}" "labor@$APP" "$env bash arsnova.eu/$EV/lauf.sh $1" | tee -a /dev/stderr)" || rc=$?
   if ((rc != 0)); then
     echo "lauf.sh $1 fehlgeschlagen ($rc). Rohdaten im app-host: ssh labor@$APP 'ls -t ~/labor-1b | head -3'" >&2
     exit "$rc"
