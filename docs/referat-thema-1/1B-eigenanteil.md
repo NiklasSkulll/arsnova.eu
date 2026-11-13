@@ -29,7 +29,7 @@ Hypothesenschwellen, Messmethode per Mitschnitt und Zeitzerlegung sind KI-Vorsch
 - Skripte für Aufbau, Prüfung und Lauf (`labor.sh`, `labor.ps1`, `vm/`, `llm-start.sh`, `app-start.sh`, `pruefen.sh`, `lauf.sh`, `treiber.mjs`), Auswertung mit Tests (`messung/`), Windows-Testaufbau (`vm/windows-test/`).
 - Protokolle, Runbook, Diagramme und dieser Entwurf nach den Vorgaben des Autors.
 - Reviews: ein Review der ganzen Branch (vier behobene Punkte), fünf fachliche und sechs visuelle Prüfrunden der Diagramme.
-- Entscheidungen, die die KI in der Nacht 2026-11-13 im Auftrag des Autors getroffen hat, sind vom Autor zu bestätigen (Arbeitsprotokoll der KI, nicht im Repo), u. a.: Hypothesen gelten als „nicht bewertbar“, wenn einem Auftrag eine Komponente fehlt; Topologie hochkant.
+- Entscheidungen, die die KI in der Nacht 2026-11-13 im Auftrag des Autors getroffen hat (Arbeitsprotokoll der KI, nicht im Repo), u. a.: Hypothesen gelten als „nicht bewertbar“, wenn einem Auftrag eine Komponente fehlt; Topologie hochkant. _Aktualisiert 2026-11-13:_ vom Autor bestätigt, ebenso der getrennte Bericht von Kalt- und Warmfall (Option a).
 
 ### Prüfung durch den Autor
 
