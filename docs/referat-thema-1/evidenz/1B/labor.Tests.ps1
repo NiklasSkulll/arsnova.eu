@@ -98,3 +98,27 @@ Describe 'Invoke-VmScript' {
     { Invoke-VmScript $null 'status' } | Should -Not -Throw
   }
 }
+
+Describe 'Get-LaufEnv' {
+  It 'gibt B0 an lauf.sh weiter, wenn -LabRuntimeAus gesetzt ist (Runtime gestoppt, Nachtrag M3)' {
+    $e = Get-LaufEnv -N 10 -Tag 'b0' -TimeoutMs 300000 -Profil 'Ausbalanciert' -Rechner 'i7, 16 Threads, 32 GB' -RuntimeAus $true
+    $e | Should -Match "(^| )LAB_RUNTIME_AUS=1( |$)"
+    $e | Should -Match "LAB_N=10 LAB_TAG='b0' LAB_TIMEOUT_MS=300000"
+  }
+  It 'laesst B0 aus, wenn der Schalter fehlt' {
+    $e = Get-LaufEnv -N 1 -Tag '' -TimeoutMs 90000 -Profil 'x' -Rechner 'y' -RuntimeAus $false
+    $e | Should -Not -Match 'LAB_RUNTIME_AUS=1'
+  }
+}
+
+Describe 'Get-MessungZiel' {
+  It 'haengt -2, -3 an, statt ein vorhandenes Ergebnis zu ueberschreiben (wie labor.sh lauf)' {
+    $d = Join-Path $TestDrive 'messung'
+    New-Item -ItemType Directory -Force $d | Out-Null
+    Get-MessungZiel -Ordner $d -Basis '2026-11-13-kontrolle-c0' -Endung '.json' | Should -Be (Join-Path $d '2026-11-13-kontrolle-c0.json')
+    Set-Content (Join-Path $d '2026-11-13-kontrolle-c0.json') '{}'
+    Get-MessungZiel -Ordner $d -Basis '2026-11-13-kontrolle-c0' -Endung '.json' | Should -Be (Join-Path $d '2026-11-13-kontrolle-c0-2.json')
+    New-Item -ItemType Directory -Force (Join-Path $d '2026-11-13-belege') | Out-Null
+    Get-MessungZiel -Ordner $d -Basis '2026-11-13-belege' -Endung '' | Should -Be (Join-Path $d '2026-11-13-belege-2')
+  }
+}

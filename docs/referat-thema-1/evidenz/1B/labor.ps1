@@ -39,12 +39,13 @@
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '',
   Justification = 'Fehlalarm: die Skriptparameter werden in den Funktionen unten gelesen.')]
 param(
-  [ValidateSet('up', 'vorpruefung', 'umgebung', 'sync', 'groessen', 'pruefen', 'kalibrierung', 'lauf', 'status', 'stop', 'start', 'destroy')]
+  [ValidateSet('up', 'vorpruefung', 'umgebung', 'sync', 'groessen', 'pruefen', 'kalibrierung', 'lauf', 'kontrolle', 'belege', 'status', 'stop', 'start', 'destroy')]
   [string]$Mode = 'groessen',
   [switch]$Ja,
   [ValidateRange(1, 10)][int]$LabN = 10,
   [ValidatePattern('^[a-z0-9-]*$')][string]$LabTag = '',
   [ValidateSet(0, 90000, 300000)][int]$LabTimeoutMs = 0,
+  [switch]$LabRuntimeAus,   # nur -Mode lauf: Auftraege bei gestoppter Runtime (B0, Ausfall), wie LAB_RUNTIME_AUS=1
   [ValidateRange(0, 64)][int]$LlmCpus = 0,
   [ValidateRange(0, 512)][int]$LlmRamGB = 0,
   [ValidateRange(0, 64)][int]$AppCpus = 0,
@@ -440,6 +441,22 @@ function Add-LaborUmgebung([string]$Datei) {
   catch { Write-Host "HINWEIS: Umgebung nicht erfasst ($($_.Exception.Message))" -ForegroundColor Yellow }
 }
 
+function Get-LaufEnv {
+  # Umgebung fuer lauf.sh im app-host, wie im_app_host in labor.sh.
+  param([int]$N, [string]$Tag, [int]$TimeoutMs, [string]$Profil, [string]$Rechner, [bool]$RuntimeAus)
+  $aus = if ($RuntimeAus) { '1' } else { "''" }
+  return "LAB_N=$N LAB_TAG='$Tag' LAB_TIMEOUT_MS=$TimeoutMs LAB_PROFIL_IST='$Profil' LAB_RECHNER='$Rechner' LAB_RUNTIME_AUS=$aus"
+}
+
+function Get-MessungZiel {
+  # Zielname in messung/ ohne Ueberschreiben: <Basis><Endung>, sonst <Basis>-2<Endung>, -3 ... (wie labor.sh lauf).
+  param([string]$Ordner, [string]$Basis, [string]$Endung)
+  $ziel = Join-Path $Ordner "$Basis$Endung"
+  $i = 2
+  while (Test-Path $ziel) { $ziel = Join-Path $Ordner "$Basis-$i$Endung"; $i++ }
+  return $ziel
+}
+
 function Invoke-ImAppHost([string]$LaufMode) {
   # PowerShell 5.1 gibt eingebettete " ungeschuetzt an ssh.exe weiter; daher -N '' (im String '''').
   Invoke-VmScript $null 'sync'
@@ -462,7 +479,7 @@ function Invoke-ImAppHost([string]$LaufMode) {
     $timeout = [int]$k.timeoutMs
     Write-Host "Timeout $timeout ms aus $($kal.Name)"
   }
-  $envText = "LAB_N=$LabN LAB_TAG='$LabTag' LAB_TIMEOUT_MS=$timeout LAB_PROFIL_IST='$profil' LAB_RECHNER='$rechner'"
+  $envText = Get-LaufEnv -N $LabN -Tag $LabTag -TimeoutMs $timeout -Profil $profil -Rechner $rechner -RuntimeAus ($LaufMode -eq 'lauf' -and $LabRuntimeAus.IsPresent)
   $ausgabe = @(& ssh.exe @o "labor@$AppIp" "$envText bash arsnova.eu/$Ev/lauf.sh $LaufMode")
   $ausgabe | Out-Host
   if ($LASTEXITCODE -ne 0) { throw "lauf.sh $LaufMode fehlgeschlagen ($LASTEXITCODE)" }
@@ -487,11 +504,38 @@ function Invoke-ImAppHost([string]$LaufMode) {
     Add-LaborUmgebung (Join-Path $lokal 'ergebnis.json')
     if (-not ($LabTag.StartsWith('dev') -or $LabTag.StartsWith('probe'))) {
       $basis = '{0:yyyy-MM-dd}-lauf{1}' -f (Get-Date), $(if ($LabTag) { "-$LabTag" } else { '' })
-      $ziel = Join-Path (Join-Path $PSScriptRoot 'messung') "$basis.json"
-      $i = 2
-      while (Test-Path $ziel) { $ziel = Join-Path (Join-Path $PSScriptRoot 'messung') "$basis-$i.json"; $i++ }
+      $ziel = Get-MessungZiel -Ordner (Join-Path $PSScriptRoot 'messung') -Basis $basis -Endung '.json'
       Copy-Item (Join-Path $lokal 'ergebnis.json') $ziel
       Write-Host "Ergebnis: $ziel"
+    }
+  }
+  if ($LaufMode -eq 'kontrolle' -or $LaufMode -eq 'belege') {
+    # Wie labor.sh: C0 (Nachtrag M2) bzw. Netz- und Konfigurationsbelege ohne Secrets (M1) nach messung/.
+    $dir = "$($ausgabe[-1])".Trim()
+    New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
+    Push-Location $OutDir
+    try { & scp.exe -q -r @o "labor@${AppIp}:$dir" '.'; if ($LASTEXITCODE -ne 0) { throw 'scp der Ergebnisse fehlgeschlagen' } }
+    finally { Pop-Location }
+    $lokal = Join-Path $OutDir (Split-Path $dir -Leaf)
+    $messung = Join-Path $PSScriptRoot 'messung'
+    if ($LaufMode -eq 'kontrolle') {
+      Add-LaborUmgebung (Join-Path $lokal 'ergebnis.json')
+      $ziel = Get-MessungZiel -Ordner $messung -Basis ('{0:yyyy-MM-dd}-kontrolle-c0' -f (Get-Date)) -Endung '.json'
+      Copy-Item (Join-Path $lokal 'ergebnis.json') $ziel
+      Write-Host "Ergebnis: $ziel"
+    }
+    else {
+      # Belege sind ohne Secrets (env-ohne-secrets.sh, Token-Gegenprobe in lauf.sh) und kommen ins Repo.
+      $ziel = Get-MessungZiel -Ordner $messung -Basis ('{0:yyyy-MM-dd}-belege' -f (Get-Date)) -Endung ''
+      New-Item -ItemType Directory -Force -Path $ziel | Out-Null
+      $utf8 = New-Object Text.UTF8Encoding $false
+      foreach ($f in @(Get-ChildItem -Path $lokal -File | Where-Object { $_.Extension -eq '.txt' -or $_.Name -eq 'manifest.json' })) {
+        # Zeilenenden auf LF, Leerzeichen am Zeilenende weg (git diff --check)
+        $text = ([IO.File]::ReadAllText($f.FullName) -replace "`r", '') -replace '(?m)[ \t]+$', ''
+        [IO.File]::WriteAllText((Join-Path $ziel $f.Name), $text, $utf8)
+      }
+      [IO.File]::WriteAllText((Join-Path $ziel 'umgebung.json'), (Get-LaborUmgebung) + "`n", $utf8)
+      Write-Host "Belege: $ziel"
     }
   }
 }
@@ -523,6 +567,8 @@ if ($MyInvocation.InvocationName -ne '.') {
     'pruefen' { Invoke-Pruefen }
     'kalibrierung' { Invoke-ImAppHost 'kalibrierung' }
     'lauf' { Invoke-ImAppHost 'lauf' }
+    'kontrolle' { Invoke-ImAppHost 'kontrolle' }
+    'belege' { Invoke-ImAppHost 'belege' }
     'status' { Invoke-VmScript $null 'status' }
     'stop' { Invoke-VmScript $null 'stop' }
     'start' { Invoke-LaborStart }

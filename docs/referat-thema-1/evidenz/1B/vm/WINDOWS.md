@@ -68,6 +68,8 @@ WSL 2 startet **eine** Hilfs-VM; alle Distributionen laufen darin als Container 
 
 `labor.ps1 -Mode pruefen` deckt Runbook §10 und §11 und die Negativtests ab. Von Hand zusätzlich: Vom **Handy oder zweiten Rechner im Heimnetz** muss `curl --max-time 5 http://192.168.150.20:8080/health` scheitern; `Get-NetRoute -DestinationPrefix 192.168.150.0/24` zeigt nur `vEthernet (arsnova-1b)`; `Get-VMSwitch` zeigt `arsnova-1b` als `Internal`.
 
+Messungen wie unter Linux (_ergänzt 2026-11-13_): `-Mode kalibrierung`, `-Mode lauf` (B0 mit `-LabRuntimeAus`), `-Mode kontrolle` (C0) und `-Mode belege` (Netz- und Konfigurationsbelege ohne Secrets); Ablauf im [Runbook, Abschnitt 3](../runbook.md#3-lauf).
+
 ## 7. Gültigkeitsgrenzen
 
 - Absolute Zeiten sind zwischen Rechnern **nicht vergleichbar**; verglichen werden Verhältnisse und die Zerlegung innerhalb eines Rechners.

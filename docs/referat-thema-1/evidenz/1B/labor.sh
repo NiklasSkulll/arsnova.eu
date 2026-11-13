@@ -304,18 +304,24 @@ im_app_host() { # modus: lauf.sh im app-host mit Hülle (Ruhezustand gesperrt, E
   if [[ "$1" == kontrolle || "$1" == belege ]]; then
     local dir; dir="$(tail -n 1 <<<"$ausgabe")"
     scp -q -r -o UserKnownHostsFile="$VMDIR/known_hosts" "labor@$APP:$dir" "$OUT/"
-    local lokal="$OUT/$(basename "$dir")"
+    local lokal; lokal="$OUT/$(basename "$dir")"
+    # Nie ein vorhandenes Ergebnis überschreiben: -2, -3 … wie bei lauf (Get-MessungZiel unter Windows).
+    local basis ziel i=2
     if [[ "$1" == kontrolle ]]; then
       umgebung_einbetten "$lokal/ergebnis.json"
-      cp "$lokal/ergebnis.json" "$HERE/messung/$(date +%F)-kontrolle-c0.json"
-      echo "Ergebnis: $HERE/messung/$(date +%F)-kontrolle-c0.json"
+      basis="$HERE/messung/$(date +%F)-kontrolle-c0" ziel="$basis.json"
+      while [[ -e "$ziel" ]]; do ziel="$basis-$i.json"; i=$((i + 1)); done
+      cp "$lokal/ergebnis.json" "$ziel"
+      echo "Ergebnis: $ziel"
     else
       # Belege sind ohne Secrets (env-ohne-secrets.sh, Token-Gegenprobe in lauf.sh) und kommen ins Repo.
-      mkdir -p "$HERE/messung/$(date +%F)-belege"
-      cp "$lokal"/*.txt "$lokal"/manifest.json "$HERE/messung/$(date +%F)-belege/"
-      sed -i 's/[[:space:]]*$//' "$HERE/messung/$(date +%F)-belege/"*.txt   # git diff --check
-      LAB_VMDIR="$VMDIR" bash "$HERE/umgebung.sh" >"$HERE/messung/$(date +%F)-belege/umgebung.json"
-      echo "Belege: $HERE/messung/$(date +%F)-belege/"
+      basis="$HERE/messung/$(date +%F)-belege" ziel="$basis"
+      while [[ -e "$ziel" ]]; do ziel="$basis-$i"; i=$((i + 1)); done
+      mkdir -p "$ziel"
+      cp "$lokal"/*.txt "$lokal"/manifest.json "$ziel/"
+      sed -i 's/[[:space:]]*$//' "$ziel/"*.txt   # git diff --check
+      LAB_VMDIR="$VMDIR" bash "$HERE/umgebung.sh" >"$ziel/umgebung.json"
+      echo "Belege: $ziel/"
     fi
   fi
   if [[ "$1" == lauf ]]; then

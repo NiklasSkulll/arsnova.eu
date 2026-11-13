@@ -119,3 +119,25 @@ test('--arbeitsstand legt refs/labor/arbeitsstand mit nicht committeten Änderun
     .find((l) => l.startsWith('powershell.exe|'));
   assert.match(aufruf, new RegExp(`\\|-Mode\\|lauf\\|-LabTag\\|dev-x\\|-Commit\\|${sha}\\|$`));
 });
+
+test('up zeigt bei Fehler das Ende des Logs und gibt den Exit-Code weiter (Admin-Fenster ist dann zu)', async () => {
+  const { spawnSync } = await import('node:child_process');
+  const fehlerBin = join(t, 'bin-fehler');
+  mkdirSync(fehlerBin, { recursive: true });
+  for (const n of ['ssh.exe', 'cmd.exe', 'wslpath'])
+    writeFileSync(join(fehlerBin, n), readFileSync(join(bin, n)));
+  writeFileSync(join(fehlerBin, 'powershell.exe'), '#!/bin/bash\nexit 3\n');
+  for (const n of ['powershell.exe', 'ssh.exe', 'cmd.exe', 'wslpath'])
+    chmodSync(join(fehlerBin, n), 0o755);
+  writeFileSync(
+    join(winhome, 'labor-1b', 'log-up-20261113T190000.txt'),
+    'Schritt 9\r\nFEHLER: llm-start.sh im llm-host fehlgeschlagen\r\n',
+  );
+  const r = spawnSync('bash', [join(here, 'labor-wsl.sh'), 'up'], {
+    encoding: 'utf8',
+    env: { ...process.env, PATH: `${fehlerBin}:${process.env.PATH}`, LAB_WSL_TEST: '1' },
+  });
+  rmSync(join(winhome, 'labor-1b', 'log-up-20261113T190000.txt'));
+  assert.equal(r.status, 3);
+  assert.match(r.stderr + r.stdout, /FEHLER: llm-start\.sh im llm-host fehlgeschlagen/);
+});

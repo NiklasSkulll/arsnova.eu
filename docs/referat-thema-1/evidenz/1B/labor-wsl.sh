@@ -4,7 +4,7 @@
 # Hyper-V-Switch; ob WSL selbst 192.168.150.0/24 erreicht, ist nicht dokumentiert und wird nicht gebraucht.
 #
 #   labor-wsl.sh status|start|stop|vorpruefung|groessen|umgebung|pruefen   wie labor.ps1 -Mode …
-#   labor-wsl.sh kalibrierung|lauf [Parameter für labor.ps1]              z. B. lauf -LabN 1 -LabTag dev-x
+#   labor-wsl.sh kalibrierung|lauf|kontrolle|belege [Parameter]  z. B. lauf -LabN 1 -LabTag dev-x; B0: lauf -LabRuntimeAus
 #   labor-wsl.sh up|destroy [Parameter]      mit Admin-Rückfrage (UAC), läuft in eigenem Fenster
 #   labor-wsl.sh vm app|llm '<befehl>'       Befehl in einer VM (Laborschlüssel, known_hosts aus dem VM-Ordner)
 #   --arbeitsstand (bei sync, lauf, kalibrierung, up): nimmt auch nicht committete Änderungen mit. Dafür legt
@@ -78,8 +78,9 @@ case "$modus" in
   up | destroy)
     # Netz und NAT brauchen Admin: eigenes Fenster mit UAC-Rückfrage; danach das Log zeigen.
     echo "Admin-Fenster für labor.ps1 -Mode $modus öffnet sich (UAC bestätigen) und schließt sich am Ende." >&2
-    powershell.exe -NoProfile -Command "\$p = Start-Process -FilePath powershell.exe -Verb RunAs -Wait -PassThru -ArgumentList '-NoProfile -ExecutionPolicy Bypass -File \"$PS1\" -Mode $modus ${args[*]:-}'; exit \$p.ExitCode"
-    rc=$?
+    # Ohne "|| rc=$?" beendet set -e das Skript vor der Logausgabe, und der Fehler wäre mit dem Fenster weg.
+    rc=0
+    powershell.exe -NoProfile -Command "\$p = Start-Process -FilePath powershell.exe -Verb RunAs -Wait -PassThru -ArgumentList '-NoProfile -ExecutionPolicy Bypass -File \"$PS1\" -Mode $modus ${args[*]:-}'; exit \$p.ExitCode" || rc=$?
     log="$(ls -t "$WINHOME"/labor-1b/log-"$modus"-*.txt 2>/dev/null | head -n 1 || true)"
     [[ -n "$log" ]] && { echo "== Ende des Logs $log" >&2; tr -d '\0\r' <"$log" | tail -n 40; }
     exit "$rc"
