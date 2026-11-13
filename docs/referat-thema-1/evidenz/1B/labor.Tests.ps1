@@ -3,7 +3,7 @@
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '',
   Justification = 'Platzhalter-Cmdlets fuer Mock; Parameter nur fuer die Signatur.')]
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', '',
-  Justification = 'Ja und LlmCpus liest labor.ps1 per dynamischem Scope.')]
+  Justification = 'Ja, LlmCpus und VmScript liest labor.ps1 per dynamischem Scope.')]
 param()
 BeforeAll {
   if (-not $env:USERPROFILE) { $env:USERPROFILE = [IO.Path]::GetTempPath() }
@@ -56,5 +56,25 @@ Describe 'Test-LaborNetz' {
     Mock Get-NetNatStaticMapping { [pscustomobject]@{ ExternalPort = 8080 } }
     Mock Test-LlmOffen { $true }
     Test-LaborNetz | Should -Be 3
+  }
+}
+
+Describe 'Invoke-VmScript' {
+  BeforeAll {
+    $script:fake = Join-Path ([IO.Path]::GetTempPath()) "vm-fake-$PID.ps1"
+  }
+  AfterAll { Remove-Item -Force -ErrorAction SilentlyContinue $script:fake }
+
+  It 'wirft, wenn vm-windows.ps1 mit Fehler endet (up macht dann nicht weiter)' {
+    Set-Content -Path $script:fake -Value 'param($Mode, $SshKey, $VmDir) exit 1'
+    $VmScript = $script:fake
+    { Invoke-VmScript $null 'up' } | Should -Throw '*vm-windows.ps1 -Mode up*'
+  }
+
+  It 'wirft nicht bei Erfolg, auch wenn ein frueherer Befehl einen Fehlercode hinterliess' {
+    Set-Content -Path $script:fake -Value 'param($Mode, $SshKey, $VmDir) exit 0'
+    $VmScript = $script:fake
+    $global:LASTEXITCODE = 255
+    { Invoke-VmScript $null 'status' } | Should -Not -Throw
   }
 }

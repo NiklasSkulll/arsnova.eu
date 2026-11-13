@@ -528,6 +528,8 @@ try {
     'status' { Invoke-Status }
     'destroy' { Invoke-Destroy }
   }
+  # Explizit 0, sonst bliebe der Code des letzten ssh-Aufrufs stehen (labor.ps1 prueft ihn).
+  exit 0
 }
 catch {
   Write-Host "FEHLER: $($_.Exception.Message)" -ForegroundColor Red

@@ -3,7 +3,8 @@
   1B-Labor unter Windows mit einem Befehl, Gegenstueck zu labor.sh (ADR 1B-010).
 
 .DESCRIPTION
-  Status: ungetestet, Niklas prueft (Test in verschachtelter VM folgt, Plan Task 12 Step 6).
+  Status: auf echtem Windows 11 (PowerShell 5.1) teilweise getestet (groessen, status, pruefen,
+  Vorpruefungen von up); VMs und Lauf nicht, siehe evidenz/1B/2026-11-13-windows-test.md.
 
     labor.ps1 -Mode up        Groessenwahl, VMs (vm-windows.ps1), llm-host, app-host, Pruefungen
     labor.ps1 -Mode groessen  nur Empfehlung und Groessenwahl anzeigen, nichts anlegen
@@ -154,7 +155,10 @@ function Invoke-VmScript([hashtable]$Groesse, [string]$VmMode) {
     $a.LlmCpus = $Groesse.LlmCpus; $a.LlmRamGB = $Groesse.LlmRamGB
     $a.AppCpus = $Groesse.AppCpus; $a.AppRamGB = $Groesse.AppRamGB
   }
+  # vm-windows.ps1 meldet Fehler nur per Exit-Code 1 (kein throw), daher hier pruefen.
+  $global:LASTEXITCODE = 0
   & $VmScript @a
+  if ($LASTEXITCODE -ne 0) { throw "vm-windows.ps1 -Mode $VmMode fehlgeschlagen ($LASTEXITCODE)" }
 }
 
 # $true, wenn der Rechner den llm-host auf 8080 erreicht (soll nicht so sein).
