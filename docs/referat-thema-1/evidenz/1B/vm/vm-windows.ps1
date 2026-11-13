@@ -408,9 +408,16 @@ function Invoke-Sync {
   $stand = Get-RepoStand -Start $PSScriptRoot
   Write-Info "Repo: $($stand.Wurzel), Commit $($stand.Commit)"
   $arch = Join-Path $VmDir 'repo-git.tgz'
+  $quelle = $stand.Wurzel
+  if ($quelle.StartsWith('\\')) {
+    # Repo auf einem Netzpfad (etwa \\wsl.localhost\...): erst lokal spiegeln, robocopy ist dafuer gebaut.
+    $quelle = Join-Path $VmDir 'repo-kopie'
+    & robocopy.exe (Join-Path $stand.Wurzel '.git') (Join-Path $quelle '.git') /MIR /NFL /NDL /NJH /NJS /NP /R:2 /W:2 | Out-Null
+    if ($LASTEXITCODE -ge 8) { throw "robocopy konnte $($stand.Wurzel)\.git nicht kopieren (Code $LASTEXITCODE)." }
+  }
   # Nur .git packen; die VM klont daraus und checkt den Commit aus (wie git bundle unter Linux).
-  & tar.exe -czf $arch -C $stand.Wurzel .git
-  if ($LASTEXITCODE -ne 0) { throw "tar.exe konnte $($stand.Wurzel)\.git nicht packen (Code $LASTEXITCODE)." }
+  & tar.exe -czf $arch -C $quelle .git
+  if ($LASTEXITCODE -ne 0) { throw "tar.exe konnte $quelle\.git nicht packen (Code $LASTEXITCODE)." }
   $o = Get-SshOption
   foreach ($vm in $Vms) {
     Wait-Ready $vm.Ip $vm.Name
@@ -458,7 +465,7 @@ function Invoke-Destroy {
   }
   if (Get-NetNat -Name $Net -ErrorAction SilentlyContinue) { Remove-NetNat -Name $Net -Confirm:$false }
   if (Get-VMSwitch -Name $Net -ErrorAction SilentlyContinue) { Remove-VMSwitch -Name $Net -Force }
-  foreach ($p in 'known_hosts', 'repo-git.tgz', 'img-tmp') {
+  foreach ($p in 'known_hosts', 'repo-git.tgz', 'repo-kopie', 'img-tmp') {
     $full = Join-Path $VmDir $p
     if (Test-Path $full) { Remove-Item -Recurse -Force $full }
   }

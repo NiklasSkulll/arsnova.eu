@@ -1,13 +1,13 @@
 # 1B-Labor: Nachbau und Lauf
 
-Zwei VMs auf einem Rechner: app-host `192.168.150.10` (App aus `docker-compose.prod.yml`) und llm-host `192.168.150.20` (Runtime aus `docker-compose.llm.yml`). Entscheidungen: [ADR 1B-002](../../adr/1B-002-topologie-zwei-vms-ein-rechner.md) bis [ADR 1B-010](../../adr/1B-010-aufbau-automatisiert-mit-groessenempfehlung.md). Linux ist getestet. Windows ist mit Pester geprüft und auf echtem Windows 11 (PowerShell 5.1) teilweise getestet: Größenwahl, `status`, `pruefen` und die Vorprüfungen von `up`. Ein Aufbau mit echtem Hyper-V steht noch aus; in einer VM auf dem Laptop hing Windows nach der WSL-Installation, der erste echte Aufbau ist der von Niklas ([Windows-Test](2026-11-13-windows-test.md)).
+Zwei VMs auf einem Rechner: app-host `192.168.150.10` (App aus `docker-compose.prod.yml`) und llm-host `192.168.150.20` (Runtime aus `docker-compose.llm.yml`). Entscheidungen: [ADR 1B-002](../../adr/1B-002-topologie-zwei-vms-ein-rechner.md) bis [ADR 1B-010](../../adr/1B-010-aufbau-automatisiert-mit-groessenempfehlung.md). Linux ist getestet. Windows läuft seit 2026-11-13 ohne WSL ([WINDOWS.md](vm/WINDOWS.md)); geprüft mit Pester und auf echtem Windows 11 bis kurz vor dem Start der VMs. Den Start unter Hyper-V selbst prüft erst der erste echte Aufbau, der von Niklas ([Windows-Test](2026-11-13-windows-test.md)).
 
 ## 1. Voraussetzungen
 
 | Was             | Linux                                                                                                                    | Windows                                                                  |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
 | Rechner         | mindestens 16 GiB RAM und 2 physische Kerne; empfohlen 24 GiB und 4 Kerne                                                | dasselbe                                                                 |
-| Virtualisierung | KVM (`/dev/kvm`), libvirt, `virt-install`, `qemu-img`, `xorriso`, `jq`; `labor.sh` nennt fehlende Pakete je Distribution | Windows 10/11 Pro, Education oder Enterprise mit Hyper-V; WSL mit Ubuntu |
+| Virtualisierung | KVM (`/dev/kvm`), libvirt, `virt-install`, `qemu-img`, `xorriso`, `jq`; `labor.sh` nennt fehlende Pakete je Distribution | Windows 10/11 Pro, Education oder Enterprise mit Hyper-V; kein WSL nötig |
 | Rechte          | Gruppe `libvirt`; sudo nur für ufw-Freigaben und das VM-Verzeichnis (fragt nach)                                         | Admin-PowerShell                                                         |
 | Netz            | Internet für Ubuntu-Image, Pakete, Docker-Images und das GGUF (2,4 GiB)                                                  | dasselbe                                                                 |
 | Strom           | Netzteil; Energieprofil siehe Abschnitt 4                                                                                | dasselbe                                                                 |
@@ -31,7 +31,7 @@ powershell -ExecutionPolicy Bypass -File .\docs\referat-thema-1\evidenz\1B\labor
 - nach dem Start der VMs weniger als die RAM-Reserve frei bliebe (Standard 4 GiB; `LAB_RAM_RESERVE_GIB` bzw. `-RamReserveGB`, mindestens 2, kleiner nur auf Testrechnern ohne andere Programme), oder
 - der freie Platz kleiner ist als der gemessene Bedarf (etwa 31 GiB) plus 10 GiB Reserve.
 
-Unter Windows zählt der verfügbare RAM wie im Task-Manager (frei plus Cache). WSL belegt selbst RAM; vor `up` hilft `wsl --shutdown`.
+Unter Windows zählt der verfügbare RAM wie im Task-Manager (frei plus Cache), geprüft direkt vor dem Start der VMs. Läuft WSL oder Docker Desktop, belegen sie selbst RAM; vor `up` hilft `wsl --shutdown`.
 
 | Belegt (Empfehlung bei 24 GiB RAM und mehr) | llm-host                         | app-host            | Hinweis                        |
 | ------------------------------------------- | -------------------------------- | ------------------- | ------------------------------ |
@@ -97,19 +97,17 @@ Mitschnitte enthalten den Runtime-Token im `Authorization`-Header und bleiben in
 
 _Ergänzt 2026-11-13, aktualisiert am selben Tag._ Stand für Störversuche und Betriebsaufwand auf dem eigenen Rechner. Das Skript schützt den Rechner (Abschnitt 2): Reicht RAM oder Platz nicht, legt es nichts an und sagt, was zu tun ist.
 
-**Einmalig (mit zwei Neustarts):**
+**Vorbereitung (einmal):**
 
-1. Windows-Edition prüfen: Pro, Education oder Enterprise (Home hat kein Hyper-V).
-2. Admin-PowerShell: `Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All`, **neu starten**.
-3. WSL mit Ubuntu (falls noch nicht da): `wsl --install -d Ubuntu`, **neu starten**, Ubuntu einmal öffnen und Benutzer anlegen.
-4. In WSL: Fork und Clone aktualisieren, Branch `feature-1B-two-host` (bis zum Merge).
-5. SSH-Schlüssel ohne Passphrase (normale PowerShell 5.1, das leere Argument geht nur so): `ssh-keygen -t ed25519 -N '""' -f "$env:USERPROFILE\.ssh\id_ed25519"`.
+1. Repo aktualisieren, Branch `feature-1B-two-host` (bis zum Merge). Es darf ein Clone unter Windows sein oder der vorhandene in WSL; WSL selbst braucht das Labor nicht.
+2. **PowerShell als Administrator** öffnen (Rechtsklick > „Als Administrator ausführen“) und in den Ordner `docs\referat-thema-1\evidenz\1B` des Clones wechseln, etwa `cd \\wsl.localhost\Ubuntu\home\<nutzer>\arsnova.eu\docs\referat-thema-1\evidenz\1B`.
+3. `powershell -ExecutionPolicy Bypass -File .\labor.ps1 -Mode vorpruefung`: prüft alles, ändert nichts, und sagt zu jedem `FEHLER`, was zu tun ist. Typisch beim ersten Mal: Hyper-V ist aus. Dann denselben Befehl mit `-EnableHyperV` am Ende, Windows **neu starten**, Schritt 3 wiederholen.
 
-**Aufbau (Admin-PowerShell, im Ordner `evidenz\1B` des WSL-Repos):**
+**Aufbau:**
 
-6. `wsl --shutdown` (gibt RAM frei), dann `.\labor.ps1 -Mode groessen`: zeigt die Empfehlung, legt nichts an.
-7. `.\labor.ps1 -Mode up -InstallWslTools`: Übersicht lesen, Empfehlung übernehmen oder eigene Werte eingeben. Dauer etwa 45–60 min, unbeaufsichtigt.
-8. Am Ende muss der Bericht nur `OK`-Zeilen enthalten; ihn aus `%USERPROFILE%\labor-1b\` ins eigene Aufbauprotokoll übernehmen. Jede Abweichung notieren: Der Hyper-V-Teil (VMs, NAT, WSL zum internen Switch) läuft hier zum ersten Mal auf echtem Windows.
+4. `powershell -ExecutionPolicy Bypass -File .\labor.ps1 -Mode up`: zeigt die Empfehlung und was dem Rechner bleibt, fragt einmal, dann läuft es allein (etwa 45–60 min; jeder Schritt mit `[n/8]` und Zeit). Wer erst sehen will, was angelegt wird: zuerst mit `-NurVorbereiten` (startet keine VM).
+5. Bricht es ab, steht da, in welchem Schritt, warum und was zu tun ist, dazu der Pfad zum Log. Nach dem Beheben denselben Befehl erneut aufrufen; Fertiges wird übersprungen. Bei Fragen das Log schicken (enthält keine Tokens).
+6. Am Ende muss der Bericht nur `OK`-Zeilen enthalten; ihn aus `%USERPROFILE%\labor-1b\` ins eigene Aufbauprotokoll übernehmen. Der Start der VMs unter Hyper-V läuft hier zum ersten Mal auf echter Hardware; jede Abweichung notieren.
 
 **Danach:** zwischen den Sitzungen `.\labor.ps1 -Mode stop`, vorher wieder `-Mode start`. Vor Kalibrierung und Läufen Abschnitt 4 (Energiemodus, Windows Update pausieren). Eigene Läufe mit `-LabTag` (z. B. `stoerung-…`); ADR-Nummern 1B-020 bis 1B-039. Am Ende `-Mode destroy`: entfernt VMs, Disks, Switch und NAT.
 
