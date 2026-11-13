@@ -8,7 +8,7 @@ Auftrag, Leitfrage und Hintergrund: [1B-Dossier](1B-private-inferenz-zweiter-hos
 
 **Leitfrage** (vom Autor bestätigt 2026-11-13, [ADR 1B-011](adr/1B-011-zeitbegriffe-und-leitfrage.md)): Wie schlüsselt sich die Zeit eines echten Kompass-Auftrags (Q&A-Zusammenfassung V2 mit der 1C-Referenzfixture) über die zweite private Serverrolle auf, und wie groß ist der Transportanteil im Vergleich zur Inferenz?
 
-**Kurzantwort:** Fast die ganze Zeit ist Inferenz (99,9 %); der Transport kostet im Median 17,8 ms, davon Netz unter 1 ms (gewerteter Lauf, n = 10, Commit `8e9d1317`, ThinkPad P50).
+**Kurzantwort:** Fast die ganze Zeit ist Inferenz (99,9 %); der Transport kostet im Median 17,8 ms, davon Netz unter 1 ms (gewerteter Lauf, n = 10, Commit `8e9d1317`, ThinkPad P50). _Ergänzt 2026-11-13:_ Eine Kontrollanfrage über die Strecke ist nicht langsamer als lokal (−2,0 ms, C0), und fällt die zweite Rolle aus, antwortet die App ohne Wartezeit extraktiv (88,5 ms, B0); Commit `9e111d35`, gleicher Rechner.
 
 ### Aufgabenabdeckung
 
@@ -28,7 +28,7 @@ Auftrag, Leitfrage und Hintergrund: [1B-Dossier](1B-private-inferenz-zweiter-hos
 | H_B2      | Adapter Median **101 ms**                | Median ≤ 2 s                     | erfüllt |
 | H_B3      | Inferenzanteil Median **99,92 %**        | ≥ 95 %                           | erfüllt |
 
-Kalt (Auftrag 1) dauert ein Auftrag 213,7 s, warm (Prompt aus dem Cache, Aufträge 2–10) im Median 148,6 s. Hauptwert ist die Netzzeit in Millisekunden; der Prozentanteil fällt auf langsamer Hardware hoch aus. Die Netzmessung hat bei langen Aufträgen eine Auflösung von etwa ±1 ms (zwei VM-Uhren), weit unter der Schwelle.
+Kalt (Auftrag 1) dauert ein Auftrag 213,7 s, warm (Prompt aus dem Cache, Aufträge 2–10) im Median 148,6 s. _Ergänzt 2026-11-13:_ Fünf weitere Kaltläufe mit je frischer Runtime: Median 200,5 s (187,1–210,1 s), Inferenzanteil 99,92–99,94 %, Netz im Median 0,37 ms; H_B3 gilt damit auch kalt mit n = 5 ([Laufprotokoll, Nachtrag M1–M4](evidenz/1B/2026-11-13-lauf.md#nachtrag-2026-11-13-abends-ergänzende-messungen-m1m4), Commit `9e111d35`). Hauptwert ist die Netzzeit in Millisekunden; der Prozentanteil fällt auf langsamer Hardware hoch aus. Die Netzmessung hat bei langen Aufträgen eine Auflösung von etwa ±1 ms (zwei VM-Uhren), weit unter der Schwelle.
 
 Die Hypothesen und Schwellen standen vor dem Lauf fest ([Design Abschnitt 6](specs/2026-11-12-1b-zwei-host-design.md#6-hypothesen-messgrößen-regeln-autor-aussagen-b-und-c-schwellen-ki-vorschlag)): H_B1 Netz im Median ≤ 50 ms und höchstens 200 ms, H_B2 Adapter im Median ≤ 2 s, H_B3 Inferenz ≥ 95 % der Auftragszeit im Median. Fehlt bei einem Auftrag eine Komponente, gilt keine Hypothese als bestätigt oder widerlegt ([`zeitzerlegung.mjs`](evidenz/1B/messung/zeitzerlegung.mjs), Regel vom 2026-11-13, vom Autor bestätigt am 2026-11-13).
 
@@ -41,6 +41,18 @@ Die App nimmt die `timings` der Runtime an, liest sie im Summary-Pfad aber nicht
 ### Befund: Jede Modellantwort wird verworfen
 
 In allen Aufträgen verwirft das Qualitätstor der App die vollständige Antwort von Qwen3-4B (Form „Stichwort: Text“ fehlt, englisch statt deutsch); die Lehrperson sieht die extraktive Ersatzzusammenfassung. Das bestätigt [ADR 1C-018](adr/1C-018-quality-gate-verwirft-echte-antworten.md) im Zwei-Host-Aufbau. Damit gehen 99,9 % der Auftragszeit in ein Ergebnis, das nicht ankommt ([Laufprotokoll](evidenz/1B/2026-11-13-lauf.md#befund-jede-modellantwort-verworfen)).
+
+### Nachtrag M1–M4: Kontrolle, Ausfall und Netzbelege
+
+Vorab festgelegt und vom Autor freigegeben ([Design, Nachtrag 2026-11-13](specs/2026-11-12-1b-zwei-host-design.md#nachtrag-2026-11-13-ergänzende-messungen-nach-der-vollständigkeitsprüfung)); Commit `9e111d35`, ThinkPad P50, Labor am Abend von null neu aufgebaut ([Laufprotokoll, Nachtrag](evidenz/1B/2026-11-13-lauf.md#nachtrag-2026-11-13-abends-ergänzende-messungen-m1m4)):
+
+| Hypothese      | Messwert                                                                 | Schwelle                         | Urteil  |
+| -------------- | ------------------------------------------------------------------------ | -------------------------------- | ------- |
+| H_C0 (M2)      | Differenz der Mediane app-host − llm-host **−2,0 ms** (348,7 / 350,7 ms) | ≤ 5 ms                           | erfüllt |
+| H_B0 (M3)      | 10 von 10 `extractive`/`unavailable`, T_job Median **88,5 ms**           | alle `unavailable`, Median ≤ 2 s | erfüllt |
+| H_B3 kalt (M4) | Inferenzanteil 99,92–99,94 % in 5 von 5, Netz Median 0,37 ms             | ≥ 95 % in allen; Netz ≤ 50 ms    | erfüllt |
+
+M1 belegt die Netzannahme aus Dossier 10.6: Port 8080 hört nur auf der privaten Adresse und lässt nur den app-host zu; Anfragen kommen mit dessen Adresse an ([Belege](evidenz/1B/messung/2026-11-13-belege/)). S1 (Same-Host) wurde begründet nicht gemessen; C0 grenzt den Transport direkter ab ([Design, Nachtrag](specs/2026-11-12-1b-zwei-host-design.md#nachtrag-2026-11-13-ergänzende-messungen-nach-der-vollständigkeitsprüfung)).
 
 ### Gültigkeitsgrenze D
 
