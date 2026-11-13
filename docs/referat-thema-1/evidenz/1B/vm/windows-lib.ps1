@@ -4,8 +4,9 @@
 # Quellen:
 # - VHD-Format (Fusszeile, CHS-Geometrie, Pruefsumme): Microsoft "Virtual Hard Disk Image Format
 #   Specification" (VHD), Abschnitte "Hard Disk Footer Format" und "CHS Calculation".
-# - Ubuntu-Rohimage im tar.gz (noble-server-cloudimg-amd64.img, raw, Vielfaches von 1 MiB):
-#   https://cloud-images.ubuntu.com/releases/noble/release/ (geprueft 2026-11-13)
+# - qcow2: Spezifikation docs/interop/qcow2.txt im QEMU-Quellbaum. Das Ubuntu-Image
+#   ubuntu-24.04-server-cloudimg-amd64.img ist qcow2 v3 (zlib, ohne Basis-Image); das tar.gz daneben
+#   enthaelt nur die Root-Partition ohne Bootloader und taugt nicht (geprueft 2026-11-13).
 # - cloud-init NoCloud akzeptiert iso9660 oder vfat mit Label cidata/CIDATA:
 #   https://docs.cloud-init.io/en/latest/reference/datasources/nocloud.html
 # - ISO ohne Zusatzwerkzeuge: IMAPI2 (IMAPI2FS.MsftFileSystemImage), wie im Projekt
@@ -101,7 +102,8 @@ function Add-VhdFooter {
 function Get-RepoStand {
   # Repo-Wurzel und Commit von HEAD aus dem .git-Ordner lesen, ohne git.exe (lose Ref, packed-refs, detached).
   param([Parameter(Mandatory)][string]$Start)
-  $d = (Resolve-Path -LiteralPath $Start).Path
+  # ProviderPath statt Path: unter \\wsl.localhost\... liefert .Path sonst 'Microsoft.PowerShell.Core\FileSystem::...'.
+  $d = (Resolve-Path -LiteralPath $Start).ProviderPath
   while ($d -and -not (Test-Path -LiteralPath (Join-Path $d '.git'))) {
     $p = Split-Path -Parent $d
     if ($p -eq $d) { $d = $null } else { $d = $p }
@@ -206,6 +208,12 @@ function Get-VorpruefungUrteil {
   }
   else { Add 'Platte' 'OK' "$($f.PlatteFreiGib) GB frei (noetig $($f.PlatteNoetigGib) GB)" }
 
+  if ($f.ContainsKey('DnsExtern') -and -not $f.DnsExtern) {
+    Add 'DNS' 'FEHLER' 'Externe Namensaufloesung (1.1.1.1) gesperrt' ('Die VMs fragen 1.1.1.1 und 9.9.9.9 direkt (Port 53). Uni- oder Firmennetze sperren das oft: ' +
+      'ein anderes Netz nutzen (z. B. Handy-Hotspot) oder VPN trennen.')
+  }
+  elseif ($f.ContainsKey('DnsExtern')) { Add 'DNS' 'OK' 'Externe Namensaufloesung (1.1.1.1) geht' }
+
   foreach ($h in @($f.Internet.Keys | Sort-Object)) {
     if ($f.Internet[$h]) { Add 'Internet' 'OK' "$h erreichbar" }
     else { Add 'Internet' 'FEHLER' "$h nicht erreichbar" "Internetverbindung pruefen; Proxy oder Firewall muss $h (HTTPS) erlauben." }
@@ -216,6 +224,99 @@ function Get-VorpruefungUrteil {
 function Format-Dauer([TimeSpan]$Dauer) {
   if ($Dauer.TotalHours -ge 1) { return '{0}:{1:00}:{2:00}' -f [int][Math]::Floor($Dauer.TotalHours), $Dauer.Minutes, $Dauer.Seconds }
   return '{0}:{1:00}' -f [int][Math]::Floor($Dauer.TotalMinutes), $Dauer.Seconds
+}
+
+function ConvertFrom-Qcow2 {
+  # qcow2 (v2/v3, zlib) -> Rohdisk, ohne qemu-img. Nach der Spezifikation docs/interop/qcow2.txt (QEMU):
+  # Header, L1/L2-Tabellen, komprimierte Cluster als rohes Deflate. Lehnt ab, was hier nicht vorkommt
+  # (Basis-Image, Verschluesselung, externe Daten, erweiterte L2-Tabellen, andere Kompression).
+  # Getestet bitgenau gegen qemu-img convert (windows-lib.Tests.ps1, Ubuntu-Image 2026-11-13).
+  param([Parameter(Mandatory)][string]$Pfad, [Parameter(Mandatory)][string]$Ziel)
+  if (-not ('LaborQcow2' -as [type])) {
+    Add-Type -TypeDefinition @'
+using System;
+using System.IO;
+using System.IO.Compression;
+public static class LaborQcow2 {
+  static ulong Be(byte[] b, int o, int n) { ulong v = 0; for (int i = 0; i < n; i++) v = (v << 8) | b[o + i]; return v; }
+  static byte[] Lies(FileStream f, long pos, int n) {
+    byte[] b = new byte[n]; f.Position = pos; int g = 0;
+    while (g < n) { int r = f.Read(b, g, n - g); if (r <= 0) break; g += r; }
+    if (g < n) Array.Resize(ref b, g);
+    return b;
+  }
+  public static void ZuRaw(string pfad, string ziel) {
+    using (FileStream f = new FileStream(pfad, FileMode.Open, FileAccess.Read, FileShare.Read)) {
+      byte[] h = Lies(f, 0, 112);
+      if (h.Length < 72 || h[0] != 0x51 || h[1] != 0x46 || h[2] != 0x49 || h[3] != 0xFB)
+        throw new InvalidDataException("kein qcow2 (Kennung fehlt): " + pfad);
+      uint version = (uint)Be(h, 4, 4);
+      if (version != 2 && version != 3) throw new InvalidDataException("qcow2-Version " + version + " nicht unterstuetzt");
+      if (Be(h, 8, 8) != 0) throw new InvalidDataException("qcow2 mit Basis-Image nicht unterstuetzt");
+      int cbits = (int)Be(h, 20, 4);
+      long size = (long)Be(h, 24, 8);
+      if (Be(h, 32, 4) != 0) throw new InvalidDataException("verschluesseltes qcow2 nicht unterstuetzt");
+      int l1n = (int)Be(h, 36, 4);
+      long l1off = (long)Be(h, 40, 8);
+      if (cbits < 9 || cbits > 21) throw new InvalidDataException("Clustergroesse 2^" + cbits + " ungueltig");
+      if (version == 3) {
+        ulong inc = Be(h, 72, 8);
+        if ((inc & ~0x9UL) != 0) throw new InvalidDataException("qcow2-Merkmale 0x" + inc.ToString("x") + " nicht unterstuetzt (z. B. externe Daten, erweiterte L2)");
+        uint hlen = (uint)Be(h, 100, 4);
+        if ((inc & 0x8UL) != 0 && hlen > 104 && h.Length > 104 && h[104] != 0)
+          throw new InvalidDataException("qcow2-Kompression ist nicht zlib");
+      }
+      int cs = 1 << cbits;
+      int l2n = cs / 8;
+      ulong offMask = 0x00fffffffffffe00UL;
+      int x = 62 - (cbits - 8);
+      ulong kMask = (1UL << x) - 1;
+      ulong sMask = (1UL << (cbits - 8)) - 1;
+      byte[] l1 = Lies(f, l1off, l1n * 8);
+      using (FileStream o = new FileStream(ziel, FileMode.Create, FileAccess.Write, FileShare.None)) {
+        o.SetLength(size);
+        byte[] cl = new byte[cs];
+        for (int i = 0; i < l1n; i++) {
+          ulong l2off = Be(l1, i * 8, 8) & offMask;
+          if (l2off == 0) continue;
+          byte[] l2 = Lies(f, (long)l2off, cs);
+          for (int j = 0; j < l2n; j++) {
+            long gpos = ((long)i * l2n + j) * cs;
+            if (gpos >= size) break;
+            ulong e = Be(l2, j * 8, 8);
+            int n = (int)Math.Min(cs, size - gpos);
+            if ((e & (1UL << 62)) != 0) {
+              long hoff = (long)(e & kMask);
+              int clen = (int)((((e >> x) & sMask) + 1) * 512 - (ulong)(hoff & 511));
+              byte[] c = Lies(f, hoff, clen);
+              using (DeflateStream d = new DeflateStream(new MemoryStream(c), CompressionMode.Decompress)) {
+                int g = 0;
+                while (g < cs) { int r = d.Read(cl, g, cs - g); if (r <= 0) break; g += r; }
+                if (g < n) throw new InvalidDataException("komprimierter Cluster bei " + gpos + " zu kurz");
+              }
+            } else {
+              ulong hoff = e & offMask;
+              if (hoff == 0 || (e & 1UL) != 0) continue;   // nicht belegt oder Nullcluster
+              byte[] c = Lies(f, (long)hoff, n);
+              if (c.Length < n) throw new InvalidDataException("Cluster bei " + gpos + " ragt ueber das Dateiende");
+              Buffer.BlockCopy(c, 0, cl, 0, n);
+            }
+            o.Position = gpos;
+            o.Write(cl, 0, n);
+          }
+        }
+      }
+    }
+  }
+}
+'@
+  }
+  try { [LaborQcow2]::ZuRaw($Pfad, $Ziel) }
+  catch {
+    $m = if ($_.Exception.InnerException) { $_.Exception.InnerException.Message } else { $_.Exception.Message }
+    Remove-Item -Force -ErrorAction SilentlyContinue $Ziel
+    throw $m
+  }
 }
 
 function New-SeedIso {

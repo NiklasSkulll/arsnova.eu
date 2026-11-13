@@ -19,9 +19,9 @@ Größen: Werte des Messrechners; `labor.ps1` empfiehlt sie je Rechner (ADR 1B-0
 
 Die VM-Schicht ist `vm-windows.ps1`, die Hilfsfunktionen stehen in `windows-lib.ps1` (getestet mit Pester, auch unter Linux-pwsh). Jeder Schritt zeigt `[n/8]` und die Zeit seit Beginn; ein erneuter Aufruf überspringt, was fertig ist.
 
-1. **Vorprüfung** (ändert nichts, einzeln: `-Mode vorpruefung`): Admin-Rechte, Windows-Edition (Home hat kein Hyper-V), Hyper-V aktiv und Hypervisor läuft (sonst Hinweis auf BIOS/UEFI), Hyper-V-Modul, `ssh.exe`/`scp.exe`, `tar.exe`, Labornetz frei (VPN, Heimnetz), andere NAT-Netze, freier Platz, Erreichbarkeit aller Downloadquellen (Ubuntu, Docker, NodeSource, Hugging Face, GitHub Container Registry). Jede Zeile `OK`, `HINWEIS` oder `FEHLER` mit Abhilfe; bei `FEHLER` bricht es ab, ohne etwas zu ändern. Fehlt der SSH-Schlüssel, legt es einen nur für das Labor an. Mit `-EnableHyperV` aktiviert es Hyper-V und bittet um einen Neustart.
+1. **Vorprüfung** (ändert nichts, einzeln: `-Mode vorpruefung`): Admin-Rechte, Windows-Edition (Home hat kein Hyper-V), Hyper-V aktiv und Hypervisor läuft (sonst Hinweis auf BIOS/UEFI), Hyper-V-Modul, `ssh.exe`/`scp.exe`, `tar.exe`, Labornetz frei (VPN, Heimnetz), andere NAT-Netze, freier Platz, Erreichbarkeit aller Downloadquellen (Ubuntu, Docker, NodeSource, Hugging Face, GitHub Container Registry). Jede Zeile `OK`, `HINWEIS` oder `FEHLER` mit Abhilfe; bei `FEHLER` bricht es ab, ohne etwas zu ändern. Es nutzt einen eigenen Laborschlüssel `%USERPROFILE%\.ssh\arsnova-1b_ed25519` und legt ihn bei Bedarf an (ein vorhandener Schlüssel mit Passphrase würde still scheitern). Die Downloadprüfung geht ohne Proxy, wie die VMs, und prüft externes DNS (1.1.1.1), das Uni- oder Firmennetze oft sperren. Mit `-EnableHyperV` aktiviert es Hyper-V und bittet um einen Neustart.
 2. **Netz**: interner Switch `arsnova-1b`, `192.168.150.1/24`, `New-NetNat` ([NAT-Netz](https://learn.microsoft.com/windows-server/virtualization/hyper-v/setup-nat-network); nur ein NAT pro Rechner).
-3. **Image**: `ubuntu-24.04-server-cloudimg-amd64.tar.gz` von `cloud-images.ubuntu.com/releases/noble/release` (SHA-256 gegen `SHA256SUMS`), entpackt mit `tar.exe` (seit Windows 10 1803 eingebaut). Das enthaltene Rohimage wird durch Anhängen einer VHD-Fußzeile (Microsoft-VHD-Spezifikation) zur festen VHD, `Test-VHD` prüft sie, `Convert-VHD` macht daraus eine dynamische VHDX. Belegt am 2026-11-13: `qemu-img` liest die Datei als VHD mit genau der Rohgröße und bitgleichem Inhalt.
+3. **Image**: `ubuntu-24.04-server-cloudimg-amd64.img` (qcow2 v3, zlib) von `cloud-images.ubuntu.com/releases/noble/release`, SHA-256 gegen `SHA256SUMS`. Ein eigener qcow2-Leser in `windows-lib.ps1` entpackt es zur Rohdisk, eine VHD-Fußzeile (Microsoft-VHD-Spezifikation) macht daraus eine feste VHD, `Test-VHD` prüft sie, `Convert-VHD` erzeugt die dynamische VHDX (erst unter Zwischennamen, dann umbenannt). Belegt am 2026-11-13: Ergebnis bitgleich mit `qemu-img convert` (8 s), die VHD bootet in KVM mit erzwungenem Secure Boot (Microsoft-Schlüssel), cloud-init findet den Seed und setzt `eth0` über die MAC. Das `tar.gz` daneben enthält nur die Root-Partition und bootet nicht.
 4. **Je VM**: Kopie der Basis-VHDX, `Resize-VHD`, NoCloud-Seed als ISO (Label `cidata`, ISO9660 und Joliet über die Windows-Schnittstelle IMAPI2, wie im Projekt [hyperv-vm-provisioning](https://github.com/schtritoff/hyperv-vm-provisioning)), Generation 2, Secure-Boot-Template `MicrosoftUEFICertificateAuthority`, statischer Speicher, keine automatischen Checkpoints, feste MAC. Mit `-NurVorbereiten` endet `up` hier, ohne eine VM zu starten.
 5. **Start**: erst jetzt die RAM-Prüfung (statischer Speicher wird beim Start belegt); bliebe Windows weniger als die Reserve, bricht es ab, die VMs bleiben angelegt.
 6. **Repo-Stand**: `.git` des Clones per `tar.exe` packen, in jede VM kopieren, dort klonen und den Commit von `HEAD` auschecken (Commit aus `.git` gelesen, kein `git.exe` nötig). Wartet je VM bis 20 min auf cloud-init und meldet alle 60 s den Stand.
@@ -29,18 +29,18 @@ Die VM-Schicht ist `vm-windows.ps1`, die Hilfsfunktionen stehen in `windows-lib.
 
 Jeder Aufruf schreibt ein Log nach `%USERPROFILE%\labor-1b\log-<Modus>-<Zeit>.txt` (ohne Tokens); bei einem Fehler nennt das Skript Schritt, Ursache, Abhilfe und den Logpfad.
 
-| Parameter                                        | Standard                            | Bedeutung                                                       |
-| ------------------------------------------------ | ----------------------------------- | --------------------------------------------------------------- |
-| `-Mode`                                          | `groessen`                          | `vorpruefung`, `up`, `pruefen`, `status`, `stop`, `start`, ...  |
-| `-Ja`                                            | aus                                 | ohne Rückfragen, Empfehlung übernehmen                          |
-| `-NurVorbereiten`                                | aus                                 | alles anlegen, keine VM starten                                 |
-| `-LlmCpus`, `-LlmRamGB`, `-AppCpus`, `-AppRamGB` | Empfehlung                          | eigene Größen                                                   |
-| `-LlmDiskGB`, `-AppDiskGB`                       | 20, 25                              | Obergrenze der Platten (mindestens 20 bzw. 25)                  |
-| `-RamReserveGB`                                  | 4                                   | RAM, der Windows bleiben muss (mindestens 2)                    |
-| `-EnableHyperV`                                  | aus                                 | Hyper-V aktivieren (danach Neustart)                            |
-| `-NoSecureBoot`                                  | aus                                 | Secure Boot aus, falls das Image mit dem Template nicht startet |
-| `-SshKey`                                        | `%USERPROFILE%\.ssh\id_ed25519.pub` | Schlüssel für `labor`                                           |
-| `-VmDir`                                         | `C:\ProgramData\arsnova-1b`         | Image, Disks, Seeds, `known_hosts`; nie einchecken              |
+| Parameter                                        | Standard                                    | Bedeutung                                                       |
+| ------------------------------------------------ | ------------------------------------------- | --------------------------------------------------------------- |
+| `-Mode`                                          | `groessen`                                  | `vorpruefung`, `up`, `pruefen`, `status`, `stop`, `start`, ...  |
+| `-Ja`                                            | aus                                         | ohne Rückfragen, Empfehlung übernehmen                          |
+| `-NurVorbereiten`                                | aus                                         | alles anlegen, keine VM starten                                 |
+| `-LlmCpus`, `-LlmRamGB`, `-AppCpus`, `-AppRamGB` | Empfehlung                                  | eigene Größen                                                   |
+| `-LlmDiskGB`, `-AppDiskGB`                       | 20, 25                                      | Obergrenze der Platten (mindestens 20 bzw. 25)                  |
+| `-RamReserveGB`                                  | 4                                           | RAM, der Windows bleiben muss (mindestens 2)                    |
+| `-EnableHyperV`                                  | aus                                         | Hyper-V aktivieren (danach Neustart)                            |
+| `-NoSecureBoot`                                  | aus                                         | Secure Boot aus, falls das Image mit dem Template nicht startet |
+| `-SshKey`                                        | `%USERPROFILE%\.ssh\arsnova-1b_ed25519.pub` | eigener Laborschlüssel für `labor`                              |
+| `-VmDir`                                         | `C:\ProgramData\arsnova-1b`                 | Image, Disks, Seeds, `known_hosts`; nie einchecken              |
 
 `destroy` entfernt nur Objekte namens `arsnova-1b…`; Basis-Image und Download bleiben in `-VmDir` (ganz weg: Ordner löschen).
 

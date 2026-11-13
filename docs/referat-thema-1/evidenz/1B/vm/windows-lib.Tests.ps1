@@ -112,6 +112,13 @@ Describe 'Get-RepoStand' {
     $s.Commit | Should -Be ("a" * 40)
   }
 
+  It 'liefert einen reinen Dateipfad, auch wenn der Start mit Provider-Praefix kommt (UNC-Ordner)' {
+    [IO.File]::WriteAllText((Join-Path $r '.git/HEAD'), (("d" * 40) + "`n"))
+    $s = Get-RepoStand -Start "Microsoft.PowerShell.Core\FileSystem::$r"
+    $s.Wurzel | Should -Not -BeLike '*::*'
+    $s.Commit | Should -Be ("d" * 40)
+  }
+
   It 'liest den Commit aus packed-refs' {
     [IO.File]::WriteAllText((Join-Path $r '.git/HEAD'), "ref: refs/heads/main`n")
     [IO.File]::WriteAllText((Join-Path $r '.git/packed-refs'), ("# pack-refs with: peeled fully-peeled sorted`n" + ("b" * 40) + " refs/heads/main`n"))
@@ -142,7 +149,7 @@ Describe 'Get-VorpruefungUrteil' {
         Admin = $true; Edition = 'Professional'; HyperV = 'Enabled'; HypervisorLaeuft = $true
         VirtualisierungFirmware = $null; HyperVModul = $true; Ssh = $true; Tar = $true
         AndereNat = @(); Adresskonflikt = $null; PlatteFreiGib = 120; PlatteNoetigGib = 41
-        Internet = @{ 'cloud-images.ubuntu.com' = $true; 'huggingface.co' = $true }
+        Internet = @{ 'cloud-images.ubuntu.com' = $true; 'huggingface.co' = $true }; DnsExtern = $true
       }
       foreach ($k in $Aenderung.Keys) { $f[$k] = $Aenderung[$k] }
       return $f
@@ -167,6 +174,7 @@ Describe 'Get-VorpruefungUrteil' {
     @{ name = 'Netz belegt'; aenderung = @{ Adresskonflikt = '192.168.150.7 auf WLAN' }; pruefung = 'Labornetz'; abhilfe = '*192.168.150.0/24*' }
     @{ name = 'NAT ueberlappt'; aenderung = @{ AndereNat = @(@{ Name = 'x'; Prefix = '192.168.0.0/16' }) }; pruefung = 'NAT'; abhilfe = '*Remove-NetNat*' }
     @{ name = 'Platte zu klein'; aenderung = @{ PlatteFreiGib = 30 }; pruefung = 'Platte'; abhilfe = '*41 GB*' }
+    @{ name = 'externes DNS gesperrt'; aenderung = @{ DnsExtern = $false }; pruefung = 'DNS'; abhilfe = '*1.1.1.1*' }
     @{ name = 'Download gesperrt'; aenderung = @{ Internet = @{ 'cloud-images.ubuntu.com' = $true; 'huggingface.co' = $false } }; pruefung = 'Internet'; abhilfe = '*huggingface.co*' }
   ) {
     $e = Get-VorpruefungUrteil (Fakten $aenderung)
@@ -188,5 +196,36 @@ Describe 'Format-Dauer' {
     @{ s = 3725; text = '1:02:05' }
   ) {
     Format-Dauer ([TimeSpan]::FromSeconds($s)) | Should -Be $text
+  }
+}
+
+Describe 'ConvertFrom-Qcow2' {
+  # Testdaten: 256 KiB (Muster, Nullen, Zufall, Text), mit qemu-img 8.x/11.x als qcow2 v3 erzeugt
+  # (komprimiert und unkomprimiert, 4-KiB- und 64-KiB-Cluster wie die Ubuntu-Images). roh.sha256 ist
+  # die SHA-256 der Rohdaten; qemu-img convert -O raw liefert dieselbe.
+  BeforeAll {
+    $script:td = Join-Path $PSScriptRoot 'testdaten'
+    $script:soll = (Get-Content -Raw (Join-Path $td 'roh.sha256')).Trim()
+  }
+
+  It 'ergibt die Rohdaten bitgenau aus <datei>' -ForEach @(
+    @{ datei = 'komprimiert-4k.qcow2' }
+    @{ datei = 'unkomprimiert-4k.qcow2' }
+    @{ datei = 'komprimiert-64k.qcow2' }
+  ) {
+    $ziel = Join-Path ([IO.Path]::GetTempPath()) "q-$PID-$datei.raw"
+    try {
+      ConvertFrom-Qcow2 -Pfad (Join-Path $td $datei) -Ziel $ziel
+      (Get-Item $ziel).Length | Should -Be 262144
+      (Get-FileHash -Algorithm SHA256 $ziel).Hash.ToLowerInvariant() | Should -Be $soll
+    }
+    finally { Remove-Item -Force -ErrorAction SilentlyContinue $ziel }
+  }
+
+  It 'lehnt eine Datei ab, die kein qcow2 ist' {
+    $p = Join-Path ([IO.Path]::GetTempPath()) "kein-$PID.img"
+    [IO.File]::WriteAllBytes($p, [byte[]]::new(4096))
+    try { { ConvertFrom-Qcow2 -Pfad $p -Ziel "$p.raw" } | Should -Throw '*kein qcow2*' }
+    finally { Remove-Item -Force $p, "$p.raw" -ErrorAction SilentlyContinue }
   }
 }

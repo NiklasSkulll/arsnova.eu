@@ -41,7 +41,7 @@ param(
   [Parameter(Mandatory = $true)]
   [ValidateSet('up', 'pruefen', 'sync', 'status', 'stop', 'start', 'destroy')]
   [string]$Mode,
-  [string]$SshKey = (Join-Path $env:USERPROFILE '.ssh\id_ed25519.pub'),
+  [string]$SshKey = (Join-Path $env:USERPROFILE '.ssh\arsnova-1b_ed25519.pub'),
   [string]$VmDir = 'C:\ProgramData\arsnova-1b',
   [ValidateRange(1, 64)][int]$LlmCpus = 4,
   [ValidateRange(1, 512)][int]$LlmRamGB = 12,
@@ -66,8 +66,8 @@ $NetAdapter = "vEthernet ($Net)"
 $NetPrefix = '192.168.150.0/24'
 $HostIp = '192.168.150.1'
 $ImgUrl = 'https://cloud-images.ubuntu.com/releases/noble/release'
-$Tarball = 'ubuntu-24.04-server-cloudimg-amd64.tar.gz'
-$RawName = 'noble-server-cloudimg-amd64.img'
+# qcow2-Gesamtdisk (GPT, EFI, shim fuer Secure Boot). Das tar.gz enthaelt nur die Root-Partition und bootet nicht.
+$ImgFile = 'ubuntu-24.04-server-cloudimg-amd64.img'
 $BaseVhdx = 'ubuntu-24.04-base.vhdx'
 $KnownHosts = (Join-Path $VmDir 'known_hosts') -replace '\\', '/'
 # Ziele, die Aufbau und VMs brauchen (Image, Docker, Pakete, Modell); geprueft vor dem Start.
@@ -111,6 +111,7 @@ function Test-Erreichbar([string]$Ziel) {
   try {
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     $r = [Net.WebRequest]::Create("https://$Ziel/")
+    $r.Proxy = $null   # direkt wie die VMs; ein Proxy des Rechners hilft den VMs nicht
     $r.Method = 'HEAD'
     $r.Timeout = 10000
     $r.GetResponse().Close()
@@ -141,6 +142,8 @@ function Get-Fakten {
   $plan = $LlmDiskGB + $AppDiskGB
   # Beim Fortsetzen belegen vorhandene VMs ihren Platz schon; dann keine Plattenschwelle.
   $vorhanden = (Get-Command Get-VM -ErrorAction SilentlyContinue) -and (Get-VM -Name 'arsnova-1b-*' -ErrorAction SilentlyContinue)
+  $dns = $false
+  try { $dns = [bool](Resolve-DnsName -Name 'cloud-images.ubuntu.com' -Server 1.1.1.1 -DnsOnly -QuickTimeout -Type A -ErrorAction Stop) } catch { $dns = $false }
   $internet = @{}
   foreach ($z in $InternetZiele) { $internet[$z] = Test-Erreichbar $z }
   return @{
@@ -150,7 +153,7 @@ function Get-Fakten {
     Tar = [bool](Get-Command tar.exe -ErrorAction SilentlyContinue)
     AndereNat = $nats; Adresskonflikt = $(if ($clash) { "$($clash.IPAddress) auf '$($clash.InterfaceAlias)'" } else { $null })
     PlatteFreiGib = [int][Math]::Floor($drive.Free / 1GB); PlatteNoetigGib = $(if ($vorhanden) { 0 } else { [Math]::Min(31, $plan) + 10 })
-    Internet = $internet
+    Internet = $internet; DnsExtern = $dns
   }
 }
 
@@ -165,7 +168,7 @@ function Invoke-Vorpruefung {
     Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All -NoRestart | Out-Null
     Write-Host ''
     Write-Host 'Hyper-V ist aktiviert. Bitte Windows jetzt neu starten und denselben Befehl danach noch einmal aufrufen.' -ForegroundColor Green
-    exit 0
+    exit 3010   # wie Windows-Installer: Neustart noetig; labor.ps1 haelt dann an
   }
   $e = Get-VorpruefungUrteil $f
   foreach ($z in $e) {
@@ -181,8 +184,20 @@ function Invoke-Vorpruefung {
 }
 
 function Initialize-SshKey {
-  if (Test-Path $SshKey) { Write-Info "SSH-Schluessel: $SshKey"; return }
   $priv = $SshKey -replace '\.pub$', ''
+  if (Test-Path $SshKey) {
+    # Ein Schluessel mit Passphrase scheitert spaeter still (BatchMode); deshalb hier pruefen.
+    if (Test-Path $priv) {
+      $p = Start-Process -FilePath 'ssh-keygen.exe' -ArgumentList "-y -P `"`" -f `"$priv`"" -Wait -NoNewWindow -PassThru `
+        -RedirectStandardOutput (Join-Path $VmDir 'keycheck.out') -RedirectStandardError (Join-Path $VmDir 'keycheck.err')
+      Remove-Item -Force -ErrorAction SilentlyContinue (Join-Path $VmDir 'keycheck.out'), (Join-Path $VmDir 'keycheck.err')
+      if ($p.ExitCode -ne 0) {
+        throw "Der SSH-Schluessel $priv hat eine Passphrase; das Labor braucht einen ohne. Den Parameter -SshKey weglassen (dann legt das Skript einen eigenen an) oder einen anderen angeben."
+      }
+    }
+    Write-Info "SSH-Schluessel: $SshKey"
+    return
+  }
   Write-Info "SSH-Schluessel fehlt; lege einen nur fuer das Labor an (ohne Passphrase): $priv"
   New-Item -ItemType Directory -Force -Path (Split-Path $priv) | Out-Null
   # Argumente als ein String: so kommt das leere -N unter PowerShell 5.1 und 7 gleich an.
@@ -233,39 +248,40 @@ function Save-Datei([string]$Url, [string]$Ziel) {
 }
 
 function Initialize-Image {
-  Write-Step 'Ubuntu-Image laden, pruefen, fuer Hyper-V umwandeln' '2-10 min, ~550 MB Download'
+  Write-Step 'Ubuntu-Image laden, pruefen, fuer Hyper-V umwandeln' '2-10 min, ~600 MB Download'
   $base = Join-Path $VmDir $BaseVhdx
   if (Test-Path $base) { Write-Info "vorhanden: $base"; return }
-  $tgz = Join-Path $VmDir $Tarball
+  $img = Join-Path $VmDir $ImgFile
   $sums = Join-Path $VmDir 'SHA256SUMS'
   Save-Datei "$ImgUrl/SHA256SUMS" $sums
-  $line = Get-Content $sums | Where-Object { $_ -match "^([0-9a-f]{64}) \*?$([regex]::Escape($Tarball))$" } | Select-Object -First 1
-  if (-not $line) { throw "$Tarball nicht in SHA256SUMS gefunden." }
+  $line = Get-Content $sums | Where-Object { $_ -match "^([0-9a-f]{64}) \*?$([regex]::Escape($ImgFile))$" } | Select-Object -First 1
+  if (-not $line) { throw "$ImgFile nicht in SHA256SUMS gefunden." }
   $soll = ($line -split ' ')[0]
-  if ((Test-Path $tgz) -and (Get-FileHash -Algorithm SHA256 $tgz).Hash.ToLowerInvariant() -ne $soll) {
-    Write-Warn 'vorhandenes Archiv ist veraltet oder unvollstaendig; lade neu'
-    Remove-Item -Force $tgz
+  if ((Test-Path $img) -and (Get-FileHash -Algorithm SHA256 $img).Hash.ToLowerInvariant() -ne $soll) {
+    Write-Warn 'vorhandenes Image ist veraltet oder unvollstaendig; lade neu'
+    Remove-Item -Force $img
   }
-  if (-not (Test-Path $tgz)) { Save-Datei "$ImgUrl/$Tarball" $tgz }
-  $ist = (Get-FileHash -Algorithm SHA256 $tgz).Hash.ToLowerInvariant()
-  if ($ist -ne $soll) { Remove-Item -Force $tgz; throw "SHA-256 stimmt nicht ($ist statt $soll); Datei geloescht, bitte erneut aufrufen." }
+  if (-not (Test-Path $img)) { Save-Datei "$ImgUrl/$ImgFile" $img }
+  $ist = (Get-FileHash -Algorithm SHA256 $img).Hash.ToLowerInvariant()
+  if ($ist -ne $soll) { Remove-Item -Force $img; throw "SHA-256 stimmt nicht ($ist statt $soll); Datei geloescht, bitte erneut aufrufen." }
   Write-Info 'SHA-256 OK'
 
+  # qcow2 -> Rohdisk (eigener Leser, bitgenau wie qemu-img) -> feste VHD -> dynamische VHDX.
+  # Erst unter Zwischennamen fertigstellen, damit ein Abbruch keine halbe Basis hinterlaesst.
   $tmp = Join-Path $VmDir 'img-tmp'
   if (Test-Path $tmp) { Remove-Item -Recurse -Force $tmp }
   New-Item -ItemType Directory -Path $tmp | Out-Null
-  Write-Info 'entpacken (tar.exe) ...'
-  & tar.exe -xzf $tgz -C $tmp $RawName
-  if ($LASTEXITCODE -ne 0) { throw "tar.exe konnte $Tarball nicht entpacken (Code $LASTEXITCODE)." }
-  $raw = Join-Path $tmp $RawName
-  if (-not (Test-Path $raw)) { throw "$RawName fehlt im Archiv (hat Canonical das Format geaendert?)." }
-  Write-Info 'Rohimage -> feste VHD (Fusszeile) -> dynamische VHDX ...'
-  Add-VhdFooter -Path $raw
   $vhd = Join-Path $tmp 'base.vhd'
-  Move-Item $raw $vhd
+  Write-Info 'qcow2 entpacken (etwa 3,5 GB Rohdisk, unter einer Minute) ...'
+  ConvertFrom-Qcow2 -Pfad $img -Ziel $vhd
+  Add-VhdFooter -Path $vhd
   try { Test-VHD -Path $vhd | Out-Null }
   catch { throw "Hyper-V erkennt die erzeugte VHD nicht: $($_.Exception.Message)" }
-  Convert-VHD -Path $vhd -DestinationPath $base -VHDType Dynamic
+  $neu = Join-Path $tmp 'base.vhdx'
+  Write-Info 'in dynamische VHDX umwandeln (Convert-VHD) ...'
+  Convert-VHD -Path $vhd -DestinationPath $neu -VHDType Dynamic
+  Test-VHD -Path $neu | Out-Null
+  Move-Item -Force $neu $base
   Remove-Item -Recurse -Force $tmp
   Write-Info "fertig: $base"
 }
@@ -322,6 +338,7 @@ function Initialize-Vm($Vm) {
     return
   }
   $vhdx = Join-Path $VmDir "$n.vhdx"
+  try {
   Copy-Plain (Join-Path $VmDir $BaseVhdx) $vhdx
   Resize-VHD -Path $vhdx -SizeBytes ([int64]$Vm.DiskGB * 1GB)
   $iso = Build-Seed $Vm
@@ -335,6 +352,13 @@ function Initialize-Vm($Vm) {
   $disk = Get-VMHardDiskDrive -VMName $n | Select-Object -First 1
   if ($NoSecureBoot) { Set-VMFirmware -VMName $n -EnableSecureBoot Off -FirstBootDevice $disk }
   else { Set-VMFirmware -VMName $n -EnableSecureBoot On -SecureBootTemplate MicrosoftUEFICertificateAuthority -FirstBootDevice $disk }
+  }
+  catch {
+    # Halb angelegte VM wieder entfernen, sonst gilt sie beim naechsten Aufruf als fertig.
+    if (Get-VM -Name $n -ErrorAction SilentlyContinue) { Remove-VM -Name $n -Force }
+    foreach ($p in $vhdx, (Join-Path $VmDir "$n-seed.iso")) { Remove-Item -Force -ErrorAction SilentlyContinue $p }
+    throw "VM $n konnte nicht angelegt werden (aufgeraeumt): $($_.Exception.Message)"
+  }
   Write-Info 'angelegt'
 }
 
@@ -342,7 +366,9 @@ function Assert-RamFrei {
   # Erst direkt vor dem Start: statischer Speicher wird beim Start belegt.
   $laufend = @(Get-VM -Name 'arsnova-1b-*' -ErrorAction SilentlyContinue | Where-Object { $_.State -eq 'Running' })
   if ($laufend.Count -gt 0) { return }
-  $need = $LlmRamGB + $AppRamGB
+  # Vorhandene VMs zaehlen mit ihrer echten Groesse (start nach up mit eigenen Groessen).
+  $vorhanden = @(Get-VM -Name 'arsnova-1b-*' -ErrorAction SilentlyContinue)
+  $need = if ($vorhanden.Count -eq 2) { [int](($vorhanden | Measure-Object -Property MemoryStartup -Sum).Sum / 1GB) } else { $LlmRamGB + $AppRamGB }
   # Verfuegbar = frei + Standby (wie im Task-Manager); Klassenname ist nicht lokalisiert.
   $frei = [int][Math]::Floor((Get-CimInstance Win32_PerfFormattedData_PerfOS_Memory).AvailableMBytes / 1024)
   Write-Info "RAM: verfuegbar $frei GB, die VMs belegen $need GB fest; Windows blieben etwa $($frei - $need) GB (Reserve $RamReserveGB GB)."

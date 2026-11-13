@@ -50,7 +50,7 @@ param(
   [ValidateRange(0, 2048)][int]$LlmDiskGB = 0,
   [ValidateRange(0, 2048)][int]$AppDiskGB = 0,
   [ValidateRange(2, 64)][int]$RamReserveGB = 4,
-  [string]$SshKey = (Join-Path $env:USERPROFILE '.ssh\id_ed25519.pub'),
+  [string]$SshKey = (Join-Path $env:USERPROFILE '.ssh\arsnova-1b_ed25519.pub'),
   [string]$VmDir = 'C:\ProgramData\arsnova-1b',
   [switch]$EnableHyperV,
   [switch]$NurVorbereiten,
@@ -166,15 +166,17 @@ function Invoke-VmScript([hashtable]$Groesse, [string]$VmMode) {
   $a = @{ Mode = $VmMode; SshKey = $SshKey; VmDir = $VmDir }
   if ($EnableHyperV) { $a.EnableHyperV = $true }
   if ($NurVorbereiten -and $VmMode -eq 'up') { $a.NurVorbereiten = $true }
+  $a.RamReserveGB = $RamReserveGB
   if ($NoSecureBoot) { $a.NoSecureBoot = $true }
   if ($Groesse) {
     $a.LlmCpus = $Groesse.LlmCpus; $a.LlmRamGB = $Groesse.LlmRamGB
     $a.AppCpus = $Groesse.AppCpus; $a.AppRamGB = $Groesse.AppRamGB
-    $a.LlmDiskGB = $Groesse.LlmDiskGB; $a.AppDiskGB = $Groesse.AppDiskGB; $a.RamReserveGB = $RamReserveGB
+    $a.LlmDiskGB = $Groesse.LlmDiskGB; $a.AppDiskGB = $Groesse.AppDiskGB
   }
   # vm-windows.ps1 meldet Fehler nur per Exit-Code 1 (kein throw), daher hier pruefen.
   $global:LASTEXITCODE = 0
   & $VmScript @a
+  if ($LASTEXITCODE -eq 3010) { throw [System.OperationCanceledException]::new('Neustart') }
   if ($LASTEXITCODE -ne 0) { throw "vm-windows.ps1 -Mode $VmMode fehlgeschlagen ($LASTEXITCODE)" }
 }
 
@@ -246,13 +248,19 @@ function Invoke-LaborUp {
 function Invoke-LaborStart {
   Invoke-VmScript $null 'start'
   $o = Get-SshArg
-  foreach ($ip in $LlmIp, $AppIp) {
-    for ($i = 0; $i -lt 60; $i++) {
-      & ssh.exe @o "labor@$ip" 'true' 2>$null
-      if ($LASTEXITCODE -eq 0) { break }
-      Start-Sleep -Seconds 5
+  # PowerShell 5.1: umgeleitetes stderr nativer Programme waere unter 'Stop' ein Abbruch.
+  $alt = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  try {
+    foreach ($ip in $LlmIp, $AppIp) {
+      for ($i = 0; $i -lt 60; $i++) {
+        & ssh.exe @o "labor@$ip" 'true' 2>$null
+        if ($LASTEXITCODE -eq 0) { break }
+        Start-Sleep -Seconds 5
+      }
     }
   }
+  finally { $ErrorActionPreference = $alt }
   Write-Host 'VMs laufen; warte 90 s auf die Container.'
   Start-Sleep -Seconds 90
   for ($v = 1; $v -le 3; $v++) {
@@ -335,6 +343,9 @@ if ($MyInvocation.InvocationName -ne '.') {
     }
   }
   }
+  catch [System.OperationCanceledException] {
+    Write-Host 'Nach dem Neustart denselben Befehl erneut aufrufen.' -ForegroundColor Green
+  }
   catch {
     $code = 1
     Write-Host ''
@@ -343,7 +354,7 @@ if ($MyInvocation.InvocationName -ne '.') {
   finally {
     if ($mitLog) {
       Stop-Transcript | Out-Null
-      if ($code -ne 0) { Write-Host "Log mit allen Ausgaben: $log (bei Fragen mitschicken; enthaelt keine Tokens)" }
+      if ($code -ne 0) { Write-Host "Log mit den Meldungen des Skripts: $log (bei Fragen mitschicken; enthaelt keine Tokens). Meldungen von curl/tar stehen nur im Fenster." }
     }
   }
   exit $code
