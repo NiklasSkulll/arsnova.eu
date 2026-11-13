@@ -1,6 +1,6 @@
 # 1B-011: Zeitbegriffe nach Dossier 8.1 und Leitfrage der Schritte 1–2
 
-- **Status:** methodisch (2026-11-13); Zuordnung der Begriffe gilt für 1B Schritte 1–4. Leitfrage: Vorschlag der KI, vom Autor zu bestätigen
+- **Status:** methodisch (2026-11-13); Zuordnung der Begriffe gilt für 1B Schritte 1–4. Leitfrage: Vorschlag der KI, vom Autor zu bestätigen; _aktualisiert 2026-11-13:_ Leitfrage und Kurzantwort vom Autor bestätigt
 - **Kategorie:** Methodik
 
 ## Kontext

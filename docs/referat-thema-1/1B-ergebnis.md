@@ -6,6 +6,10 @@ Auftrag, Leitfrage und Hintergrund: [1B-Dossier](1B-private-inferenz-zweiter-hos
 
 ## Schritte 1–2 (Jonas)
 
+**Leitfrage** (vom Autor bestätigt 2026-11-13, [ADR 1B-011](adr/1B-011-zeitbegriffe-und-leitfrage.md)): Wie schlüsselt sich die Zeit eines echten Kompass-Auftrags (Q&A-Zusammenfassung V2 mit der 1C-Referenzfixture) über die zweite private Serverrolle auf, und wie groß ist der Transportanteil im Vergleich zur Inferenz?
+
+**Kurzantwort:** Fast die ganze Zeit ist Inferenz (99,9 %); der Transport kostet im Median 17,8 ms, davon Netz unter 1 ms (gewerteter Lauf, n = 10, Commit `8e9d1317`, ThinkPad P50).
+
 ### Aufgabenabdeckung
 
 | Schritt des Auftrags                                           | Ergebnis                                                                                                                                                                                                                                                                                | Beleg                                                                                                                          |
