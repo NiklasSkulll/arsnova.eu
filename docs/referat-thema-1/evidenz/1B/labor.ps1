@@ -3,10 +3,11 @@
   1B-Labor unter Windows mit einem Befehl, Gegenstueck zu labor.sh (ADR 1B-010).
 
 .DESCRIPTION
-  Status: auf echtem Windows 11 (PowerShell 5.1) teilweise getestet (groessen, status, pruefen,
-  Vorpruefungen von up); VMs und Lauf nicht, siehe evidenz/1B/2026-11-13-windows-test.md.
+  Ohne WSL (seit 2026-11-13). Getestet: siehe evidenz/1B/2026-11-13-windows-test.md.
 
+    labor.ps1 -Mode vorpruefung  nur pruefen, ob dieser Rechner bereit ist (aendert nichts)
     labor.ps1 -Mode up        Groessenwahl, VMs (vm-windows.ps1), llm-host, app-host, Pruefungen
+                              -NurVorbereiten: alles anlegen, aber keine VM starten
     labor.ps1 -Mode groessen  nur Empfehlung und Groessenwahl anzeigen, nichts anlegen
     labor.ps1 -Mode pruefen   nur die Pruefungen (Runbook 10, 11, Negativtests), Bericht schreiben
     labor.ps1 -Mode kalibrierung  eine nicht gewertete Anfrage, Timeout nach Regel (ADR 1B-005)
@@ -25,7 +26,8 @@
   RAM-Reserve fuer Windows: -RamReserveGB (Standard 4, mindestens 2; kleiner nur auf Testrechnern).
   Hyper-V kann vCPUs nicht an Host-Threads binden; Ersatz: statischer Speicher, Reserve 100 %
   und doppeltes Gewicht fuer den llm-host (vm-windows.ps1). Das GGUF laedt die VM selbst.
-  Bericht: $env:USERPROFILE\labor-1b\aufbau-<Zeit>.txt, ohne Tokens.
+  Bericht: $env:USERPROFILE\labor-1b\aufbau-<Zeit>.txt, ohne Tokens. Jeder Aufruf schreibt ein Log
+  nach $env:USERPROFILE\labor-1b\log-<Modus>-<Zeit>.txt; bei Fehlern nennt das Skript den Pfad.
 
   Reines ASCII wegen Windows PowerShell 5.1 (siehe vm-windows.ps1).
 #>
@@ -35,7 +37,7 @@
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '',
   Justification = 'Fehlalarm: die Skriptparameter werden in den Funktionen unten gelesen.')]
 param(
-  [ValidateSet('up', 'groessen', 'pruefen', 'kalibrierung', 'lauf', 'status', 'stop', 'start', 'destroy')]
+  [ValidateSet('up', 'vorpruefung', 'groessen', 'pruefen', 'kalibrierung', 'lauf', 'status', 'stop', 'start', 'destroy')]
   [string]$Mode = 'groessen',
   [switch]$Ja,
   [ValidateRange(1, 10)][int]$LabN = 10,
@@ -50,9 +52,8 @@ param(
   [ValidateRange(2, 64)][int]$RamReserveGB = 4,
   [string]$SshKey = (Join-Path $env:USERPROFILE '.ssh\id_ed25519.pub'),
   [string]$VmDir = 'C:\ProgramData\arsnova-1b',
-  [string]$WslDistro = '',
   [switch]$EnableHyperV,
-  [switch]$InstallWslTools,
+  [switch]$NurVorbereiten,
   [switch]$NoSecureBoot,
   [string]$OutDir = (Join-Path $env:USERPROFILE 'labor-1b')
 )
@@ -163,9 +164,8 @@ function Invoke-Vm([string]$Ip, [string]$Command) {
 
 function Invoke-VmScript([hashtable]$Groesse, [string]$VmMode) {
   $a = @{ Mode = $VmMode; SshKey = $SshKey; VmDir = $VmDir }
-  if ($WslDistro) { $a.WslDistro = $WslDistro }
   if ($EnableHyperV) { $a.EnableHyperV = $true }
-  if ($InstallWslTools) { $a.InstallWslTools = $true }
+  if ($NurVorbereiten -and $VmMode -eq 'up') { $a.NurVorbereiten = $true }
   if ($NoSecureBoot) { $a.NoSecureBoot = $true }
   if ($Groesse) {
     $a.LlmCpus = $Groesse.LlmCpus; $a.LlmRamGB = $Groesse.LlmRamGB
@@ -222,14 +222,24 @@ function Invoke-Pruefen {
 function Invoke-LaborUp {
   $g = Select-LaborGroesse
   Invoke-VmScript $g 'up'
-  Write-Host '== llm-host einrichten'
-  if ((Invoke-Vm $LlmIp "bash arsnova.eu/$Ev/llm-start.sh") -ne 0) { throw 'llm-start.sh fehlgeschlagen' }
-  Write-Host '== app-host einrichten (Token nur per Pipe von VM zu VM)'
+  if ($NurVorbereiten) { return }
+  $t0 = Get-Date
+  Write-Host ''
+  Write-Host '[Einrichtung 1/3] llm-host: Runtime-Image bauen, Modell (2,4 GB) laden und pruefen, starten (dauert 5-20 min)' -ForegroundColor Cyan
+  if ((Invoke-Vm $LlmIp "bash arsnova.eu/$Ev/llm-start.sh") -ne 0) {
+    throw "llm-start.sh im llm-host fehlgeschlagen (Ausgabe oben). Erneut: labor.ps1 -Mode up (setzt fort)."
+  }
+  Write-Host ''
+  Write-Host "[Einrichtung 2/3] app-host: App-Image bauen, Datenbank, Start (dauert 15-30 min) - seit Beginn der Einrichtung $([int]((Get-Date) - $t0).TotalMinutes) min" -ForegroundColor Cyan
   $o = Get-SshArg
   & ssh.exe @o "labor@$LlmIp" "sed -n 's/^OPEN_WEIGHT_LLM_TOKEN=//p' arsnova.eu/.env.llm" |
     & ssh.exe @o "labor@$AppIp" "bash arsnova.eu/$Ev/app-start.sh" | Out-Host
-  if ($LASTEXITCODE -ne 0) { throw 'app-start.sh fehlgeschlagen' }
+  if ($LASTEXITCODE -ne 0) { throw 'app-start.sh im app-host fehlgeschlagen (Ausgabe oben). Erneut: labor.ps1 -Mode up (setzt fort).' }
+  Write-Host ''
+  Write-Host "[Einrichtung 3/3] alles pruefen - Einrichtung dauerte $([int]((Get-Date) - $t0).TotalMinutes) min" -ForegroundColor Cyan
   Invoke-Pruefen
+  Write-Host ''
+  Write-Host 'Fertig. Zwischen den Sitzungen: labor.ps1 -Mode stop; danach -Mode start.' -ForegroundColor Green
 }
 
 # Nach dem Start: auf SSH und die Container warten (restart: always), dann pruefen.
@@ -304,7 +314,14 @@ function Invoke-ImAppHost([string]$LaufMode) {
 
 # Hauptteil nur bei direktem Aufruf, nicht beim Dot-Sourcing (Tests).
 if ($MyInvocation.InvocationName -ne '.') {
+  New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
+  $log = Join-Path $OutDir ("log-$Mode-{0:yyyyMMddTHHmmss}.txt" -f (Get-Date))
+  $mitLog = $Mode -notin @('pruefen')   # pruefen schreibt seinen eigenen Bericht
+  if ($mitLog) { Start-Transcript -Path $log | Out-Null }
+  $code = 0
+  try {
   switch ($Mode) {
+    'vorpruefung' { Invoke-VmScript $null 'pruefen' }
     'up' { Invoke-LaborUp }
     'groessen' { Select-LaborGroesse | Out-Null }
     'pruefen' { Invoke-Pruefen }
@@ -317,4 +334,17 @@ if ($MyInvocation.InvocationName -ne '.') {
       if (Test-Ja 'Beide Labor-VMs mit Disks, NAT und Switch loeschen? [j/N]' $false) { Invoke-VmScript $null 'destroy' }
     }
   }
+  }
+  catch {
+    $code = 1
+    Write-Host ''
+    Write-Host "FEHLER: $($_.Exception.Message)" -ForegroundColor Red
+  }
+  finally {
+    if ($mitLog) {
+      Stop-Transcript | Out-Null
+      if ($code -ne 0) { Write-Host "Log mit allen Ausgaben: $log (bei Fragen mitschicken; enthaelt keine Tokens)" }
+    }
+  }
+  exit $code
 }

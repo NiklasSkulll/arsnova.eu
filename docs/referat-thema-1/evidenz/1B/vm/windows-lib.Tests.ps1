@@ -1,0 +1,192 @@
+# Pester 5: reine Hilfsfunktionen des Windows-Wegs (windows-lib.ps1), laufen auch unter Linux-pwsh.
+# Aufruf: Invoke-Pester docs/referat-thema-1/evidenz/1B/vm/windows-lib.Tests.ps1
+# Referenzgeometrien: qemu-img create -f vpc -o subformat=fixed (rechnet nach der VHD-Spezifikation),
+# fuer Groessen, die genau auf CHS aufgehen (2026-11-13).
+BeforeAll {
+  . (Join-Path $PSScriptRoot 'windows-lib.ps1')
+
+  function Read-Be([byte[]]$B, [int]$Off, [int]$Len) {
+    [uint64]$v = 0
+    for ($i = 0; $i -lt $Len; $i++) { $v = ($v -shl 8) -bor $B[$Off + $i] }
+    return $v
+  }
+}
+
+Describe 'Get-VhdGeometry' {
+  It 'liefert <erwartet> fuer <bytes> Bytes wie qemu-img' -ForEach @(
+    @{ bytes = 1972518912; erwartet = '3822/16/63' }
+    @{ bytes = 26843701248; erwartet = '52013/16/63' }
+    @{ bytes = 67125248; erwartet = '964/8/17' }
+    @{ bytes = 136365219840; erwartet = '65279/16/255' }
+  ) {
+    $g = Get-VhdGeometry -Bytes $bytes
+    "$($g.Zylinder)/$($g.Koepfe)/$($g.Sektoren)" | Should -Be $erwartet
+  }
+}
+
+Describe 'Get-VhdFooter' {
+  BeforeAll {
+    $script:id = [byte[]](1..16)
+    $script:f = Get-VhdFooter -Bytes 1972371456 -Zeitstempel 0x30A1B2C3 -UniqueId $script:id
+  }
+
+  It 'ist 512 Bytes lang und beginnt mit conectix' {
+    $f.Length | Should -Be 512
+    [Text.Encoding]::ASCII.GetString($f, 0, 8) | Should -Be 'conectix'
+  }
+
+  It 'beschreibt eine feste Platte der genauen Rohgroesse' {
+    Read-Be $f 8 4 | Should -Be 2              # Features
+    Read-Be $f 12 4 | Should -Be 0x00010000    # Formatversion
+    Read-Be $f 16 8 | Should -Be ([uint64]::MaxValue) # Data Offset (fest)
+    Read-Be $f 24 4 | Should -Be 0x30A1B2C3    # Zeitstempel
+    [Text.Encoding]::ASCII.GetString($f, 28, 4) | Should -Be 'win '
+    [Text.Encoding]::ASCII.GetString($f, 36, 4) | Should -Be 'Wi2k'
+    Read-Be $f 40 8 | Should -Be 1972371456    # Original Size
+    Read-Be $f 48 8 | Should -Be 1972371456    # Current Size
+    Read-Be $f 60 4 | Should -Be 2             # Disk Type: fest
+  }
+
+  It 'traegt die Geometrie nach der Spezifikation (abgerundet) ein' {
+    $g = Get-VhdGeometry -Bytes 1972371456
+    Read-Be $f 56 2 | Should -Be $g.Zylinder
+    $f[58] | Should -Be $g.Koepfe
+    $f[59] | Should -Be $g.Sektoren
+  }
+
+  It 'hat eine gueltige Pruefsumme (Einerkomplement der Bytesumme ohne Pruefsummenfeld)' {
+    $sum = [uint64]0
+    for ($i = 0; $i -lt 512; $i++) { if ($i -lt 64 -or $i -gt 67) { $sum += $f[$i] } }
+    Read-Be $f 64 4 | Should -Be ((-bnot [uint32]($sum -band 0xFFFFFFFF)) -band 0xFFFFFFFF)
+  }
+
+  It 'uebernimmt die eindeutige ID und laesst den Rest leer' {
+    $f[68..83] | Should -Be $id
+    $f[84] | Should -Be 0
+    @($f[85..511] | Where-Object { $_ -ne 0 }).Count | Should -Be 0
+  }
+
+  It 'lehnt Groessen ab, die kein Vielfaches von 512 sind' {
+    { Get-VhdFooter -Bytes 1000 -Zeitstempel 0 -UniqueId $id } | Should -Throw '*512*'
+  }
+}
+
+Describe 'Add-VhdFooter' {
+  It 'haengt 512 Bytes an eine Rohdatei an und laesst den Inhalt unveraendert' {
+    $p = Join-Path ([IO.Path]::GetTempPath()) "raw-$PID.img"
+    [IO.File]::WriteAllBytes($p, [byte[]](1..255 + 0 + 1..255 + 0) * 4)
+    try {
+      Add-VhdFooter -Path $p
+      $b = [IO.File]::ReadAllBytes($p)
+      $b.Length | Should -Be (2048 + 512)
+      [Text.Encoding]::ASCII.GetString($b, 2048, 8) | Should -Be 'conectix'
+      $b[0..2047] | Should -Be ([byte[]](1..255 + 0 + 1..255 + 0) * 4)
+    }
+    finally { Remove-Item -Force $p }
+  }
+
+  It 'haengt keinen zweiten Kopf an' {
+    $p = Join-Path ([IO.Path]::GetTempPath()) "raw2-$PID.img"
+    [IO.File]::WriteAllBytes($p, [byte[]]::new(1024))
+    try {
+      Add-VhdFooter -Path $p
+      { Add-VhdFooter -Path $p } | Should -Throw '*schon*'
+    }
+    finally { Remove-Item -Force $p }
+  }
+}
+
+Describe 'Get-RepoStand' {
+  BeforeEach {
+    $script:r = Join-Path ([IO.Path]::GetTempPath()) "repo-$PID-$(Get-Random)"
+    New-Item -ItemType Directory -Path (Join-Path $r '.git/refs/heads') -Force | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $r 'docs/x') -Force | Out-Null
+  }
+  AfterEach { Remove-Item -Recurse -Force $r }
+
+  It 'liest den Commit eines Zweigs aus einer losen Referenz, auch aus einem Unterordner' {
+    [IO.File]::WriteAllText((Join-Path $r '.git/HEAD'), "ref: refs/heads/feature-1B`n")
+    [IO.File]::WriteAllText((Join-Path $r '.git/refs/heads/feature-1B'), ("a" * 40 + "`n"))
+    $s = Get-RepoStand -Start (Join-Path $r 'docs/x')
+    $s.Wurzel | Should -Be ((Resolve-Path $r).Path)
+    $s.Commit | Should -Be ("a" * 40)
+  }
+
+  It 'liest den Commit aus packed-refs' {
+    [IO.File]::WriteAllText((Join-Path $r '.git/HEAD'), "ref: refs/heads/main`n")
+    [IO.File]::WriteAllText((Join-Path $r '.git/packed-refs'), ("# pack-refs with: peeled fully-peeled sorted`n" + ("b" * 40) + " refs/heads/main`n"))
+    (Get-RepoStand -Start $r).Commit | Should -Be ("b" * 40)
+  }
+
+  It 'liest einen losgeloesten HEAD' {
+    [IO.File]::WriteAllText((Join-Path $r '.git/HEAD'), (("c" * 40) + "`n"))
+    (Get-RepoStand -Start $r).Commit | Should -Be ("c" * 40)
+  }
+
+  It 'meldet verstaendlich, wenn kein Repo gefunden wird' {
+    Remove-Item -Recurse -Force (Join-Path $r '.git')
+    { Get-RepoStand -Start $r } | Should -Throw '*kein Git-Repo*'
+  }
+
+  It 'meldet einen Worktree (.git als Datei) verstaendlich' {
+    Remove-Item -Recurse -Force (Join-Path $r '.git')
+    [IO.File]::WriteAllText((Join-Path $r '.git'), 'gitdir: /anderswo/.git/worktrees/x')
+    { Get-RepoStand -Start $r } | Should -Throw '*Worktree*'
+  }
+}
+
+Describe 'Get-VorpruefungUrteil' {
+  BeforeAll {
+    function Fakten([hashtable]$Aenderung = @{}) {
+      $f = @{
+        Admin = $true; Edition = 'Professional'; HyperV = 'Enabled'; HypervisorLaeuft = $true
+        VirtualisierungFirmware = $null; HyperVModul = $true; Ssh = $true; Tar = $true
+        AndereNat = @(); Adresskonflikt = $null; PlatteFreiGib = 120; PlatteNoetigGib = 41
+        Internet = @{ 'cloud-images.ubuntu.com' = $true; 'huggingface.co' = $true }
+      }
+      foreach ($k in $Aenderung.Keys) { $f[$k] = $Aenderung[$k] }
+      return $f
+    }
+    function Fatal($e) { @($e | Where-Object { $_.Status -eq 'FEHLER' } | ForEach-Object { $_.Pruefung }) -join ',' }
+  }
+
+  It 'meldet bei einem passenden Rechner nur OK' {
+    $e = Get-VorpruefungUrteil (Fakten)
+    Fatal $e | Should -Be ''
+    @($e | Where-Object { $_.Status -eq 'OK' }).Count | Should -BeGreaterThan 5
+  }
+
+  It 'nennt jeden Fehler mit Abhilfe: <name>' -ForEach @(
+    @{ name = 'kein Admin'; aenderung = @{ Admin = $false }; pruefung = 'Admin'; abhilfe = '*Als Administrator*' }
+    @{ name = 'Windows Home'; aenderung = @{ Edition = 'Core'; HyperV = 'Missing' }; pruefung = 'Edition'; abhilfe = '*Pro*' }
+    @{ name = 'Hyper-V aus'; aenderung = @{ HyperV = 'Disabled'; HypervisorLaeuft = $false; VirtualisierungFirmware = $true }; pruefung = 'Hyper-V'; abhilfe = '*-EnableHyperV*' }
+    @{ name = 'Virtualisierung im BIOS aus'; aenderung = @{ HyperV = 'Disabled'; HypervisorLaeuft = $false; VirtualisierungFirmware = $false }; pruefung = 'Virtualisierung'; abhilfe = '*BIOS*' }
+    @{ name = 'Hyper-V an, Hypervisor startet nicht'; aenderung = @{ HypervisorLaeuft = $false; VirtualisierungFirmware = $false }; pruefung = 'Virtualisierung'; abhilfe = '*BIOS*' }
+    @{ name = 'kein ssh'; aenderung = @{ Ssh = $false }; pruefung = 'OpenSSH'; abhilfe = '*OpenSSH.Client*' }
+    @{ name = 'kein tar'; aenderung = @{ Tar = $false }; pruefung = 'tar'; abhilfe = '*Windows 10 1803*' }
+    @{ name = 'Netz belegt'; aenderung = @{ Adresskonflikt = '192.168.150.7 auf WLAN' }; pruefung = 'Labornetz'; abhilfe = '*192.168.150.0/24*' }
+    @{ name = 'NAT ueberlappt'; aenderung = @{ AndereNat = @(@{ Name = 'x'; Prefix = '192.168.0.0/16' }) }; pruefung = 'NAT'; abhilfe = '*Remove-NetNat*' }
+    @{ name = 'Platte zu klein'; aenderung = @{ PlatteFreiGib = 30 }; pruefung = 'Platte'; abhilfe = '*41 GB*' }
+    @{ name = 'Download gesperrt'; aenderung = @{ Internet = @{ 'cloud-images.ubuntu.com' = $true; 'huggingface.co' = $false } }; pruefung = 'Internet'; abhilfe = '*huggingface.co*' }
+  ) {
+    $e = Get-VorpruefungUrteil (Fakten $aenderung)
+    Fatal $e | Should -BeLike "*$pruefung*"
+    ($e | Where-Object { $_.Pruefung -eq $pruefung -and $_.Status -eq 'FEHLER' }).Abhilfe | Should -BeLike $abhilfe
+  }
+
+  It 'warnt bei einem anderen, nicht ueberlappenden NAT nur' {
+    $e = Get-VorpruefungUrteil (Fakten @{ AndereNat = @(@{ Name = 'docker'; Prefix = '172.20.0.0/16' }) })
+    Fatal $e | Should -Be ''
+    ($e | Where-Object { $_.Pruefung -eq 'NAT' }).Status | Should -Be 'HINWEIS'
+  }
+}
+
+Describe 'Format-Dauer' {
+  It 'zeigt <s> s als <text>' -ForEach @(
+    @{ s = 5; text = '0:05' }
+    @{ s = 125; text = '2:05' }
+    @{ s = 3725; text = '1:02:05' }
+  ) {
+    Format-Dauer ([TimeSpan]::FromSeconds($s)) | Should -Be $text
+  }
+}

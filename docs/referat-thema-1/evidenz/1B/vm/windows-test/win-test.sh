@@ -3,9 +3,9 @@
 # (Plan, Nachtrag Task 12 Step 6). Läuft auf einem Linux-Rechner mit KVM und libvirt.
 #
 #   win-test.sh vm      Netz, Wegwerf-Passwort, Unattend-ISO, Windows-VM installieren, auf SSH warten
-#   win-test.sh wsl     WSL mit Ubuntu (wsl --import aus dem offiziellen Archiv), Repo per git bundle
-#   win-test.sh labor   labor.ps1 -Mode up, pruefen, Entwicklungslauf (LAB_N=1), Logs nach WIN_OUT
-#                       (Zusatzargumente für up: WIN_LAB_ARGS, z. B. "-RamReserveGB 2")
+#   win-test.sh repo    Repo-Stand als frischen Clone nach C:\1b\arsnova.eu (ohne WSL, wie bei Niklas)
+#   win-test.sh labor   labor.ps1: vorpruefung, groessen, up -NurVorbereiten (zweimal), up bis zum
+#                       RAM-Schutz, status, destroy; Ausgaben nach WIN_OUT
 #   win-test.sh destroy Windows-VM, Disk und Netz entfernen (ISO bleibt)
 #
 # Voraussetzungen: Labor-VMs aus und Labornetz gestoppt (das Netz nutzt dieselbe Bridge virbr-1b,
@@ -26,16 +26,10 @@ ISO="${WIN_ISO:-$WIN_DIR/win11-eval-de.iso}"
 NAME=arsnova-1b-win NET=arsnova-1b-win IP=192.168.151.10 MAC=52:54:00:1b:01:10
 KEY="${LAB_SSH_KEY:-$HOME/.ssh/id_ed25519.pub}"
 SSH=(ssh -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile="$WIN_DIR/known_hosts" -o ConnectTimeout=5 -o BatchMode=yes "labor@$IP")
-WSL_URL=https://cloud-images.ubuntu.com/wsl/releases/24.04/current
-WSL_TAR=ubuntu-noble-wsl-amd64-24.04lts.rootfs.tar.gz
 # Win32-OpenSSH als MSI statt Windows-Capability (die kam erst nach 1 h 40 min), SHA-256 laut GitHub-Release.
 SSH_MSI=OpenSSH-Win64-v10.0.0.0.msi
 SSH_MSI_URL=https://github.com/PowerShell/Win32-OpenSSH/releases/download/10.0.0.0p2-Preview/$SSH_MSI
 SSH_MSI_SHA=ddec9c53864280759cf9f74791cefd387100e3946aa849a1c138a4ed1b96b7d9
-# WSL als MSI von GitHub: der eingebaute wsl.exe-Platzhalter installiert über SSH nicht (nur Store-Weg).
-WSL_MSI=wsl.3.0.5.0.x64.msi
-WSL_MSI_URL=https://github.com/microsoft/WSL/releases/download/3.0.5/$WSL_MSI
-WSL_MSI_SHA=2313efc5873e3f8552f42e77f950fabd913c0289078fa89d2100f3421a525eaa
 # scp -O (altes Protokoll): der sftp-Teil von Win32-OpenSSH 10.0.0.0p2 bricht ab (Test 2026-11-13).
 SCP=(scp -O -q -o UserKnownHostsFile="$WIN_DIR/known_hosts")
 mkdir -p "$WIN_OUT"
@@ -112,53 +106,33 @@ EOF
     tee "$WIN_OUT/windows.txt"
 }
 
-wsl_einrichten() {
-  log "WSL $WSL_MSI installieren (SHA-256 geprüft)"
-  [[ -f "$WIN_DIR/$WSL_MSI" ]] || curl -fL -o "$WIN_DIR/$WSL_MSI" "$WSL_MSI_URL"
-  echo "$WSL_MSI_SHA  $WIN_DIR/$WSL_MSI" | sha256sum -c -
- win 'New-Item -ItemType Directory -Force C:\1b | Out-Null'
-  "${SCP[@]}" "$WIN_DIR/$WSL_MSI" "labor@$IP:C:/1b/$WSL_MSI"
- win "Start-Process msiexec.exe -Wait -ArgumentList '/i C:\1b\$WSL_MSI /qn /norestart'; exit 0"
- win 'Restart-Computer -Force' || true
-  sleep 90
-  warte_ssh 30
- win 'wsl.exe --update; wsl.exe --version' | tr -d '\0' | tee -a "$WIN_OUT/windows.txt" || true
-  log "Ubuntu 24.04 aus $WSL_URL importieren"
-  curl -fsSL -o "$WIN_DIR/SHA256SUMS.wsl" "$WSL_URL/SHA256SUMS"
-  [[ -f "$WIN_DIR/$WSL_TAR" ]] || curl -fL -o "$WIN_DIR/$WSL_TAR" "$WSL_URL/$WSL_TAR"
-  (cd "$WIN_DIR" && grep " \*\?$WSL_TAR\$" SHA256SUMS.wsl | sha256sum -c -)
- win 'New-Item -ItemType Directory -Force C:\1b, C:\wsl | Out-Null'
-  "${SCP[@]}" "$WIN_DIR/$WSL_TAR" "labor@$IP:C:/1b/ubuntu.tar.gz"
- win "if (-not ((wsl.exe -l -q) -replace \"\`0\", '' | Select-String -Quiet '^Ubuntu$')) { wsl.exe --import Ubuntu C:\\wsl\\Ubuntu C:\\1b\\ubuntu.tar.gz }; wsl.exe --set-default Ubuntu; wsl.exe -d Ubuntu -u root -e uname -a" | tr -d '\0'
-  log "Repo-Stand per git bundle in WSL"
-  git -C "$REPO" bundle create "$WIN_DIR/repo.bundle" HEAD 2>/dev/null
-  "${SCP[@]}" "$WIN_DIR/repo.bundle" "labor@$IP:C:/1b/repo.bundle"
-  local sha; sha="$(git -C "$REPO" rev-parse HEAD)"
- win "wsl.exe -d Ubuntu -u root -e bash -c 'command -v git >/dev/null || (apt-get update -q && DEBIAN_FRONTEND=noninteractive apt-get install -y -q git); test -d /root/arsnova.eu || git clone -q /mnt/c/1b/repo.bundle /root/arsnova.eu; cd /root/arsnova.eu && git fetch -q /mnt/c/1b/repo.bundle && git checkout -q --detach $sha && git log --oneline -1'" | tr -d '\0'
-  # SSH-Schluessel fuer labor.ps1. PowerShell 5.1 verliert leere Argumente; '""' kommt als "" an
-  # (am 2026-11-13 in der Test-VM geprueft, die Variante ueber cmd /c scheiterte an der Quotierung).
-  win "$(cat <<'PS'
-if (-not (Test-Path "$env:USERPROFILE\.ssh\id_ed25519")) {
-  New-Item -ItemType Directory -Force "$env:USERPROFILE\.ssh" | Out-Null
-  ssh-keygen -q -t ed25519 -N '""' -f "$env:USERPROFILE\.ssh\id_ed25519"
-}
-Test-Path "$env:USERPROFILE\.ssh\id_ed25519.pub"
-PS
-)"
+repo() {
+  # Ohne WSL: frischer Clone (Arbeitsbaum und .git) per tar nach C:\1b\arsnova.eu, wie bei Niklas.
+  log "Repo-Stand $(git -C "$REPO" rev-parse --short HEAD) als frischen Clone nach Windows"
+  local t; t="$(mktemp -d)"
+  git clone -q --no-hardlinks "$REPO" "$t/arsnova.eu"
+  git -C "$t/arsnova.eu" checkout -q "$(git -C "$REPO" rev-parse HEAD)"
+  bsdtar -czf "$WIN_DIR/repo.tgz" -C "$t" arsnova.eu
+  rm -rf "$t"
+  win 'New-Item -ItemType Directory -Force C:\1b | Out-Null; if (Test-Path C:\1b\arsnova.eu) { Remove-Item -Recurse -Force C:\1b\arsnova.eu }'
+  "${SCP[@]}" "$WIN_DIR/repo.tgz" "labor@$IP:C:/1b/repo.tgz"
+  win 'tar.exe -xzf C:\1b\repo.tgz -C C:\1b; Test-Path C:\1b\arsnova.eu\.git'
 }
 
 labor() {
-  local p='\\wsl.localhost\Ubuntu\root\arsnova.eu\docs\referat-thema-1\evidenz\1B\labor.ps1'
-  log "labor.ps1 -Mode groessen"
- win "powershell -NoProfile -ExecutionPolicy Bypass -File $p -Mode groessen -Ja" | tee "$WIN_OUT/groessen.txt"
-  log "labor.ps1 -Mode up (dauert lange: verschachtelt, App-Build)"
- win "powershell -NoProfile -ExecutionPolicy Bypass -File $p -Mode up -Ja -EnableHyperV -InstallWslTools ${WIN_LAB_ARGS:-}" 2>&1 | tee "$WIN_OUT/up.txt"
-  log "labor.ps1 -Mode pruefen"
- win "powershell -NoProfile -ExecutionPolicy Bypass -File $p -Mode pruefen" 2>&1 | tee "$WIN_OUT/pruefen.txt" || true
-  log "Entwicklungslauf mit einem Auftrag"
- win "powershell -NoProfile -ExecutionPolicy Bypass -File $p -Mode lauf -LabN 1 -LabTag dev-win -LabTimeoutMs 300000" 2>&1 |
-    tee "$WIN_OUT/lauf.txt" || true
+  # Prueft den Windows-Weg bis kurz vor dem VM-Start (verschachtelte L2-VMs haengen mit Host-Kernel 7.2).
+  # Die Windows-VM hat 16 GiB; up ohne -NurVorbereiten muss deshalb am RAM-Schutz abbrechen.
+  local p='C:\1b\arsnova.eu\docs\referat-thema-1\evidenz\1B\labor.ps1'
+  local g='-LlmCpus 2 -LlmRamGB 12 -AppCpus 2 -AppRamGB 6'
+  local s
+  for s in "vorpruefung:-Mode vorpruefung" "groessen:-Mode groessen -Ja" \
+    "vorbereiten:-Mode up -Ja -NurVorbereiten $g" "vorbereiten-erneut:-Mode up -Ja -NurVorbereiten $g" \
+    "up-ram-schutz:-Mode up -Ja $g" "status:-Mode status" "destroy:-Mode destroy -Ja"; do
+    log "labor.ps1 ${s#*:}"
+    win "powershell -NoProfile -ExecutionPolicy Bypass -File $p ${s#*:}; \"exit=\$LASTEXITCODE\"" 2>&1 | tee "$WIN_OUT/${s%%:*}.txt" || true
+  done
   "${SCP[@]}" -r "labor@$IP:C:/Users/labor/labor-1b" "$WIN_OUT/von-windows" || true
+  win 'Get-VM | Format-Table Name, State; Get-ChildItem C:\ProgramData\arsnova-1b | Format-Table Name, Length' 2>&1 | tee "$WIN_OUT/rest.txt" || true
 }
 
 destroy() {
@@ -171,8 +145,8 @@ destroy() {
 
 case "${1:-}" in
   vm) vm ;;
-  wsl) wsl_einrichten ;;
+  repo) repo ;;
   labor) labor ;;
   destroy) destroy ;;
-  *) echo "Aufruf: $0 vm|wsl|labor|destroy" >&2; exit 2 ;;
+  *) echo "Aufruf: $0 vm|repo|labor|destroy" >&2; exit 2 ;;
 esac
