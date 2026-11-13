@@ -47,6 +47,10 @@ Ein Lauf startet die Runtime frisch (höchstens 10 Aufträge je Runtime, [ADR 1B
 
 `labor.sh lauf` hält unter Linux das Profil `performance` per `powerprofilesctl launch` und stellt es danach zurück, wie 1C. `LAB_PROFIL=unveraendert` lässt es wie es ist (nur Entwicklungsläufe). Das Ergebnis nennt das Profil. Kalibrierung und gewerteter Lauf brauchen dasselbe Profil. Windows ändert nichts und hält das aktive Schema fest.
 
+**Windows, von Hand vor Kalibrierung und Lauf:** Energiemodus „Beste Leistung“ (Einstellungen → System → Netzbetrieb und Akku), Netzteil an, Windows Update für die Dauer pausieren (Einstellungen → Windows Update → Updates aussetzen). `labor.ps1` ändert beides nicht und hält nur das aktive Schema fest.
+
+**Messruhe in den VMs:** Hintergrund-Updates (`apt-daily*`, `unattended-upgrades`, `fwupd-refresh` u. a.) schaltet das `user-data` unter Linux und Windows ab; `pruefen` meldet „Hintergrund-Updates aus“. Anlass: Am 2026-11-13 lief `apt-daily-upgrade` mitten im gewerteten Lauf in beiden VMs.
+
 ## 5. Rückbau
 
 `labor.sh destroy` bzw. `labor.ps1 -Mode destroy`: VMs, Disks und Labornetz. Das Ubuntu-Image bleibt im VM-Verzeichnis liegen.
@@ -56,6 +60,7 @@ Ein Lauf startet die Runtime frisch (höchstens 10 Aufträge je Runtime, [ADR 1B
 | Falle                                                                       | Abhilfe                                                                               |
 | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | Aktive Host-ufw: VMs bekommen keine IP, kein ausgehendes NAT                | Freigabe nur auf `virbr-1b` für DHCP, DNS und Weiterleitung; `labor.sh` bietet sie an |
+| Updates im Hintergrund während eines Laufs (VM oder Host)                   | VMs: `user-data` schaltet sie ab, `pruefen` prüft es; Host: siehe Abschnitt 4         |
 | VM-Verzeichnis im Home (Modus 700): libvirt-qemu kann die Disks nicht lesen | `/var/lib/libvirt/images/arsnova-1b` (Standard)                                       |
 | Runbook §6 `npm ci --omit=dev`: Produktionswrapper findet `dotenv` nicht    | `llm-start.sh` installiert ohne `--omit=dev` (Befund für das Ergebnis)                |
 | Push großer Layer in `registry:2` läuft in einen Timeout                    | Wiederholung (bis 5 Versuche) in `llm-start.sh` und `app-start.sh`                    |
