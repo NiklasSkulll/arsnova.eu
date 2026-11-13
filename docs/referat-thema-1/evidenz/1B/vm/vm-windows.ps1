@@ -136,7 +136,7 @@ function Get-Fakten {
   $fw = $null
   if (-not $cs.HypervisorPresent) {
     # Nur ohne laufenden Hypervisor aussagekraeftig; mit Hyper-V meldet Windows hier immer false.
-    $fw = [bool](@(Get-CimInstance Win32_Processor) | Where-Object { $_.VirtualizationFirmwareEnabled }).Count
+    $fw = [bool]@(@(Get-CimInstance Win32_Processor) | Where-Object { $_.VirtualizationFirmwareEnabled }).Count
   }
   $nats = @(Get-NetNat -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne $Net } |
       ForEach-Object { @{ Name = $_.Name; Prefix = $_.InternalIPInterfaceAddressPrefix } })
@@ -151,7 +151,7 @@ function Get-Fakten {
       $frei = [int][Math]::Floor($vol.SizeRemaining / 1GB)
     }
   }
-  $akku = [bool](@(Get-CimInstance Win32_Battery -ErrorAction SilentlyContinue) | Where-Object { $_.BatteryStatus -eq 1 }).Count
+  $akku = [bool]@(@(Get-CimInstance Win32_Battery -ErrorAction SilentlyContinue) | Where-Object { $_.BatteryStatus -eq 1 }).Count
   $plan = $LlmDiskGB + $AppDiskGB
   # Beim Fortsetzen belegen vorhandene VMs ihren Platz schon; dann keine Plattenschwelle.
   $vorhanden = (Get-Command Get-VM -ErrorAction SilentlyContinue) -and (Get-VM -Name 'arsnova-1b-*' -ErrorAction SilentlyContinue)

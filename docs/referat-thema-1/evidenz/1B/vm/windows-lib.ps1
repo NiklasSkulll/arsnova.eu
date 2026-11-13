@@ -266,6 +266,14 @@ function Get-LaborPlan {
   return , @(45, 15, 300, 45, 45, 15, 720, 15, 900, 1500, 180)
 }
 
+function Get-WachFlag {
+  # ES_CONTINUOUS (0x80000000) | ES_SYSTEM_REQUIRED (0x1). Als Dezimalzahl: das Literal 0x80000001 waere
+  # in PowerShell ein negativer Int32 (Windows-Test 2026-11-13).
+  param([bool]$An = $true)
+  if ($An) { return [uint32]2147483649 }
+  return [uint32]2147483648
+}
+
 function Set-WachHalten {
   # Verhindert Ruhezustand und Standby, solange dieser Prozess laeuft (SetThreadExecutionState,
   # ES_CONTINUOUS | ES_SYSTEM_REQUIRED). Endet automatisch mit dem Prozess. Nur Windows.
@@ -275,8 +283,7 @@ function Set-WachHalten {
   if (-not ('LaborWach' -as [type])) {
     Add-Type -Namespace '' -Name 'LaborWach' -MemberDefinition '[DllImport("kernel32.dll")] public static extern uint SetThreadExecutionState(uint esFlags);'
   }
-  $flags = if ($An) { [uint32]0x80000001 } else { [uint32]0x80000000 }
-  [void][LaborWach]::SetThreadExecutionState($flags)
+  [void][LaborWach]::SetThreadExecutionState((Get-WachFlag -An $An))
 }
 
 function Add-JsonFeld {

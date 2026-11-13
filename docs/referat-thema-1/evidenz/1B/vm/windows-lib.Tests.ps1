@@ -299,3 +299,23 @@ Describe 'Add-JsonFeld' {
     { Add-JsonFeld -Json '[1,2]' -Name 'u' -Wert '{}' } | Should -Throw '*JSON-Objekt*'
   }
 }
+
+Describe 'Get-WachFlag' {
+  It 'liefert ES_CONTINUOUS | ES_SYSTEM_REQUIRED als UInt32' {
+    $f = Get-WachFlag -An $true
+    $f | Should -BeOfType [uint32]
+    $f | Should -Be 2147483649
+    Get-WachFlag -An $false | Should -Be 2147483648
+  }
+}
+
+Describe 'Strict-Mode-Falle .Count' {
+  # Gefunden im Windows-Test 2026-11-13: unter Set-StrictMode hat ein leeres Pipeline-Ergebnis kein .Count.
+  It 'zaehlt Pipeline-Ergebnisse in <datei> nur in @(...)' -ForEach @(
+    @{ datei = 'vm-windows.ps1' }, @{ datei = 'windows-lib.ps1' }, @{ datei = '../labor.ps1' }, @{ datei = '../groessen.ps1' }
+  ) {
+    $text = Get-Content -Raw (Join-Path $PSScriptRoot $datei)
+    $treffer = [regex]::Matches($text, '(?<!@)\((?:(?!\r?\n).)*\|\s*Where-Object(?:(?!\r?\n).)*\)\.Count')
+    @($treffer | ForEach-Object { $_.Value }) | Should -BeNullOrEmpty
+  }
+}
