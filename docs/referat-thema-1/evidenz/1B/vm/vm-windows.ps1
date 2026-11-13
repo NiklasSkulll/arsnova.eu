@@ -123,11 +123,14 @@ function Test-HyperVBerechtigt {
 function Add-HyperVGruppe {
   # Einmalig im Admin-Lauf: den angemeldeten Nutzer in Hyper-V-Administratoren aufnehmen, damit Alltags-
   # befehle (status, start, stop, Laeufe) und Agenten in WSL ohne Admin-Fenster auskommen.
-  $nutzer = "$env:USERDOMAIN\$env:USERNAME"
+  # Ueber die SID, nicht den Namen: USERDOMAIN ist je nach Sitzung WORKGROUP, und Microsoft-Konten haben
+  # andere Anzeigenamen (Windows-Test 2026-11-13: "Prinzipal WORKGROUP\labor nicht gefunden").
+  $ich = [Security.Principal.WindowsIdentity]::GetCurrent()
+  $nutzer = $ich.Name
   try {
-    $drin = @(Get-LocalGroupMember -SID 'S-1-5-32-578' -ErrorAction Stop | Where-Object { $_.Name -eq $nutzer }).Count -gt 0
+    $drin = @(Get-LocalGroupMember -SID 'S-1-5-32-578' -ErrorAction Stop | Where-Object { "$($_.SID)" -eq "$($ich.User)" }).Count -gt 0
     if (-not $drin) {
-      Add-LocalGroupMember -SID 'S-1-5-32-578' -Member $nutzer -ErrorAction Stop
+      Add-LocalGroupMember -SID 'S-1-5-32-578' -Member $ich.User.Value -ErrorAction Stop
       Write-Info "$nutzer in Hyper-V-Administratoren aufgenommen: ab der naechsten Anmeldung gehen status/start/stop ohne Admin-Fenster."
     }
   }
