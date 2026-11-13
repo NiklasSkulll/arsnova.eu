@@ -7,7 +7,7 @@
 #   win-test.sh labor   labor.ps1 -Mode up, pruefen, Entwicklungslauf (LAB_N=1), Logs nach WIN_OUT
 #   win-test.sh destroy Windows-VM, Disk und Netz entfernen (ISO bleibt)
 #
-# Voraussetzungen: Labor-VMs abgebaut (labor.sh destroy; das Netz nutzt dieselbe Bridge virbr-1b,
+# Voraussetzungen: Labor-VMs aus und Labornetz gestoppt (das Netz nutzt dieselbe Bridge virbr-1b,
 # damit gelten die ufw-Freigaben), ISO unter WIN_DIR, kvm_intel nested=Y, OVMF, xorriso.
 # Netz 192.168.151.0/24, damit es sich nicht mit dem Labornetz 192.168.150.0/24 in Windows überschneidet.
 # Bekannt (2026-11-13): Mit Host-Kernel 7.2.x startet Windows mit aktivem Hyper-V verschachtelt nicht
@@ -28,6 +28,10 @@ KEY="${LAB_SSH_KEY:-$HOME/.ssh/id_ed25519.pub}"
 SSH=(ssh -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile="$WIN_DIR/known_hosts" -o ConnectTimeout=5 -o BatchMode=yes "labor@$IP")
 WSL_URL=https://cloud-images.ubuntu.com/wsl/releases/24.04/current
 WSL_TAR=ubuntu-noble-wsl-amd64-24.04lts.rootfs.tar.gz
+# Win32-OpenSSH als MSI statt Windows-Capability (die kam erst nach 1 h 40 min), SHA-256 laut GitHub-Release.
+SSH_MSI=OpenSSH-Win64-v10.0.0.0.msi
+SSH_MSI_URL=https://github.com/PowerShell/Win32-OpenSSH/releases/download/10.0.0.0p2-Preview/$SSH_MSI
+SSH_MSI_SHA=ddec9c53864280759cf9f74791cefd387100e3946aa849a1c138a4ed1b96b7d9
 mkdir -p "$WIN_OUT"
 log() { echo "$(date --iso-8601=seconds) $*"; }
 win() { "${SSH[@]}" "$@"; }
@@ -40,8 +44,8 @@ warte_ssh() { # max. Minuten
 
 vm() {
   [[ -f "$ISO" ]] || { echo "ISO fehlt: $ISO" >&2; exit 1; }
-  if virsh net-info arsnova-1b >/dev/null 2>&1; then
-    echo "Labornetz arsnova-1b existiert (gleiche Bridge): zuerst labor.sh destroy" >&2
+  if virsh net-info arsnova-1b 2>/dev/null | grep -Eq '^Active: +yes'; then
+    echo "Labornetz arsnova-1b ist aktiv (gleiche Bridge): Labor-VMs herunterfahren, virsh net-destroy arsnova-1b" >&2
     exit 1
   fi
   if ! virsh net-info "$NET" >/dev/null 2>&1; then
@@ -67,6 +71,9 @@ EOF
   [[ -f "$WIN_DIR/passwort" ]] || openssl rand -base64 18 | tr -d '/+=' >"$WIN_DIR/passwort"
   sed "s|__PASSWORT__|$(cat "$WIN_DIR/passwort")|g" "$HERE/autounattend.xml" >"$t/autounattend.xml"
   cp "$HERE/setup.ps1" "$t/"
+  [[ -f "$WIN_DIR/$SSH_MSI" ]] || curl -fsSL -o "$WIN_DIR/$SSH_MSI" "$SSH_MSI_URL"
+  echo "$SSH_MSI_SHA  $WIN_DIR/$SSH_MSI" | sha256sum -c --quiet -
+  cp "$WIN_DIR/$SSH_MSI" "$t/"
   cp "$KEY" "$t/authorized_keys"
   rm -f "$WIN_DIR/unattend.iso" # libvirt übernimmt die Datei beim Start (dynamic_ownership)
   xorriso -as mkisofs -quiet -o "$WIN_DIR/unattend.iso" -V UNATTEND -J -joliet-long -r "$t"

@@ -6,7 +6,14 @@ param()
 $ErrorActionPreference = 'Continue'
 Start-Transcript -Path C:\1b-setup.log -Append | Out-Null
 
-Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0 | Out-Null
+# Liegt das Win32-OpenSSH-MSI bei (win-test.sh, SHA-256 dort geprueft), dauert das Sekunden;
+# die Windows-Capability kam am 2026-11-13 erst nach 1 h 40 min aus Windows Update.
+$msi = Get-ChildItem -Path $PSScriptRoot -Filter 'OpenSSH-Win64-*.msi' -ErrorAction SilentlyContinue | Select-Object -First 1
+if ($msi) {
+  Start-Process msiexec.exe -Wait -ArgumentList @('/i', "`"$($msi.FullName)`"", '/qn', 'ADDLOCAL=Server')
+} else {
+  Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0 | Out-Null
+}
 Set-Service -Name sshd -StartupType Automatic
 New-ItemProperty -Path HKLM:\SOFTWARE\OpenSSH -Name DefaultShell -PropertyType String -Force `
   -Value "$env:WINDIR\System32\WindowsPowerShell\v1.0\powershell.exe" | Out-Null
