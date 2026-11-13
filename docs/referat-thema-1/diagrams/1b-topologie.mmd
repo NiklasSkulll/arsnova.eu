@@ -23,7 +23,8 @@ flowchart TB
     Bearer-Token`"]
   end
   net["`**Internet**
-  ausgehend, für die Einrichtung,<br/>bleibt aktiv`"]
+  ausgehend, für die Einrichtung,
+  bleibt aktiv`"]
 
   app e1@-->|"HTTP 8080, Bearer"| llm
   LAP e2@-.->|"ausgehendes NAT, keine Portweiterleitung"| net
