@@ -248,7 +248,7 @@ function Resolve-LaborVmDir([bool]$Waehlen) {
   Write-Host ''
   Write-Host 'Wohin sollen die VM-Disks? (bis etwa 45 GB, real rund 25 GB; Image und Zwischendateien ~8 GB)'
   foreach ($l in $e.Geeignet) { Write-Host ("  {0}:  {1,5} GB frei  ({2})" -f $l.Buchstabe, $l.FreiGib, $l.Dateisystem) }
-  foreach ($l in $e.Ungeeignet) { Write-Host ("  {0}:  {1,5} GB frei  ({2}, {3}) - ungeeignet fuer Hyper-V" -f $l.Buchstabe, $l.FreiGib, $l.Dateisystem, $l.Typ) }
+  foreach ($l in @($e.Ungeeignet | Where-Object { $_.Typ -ne 'CD-ROM' })) { Write-Host ("  {0}:  {1,5} GB frei  ({2}, {3}) - ungeeignet fuer Hyper-V" -f $l.Buchstabe, $l.FreiGib, $l.Dateisystem, $l.Typ) }
   if (-not $e.Empfehlung) { throw 'Kein lokales NTFS- oder ReFS-Laufwerk gefunden; -VmDir angeben.' }
   $wahl = $e.Empfehlung
   if (-not $Ja) {

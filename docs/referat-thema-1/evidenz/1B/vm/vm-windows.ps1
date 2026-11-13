@@ -494,8 +494,9 @@ function Invoke-Status {
 function Invoke-Destroy {
   foreach ($vm in $Vms) {
     $n = $vm.Name
-    if (Get-VM -Name $n -ErrorAction SilentlyContinue) {
-      Stop-VM -Name $n -TurnOff -Force -ErrorAction SilentlyContinue
+    $v = Get-VM -Name $n -ErrorAction SilentlyContinue
+    if ($v) {
+      if ($v.State -ne 'Off') { Stop-VM -Name $n -TurnOff -Force -WarningAction SilentlyContinue -ErrorAction SilentlyContinue }
       Remove-VM -Name $n -Force
     }
     foreach ($p in "$n.vhdx", "$n-seed.iso", "$n-seed", $n) {
