@@ -43,6 +43,12 @@ write_files:
       ufw --force enable
       install -d -m 0755 /srv/arsnova/models/open-weight-llm
       chown labor:labor /srv/arsnova/models/open-weight-llm
+      # Messruhe (Lauf 2026-11-13: apt-daily-upgrade lief mitten im gewerteten Lauf):
+      # keine Updates, Firmware- oder Index-Downloads im Hintergrund.
+      for u in apt-daily.timer apt-daily-upgrade.timer unattended-upgrades.service fwupd-refresh.timer \
+        update-notifier-download.timer man-db.timer motd-news.timer; do
+        systemctl disable --now "$u" 2>/dev/null || true
+      done
       touch /var/lib/labor-basis.done
 runcmd:
   - [bash, /usr/local/sbin/labor-basis.sh]

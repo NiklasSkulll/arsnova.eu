@@ -35,6 +35,12 @@ write_files:
         docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin nodejs
       systemctl enable --now docker
       usermod -aG docker labor
+      # Messruhe (Lauf 2026-11-13: apt-daily-upgrade lief mitten im gewerteten Lauf):
+      # keine Updates, Firmware- oder Index-Downloads im Hintergrund.
+      for u in apt-daily.timer apt-daily-upgrade.timer unattended-upgrades.service fwupd-refresh.timer \
+        update-notifier-download.timer man-db.timer motd-news.timer; do
+        systemctl disable --now "$u" 2>/dev/null || true
+      done
       touch /var/lib/labor-basis.done
 runcmd:
   - [bash, /usr/local/sbin/labor-basis.sh]

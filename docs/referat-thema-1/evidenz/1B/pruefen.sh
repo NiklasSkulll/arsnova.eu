@@ -14,6 +14,9 @@ pruef() { # name bedingung-ergebnis detail
 code() { curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$@"; }
 
 echo "== $(hostname) $(date --iso-8601=seconds) commit $(git rev-parse --short=12 HEAD) vCPU $(nproc) RAM $(free -g | awk '/^Mem:/ {print $2}') GiB"
+# Messruhe: Hintergrund-Updates aus (user-data, Lauf 2026-11-13).
+ruhe="$(systemctl is-enabled apt-daily.timer apt-daily-upgrade.timer 2>/dev/null | paste -sd' ')"
+[[ "$ruhe" =~ ^(disabled|masked)\ (disabled|masked)$ ]]; pruef "Hintergrund-Updates aus" $? "apt-daily, apt-daily-upgrade: $ruhe"
 case "${1:-}" in
   llm)
     T="$(sed -n 's/^OPEN_WEIGHT_LLM_TOKEN=//p' .env.llm)"
