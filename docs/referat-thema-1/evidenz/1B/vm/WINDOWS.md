@@ -2,6 +2,8 @@
 
 **Status: ungetestet, Niklas prüft** · Stand: 2026-11-12
 
+_Ergänzt 2026-11-13:_ Teiltest auf echtem Windows 11 (PowerShell 5.1) in einer KVM-VM: Größenwahl, `status`, `pruefen` und die Vorprüfungen von `up` laufen; VMs, WSL-Teil und Lauf sind weiter ungetestet. Ergebnis und Grund: [Windows-Test](../2026-11-13-windows-test.md).
+
 _Ergänzt 2026-11-12:_ Der Weg mit einem Befehl ist jetzt `..\labor.ps1 -Mode up` (Größenwahl, VMs, Einrichtung beider Hosts, Prüfungen) und `-Mode lauf` für den Lauf; Ablauf im [Runbook](../runbook.md), Entscheidung in [ADR 1B-010](../../../adr/1B-010-aufbau-automatisiert-mit-groessenempfehlung.md). `vm-windows.ps1` bleibt die VM-Schicht darunter.
 
 Ziel: dasselbe Zwei-VM-Labor wie unter Linux (`vm-linux.sh`, libvirt), nur mit anderer Startschicht (Hyper-V). Die cloud-init-Dateien sind identisch: `app-host.user-data.yaml` und `llm-host.user-data.yaml` in diesem Ordner.

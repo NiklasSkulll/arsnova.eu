@@ -22,9 +22,12 @@ if (Test-Path $cfg) {
   (Get-Content $cfg) -replace '^#?PasswordAuthentication .*', 'PasswordAuthentication no' | Set-Content -Encoding ascii $cfg
 }
 Start-Service sshd
-if (-not (Get-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -ErrorAction SilentlyContinue)) {
+# Die Regel des OpenSSH-Pakets gilt nur im Profil Privat; das NAT-Netz der VM ist Oeffentlich.
+if (Get-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -ErrorAction SilentlyContinue) {
+  Set-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -Profile Any -Enabled True
+} else {
   New-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -DisplayName 'OpenSSH Server' -Enabled True `
-    -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22 | Out-Null
+    -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22 -Profile Any | Out-Null
 }
 
 foreach ($f in 'Microsoft-Hyper-V', 'VirtualMachinePlatform', 'Microsoft-Windows-Subsystem-Linux') {

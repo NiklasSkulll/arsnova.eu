@@ -10,6 +10,9 @@
 # Voraussetzungen: Labor-VMs abgebaut (labor.sh destroy; das Netz nutzt dieselbe Bridge virbr-1b,
 # damit gelten die ufw-Freigaben), ISO unter WIN_DIR, kvm_intel nested=Y, OVMF, xorriso.
 # Netz 192.168.151.0/24, damit es sich nicht mit dem Labornetz 192.168.150.0/24 in Windows überschneidet.
+# Bekannt (2026-11-13): Mit Host-Kernel 7.2.x startet Windows mit aktivem Hyper-V verschachtelt nicht
+# („Automatische Reparatur“), auch ohne evmcs; ohne vmx bootet es. Gemeldet als Regression ab 7.2
+# (discuss.cachyos.org/t/36134). Volltest erst mit einem Host-Kernel 7.1 oder nach einer Korrektur.
 set -euo pipefail
 HERE="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 REPO="$(git -C "$HERE" rev-parse --show-toplevel)"
@@ -76,8 +79,9 @@ EOF
     --graphics vnc,listen=127.0.0.1 --noautoconsole --wait 0
   # Das UEFI-Bootmenü des ISO wartet auf „Taste drücken“; Enter senden, bis Setup läuft.
   for _ in $(seq 1 20); do virsh send-key "$NAME" KEY_ENTER >/dev/null 2>&1 || true; sleep 1; done
-  log "warte auf Installation, ersten Login, setup.ps1 und Neustart (bis 120 min)"
-  warte_ssh 120
+  # setup.ps1 laedt OpenSSH ueber Windows Update; am 2026-11-13 dauerte das allein 1 h 40 min.
+  log "warte auf Installation, ersten Login, setup.ps1 und Neustart (bis 240 min)"
+  warte_ssh 240
   until win 'Test-Path C:\1b-setup.done' 2>/dev/null | grep -q True; do sleep 20; done
   sleep 120
   warte_ssh 30
@@ -104,8 +108,16 @@ wsl_einrichten() {
   scp -q -o UserKnownHostsFile="$WIN_DIR/known_hosts" "$WIN_DIR/repo.bundle" "labor@$IP:C:/1b/repo.bundle"
   local sha; sha="$(git -C "$REPO" rev-parse HEAD)"
  win "wsl.exe -d Ubuntu -u root -e bash -c 'command -v git >/dev/null || (apt-get update -q && DEBIAN_FRONTEND=noninteractive apt-get install -y -q git); test -d /root/arsnova.eu || git clone -q /mnt/c/1b/repo.bundle /root/arsnova.eu; cd /root/arsnova.eu && git fetch -q /mnt/c/1b/repo.bundle && git checkout -q --detach $sha && git log --oneline -1'" | tr -d '\0'
-  # SSH-Schluessel fuer labor.ps1 (PowerShell 5.1 verliert leere Argumente, daher cmd).
- win 'if (-not (Test-Path $env:USERPROFILE\.ssh\id_ed25519)) { New-Item -ItemType Directory -Force $env:USERPROFILE\.ssh | Out-Null; cmd /c "ssh-keygen -q -t ed25519 -N \"\" -f %USERPROFILE%\.ssh\id_ed25519" }; Test-Path $env:USERPROFILE\.ssh\id_ed25519.pub'
+  # SSH-Schluessel fuer labor.ps1. PowerShell 5.1 verliert leere Argumente; '""' kommt als "" an
+  # (am 2026-11-13 in der Test-VM geprueft, die Variante ueber cmd /c scheiterte an der Quotierung).
+  win "$(cat <<'PS'
+if (-not (Test-Path "$env:USERPROFILE\.ssh\id_ed25519")) {
+  New-Item -ItemType Directory -Force "$env:USERPROFILE\.ssh" | Out-Null
+  ssh-keygen -q -t ed25519 -N '""' -f "$env:USERPROFILE\.ssh\id_ed25519"
+}
+Test-Path "$env:USERPROFILE\.ssh\id_ed25519.pub"
+PS
+)"
 }
 
 labor() {
