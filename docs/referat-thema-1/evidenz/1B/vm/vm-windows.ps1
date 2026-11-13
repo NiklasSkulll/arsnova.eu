@@ -388,6 +388,8 @@ function Assert-RamFrei {
   Write-Info "RAM: verfuegbar $frei GB, die VMs belegen $need GB fest; Windows blieben etwa $($frei - $need) GB (Reserve $RamReserveGB GB)."
   $r = Test-LaborRessourcen -FreiRamGib $frei -FreiDiskGib 1000 -PlanRamGib $need -PlanDiskGib 0 -ReserveGib $RamReserveGB
   if ($r.abbruch -eq 'ram-frei') {
+    $p = @(Get-Process -ErrorAction SilentlyContinue | ForEach-Object { @{ Name = $_.ProcessName; Bytes = $_.WorkingSet64 } })
+    foreach ($l in @(Format-RamFresser -Prozesse $p)) { Write-Info "Speicherverbraucher: $l" }
     throw ("Zu wenig freier RAM: Windows blieben weniger als $RamReserveGB GB. Die VMs sind angelegt, aber nicht gestartet.`n" +
       'Programme schliessen (auch WSL: wsl --shutdown, Docker Desktop) und denselben Befehl erneut aufrufen, oder kleinere Groessen waehlen (dann erst -Mode destroy).')
   }

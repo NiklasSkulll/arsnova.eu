@@ -333,3 +333,24 @@ Describe 'Get-RamVorschau' {
     if (-not $reicht) { $v.Text | Should -BeLike '*startet das Labor nicht*' }
   }
 }
+
+Describe 'Format-RamFresser' {
+  It 'nennt WSL und Docker mit konkretem Tipp und laesst Kleinkram weg' {
+    $p = @(
+      @{ Name = 'VmmemWSL'; Bytes = 15GB }
+      @{ Name = 'com.docker.backend'; Bytes = 2GB }
+      @{ Name = 'msedge'; Bytes = 900MB }
+      @{ Name = 'msedge'; Bytes = 700MB }
+      @{ Name = 'notepad'; Bytes = 20MB }
+    )
+    $z = @(Format-RamFresser -Prozesse $p)
+    $z[0] | Should -BeLike '*WSL (VmmemWSL)*15*GB*wsl --shutdown*'
+    $z[1] | Should -BeLike '*Docker Desktop (com.docker.backend)*2*GB*beenden*'
+    $z[2] | Should -BeLike '*msedge*1,6*GB*'
+    ($z -join ' ') | Should -Not -BeLike '*notepad*'
+  }
+
+  It 'liefert nichts ohne grosse Verbraucher' {
+    @(Format-RamFresser -Prozesse @(@{ Name = 'notepad'; Bytes = 20MB })).Count | Should -Be 0
+  }
+}

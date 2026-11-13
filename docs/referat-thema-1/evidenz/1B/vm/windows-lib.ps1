@@ -271,6 +271,22 @@ function Get-RamVorschau {
   [pscustomobject]@{ Reicht = $reicht; RestGib = $rest; Text = $t }
 }
 
+function Format-RamFresser {
+  # Prozesse: @{ Name; Bytes } (Arbeitsspeicher). Fasst gleichnamige zusammen, zeigt die fuenf groessten ab
+  # 0,5 GB, mit Tipp fuer die typischen Verursacher (WSL 2 reserviert bis zur Haelfte des RAMs, Docker Desktop).
+  param([Parameter(Mandatory)][AllowEmptyCollection()][object[]]$Prozesse)
+  $summe = @{}
+  foreach ($p in $Prozesse) { $summe[$p.Name] = [double]($summe[$p.Name]) + [double]$p.Bytes }
+  $kultur = [Globalization.CultureInfo]::GetCultureInfo('de-DE')
+  $summe.GetEnumerator() | Where-Object { $_.Value -ge 0.5GB } | Sort-Object Value -Descending | Select-Object -First 5 | ForEach-Object {
+    $gb = ($_.Value / 1GB).ToString('0.#', $kultur)
+    $name = [string]$_.Key   # in switch waere $_ der gepruefte Wert, nicht der Eintrag
+    if ($name -match '^(?i)vmmem') { "WSL ($name) belegt $gb GB -> in PowerShell: wsl --shutdown (WSL danach normal wieder oeffnen)" }
+    elseif ($name -match '^(?i)(com\.docker|docker desktop)') { "Docker Desktop ($name) belegt $gb GB -> Docker Desktop beenden" }
+    else { "$name belegt $gb GB" }
+  }
+}
+
 function Get-LaborPlan {
   # Geschaetzte Sekunden je Schritt von labor.ps1 -Mode up (ThinkPad P50 als Massstab, eher grosszuegig):
   # 1 Vorpruefung, 2 Netz, 3 Image, 4-5 VMs anlegen, 6 Start, 7 Repo und cloud-init, 8 Stand,

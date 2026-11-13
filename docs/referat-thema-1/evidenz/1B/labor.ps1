@@ -146,14 +146,26 @@ function Select-LaborGroesse {
   if ($f) { throw "Ungueltige Groessen: $(Get-LaborText $f)" }
   Write-Host ("Gewaehlt: llm-host $($w.LlmCpus) vCPU, $($w.LlmRamGB) GB, Platte $($w.LlmDiskGB) GB; " +
     "app-host $($w.AppCpus) vCPU, $($w.AppRamGB) GB, Platte $($w.AppDiskGB) GB")
+  Show-RamVorschau ($w.LlmRamGB + $w.AppRamGB)
+  return $w
+}
+
+# RAM-Vorschau fuer den Start; reicht es nicht, die groessten Verbraucher mit Tipp (WSL, Docker Desktop).
+function Show-RamVorschau([int]$PlanGib) {
   $script:RamVorschau = $null
   $frei = Get-VerfuegbarRamGib
-  if ($null -ne $frei -and -not (Test-LaborVmsLaufen)) {
-    $script:RamVorschau = Get-RamVorschau -VerfuegbarGib $frei -PlanGib ($w.LlmRamGB + $w.AppRamGB) -ReserveGib $RamReserveGB
-    $farbe = if ($script:RamVorschau.Reicht) { 'Green' } else { 'Yellow' }
-    Write-Host $script:RamVorschau.Text -ForegroundColor $farbe
+  if ($null -eq $frei -or (Test-LaborVmsLaufen)) { return }
+  $script:RamVorschau = Get-RamVorschau -VerfuegbarGib $frei -PlanGib $PlanGib -ReserveGib $RamReserveGB
+  $farbe = if ($script:RamVorschau.Reicht) { 'Green' } else { 'Yellow' }
+  Write-Host $script:RamVorschau.Text -ForegroundColor $farbe
+  if (-not $script:RamVorschau.Reicht) {
+    $p = @(Get-Process -ErrorAction SilentlyContinue | ForEach-Object { @{ Name = $_.ProcessName; Bytes = $_.WorkingSet64 } })
+    $z = @(Format-RamFresser -Prozesse $p)
+    if ($z.Count -gt 0) {
+      Write-Host 'Groesste Speicherverbraucher gerade:' -ForegroundColor Yellow
+      foreach ($l in $z) { Write-Host "  $l" -ForegroundColor Yellow }
+    }
   }
-  return $w
 }
 
 # Verfuegbarer RAM wie im Task-Manager (frei plus Standby); $null ausserhalb von Windows (Tests).
@@ -484,7 +496,12 @@ if ($MyInvocation.InvocationName -ne '.') {
   # Kein Ruhezustand, solange Aufbau oder Messung laeuft (endet mit diesem Fenster).
   if ($Mode -in @('up', 'start', 'kalibrierung', 'lauf')) { try { Set-WachHalten $true } catch { Write-Host "HINWEIS: Ruhezustand nicht gesperrt ($($_.Exception.Message))" } }
   switch ($Mode) {
-    'vorpruefung' { Invoke-VmScript $null 'pruefen' }
+    'vorpruefung' {
+      Invoke-VmScript $null 'pruefen'
+      $r = Get-LaborRechner
+      $e = Get-LaborGroesse -Kerne $r.Kerne -Threads $r.Threads -RamGib $r.RamGib
+      if (-not $e.abbruch) { Show-RamVorschau ($e.llm.ramGib + $e.app.ramGib) }
+    }
     'umgebung' { Get-LaborUmgebung }
     'up' { Invoke-LaborUp }
     'groessen' { Select-LaborGroesse | Out-Null }
