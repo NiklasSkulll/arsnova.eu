@@ -279,6 +279,17 @@ function Set-WachHalten {
   [void][LaborWach]::SetThreadExecutionState($flags)
 }
 
+function Add-JsonFeld {
+  # Haengt "Name": Wert an ein JSON-Objekt an, als Text: Die Messwerte bleiben Zeichen fuer Zeichen,
+  # wie lauf.sh sie geschrieben hat (ConvertTo-Json in PowerShell 5.1 wuerde Zahlen und Zeichen umschreiben).
+  param([Parameter(Mandatory)][string]$Json, [Parameter(Mandatory)][string]$Name, [Parameter(Mandatory)][string]$Wert)
+  $t = $Json.TrimEnd()
+  if (-not ($t.StartsWith('{') -and $t.EndsWith('}'))) { throw 'Add-JsonFeld erwartet ein JSON-Objekt.' }
+  $innen = $t.Substring(0, $t.Length - 1).TrimEnd()
+  $komma = if ($innen -eq '{') { '' } else { ',' }
+  return "$innen$komma`n  `"$Name`": $Wert`n}`n"
+}
+
 function Format-Dauer([TimeSpan]$Dauer) {
   if ($Dauer.TotalHours -ge 1) { return '{0}:{1:00}:{2:00}' -f [int][Math]::Floor($Dauer.TotalHours), $Dauer.Minutes, $Dauer.Seconds }
   return '{0}:{1:00}' -f [int][Math]::Floor($Dauer.TotalMinutes), $Dauer.Seconds

@@ -9,6 +9,7 @@
 #                      LAB_TAG mit Präfix dev oder probe: kommt nicht ins Repo; Timeout ohne
 #                      LAB_TIMEOUT_MS aus der jüngsten Kalibrierung mit gleichem Energieprofil
 #   labor.sh status    VMs, Pinning, Docker, Repo-Stand
+#   labor.sh umgebung  Rechner, Hypervisor und VMs als JSON (steht auch in jedem Ergebnis)
 #   labor.sh stop      beide VMs herunterfahren (RAM und CPU wieder frei, Disks bleiben)
 #   labor.sh start     beide VMs starten, auf die Dienste warten, prüfen
 #   labor.sh destroy   VMs, Disks und Netz entfernen (fragt nach)
@@ -199,8 +200,15 @@ negativtests() {
   return "$ok"
 }
 
+# Umgebung (Rechner, Hypervisor, VMs, Schema 1b-umgebung-1) erfassen und in eine Ergebnisdatei einbetten.
+umgebung_einbetten() { # datei
+  local u; u="$(LAB_VMDIR="$VMDIR" bash "$HERE/umgebung.sh")" || { echo "Umgebung nicht erfasst" >&2; return 0; }
+  jq --argjson u "$u" '. + {umgebung: $u}' "$1" >"$1.neu" && mv "$1.neu" "$1"
+}
+
 pruefen() {
   local rc bericht; bericht="$OUT/aufbau-$(date +%Y%m%dT%H%M%S).txt"
+  LAB_VMDIR="$VMDIR" bash "$HERE/umgebung.sh" >"${bericht%.txt}-umgebung.json" 2>/dev/null || true
   {
     echo "# 1B-Aufbaubericht (ohne Secrets) $(date --iso-8601=seconds)"
     echo "Repo: $(git -C "$REPO" rev-parse HEAD)"
@@ -218,7 +226,7 @@ pruefen() {
     echo "== Ergebnis: $([[ $f == 0 ]] && echo 'alle Prüfungen OK' || echo 'FEHLER, siehe oben')"
     exit "$f"
   } 2>&1 | tee "$bericht" && rc=0 || rc=$?
-  echo "Bericht: $bericht"
+  echo "Bericht: $bericht (Umgebung: ${bericht%.txt}-umgebung.json)"
   return "$rc"
 }
 
@@ -279,12 +287,14 @@ im_app_host() { # modus: lauf.sh im app-host mit Hülle (Ruhezustand gesperrt, E
   if [[ "$1" == kalibrierung ]]; then
     local datei; datei="$(tail -n 1 <<<"$ausgabe")"
     scp -q -o UserKnownHostsFile="$VMDIR/known_hosts" "labor@$APP:$datei" "$OUT/"
+    umgebung_einbetten "$OUT/$(basename "$datei")"
     echo "Kalibrierung: $OUT/$(basename "$datei")"
   fi
   if [[ "$1" == lauf ]]; then
     local dir; dir="$(tail -n 1 <<<"$ausgabe")"
     scp -q -r -o UserKnownHostsFile="$VMDIR/known_hosts" "labor@$APP:$dir" "$OUT/"
     echo "Rohdaten (nie einchecken, Mitschnitte enthalten den Token): $OUT/$(basename "$dir")"
+    umgebung_einbetten "$OUT/$(basename "$dir")/ergebnis.json"
     if [[ "${LAB_TAG:-}" != dev* && "${LAB_TAG:-}" != probe* ]]; then
       local ziel; ziel="$HERE/messung/$(date +%F)-lauf${LAB_TAG:+-$LAB_TAG}.json" i=2
       while [[ -e "$ziel" ]]; do ziel="$HERE/messung/$(date +%F)-lauf${LAB_TAG:+-$LAB_TAG}-$i.json"; i=$((i + 1)); done
@@ -334,9 +344,10 @@ case "${1:-}" in
   kalibrierung | lauf) im_app_host "$1" ;;
   pruefen) pruefen ;;
   status) bash "$HERE/vm/vm-linux.sh" status ;;
+  umgebung) LAB_VMDIR="$VMDIR" bash "$HERE/umgebung.sh" ;;
   destroy)
     frage "Beide Labor-VMs mit Disks und das Labornetz löschen? [j/N]" n || exit 0
     bash "$HERE/vm/vm-linux.sh" destroy
     ;;
-  *) echo "Aufruf: $0 up|groessen|pruefen|kalibrierung|lauf|status|stop|start|destroy" >&2; exit 2 ;;
+  *) echo "Aufruf: $0 up|groessen|pruefen|kalibrierung|lauf|status|umgebung|stop|start|destroy" >&2; exit 2 ;;
 esac

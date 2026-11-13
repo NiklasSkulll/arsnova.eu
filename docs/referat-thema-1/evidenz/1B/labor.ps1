@@ -6,6 +6,7 @@
   Ohne WSL (seit 2026-11-13). Getestet: siehe evidenz/1B/2026-11-13-windows-test.md.
 
     labor.ps1 -Mode vorpruefung  nur pruefen, ob dieser Rechner bereit ist (aendert nichts)
+    labor.ps1 -Mode umgebung  Rechner, Hyper-V und VMs als JSON (steht auch in jedem Ergebnis)
     labor.ps1 -Mode up        Groessenwahl, VMs (vm-windows.ps1), llm-host, app-host, Pruefungen
                               -NurVorbereiten: alles anlegen, aber keine VM starten
     labor.ps1 -Mode groessen  nur Empfehlung und Groessenwahl anzeigen, nichts anlegen
@@ -37,7 +38,7 @@
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '',
   Justification = 'Fehlalarm: die Skriptparameter werden in den Funktionen unten gelesen.')]
 param(
-  [ValidateSet('up', 'vorpruefung', 'groessen', 'pruefen', 'kalibrierung', 'lauf', 'status', 'stop', 'start', 'destroy')]
+  [ValidateSet('up', 'vorpruefung', 'umgebung', 'groessen', 'pruefen', 'kalibrierung', 'lauf', 'status', 'stop', 'start', 'destroy')]
   [string]$Mode = 'groessen',
   [switch]$Ja,
   [ValidateRange(1, 10)][int]$LabN = 10,
@@ -205,6 +206,8 @@ function Test-LaborNetz {
 function Invoke-Pruefen {
   New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
   $bericht = Join-Path $OutDir ("aufbau-{0:yyyyMMddTHHmmss}.txt" -f (Get-Date))
+  try { [IO.File]::WriteAllText(($bericht -replace '\.txt$', '-umgebung.json'), (Get-LaborUmgebung), (New-Object Text.UTF8Encoding $false)) }
+  catch { Write-Host "HINWEIS: Umgebung nicht erfasst ($($_.Exception.Message))" -ForegroundColor Yellow }
   Start-Transcript -Path $bericht | Out-Null
   try {
     Write-Host "# 1B-Aufbaubericht (ohne Secrets) $(Get-Date -Format o)"
@@ -313,6 +316,82 @@ function Invoke-LaborStart {
   }
 }
 
+# Umgebung eines Laufs als JSON (Schema 1b-umgebung-1, gleich wie umgebung.sh unter Linux):
+# Rechner, Windows-Version, Energieschema, Netzteil, Speicherort mit Plattentyp, Hyper-V-Version und je VM
+# Groesse, Reserve/Gewicht (kein Pinning), Konfigurationsversion, Secure Boot, Platte und das Innere (vm-info.sh).
+function Get-LaborUmgebung {
+  $cpu = @(Get-CimInstance Win32_Processor)
+  $os = Get-CimInstance Win32_OperatingSystem
+  $cs = Get-CimInstance Win32_ComputerSystem
+  $plan = ((& powercfg.exe /getactivescheme) -join ' ') -replace '[^A-Za-z0-9 ()._:-]', ''
+  $bat = @(Get-CimInstance Win32_Battery -ErrorAction SilentlyContinue)
+  $netzteil = if ($bat.Count -gt 0) { -not [bool]($bat | Where-Object { $_.BatteryStatus -eq 1 }) } else { $null }
+  $ort = [ordered]@{ pfad = $VmDir; dateisystem = $null; medium = $null }
+  if ($VmDir -match '^([A-Za-z]):') {
+    $l = $Matches[1]
+    try {
+      $ort.dateisystem = [string](Get-Volume -DriveLetter $l -ErrorAction Stop).FileSystem
+      $nr = (Get-Partition -DriveLetter $l -ErrorAction Stop).DiskNumber
+      $pd = Get-PhysicalDisk -ErrorAction Stop | Where-Object { "$($_.DeviceId)" -eq "$nr" } | Select-Object -First 1
+      if ($pd) { $ort.medium = "$($pd.MediaType) $($pd.BusType)".Trim() }
+    }
+    catch { $null = $_ }
+  }
+  $hvVersion = $null
+  $vmms = Join-Path $env:SystemRoot 'System32\vmms.exe'
+  if (Test-Path $vmms) { $hvVersion = (Get-Item $vmms).VersionInfo.ProductVersion }
+  $vms = @()
+  if (Get-Command Get-VM -ErrorAction SilentlyContinue) {
+    foreach ($v in @(Get-VM -Name 'arsnova-1b-*' -ErrorAction SilentlyContinue | Sort-Object Name)) {
+      $p = Get-VMProcessor -VMName $v.Name
+      $platte = $null
+      $hd = Get-VMHardDiskDrive -VMName $v.Name | Select-Object -First 1
+      if ($hd) { try { $platte = [int][Math]::Round((Get-VHD -Path $hd.Path).Size / 1GB) } catch { $null = $_ } }
+      $ip = if ($v.Name -eq 'arsnova-1b-app') { $AppIp } else { $LlmIp }
+      $gast = $null
+      if ($v.State -eq 'Running') {
+        $o = Get-SshArg
+        $alt = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
+        try { $t = (& ssh.exe @o "labor@$ip" "bash arsnova.eu/$Ev/vm-info.sh" 2>$null) -join "`n"; if ($LASTEXITCODE -eq 0) { $gast = $t | ConvertFrom-Json } }
+        catch { $gast = $null }
+        finally { $ErrorActionPreference = $alt }
+      }
+      $vms += [ordered]@{
+        name = $v.Name; ip = $ip; zustand = [string]$v.State; vcpu = $p.Count; ramGib = [Math]::Round($v.MemoryStartup / 1GB, 1)
+        cpuset = $null; cpuReserveProzent = $p.Reserve; cpuGewicht = $p.RelativeWeight
+        generation = $v.Generation; konfigurationsversion = [string]$v.Version
+        secureBoot = [string](Get-VMFirmware -VMName $v.Name).SecureBoot; plattenMaxGib = $platte; gast = $gast
+      }
+    }
+  }
+  $stand = try { (Get-RepoStand -Start $PSScriptRoot).Commit } catch { $null }
+  $u = [ordered]@{
+    schema = '1b-umgebung-1'; erfasstAm = (Get-Date).ToString('o')
+    rechner = [ordered]@{
+      plattform = 'windows'; cpu = [string]$cpu[0].Name.Trim()
+      kerne = [int](($cpu | Measure-Object -Property NumberOfCores -Sum).Sum)
+      threads = [int](($cpu | Measure-Object -Property NumberOfLogicalProcessors -Sum).Sum)
+      maxMHz = [int]$cpu[0].MaxClockSpeed; ramGib = [Math]::Round($cs.TotalPhysicalMemory / 1GB, 1)
+      os = [string]$os.Caption; kernel = "$($os.Version) (Build $($os.BuildNumber))"
+      energieprofil = $plan; cpuGovernor = $null; cpufreqTreiber = $null; netzteil = $netzteil; speicherort = $ort
+    }
+    hypervisor = [ordered]@{ name = 'Hyper-V'; version = $hvVersion; libvirt = $null; nested = $null; pinning = $false }
+    vms = $vms
+    laborStand = [ordered]@{ commit = $stand }
+  }
+  return ($u | ConvertTo-Json -Depth 8)
+}
+
+function Add-LaborUmgebung([string]$Datei) {
+  # Bettet die Umgebung in eine Ergebnisdatei ein; ein Fehler hier darf den Lauf nicht entwerten.
+  try {
+    $neu = Add-JsonFeld -Json ([IO.File]::ReadAllText($Datei)) -Name 'umgebung' -Wert (Get-LaborUmgebung)
+    [IO.File]::WriteAllText($Datei, $neu, (New-Object Text.UTF8Encoding $false))
+  }
+  catch { Write-Host "HINWEIS: Umgebung nicht erfasst ($($_.Exception.Message))" -ForegroundColor Yellow }
+}
+
 function Invoke-ImAppHost([string]$LaufMode) {
   # PowerShell 5.1 gibt eingebettete " ungeschuetzt an ssh.exe weiter; daher -N '' (im String '''').
   Invoke-VmScript $null 'sync'
@@ -342,8 +421,12 @@ function Invoke-ImAppHost([string]$LaufMode) {
   if ($LaufMode -eq 'kalibrierung') {
     New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
     Push-Location $OutDir
-    try { & scp.exe -q @o "labor@${AppIp}:$("$($ausgabe[-1])".Trim())" '.' }
+    $datei = "$($ausgabe[-1])".Trim()
+    try { & scp.exe -q @o "labor@${AppIp}:$datei" '.'; if ($LASTEXITCODE -ne 0) { throw 'scp der Kalibrierung fehlgeschlagen' } }
     finally { Pop-Location }
+    $lokal = Join-Path $OutDir (Split-Path $datei -Leaf)
+    Add-LaborUmgebung $lokal
+    Write-Host "Kalibrierung: $lokal"
   }
   if ($LaufMode -eq 'lauf') {
     $dir = "$($ausgabe[-1])".Trim()
@@ -353,6 +436,7 @@ function Invoke-ImAppHost([string]$LaufMode) {
     finally { Pop-Location }
     $lokal = Join-Path $OutDir (Split-Path $dir -Leaf)
     Write-Host "Rohdaten (nie einchecken, Mitschnitte enthalten den Token): $lokal"
+    Add-LaborUmgebung (Join-Path $lokal 'ergebnis.json')
     if (-not ($LabTag.StartsWith('dev') -or $LabTag.StartsWith('probe'))) {
       $basis = '{0:yyyy-MM-dd}-lauf{1}' -f (Get-Date), $(if ($LabTag) { "-$LabTag" } else { '' })
       $ziel = Join-Path (Join-Path $PSScriptRoot 'messung') "$basis.json"
@@ -379,6 +463,7 @@ if ($MyInvocation.InvocationName -ne '.') {
   if ($Mode -in @('up', 'start', 'kalibrierung', 'lauf')) { try { Set-WachHalten $true } catch { Write-Host "HINWEIS: Ruhezustand nicht gesperrt ($($_.Exception.Message))" } }
   switch ($Mode) {
     'vorpruefung' { Invoke-VmScript $null 'pruefen' }
+    'umgebung' { Get-LaborUmgebung }
     'up' { Invoke-LaborUp }
     'groessen' { Select-LaborGroesse | Out-Null }
     'pruefen' { Invoke-Pruefen }

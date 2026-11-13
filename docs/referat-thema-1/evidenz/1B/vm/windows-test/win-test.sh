@@ -129,7 +129,7 @@ labor() {
   local g='-LlmCpus 2 -LlmRamGB 12 -AppCpus 2 -AppRamGB 6'
   local s
   for s in "vorpruefung:-Mode vorpruefung" "groessen:-Mode groessen -Ja" \
-    "vorbereiten:-Mode up -Ja -NurVorbereiten $g" "vorbereiten-erneut:-Mode up -Ja -NurVorbereiten $g" \
+    "vorbereiten:-Mode up -Ja -NurVorbereiten $g" "vorbereiten-erneut:-Mode up -Ja -NurVorbereiten $g" "umgebung:-Mode umgebung" \
     "up-ram-schutz:-Mode up -Ja $g" "status:-Mode status" "destroy:-Mode destroy -Ja"; do
     log "labor.ps1 ${s#*:}"
     win "powershell -NoProfile -ExecutionPolicy Bypass -File $p ${s#*:}; \"exit=\$LASTEXITCODE\"" 2>&1 | tee "$WIN_OUT/${s%%:*}.txt" || true

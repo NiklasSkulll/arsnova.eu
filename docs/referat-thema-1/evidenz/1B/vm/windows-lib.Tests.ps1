@@ -284,3 +284,18 @@ Describe 'Get-Restzeit' {
     Get-Restzeit -Plan $plan -Erledigt 4 | Should -Be ([TimeSpan]::Zero)
   }
 }
+
+Describe 'Add-JsonFeld' {
+  It 'haengt ein Feld an, ohne den uebrigen Text zu veraendern' {
+    $alt = "{`n  `"lauf`": `"x`",`n  `"wert`": 0.1234567890123`n}`n"
+    $neu = Add-JsonFeld -Json $alt -Name 'umgebung' -Wert '{"schema":"1b-umgebung-1"}'
+    $neu | Should -BeLike "*0.1234567890123*"
+    $neu.StartsWith($alt.TrimEnd().TrimEnd('}').TrimEnd()) | Should -BeTrue
+    ($neu | ConvertFrom-Json).umgebung.schema | Should -Be '1b-umgebung-1'
+    ($neu | ConvertFrom-Json).lauf | Should -Be 'x'
+  }
+
+  It 'lehnt Text ab, der kein JSON-Objekt ist' {
+    { Add-JsonFeld -Json '[1,2]' -Name 'u' -Wert '{}' } | Should -Throw '*JSON-Objekt*'
+  }
+}
