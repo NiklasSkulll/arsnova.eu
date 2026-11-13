@@ -33,6 +33,9 @@ SSH_MSI_SHA=ddec9c53864280759cf9f74791cefd387100e3946aa849a1c138a4ed1b96b7d9
 # scp -O (altes Protokoll): der sftp-Teil von Win32-OpenSSH 10.0.0.0p2 bricht ab (Test 2026-11-13).
 SCP=(scp -O -q -o UserKnownHostsFile="$WIN_DIR/known_hosts")
 mkdir -p "$WIN_OUT"
+# virt-install ist ein Python-Programm mit "#!/usr/bin/env python3". Steht ein anderes Python (mise, pyenv,
+# venv) vorn im PATH, fehlt dort das Modul gi und es bricht ab (2026-11-13 in einer systemd-Unit).
+virt_install() { PATH="/usr/bin:$PATH" virt-install "$@"; }
 log() { echo "$(date --iso-8601=seconds) $*"; }
 win() { "${SSH[@]}" "$@"; }
 
@@ -87,7 +90,7 @@ EOF
   rm -rf "$t"
 
   log "Windows-VM anlegen und installieren"
-  virt-install --name "$NAME" --memory "${WIN_RAM_MIB:-18432}" --vcpus 4,sockets=1,cores=4,threads=1 \
+  virt_install --name "$NAME" --memory "${WIN_RAM_MIB:-18432}" --vcpus 4,sockets=1,cores=4,threads=1 \
     --cpu "${WIN_CPU:-host-passthrough}" --osinfo win11 --boot uefi \
     --disk "path=$WIN_DIR/$NAME.qcow2,size=60,format=qcow2,bus=sata" \
     --disk "path=$ISO,device=cdrom,bus=sata" --disk "path=$WIN_DIR/unattend.iso,device=cdrom,bus=sata" \

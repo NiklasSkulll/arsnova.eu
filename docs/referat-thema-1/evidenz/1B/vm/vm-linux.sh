@@ -40,6 +40,9 @@ VMS=(
   "arsnova-1b-llm 192.168.150.20 52:54:00:1b:00:20 $LLM_VCPU $((LLM_RAM * 1024)) $LLM_DISK $LLM_SET llm-host.user-data.yaml"
 )
 
+# virt-install ist ein Python-Programm mit "#!/usr/bin/env python3". Steht ein anderes Python (mise, pyenv,
+# venv) vorn im PATH, fehlt dort das Modul gi und es bricht ab (2026-11-13 in einer systemd-Unit).
+virt_install() { PATH="/usr/bin:$PATH" virt-install "$@"; }
 need() { command -v "$1" >/dev/null || { echo "Fehlt: $1" >&2; exit 1; }; }
 
 seed_iso() { # out user-data name
@@ -101,7 +104,7 @@ up() {
     fi
     qemu-img create -q -f qcow2 -F qcow2 -b "$VMDIR/$IMG" "$VMDIR/$name.qcow2" "${disk}G"
     seed_iso "$VMDIR/$name-seed.iso" "$ud" "$name"
-    virt-install --name "$name" --memory "$ram" --vcpus "$vcpus" --cpuset "$cpuset" \
+    virt_install --name "$name" --memory "$ram" --vcpus "$vcpus" --cpuset "$cpuset" \
       --cpu host-passthrough --osinfo ubuntu24.04 --import \
       --disk "path=$VMDIR/$name.qcow2,format=qcow2" \
       --disk "path=$VMDIR/$name-seed.iso,device=cdrom" \
