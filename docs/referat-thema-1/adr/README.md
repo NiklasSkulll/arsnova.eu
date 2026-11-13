@@ -111,3 +111,4 @@ _Ergänzt 2026-11-12._ Nummernkreis `1B-001`–`1B-019` für Jonas (Schritte 1�
 | [1B-008](1B-008-kernaussagen-und-schwellen.md)                  | Kernaussagen und Schwellen für die Schritte 1–2                    | methodisch | Methodik  |
 | [1B-009](1B-009-portabilitaet-linux-windows.md)                 | Portabler Aufbau, unter Linux getestet, unter Windows dokumentiert | methodisch | Methodik  |
 | [1B-010](1B-010-aufbau-automatisiert-mit-groessenempfehlung.md) | Aufbau mit einem Befehl, VM-Größen aus einer Regel                 | methodisch | Methodik  |
+| [1B-011](1B-011-zeitbegriffe-und-leitfrage.md)                  | Zeitbegriffe nach Dossier 8.1 und Leitfrage der Schritte 1–2       | methodisch | Methodik  |

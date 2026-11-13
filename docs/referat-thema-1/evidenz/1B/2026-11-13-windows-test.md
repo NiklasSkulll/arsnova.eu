@@ -89,6 +89,8 @@ Während des Laufs startete das Test-Windows für ein Update neu; das betraf nur
 
 ## Ergebnis Teiltest (PowerShell 5.1.26100, Commit `1c6cf6474bae`)
 
+_Aktualisiert 2026-11-13:_ Dieser Teiltest gehört zum früheren Weg über WSL. Er ist überholt: `labor.ps1` braucht seit Versuch 4 kein WSL mehr, und die Test-VM ist nach Versuch 5 gelöscht; ein Volltest folgt nicht mehr in dieser VM. W4 betrifft nur den alten Weg.
+
 | Modus                   | Ergebnis                                                                                                                                      |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | `groessen -Ja`          | OK: 4 Kerne, 4 Threads, 17 GB erkannt; Empfehlung llm 2 vCPU/10 GB, app 2 vCPU/4 GB mit allen vier Hinweisen (knappe Stufe, ohne SMT Kerne−2) |

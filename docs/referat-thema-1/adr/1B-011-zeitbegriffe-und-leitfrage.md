@@ -23,6 +23,8 @@ Issue #8 verlangt die Zeitbegriffe T_host … T_transport aus [Dossier 8.1](../1
 | davon Server ohne Inferenz                | Drahtzeit am llm-host − T_infer (HTTP, Template, Tokenisierung, Serialisierung)           | `serverOhneInferenzMs`             | 17,4 ms |
 | T_adapter + Client-Anteil                 | T_job − (T_slot + T_post): Queue, zwei `prepare`, Binding, `parseCompletion`, Client-Code | `adapterMs`                        |  101 ms |
 
+_Korrigiert 2026-11-13:_ Die Tabelle mischt zwei Gruppen. T_job (148,6 s) und T_infer (148,3 s) sind die Mediane der neun warmen Aufträge (`kennzahlen.warm`), die übrigen Zeilen gelten für alle zehn. Für alle zehn Aufträge sind es T_host **56,5 ms**, T_job **148,7 s** (148675,5 ms) und T_infer **148,5 s** (148458 ms), nachgerechnet aus [`2026-11-13-lauf.json`](../evidenz/1B/messung/2026-11-13-lauf.json). T_transport (17,8 ms), Netz, Server ohne Inferenz und Adapter sind Mediane der Werte je Auftrag; sie lassen sich deshalb nicht aus den Medianen der Zeilen darüber abziehen. Die Aussage der Tabelle ändert sich nicht.
+
 T_client ist nicht getrennt messbar ohne Instrumentierung (heute verworfen, Befund C); die Messung schneidet am Draht. Damit ist T_transport feiner zerlegt als im Dossier: Netzanteil und Serveranteil getrennt. Der Transportanteil T_transport / T_job beträgt im Median rund 0,01 % und liegt weit unter der Dossier-Schwelle von 5 % ([Dossier 10.5](../1B-private-inferenz-zweiter-host.md#105-entscheidungsschwellen-vorschlag-vorab-begründen)).
 
 **Leitfrage Schritte 1–2 (Vorschlag, eng am Entwurf aus #8):**
