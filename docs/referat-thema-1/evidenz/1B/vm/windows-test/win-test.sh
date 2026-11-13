@@ -32,6 +32,12 @@ WSL_TAR=ubuntu-noble-wsl-amd64-24.04lts.rootfs.tar.gz
 SSH_MSI=OpenSSH-Win64-v10.0.0.0.msi
 SSH_MSI_URL=https://github.com/PowerShell/Win32-OpenSSH/releases/download/10.0.0.0p2-Preview/$SSH_MSI
 SSH_MSI_SHA=ddec9c53864280759cf9f74791cefd387100e3946aa849a1c138a4ed1b96b7d9
+# WSL als MSI von GitHub: der eingebaute wsl.exe-Platzhalter installiert über SSH nicht (nur Store-Weg).
+WSL_MSI=wsl.3.0.5.0.x64.msi
+WSL_MSI_URL=https://github.com/microsoft/WSL/releases/download/3.0.5/$WSL_MSI
+WSL_MSI_SHA=2313efc5873e3f8552f42e77f950fabd913c0289078fa89d2100f3421a525eaa
+# scp -O (altes Protokoll): der sftp-Teil von Win32-OpenSSH 10.0.0.0p2 bricht ab (Test 2026-11-13).
+SCP=(scp -O -q -o UserKnownHostsFile="$WIN_DIR/known_hosts")
 mkdir -p "$WIN_OUT"
 log() { echo "$(date --iso-8601=seconds) $*"; }
 win() { "${SSH[@]}" "$@"; }
@@ -107,8 +113,12 @@ EOF
 }
 
 wsl_einrichten() {
-  log "WSL installieren (ohne Distribution)"
- win 'wsl.exe --install --no-distribution; exit 0' | tr -d '\0' || true
+  log "WSL $WSL_MSI installieren (SHA-256 geprüft)"
+  [[ -f "$WIN_DIR/$WSL_MSI" ]] || curl -fL -o "$WIN_DIR/$WSL_MSI" "$WSL_MSI_URL"
+  echo "$WSL_MSI_SHA  $WIN_DIR/$WSL_MSI" | sha256sum -c -
+ win 'New-Item -ItemType Directory -Force C:\1b | Out-Null'
+  "${SCP[@]}" "$WIN_DIR/$WSL_MSI" "labor@$IP:C:/1b/$WSL_MSI"
+ win "Start-Process msiexec.exe -Wait -ArgumentList '/i C:\1b\$WSL_MSI /qn /norestart'; exit 0"
  win 'Restart-Computer -Force' || true
   sleep 90
   warte_ssh 30
@@ -118,11 +128,11 @@ wsl_einrichten() {
   [[ -f "$WIN_DIR/$WSL_TAR" ]] || curl -fL -o "$WIN_DIR/$WSL_TAR" "$WSL_URL/$WSL_TAR"
   (cd "$WIN_DIR" && grep " \*\?$WSL_TAR\$" SHA256SUMS.wsl | sha256sum -c -)
  win 'New-Item -ItemType Directory -Force C:\1b, C:\wsl | Out-Null'
-  scp -q -o UserKnownHostsFile="$WIN_DIR/known_hosts" "$WIN_DIR/$WSL_TAR" "labor@$IP:C:/1b/ubuntu.tar.gz"
+  "${SCP[@]}" "$WIN_DIR/$WSL_TAR" "labor@$IP:C:/1b/ubuntu.tar.gz"
  win "if (-not ((wsl.exe -l -q) -replace \"\`0\", '' | Select-String -Quiet '^Ubuntu$')) { wsl.exe --import Ubuntu C:\\wsl\\Ubuntu C:\\1b\\ubuntu.tar.gz }; wsl.exe --set-default Ubuntu; wsl.exe -d Ubuntu -u root -e uname -a" | tr -d '\0'
   log "Repo-Stand per git bundle in WSL"
   git -C "$REPO" bundle create "$WIN_DIR/repo.bundle" HEAD 2>/dev/null
-  scp -q -o UserKnownHostsFile="$WIN_DIR/known_hosts" "$WIN_DIR/repo.bundle" "labor@$IP:C:/1b/repo.bundle"
+  "${SCP[@]}" "$WIN_DIR/repo.bundle" "labor@$IP:C:/1b/repo.bundle"
   local sha; sha="$(git -C "$REPO" rev-parse HEAD)"
  win "wsl.exe -d Ubuntu -u root -e bash -c 'command -v git >/dev/null || (apt-get update -q && DEBIAN_FRONTEND=noninteractive apt-get install -y -q git); test -d /root/arsnova.eu || git clone -q /mnt/c/1b/repo.bundle /root/arsnova.eu; cd /root/arsnova.eu && git fetch -q /mnt/c/1b/repo.bundle && git checkout -q --detach $sha && git log --oneline -1'" | tr -d '\0'
   # SSH-Schluessel fuer labor.ps1. PowerShell 5.1 verliert leere Argumente; '""' kommt als "" an
@@ -148,7 +158,7 @@ labor() {
   log "Entwicklungslauf mit einem Auftrag"
  win "powershell -NoProfile -ExecutionPolicy Bypass -File $p -Mode lauf -LabN 1 -LabTag dev-win -LabTimeoutMs 300000" 2>&1 |
     tee "$WIN_OUT/lauf.txt" || true
-  scp -q -r -o UserKnownHostsFile="$WIN_DIR/known_hosts" "labor@$IP:C:/Users/labor/labor-1b" "$WIN_OUT/von-windows" || true
+  "${SCP[@]}" -r "labor@$IP:C:/Users/labor/labor-1b" "$WIN_OUT/von-windows" || true
 }
 
 destroy() {
