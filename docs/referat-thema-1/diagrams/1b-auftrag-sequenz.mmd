@@ -1,0 +1,46 @@
+---
+config:
+  sequence:
+    actorMargin: 24
+    boxMargin: 9
+    noteMargin: 6
+    messageMargin: 28
+    mirrorActors: false
+    width: 130
+---
+sequenceDiagram
+  autonumber
+  box rgba(217, 119, 6, 0.10) app-host
+    participant T as Treiber
+    participant A as tRPC-API
+    participant Q as Queue
+    participant AD as Adapter und LLM-Client
+  end
+  box rgba(13, 148, 136, 0.10) llm-host
+    participant L as llama-server
+  end
+
+  T->>A: qa.requestSummary
+  Note over A: Host-Token, Kontext,<br/>Cooldown 30 s
+  A-)Q: Job einreihen
+  A-->>T: pending
+  loop jede Sekunde bis zum Endstatus
+    T->>A: qa.summaryRuntime
+    A-->>T: pending
+  end
+  Note over Q: T_job beginnt
+  Q->>Q: Kontext vorher
+  Q->>AD: runPreparedQaSummary
+  Note over AD,L: Drahtzeit app-host beginnt
+  AD->>L: GET /slots
+  L-->>AD: 200
+  AD->>L: POST /v1/chat/completions
+  Note over AD,L: Inferenz = prompt_ms + predicted_ms
+  L-->>AD: 200 mit timings
+  Note over AD,L: Drahtzeit endet<br/>Netz = app-host minus llm-host
+  Note over AD: timings verworfen,<br/>Quality-Gate
+  AD-->>Q: Ergebnis
+  Q->>Q: Kontext nachher, Hash
+  Note over Q: T_job endet: latencyMs<br/>Adapter = latencyMs minus Drahtzeit
+  T->>A: qa.summaryRuntime
+  A-->>T: Endstatus

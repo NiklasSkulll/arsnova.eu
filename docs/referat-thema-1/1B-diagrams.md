@@ -4,44 +4,18 @@ Diagramme zu Auftrag 1B (Aufbau und Zeitzerlegung, Stand 2026-11-13). Abbildung 
 
 > **Code-Stand:** App-Code-Baseline [`a19ca70ff37d`](https://github.com/NiklasSkulll/arsnova.eu/tree/a19ca70ff37d) ([ADR 1B-001](adr/1B-001-baseline-fork-main-a19ca70f.md)). Der Produktionscode ist auf diesem Branch unverändert: `git diff --stat a19ca70ff37d HEAD -- apps libs docker scripts docker-compose*.yml` ist leer (geprüft 2026-11-13, `HEAD` = `7aab5d71`). Auch der Stand der Lab-VMs `747c8f7e` unterscheidet sich in diesen Pfaden nicht. Alle Zeilennummern zählen ab 1 und gelten für `a19ca70ff37d`, außer in der zweiten Tabelle (Skripte, dort `7aab5d71`).
 
-_Hinweis:_ Die Diagramme stehen hier als Mermaid-Quelltext und werden von GitHub direkt gezeichnet. Eigene `.mmd`/SVG-Dateien nach [`diagrams/README.md`](diagrams/README.md) gibt es noch nicht; die Farbklassen sind unten in der Quelle mitgeführt.
+Quellen der Diagramme: [`diagrams/1b-topologie.mmd`](diagrams/1b-topologie.mmd) und [`diagrams/1b-auftrag-sequenz.mmd`](diagrams/1b-auftrag-sequenz.mmd), gerendert nach [`diagrams/README.md`](diagrams/README.md).
 
 ## Abbildung 1: Topologie des Labors
 
 Quellen: [ADR 1B-002](adr/1B-002-topologie-zwei-vms-ein-rechner.md), [ADR 1B-003](adr/1B-003-laborregel-virtuelles-netz.md), [Aufbauprotokoll](evidenz/1B/2026-11-12-aufbau.md#rechner-und-größen), [`netz.xml`](evidenz/1B/vm/netz.xml).
 
-```mermaid
-flowchart TB
-  net["`**Internet**
-  nur ausgehend, für die Einrichtung`"]
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="diagrams/1b-topologie.dark.svg">
+  <img alt="Ein Laptop mit KVM, 4 Kernen, 8 Threads und 31 GiB trägt ein privates Netz 192.168.150.0/24 mit zwei VMs: dem app-host 192.168.150.10 (2 vCPU, 6 GiB) mit App, postgres, redis und pdf-worker, deren Ports nur auf 127.0.0.1 liegen, und dem llm-host 192.168.150.20 (4 vCPU, 12 GiB) mit llama-server nur auf Port 8080 und Bearer-Token. Der app-host ruft den llm-host per HTTP auf Port 8080 mit Bearer-Token auf. Nach außen gibt es nur ausgehendes NAT für die Einrichtung, keine Portweiterleitung." src="diagrams/1b-topologie.light.svg">
+</picture>
 
-  subgraph LAP["Laptop · ThinkPad P50 · Linux · KVM und libvirt · i7-6820HQ, 4 Kerne und 8 Threads · 31 GiB"]
-    subgraph NET["Privates libvirt-Netz arsnova-1b · 192.168.150.0/24 · Bridge virbr-1b · Gateway .1 · NAT nur ausgehend"]
-      app["`**app-host** · 192.168.150.10
-      2 vCPU auf CPU 4 und 5 · 6 GiB
-      docker-compose.prod.yml: app, postgres, redis, pdf-worker
-      Ports nur auf 127.0.0.1`"]
-      llm["`**llm-host** · 192.168.150.20
-      4 vCPU auf CPU 0 bis 3 · 12 GiB
-      docker-compose.llm.yml: llama-server
-      bindet nur an 192.168.150.20:8080 · Bearer-Token`"]
-    end
-  end
-
-  app -->|"HTTP, TCP 8080, Bearer"| llm
-  NET -.->|"NAT, keine Portweiterleitung"| net
-
-  class net muted
-  class app app
-  class llm runtime
-  class LAP hostGroup
-  class NET legendGroup
-  classDef muted fill:#f1f5f9,stroke:#64748b,stroke-dasharray:4 3,color:#0f172a
-  classDef app fill:#fef3c7,stroke:#d97706,stroke-width:1.5px,color:#0f172a
-  classDef runtime fill:#ccfbf1,stroke:#0d9488,stroke-width:1.5px,color:#0f172a
-  classDef hostGroup fill:#2563eb0f,stroke:#2563eb,stroke-width:1.5px
-  classDef legendGroup fill:#64748b0a,stroke:#cbd5e1,stroke-width:1px
-```
+_Abb. 1: Topologie des 1B-Labors. Eigene Darstellung (Jonas Weirauch, Auftrag 1B), KI-gestützt erstellt (Claude Code)._
 
 Abweichungen von der Vorgabe des Auftrags, jeweils nach der Quelle:
 
@@ -54,45 +28,12 @@ Abweichungen von der Vorgabe des Auftrags, jeweils nach der Quelle:
 
 Messregeln (Rechnung, Kontrolle C0, Gültigkeit): [ADR 1B-006](adr/1B-006-zeitmessung-per-mitschnitt.md), [Design Abschnitt 5](specs/2026-11-12-1b-zwei-host-design.md#5-zeitmessung-ki-vorschlag), Auswertung [`zeitzerlegung.mjs`](evidenz/1B/messung/zeitzerlegung.mjs). Hier stehen nur die Schnitte. Der Ablauf zeigt einen Auftrag mit Modellantwort; die Codestellen stehen in der [Belegtabelle](#belegtabelle).
 
-```mermaid
-sequenceDiagram
-  autonumber
-  box rgba(217, 119, 6, 0.10) app-host
-    participant T as treiber.mjs
-    participant A as tRPC-API
-    participant Q as Queue
-    participant AD as Adapter und LLM-Client
-  end
-  box rgba(13, 148, 136, 0.10) llm-host
-    participant L as llama-server
-  end
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="diagrams/1b-auftrag-sequenz.dark.svg">
+  <img alt="Der Treiber stößt per tRPC qa.requestSummary an; die API prüft Host-Token, Kontext und Cooldown, reiht den Job ein und antwortet pending, danach fragt der Treiber jede Sekunde den Status ab. Der Job beginnt mit T_job, baut den Kontext auf und ruft Adapter und LLM-Client. Ab dort zählt die Drahtzeit am app-host: GET /slots und POST /v1/chat/completions an den llama-server im llm-host, der die Inferenz als prompt_ms plus predicted_ms meldet. Netz ist Drahtzeit am app-host minus Drahtzeit am llm-host. Der Client verwirft die timings, das Quality-Gate prüft, der Job baut den Kontext erneut und vergleicht den Hash. T_job endet mit latencyMs im Log; Adapter ist latencyMs minus Drahtzeit. Zuletzt liest der Treiber den Endstatus." src="diagrams/1b-auftrag-sequenz.light.svg">
+</picture>
 
-  T->>A: qa.requestSummary
-  Note over A: Host-Token prüfen, Kontext bauen,<br/>Cooldown 30 s prüfen
-  A-)Q: Job einreihen
-  A-->>T: pending
-  loop jede Sekunde bis zum Endstatus
-    T->>A: qa.summaryRuntime
-    A-->>T: pending
-  end
-
-  Note over Q: Schnitt 1 beginnt, T_job startet in processJob
-  Q->>Q: prepare, Kontext vorher
-  Q->>AD: runPreparedQaSummary
-  Note over AD,L: Schnitt 2 beginnt, Drahtzeit am app-host (tcpdump)
-  AD->>L: GET /slots?fail_on_no_slot=1
-  L-->>AD: 200
-  AD->>L: POST /v1/chat/completions
-  Note over L: Schnitt 3, Inferenz = timings.prompt_ms + predicted_ms
-  L-->>AD: 200 mit choices und timings
-  Note over AD,L: Schnitt 2 endet<br/>Netz = Drahtzeit app-host minus Drahtzeit llm-host
-  Note over AD: parseCompletion verwirft timings, Quality-Gate
-  AD-->>Q: Ergebnis
-  Q->>Q: prepare, Kontext nachher, Hash vergleichen
-  Note over Q: Schnitt 1 endet, qa_summary:completed mit latencyMs<br/>Adapter = latencyMs minus Drahtzeit app-host
-  T->>A: qa.summaryRuntime
-  A-->>T: Endstatus
-```
+_Abb. 2: Ein Summary-Auftrag und die Schnitte der Zeitmessung. Eigene Darstellung (Jonas Weirauch, Auftrag 1B), KI-gestützt erstellt (Claude Code)._
 
 Die drei Größen:
 
