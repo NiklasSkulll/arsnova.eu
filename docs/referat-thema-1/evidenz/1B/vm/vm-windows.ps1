@@ -475,6 +475,9 @@ function Wait-Ready([string]$Ip, [string]$Name) {
 
 function Invoke-Sync {
   Write-Step 'Repo-Stand in beide VMs kopieren' '1-3 min'
+  # Ohne laufende VMs sofort abbrechen statt bis zu 20 min auf SSH zu warten (Windows-Test 2026-11-13).
+  $aus = @($Vms | Where-Object { -not (Get-VM -Name $_.Name -ErrorAction SilentlyContinue | Where-Object { $_.State -eq 'Running' }) })
+  if ($aus.Count -gt 0) { throw "VMs laufen nicht ($(@($aus | ForEach-Object { $_.Name }) -join ', ')): erst labor.ps1 -Mode start." }
   $stand = Get-RepoStand -Start $PSScriptRoot
   if ($Commit) { $stand.Commit = $Commit }
   Write-Info "Repo: $($stand.Wurzel), Commit $($stand.Commit)"
