@@ -62,6 +62,8 @@ grep -E '^(PUBLIC_FRONTEND_URL|QA_SUMMARY_ENABLED|QA_SUMMARY_TIMEOUT_MS|OPEN_WEI
 
 C=(docker compose -f docker-compose.prod.yml --env-file .env.production)
 echo "== Migrationen (wie scripts/deploy.sh)"
+# Images vorab holen; ein kurzer DNS-Ausfall brach am 2026-11-13 den Aufbau ab, Wiederholung hilft.
+for i in 1 2 3 4 5; do "${C[@]}" pull -q postgres redis && break; echo "Pull $i fehlgeschlagen" >&2; sleep 30; done
 "${C[@]}" up -d postgres redis --wait
 "${C[@]}" run --rm --no-deps --entrypoint "" app \
   /app/node_modules/.bin/prisma migrate deploy --schema /app/prisma/schema.prisma
