@@ -124,9 +124,9 @@ repo() {
 
 labor() {
   # Prueft den Windows-Weg bis kurz vor dem VM-Start (verschachtelte L2-VMs haengen mit Host-Kernel 7.2).
-  # Die Windows-VM hat 16 GiB; up ohne -NurVorbereiten muss deshalb am RAM-Schutz abbrechen.
+  # Die Windows-VM hat 17 GiB und eine zweite Platte D: (wie bei Niklas); up ohne -NurVorbereiten muss am RAM-Schutz abbrechen.
   local p='C:\1b\arsnova.eu\docs\referat-thema-1\evidenz\1B\labor.ps1'
-  local g='-LlmCpus 2 -LlmRamGB 12 -AppCpus 2 -AppRamGB 6'
+  local g='-LlmCpus 2 -LlmRamGB 10 -AppCpus 2 -AppRamGB 4'   # Test-VM mit 17 GiB: knappe Stufe
   local s
   for s in "vorpruefung:-Mode vorpruefung" "groessen:-Mode groessen -Ja" \
     "vorbereiten:-Mode up -Ja -NurVorbereiten $g" "vorbereiten-erneut:-Mode up -Ja -NurVorbereiten $g" "umgebung:-Mode umgebung" \
