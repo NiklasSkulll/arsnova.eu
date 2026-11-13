@@ -4,7 +4,7 @@ config:
   flowchart:
     curve: basis
     nodeSpacing: 40
-    rankSpacing: 40
+    rankSpacing: 60
     padding: 10
     wrappingWidth: 320
     subGraphTitleMargin:
@@ -12,7 +12,8 @@ config:
       bottom: 10
 ---
 flowchart TB
-  subgraph LAP["Laptop · KVM · 4 Kerne, 8 Threads, 31 GiB · privates Netz 192.168.150.0/24"]
+  subgraph LAP["Laptop · KVM · 4 Kerne, 8 Threads, 31 GiB<br/>privates Netz 192.168.150.0/24"]
+    direction TB
     app["`**app-host** · 192.168.150.10
     2 vCPU, 6 GiB
     App, postgres, redis, pdf-worker
@@ -27,11 +28,11 @@ flowchart TB
   bleibt aktiv`"]
 
   app e1@-->|"HTTP 8080, Bearer"| llm
-  LAP e2@-.->|"ausgehendes NAT, keine Portweiterleitung"| net
+  LAP e2@-.->|"ausgehendes NAT,<br/>keine Portweiterleitung"| net
 
   class app app
   class llm runtime
-  class net store
+  class net legendGroup
   class LAP legendGroup
   class e1 emph
   class e2 muted

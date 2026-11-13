@@ -12,7 +12,7 @@ sequenceDiagram
   box rgba(217, 119, 6, 0.10) app-host
     participant T as Treiber
     participant A as tRPC-API
-    participant Q as Queue
+    participant Q as Warteschlange
     participant AD as Adapter und LLM-Client
   end
   box rgba(13, 148, 136, 0.10) llm-host
@@ -22,8 +22,8 @@ sequenceDiagram
   T->>A: qa.requestSummary
   Note over A: Host-Token, Sessionzustand,<br/>Q&A aktiv, Zusammenfassung an
   A->>Q: requestQaSummary
-  Note over Q: laufender Job? Kontext bauen,<br/>genug Fragen? Cooldown 30 s,<br/>Queue voll?
-  Q-)Q: Job einreihen
+  Note over Q: laufender Job? Kontext bauen,<br/>genug Fragen? Cooldown 30 s,<br/>Warteschlange voll?
+  Note right of Q: Job einreihen
   A-->>T: pending
   par Treiber fragt nach je 1 s Pause
     loop bis zum Endstatus
@@ -31,21 +31,21 @@ sequenceDiagram
       A-->>T: pending
     end
   and Job startet per setImmediate
-    Note over Q: T_job beginnt
-    Q->>Q: Kontext vorher
+    Note over Q: Messpunkt: T_job beginnt
+    Note right of Q: Kontext vorher
     Q->>AD: runPreparedQaSummary
     AD->>L: GET /slots
     L-->>AD: 200
-    Note over AD,L: Drahtzeit GET
+    Note over AD,L: Messpunkt: Drahtzeit GET
     AD->>L: POST /v1/chat/completions
-    Note over L: Inferenz = prompt_ms + predicted_ms
+    Note over AD,L: Messpunkt: Inferenz =<br/>prompt_ms + predicted_ms
     L-->>AD: 200 mit timings
-    Note over AD,L: Drahtzeit POST
+    Note over AD,L: Messpunkt: Drahtzeit POST
     Note over AD: timings verworfen, Quality-Gate
     AD-->>Q: Ergebnis
-    Q->>Q: Kontext nachher, Hash
-    Note over Q: T_job endet: latencyMs
+    Note right of Q: Kontext nachher, Hash
+    Note over Q: Messpunkt: T_job endet,<br/>latencyMs
   end
   T->>A: qa.summaryRuntime
-  Note over A,Q: Kontext zum vierten Mal, Hash-Vergleich
+  Note over A,Q: Kontext zum vierten Mal,<br/>Hash-Vergleich
   A-->>T: Endstatus
