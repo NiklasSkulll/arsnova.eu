@@ -211,17 +211,25 @@ export function kennzahlen(auftraege) {
         : null,
     };
   };
+  // Fehlt bei einem Auftrag Netz, Adapter oder Inferenz (z. B. Timeout), gilt keine Hypothese als
+  // bestätigt oder widerlegt (null); die Kennzahlen der übrigen Aufträge bleiben beschreibend.
+  const gewertet = auftraege.filter(
+    (a) => a.netzMs !== null && a.adapterMs !== null && a.inferMs !== null,
+  );
+  const bewertbar = auftraege.length > 0 && gewertet.length === auftraege.length;
+  const urteil = (ok) => (bewertbar ? ok : null);
   return {
     n: auftraege.length,
-    unvollstaendig: auftraege.length - voll.length,
+    nGewertet: gewertet.length,
+    unvollstaendig: auftraege.length - gewertet.length,
     netz: { medianMs: netzMedianMs, maxMs: netzMaxMs },
     adapter: { medianMs: adapterMedianMs },
     inferAnteilMedian,
     kalt: gruppe(auftraege.filter((a) => a.cacheN === 0)),
     warm: gruppe(auftraege.filter((a) => a.cacheN > 0)),
-    hB1: netzMedianMs !== null && netzMedianMs <= 50 && netzMaxMs <= 200,
-    hB2: adapterMedianMs !== null && adapterMedianMs <= 2000,
-    hB3: inferAnteilMedian !== null && inferAnteilMedian >= 0.95,
+    hB1: urteil(netzMedianMs !== null && netzMedianMs <= 50 && netzMaxMs <= 200),
+    hB2: urteil(adapterMedianMs !== null && adapterMedianMs <= 2000),
+    hB3: urteil(inferAnteilMedian !== null && inferAnteilMedian >= 0.95),
   };
 }
 

@@ -99,7 +99,8 @@ test('Auftrag ohne Modellantwort hat inferMs null', () => {
   const k = kennzahlen([a, { netzMs: 1, adapterMs: 1, inferMs: 95, jobMs: 100 }]);
   assert.equal(k.n, 2);
   assert.equal(k.inferAnteilMedian, 0.95);
-  assert.equal(k.hB3, true);
+  // Ruling 2026-11-13: ohne Inferenz bei einem Auftrag ist H_B3 nicht bewertbar (null).
+  assert.equal(k.hB3, null);
 });
 
 test('timings müssen zum POST-Status passen und Zahlen enthalten', () => {
@@ -247,4 +248,14 @@ test('kennzahlen trennt kalte und warme Aufträge nach cacheN', () => {
   assert.equal(k.warm.n, 2);
   assert.equal(k.warm.inferMsMedian, 115);
   assert.equal(k.warm.jobMsMedian, 116);
+});
+
+test('kennzahlen bewertet keine Hypothese, wenn ein Auftrag unvollständig ist', () => {
+  const mk = (netzMs, adapterMs, inferMs, jobMs) => ({ netzMs, adapterMs, inferMs, jobMs });
+  const k = kennzahlen([mk(1, 100, 99, 100), mk(1, 100, 99, 100), mk(null, null, null, 300_000)]);
+  assert.equal(k.unvollstaendig, 1);
+  assert.equal(k.nGewertet, 2);
+  assert.equal(k.hB1, null);
+  assert.equal(k.hB2, null);
+  assert.equal(k.hB3, null);
 });
