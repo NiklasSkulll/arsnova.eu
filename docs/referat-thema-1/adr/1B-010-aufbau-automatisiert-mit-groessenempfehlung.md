@@ -40,3 +40,12 @@ Windows: Hyper-V kann vCPUs nicht an Host-Threads binden. `Set-VMProcessor` biet
 - Niklas ruft einen Befehl auf und bekommt eine begründete Größe für seinen Rechner.
 - Inferenzzeiten auf anderen Größen sind nicht mit dem Messrechner vergleichbar. Der Bericht nennt die gewählten Größen, und das Skript warnt unter 4 vCPU.
 - Unter Windows ohne Pinning ist die Messung störanfälliger. Das ist eine Gültigkeitsgrenze für Niklas' Lauf.
+
+## Nachtrag 2026-11-13: Schutz für den Rechner
+
+Auf Wunsch des Autors (Niklas soll keine Sorge um Speicher und Absturz haben) ergänzt, die Entscheidung oben bleibt:
+
+- Die Empfehlung nennt auch die Platte (llm-host 20 GiB statt fest 30, app-host 25 GiB wegen ~18 GiB beim App-Build, gemessen); eigene Werte darüber sind möglich.
+- Vor dem Anlegen bricht `up` ab, statt zu warnen, wenn dem Rechner weniger als die RAM-Reserve (Standard 4 GiB) bliebe oder der Platz nicht für den gemessenen Bedarf (~31 GiB) plus 10 GiB reicht. Regel und Testfälle: `groessen-faelle.json` (`ressourcenRegel`).
+- Neue Modi `stop` und `start`; nach dem Build löschen die VMs ihren Docker-Build-Cache.
+- Belege: Node 53/53, Pester 39/39, PSScriptAnalyzer 1.23.0 ohne Befund (Commit `2acddb37`); Abbruch unter Linux mit zu viel RAM von Hand geprüft. Der Volltest unter Windows in einer VM scheiterte an der Verschachtelung ([Windows-Test, Versuch 3](../evidenz/1B/2026-11-13-windows-test.md#verlauf-versuch-3-volltest-mit-wsl-2026-11-13-vormittag)); der erste echte Aufbau unter Windows ist der von Niklas.

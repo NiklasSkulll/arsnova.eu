@@ -1,6 +1,6 @@
 # 1B-Labor: Nachbau und Lauf
 
-Zwei VMs auf einem Rechner: app-host `192.168.150.10` (App aus `docker-compose.prod.yml`) und llm-host `192.168.150.20` (Runtime aus `docker-compose.llm.yml`). Entscheidungen: [ADR 1B-002](../../adr/1B-002-topologie-zwei-vms-ein-rechner.md) bis [ADR 1B-010](../../adr/1B-010-aufbau-automatisiert-mit-groessenempfehlung.md). Linux ist getestet. Windows ist mit Pester geprüft und auf echtem Windows 11 (PowerShell 5.1) teilweise getestet: Größenwahl, `status`, `pruefen` und die Vorprüfungen von `up`. Ein Aufbau mit echtem Hyper-V steht noch aus ([Windows-Test](2026-11-13-windows-test.md)).
+Zwei VMs auf einem Rechner: app-host `192.168.150.10` (App aus `docker-compose.prod.yml`) und llm-host `192.168.150.20` (Runtime aus `docker-compose.llm.yml`). Entscheidungen: [ADR 1B-002](../../adr/1B-002-topologie-zwei-vms-ein-rechner.md) bis [ADR 1B-010](../../adr/1B-010-aufbau-automatisiert-mit-groessenempfehlung.md). Linux ist getestet. Windows ist mit Pester geprüft und auf echtem Windows 11 (PowerShell 5.1) teilweise getestet: Größenwahl, `status`, `pruefen` und die Vorprüfungen von `up`. Ein Aufbau mit echtem Hyper-V steht noch aus; in einer VM auf dem Laptop hing Windows nach der WSL-Installation, der erste echte Aufbau ist der von Niklas ([Windows-Test](2026-11-13-windows-test.md)).
 
 ## 1. Voraussetzungen
 
@@ -25,6 +25,24 @@ powershell -ExecutionPolicy Bypass -File .\docs\referat-thema-1\evidenz\1B\labor
 ```
 
 `up` zeigt die Größenempfehlung für den Rechner und fragt, ob sie übernommen wird. Danach baut es die VMs, richtet den llm-host ein (Runtime-Image in lokaler Registry, GGUF prüfen oder laden, `.env.llm` mit Token nur in der VM, Wrapper-Prüfungen, Start), dann den app-host (App-Image, `.env.production`, Migrationen, Start), und prüft zuletzt alles. Ohne Rückfragen: `LAB_JA=1` bzw. `-Ja`. Dauer am ThinkPad P50 im Energiesparprofil: etwa 45 min, davon rund 20 min App-Build.
+
+**Schutz für den Rechner** (_ergänzt 2026-11-13_): Vor dem Anlegen zeigt `up`, was es belegt und was dem Rechner bleibt, und **bricht ab, ohne etwas anzulegen**, wenn
+
+- nach dem Start der VMs weniger als die RAM-Reserve frei bliebe (Standard 4 GiB; `LAB_RAM_RESERVE_GIB` bzw. `-RamReserveGB`, mindestens 2, kleiner nur auf Testrechnern ohne andere Programme), oder
+- der freie Platz kleiner ist als der gemessene Bedarf (etwa 31 GiB) plus 10 GiB Reserve.
+
+Unter Windows zählt der verfügbare RAM wie im Task-Manager (frei plus Cache). WSL belegt selbst RAM; vor `up` hilft `wsl --shutdown`.
+
+| Belegt (Empfehlung bei 24 GiB RAM und mehr) | llm-host                         | app-host            | Hinweis                        |
+| ------------------------------------------- | -------------------------------- | ------------------- | ------------------------------ |
+| RAM (fest, solange die VM läuft)            | 12 GiB                           | 6 GiB               | knapp: 10 + 4 GiB              |
+| vCPU                                        | physische Kerne, höchstens 8     | 2                   | ohne SMT bleiben 2 Kerne frei  |
+| Platte (Obergrenze, dünn belegt)            | 20 GiB (real ~12)                | 25 GiB (real ~12)   | App-Build braucht kurz ~18 GiB |
+| Last                                        | volle vCPUs nur während Inferenz | gering, außer Build | Leerlauf fast null             |
+
+Eigene Größen: `LAB_LLM_VCPU`, `LAB_LLM_RAM_GIB`, `LAB_LLM_DISK_GIB`, `LAB_APP_…` bzw. `-LlmCpus`, `-LlmRamGB`, `-LlmDiskGB`, `-App…`; ohne `-Ja` fragt `up` sie einzeln ab und lehnt zu kleine Werte ab. Nach dem Build löschen beide VMs ihren Docker-Build-Cache (im app-host rund 6 GiB).
+
+**Ein und aus:** `labor.sh stop` bzw. `labor.ps1 -Mode stop` fährt beide VMs herunter; dann belegen sie weder RAM noch CPU, Daten und Einrichtung bleiben. `start` fährt sie wieder hoch, wartet auf die Dienste und prüft alles.
 
 Ergebnis: Aufbaubericht `~/labor-1b/aufbau-<Zeit>.txt` mit je einer Zeile `OK` oder `FEHLER` pro Prüfung. Erneut prüfen: `labor.sh pruefen`. `up` ist mehrfach aufrufbar; bestehende VMs mit anderer Größe lehnt es ab (dann `destroy`).
 
@@ -77,12 +95,22 @@ Mitschnitte enthalten den Runtime-Token im `Authorization`-Header und bleiben in
 
 ## 8. Übergabe an Niklas (Schritte 3–4)
 
-_Ergänzt 2026-11-13._ Stand für Störversuche und Betriebsaufwand auf dem eigenen Rechner:
+_Ergänzt 2026-11-13, aktualisiert am selben Tag._ Stand für Störversuche und Betriebsaufwand auf dem eigenen Rechner. Das Skript schützt den Rechner (Abschnitt 2): Reicht RAM oder Platz nicht, legt es nichts an und sagt, was zu tun ist.
 
-1. Fork und Clone aktualisieren, Branch `feature-1B-two-host` (bis zum Merge).
-2. Windows: Hyper-V und WSL mit Ubuntu einrichten ([WINDOWS.md](vm/WINDOWS.md)), SSH-Schlüssel ohne Passphrase anlegen. In Windows PowerShell 5.1 geht das leere Argument nur so: `ssh-keygen -t ed25519 -N '""' -f "$env:USERPROFILE\.ssh\id_ed25519"`.
-3. `labor.ps1 -Mode groessen`, dann `-Mode up` in einer Admin-PowerShell. Bitte jede Abweichung notieren: Der Hyper-V-Teil (VMs, NAT, WSL zum internen Switch) ist der ungetestete Rest.
-4. `-Mode pruefen` muss nur `OK`-Zeilen liefern; den Bericht aus `%USERPROFILE%\labor-1b\` ins eigene Aufbauprotokoll übernehmen.
-5. Eigene Läufe mit `-LabTag` (z. B. `stoerung-…`), damit sie nicht mit den Läufen von Jonas kollidieren; ADR-Nummern 1B-020 bis 1B-039.
+**Einmalig (mit zwei Neustarts):**
+
+1. Windows-Edition prüfen: Pro, Education oder Enterprise (Home hat kein Hyper-V).
+2. Admin-PowerShell: `Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All`, **neu starten**.
+3. WSL mit Ubuntu (falls noch nicht da): `wsl --install -d Ubuntu`, **neu starten**, Ubuntu einmal öffnen und Benutzer anlegen.
+4. In WSL: Fork und Clone aktualisieren, Branch `feature-1B-two-host` (bis zum Merge).
+5. SSH-Schlüssel ohne Passphrase (normale PowerShell 5.1, das leere Argument geht nur so): `ssh-keygen -t ed25519 -N '""' -f "$env:USERPROFILE\.ssh\id_ed25519"`.
+
+**Aufbau (Admin-PowerShell, im Ordner `evidenz\1B` des WSL-Repos):**
+
+6. `wsl --shutdown` (gibt RAM frei), dann `.\labor.ps1 -Mode groessen`: zeigt die Empfehlung, legt nichts an.
+7. `.\labor.ps1 -Mode up -InstallWslTools`: Übersicht lesen, Empfehlung übernehmen oder eigene Werte eingeben. Dauer etwa 45–60 min, unbeaufsichtigt.
+8. Am Ende muss der Bericht nur `OK`-Zeilen enthalten; ihn aus `%USERPROFILE%\labor-1b\` ins eigene Aufbauprotokoll übernehmen. Jede Abweichung notieren: Der Hyper-V-Teil (VMs, NAT, WSL zum internen Switch) läuft hier zum ersten Mal auf echtem Windows.
+
+**Danach:** zwischen den Sitzungen `.\labor.ps1 -Mode stop`, vorher wieder `-Mode start`. Vor Kalibrierung und Läufen Abschnitt 4 (Energiemodus, Windows Update pausieren). Eigene Läufe mit `-LabTag` (z. B. `stoerung-…`); ADR-Nummern 1B-020 bis 1B-039. Am Ende `-Mode destroy`: entfernt VMs, Disks, Switch und NAT.
 
 Wiederverwendbar für Schritt 3: `lauf.sh` (Mitschnitt auf beiden Hosts, Speicher-CSV, Zeitzerlegung), `pruefen.sh` (Limits, Flags, Bind) und der Treiber `treiber.mjs`. Die Runtime im llm-host lässt sich für Ausfälle mit `docker stop arsnova-open-weight-llm` bzw. `docker compose … up -d` steuern; die Werte aus Schritt 2 stehen unter `messung/`.

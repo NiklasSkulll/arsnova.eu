@@ -28,7 +28,7 @@ Das Skript ist das Gegenstück zu `vm-linux.sh`: gleiche VM-Namen, IPs, Größen
 - Windows 10/11 **Pro, Education oder Enterprise** (Hyper-V; auf Home nicht möglich, siehe Abschnitt 3).
 - WSL 2 mit einer Debian-/Ubuntu-Distribution, in der das Repo liegt (etwa `~/arsnova.eu`).
 - Windows-OpenSSH-Client (`ssh`, `scp`); auf Windows 10/11 meist schon da.
-- Etwa 18 GB freier RAM für die VMs (statischer Speicher) und mindestens 40 GB freier Platz auf `C:`; das Skript warnt, wenn weniger frei ist.
+- Freier RAM für die VMs (statischer Speicher, Empfehlung 18 GB) plus 4 GB Reserve für Windows, und etwa 41 GB freier Platz auf `C:`. _Aktualisiert 2026-11-13:_ Reicht eines nicht, bricht `up` ab, ohne etwas anzulegen (vorher nur Warnung); siehe [Runbook, Abschnitt 2](../runbook.md#2-aufbau).
 
 ### 1.2 Einmalig
 
@@ -75,13 +75,15 @@ powershell -ExecutionPolicy Bypass -File .\vm-windows.ps1 -Mode destroy
 
 | Parameter                                        | Standard                                  | Bedeutung                                                          |
 | ------------------------------------------------ | ----------------------------------------- | ------------------------------------------------------------------ |
-| `-Mode`                                          | –                                         | `up`, `status` oder `destroy`                                      |
+| `-Mode`                                          | –                                         | `up`, `status`, `stop`, `start` oder `destroy`                     |
 | `-SshKey`                                        | `%USERPROFILE%\.ssh\id_ed25519.pub`       | öffentlicher Schlüssel für `labor`; privater Schlüssel ohne `.pub` |
 | `-VmDir`                                         | `C:\ProgramData\arsnova-1b`               | Image, Disks, Seeds, `known_hosts`, Bundle; nie einchecken         |
 | `-RepoPath`                                      | aus dem Skriptort, `git rev-parse` in WSL | Repo aus Sicht von WSL                                             |
 | `-WslDistro`                                     | aus dem Skriptort, sonst Standard-Distro  | WSL-Distribution                                                   |
 | `-Commit`                                        | `HEAD`                                    | Repo-Stand für die VMs; muss Vorfahre von `HEAD` sein              |
 | `-LlmCpus`, `-LlmRamGB`, `-AppCpus`, `-AppRamGB` | 4, 12, 2, 6                               | Größen wie unter Linux                                             |
+| `-LlmDiskGB`, `-AppDiskGB`                       | 20, 25                                    | Obergrenze der Platten (mindestens 20 bzw. 25)                     |
+| `-RamReserveGB`                                  | 4                                         | RAM, der Windows bleiben muss (mindestens 2)                       |
 | `-EnableHyperV`                                  | aus                                       | Hyper-V aktivieren (danach Neustart)                               |
 | `-InstallWslTools`                               | aus                                       | `qemu-utils`, `xorriso`, `git` in WSL installieren                 |
 | `-NoSecureBoot`                                  | aus                                       | Secure Boot aus, falls das Image mit dem Template nicht startet    |
