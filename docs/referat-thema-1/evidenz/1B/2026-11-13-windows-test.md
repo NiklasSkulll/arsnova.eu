@@ -72,6 +72,21 @@ Neue Windows-VM (ohne WSL-Features), 17 GiB RAM, zweite Platte mit 80 GB (in Win
 
 Nicht geprüft: Start der Labor-VMs unter Hyper-V, cloud-init darin, Einrichtung und Lauf. Ersatzbeleg für den Start: dieselbe Disk-Kette bootet in KVM mit erzwungenem Secure Boot (Microsoft-Schlüssel), cloud-init findet den Seed und setzt `eth0` über die MAC ([WINDOWS.md](vm/WINDOWS.md)). Ausgaben: `~/labor-1b/win-test6.log` (nicht im Repo).
 
+## Versuch 5: Regression auf dem Endstand (2026-11-13 Abend)
+
+Stand `76d61b4e` bzw. für `sync` und die Gruppe `024baaf9`, gleiche VM und gleiches Laufwerk `F:` wie Versuch 4, Labor-VMs nicht gestartet.
+
+| Schritt                        | Ergebnis                                                                                                                                                                                              |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vorpruefung`                  | alle Prüfungen OK                                                                                                                                                                                     |
+| `up -NurVorbereiten`           | 5 Schritte mit Restzeit, VMs angelegt; **Fehler gefunden:** Aufnahme in Hyper-V-Administratoren scheitert („Prinzipal WORKGROUP\labor nicht gefunden“). Behoben in `76d61b4e` (Aufnahme über die SID) |
+| `status`                       | OK, beide VMs „Off“ mit Reserve und Gewicht                                                                                                                                                           |
+| `sync` bei ausgeschalteten VMs | **Fehler gefunden:** wartete über 20 min ohne Ausgabe auf SSH. Behoben in `024baaf9`; danach bricht `sync` sofort ab mit „VMs laufen nicht (…): erst labor.ps1 -Mode start.“                          |
+| Gruppe nach dem Fix            | `Add-HyperVGruppe` direkt aufgerufen: nimmt `ARSNOVA-WIN\labor` auf; zweiter Aufruf ändert nichts                                                                                                     |
+| `destroy -Ja`                  | OK, Basis-Image bleibt auf `F:`                                                                                                                                                                       |
+
+Während des Laufs startete das Test-Windows für ein Update neu; das betraf nur die Testverbindung. Ausgaben: `~/labor-1b/win-test7.log`, `win-test8.log` (nicht im Repo). Danach wurde die Test-VM gelöscht (Zustimmung des Autors). Der Start der Labor-VMs unter Hyper-V bleibt ungeprüft (Grenze des Testaufbaus, siehe oben); Niklas' erster Aufbau ist der erste echte Test dafür.
+
 ## Ergebnis Teiltest (PowerShell 5.1.26100, Commit `1c6cf6474bae`)
 
 | Modus                   | Ergebnis                                                                                                                                      |
