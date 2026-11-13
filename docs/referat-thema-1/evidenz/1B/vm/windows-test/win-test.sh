@@ -98,7 +98,7 @@ EOF
     --graphics vnc,listen=127.0.0.1 --noautoconsole --wait 0 \
     --check disk_size=off # qcow2 dünn belegt; Windows braucht real 15–20 GB (Wächter in der Nacht 2026-11-13)
   # Das UEFI-Bootmenü des ISO wartet auf „Taste drücken“; Enter senden, bis Setup läuft.
-  for _ in $(seq 1 20); do virsh send-key "$NAME" KEY_ENTER >/dev/null 2>&1 || true; sleep 1; done
+  for _ in $(seq 1 60); do virsh send-key "$NAME" KEY_ENTER >/dev/null 2>&1 || true; sleep 1; done # 60 s: das Anlegen der Disk kann dauern
   # setup.ps1 laedt OpenSSH ueber Windows Update; am 2026-11-13 dauerte das allein 1 h 40 min.
   log "warte auf Installation, ersten Login, setup.ps1 und Neustart (bis 240 min)"
   warte_ssh 240
