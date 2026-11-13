@@ -1,16 +1,16 @@
-# 1B: Windows-Test von `labor.ps1` (Teiltest)
+# 1B: Windows-Test von `labor.ps1`
 
-Stand: 2026-11-13 · Rechner: ThinkPad P50 (i7-6820HQ, 4 Kerne/8 Threads, 31 GiB), Host-Kernel 7.2.11, libvirt/KVM · Prüfung durch den Autor: offen
+Stand: 2026-11-13 · Rechner: ThinkPad P50 (i7-6820HQ, 4 Kerne/8 Threads, 31 GiB), Host-Kernel 7.2.15 (`linux-omarchy`), libvirt/KVM · Prüfung durch den Autor: offen
 
 Ziel (Plan, Nachtrag Task 12 Step 6): `labor.ps1` auf echtem Windows mit Hyper-V testen, in einer Windows-VM mit verschachtelter Virtualisierung. Skripte: [`vm/windows-test/`](vm/windows-test/).
 
 ## Aufbau
 
 - Windows 11 Enterprise Evaluation (de-de, Build 26100), unbeaufsichtigt per `autounattend.xml`
-- VM `arsnova-1b-win`: 4 vCPU (`host-passthrough`), 18 GiB RAM, 60 GB Disk, NAT-Netz 192.168.151.0/24
+- VM `arsnova-1b-win`: 4 vCPU, 18 GiB RAM, 60 GB Disk, NAT-Netz 192.168.151.0/24; CPU-Modell in Versuch 1 `host-passthrough`, in Versuch 2 `Skylake-Client-noTSX-IBRS,+vmx`
 - `setup.ps1` nach dem ersten Login: OpenSSH-Server nur mit Schlüssel, Hyper-V, WSL-Grundlage, Neustart
 
-## Verlauf
+## Verlauf Versuch 1 (`host-passthrough`)
 
 | Zeit (2026-11-12/13) | Ereignis                                                                                        |
 | -------------------- | ----------------------------------------------------------------------------------------------- |
@@ -23,7 +23,22 @@ Ziel (Plan, Nachtrag Task 12 Step 6): `labor.ps1` auf echtem Windows mit Hyper-V
 | 02:02                | SSH erst nach Freigabe der Firewall-Regel für alle Profile erreichbar (siehe Befunde)           |
 | 02:05 – 02:30        | Teiltest von `labor.ps1` ohne laufenden Hypervisor                                              |
 
-Zum Startabbruch passt ein Bericht über eine Regression ab Host-Kernel 7.2 (Windows-11-Gast mit verschachteltem Hyper-V startet nicht, mit 7.1.8 schon): [CachyOS-Forum](https://discuss.cachyos.org/t/windows-11-kvm-guest-with-nested-hyper-v-boot-loops-on-linux-cachyos-7-2-x-works-on-7-1-8/36134). Einzelbericht, nicht bestätigt; auf diesem Rechner ist nur Kernel 7.2 installiert, ein Gegentest mit 7.1 fehlt.
+Zum Startabbruch passt ein Bericht über eine Regression ab Host-Kernel 7.2 (Windows-11-Gast mit verschachteltem Hyper-V startet nicht, mit 7.1.8 schon): [CachyOS-Forum](https://discuss.cachyos.org/t/windows-11-kvm-guest-with-nested-hyper-v-boot-loops-on-linux-cachyos-7-2-x-works-on-7-1-8/36134). Einzelbericht, nicht bestätigt; ein Gegentest mit älterem Kernel fehlt.
+
+_Korrektur 2026-11-13, 06:25:_ Hier stand „Host-Kernel 7.2.11“ und „nur Kernel 7.2 installiert“. Laufend ist `linux-omarchy` 7.2.15 (`uname -r`); installiert sind auch 7.2.11 (`linux`) und 6.18 (`linux-lts`).
+
+## Verlauf Versuch 2 (benanntes CPU-Modell)
+
+In [qemu-project/qemu#3215](https://gitlab.com/qemu-project/qemu/-/issues/3215) bootete Windows mit benannten CPU-Modellen. Versuch 2 nutzt `WIN_CPU=Skylake-Client-noTSX-IBRS,+vmx` (passt zum i7-6820HQ), sonst alles wie Versuch 1, mit OpenSSH aus dem MSI.
+
+| Zeit (2026-11-13) | Ereignis                                                                                      |
+| ----------------- | --------------------------------------------------------------------------------------------- |
+| 04:42             | VM angelegt, Installation startet                                                             |
+| 06:03             | `setup.ps1` startet, endet 06:09 und startet neu                                              |
+| 06:10             | Windows startet **mit aktivem Hyper-V**, SSH erreichbar                                       |
+| 06:20             | `HypervisorPresent = True`, Dienst `vmms` läuft, `hypervisorlaunchtype Auto`, 4 logische CPUs |
+
+Damit liegt der Startabbruch am CPU-Modell `host-passthrough`, nicht am Kernel allein. Belege: `~/labor-1b/windows-test/hyperv-check.txt`, `~/labor-1b/win-vm2.log` (nicht im Repo). Windows meldet Version 10.0.26300.
 
 ## Ergebnis Teiltest (PowerShell 5.1.26100, Commit `1c6cf6474bae`)
 
@@ -36,7 +51,7 @@ Zum Startabbruch passt ein Bericht über eine Regression ab Host-Kernel 7.2 (Win
 | `up -Ja` nach Fix       | OK: bricht nach der Meldung von `vm-windows.ps1` ab                                                                                           |
 | `up -Ja` mit Schlüssel  | OK: Speicherwarnung (35,8 GB frei), dann Abbruch „WSL startet keine Distribution“ mit Installationshinweis                                    |
 
-Nicht getestet: VMs anlegen, WSL-Teil, `llm-start.sh`/`app-start.sh` über Windows, Kalibrierung und Lauf. Dafür braucht es einen laufenden Hypervisor in der Windows-VM.
+Nicht getestet: VMs anlegen, WSL-Teil, `llm-start.sh`/`app-start.sh` über Windows, Kalibrierung und Lauf. Seit Versuch 2 läuft der Hypervisor; der Volltest (`win-test.sh wsl`, dann `labor`) folgt nach dem gewerteten Linux-Lauf, die VM bleibt dafür erhalten.
 
 ## Befunde
 

@@ -10,11 +10,10 @@
 # Voraussetzungen: Labor-VMs aus und Labornetz gestoppt (das Netz nutzt dieselbe Bridge virbr-1b,
 # damit gelten die ufw-Freigaben), ISO unter WIN_DIR, kvm_intel nested=Y, OVMF, xorriso.
 # Netz 192.168.151.0/24, damit es sich nicht mit dem Labornetz 192.168.150.0/24 in Windows überschneidet.
-# Bekannt (2026-11-13): Mit Host-Kernel 7.2.x startet Windows mit aktivem Hyper-V verschachtelt nicht
-# („Automatische Reparatur“), auch ohne evmcs; ohne vmx bootet es. Gemeldet als Regression ab 7.2
-# (discuss.cachyos.org/t/36134). Volltest erst mit einem Host-Kernel 7.1 oder nach einer Korrektur.
-# Versuch ohne Kernelwechsel: benanntes CPU-Modell, z. B. WIN_CPU=Skylake-Client-noTSX-IBRS,+vmx
-# (mit benannten Modellen bootete Windows in qemu-project/qemu#3215, mit Icelake nicht).
+# Bekannt (2026-11-13): Mit host-passthrough startet Windows mit aktivem Hyper-V verschachtelt nicht
+# („Automatische Reparatur“), auch ohne evmcs; ohne vmx bootet es (Host-Kernel 7.2.15).
+# Mit benanntem CPU-Modell läuft Hyper-V: WIN_CPU=Skylake-Client-noTSX-IBRS,+vmx (2026-11-13,
+# i7-6820HQ; vgl. qemu-project/qemu#3215). Das Modell muss zur Host-CPU passen (virsh domcapabilities).
 set -euo pipefail
 HERE="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 REPO="$(git -C "$HERE" rev-parse --show-toplevel)"
