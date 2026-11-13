@@ -31,20 +31,20 @@ sequenceDiagram
       A-->>T: pending
     end
   and Job per setImmediate
-    Note over Q: Messpunkt: T_job beginnt
+    Note over Q: ⏱ Messpunkt: T_job beginnt
     Note over Q: Kontext vorher
     Q->>AD: runPreparedQaSummary
     AD->>L: GET /slots
     L-->>AD: 200
-    Note over AD,L: Messpunkt: Drahtzeit GET
+    Note over AD,L: ⏱ Messpunkt: Drahtzeit GET
     AD->>L: POST /v1/chat/completions
-    Note over AD,L: Messpunkt: Inferenz =<br/>prompt_ms + predicted_ms
+    Note over AD,L: ⏱ Messpunkt: Inferenz =<br/>prompt_ms + predicted_ms
     L-->>AD: 200 mit timings
-    Note over AD,L: Messpunkt: Drahtzeit POST
+    Note over AD,L: ⏱ Messpunkt: Drahtzeit POST
     Note over AD: timings verworfen, Quality-Gate
     AD-->>Q: Ergebnis
     Note over Q: Kontext nachher, Hash
-    Note over Q: Messpunkt: T_job endet,<br/>latencyMs
+    Note over Q: ⏱ Messpunkt: T_job endet,<br/>latencyMs
   end
   T->>A: qa.summaryRuntime
   Note over A,Q: Kontext zum vierten Mal,<br/>Hash-Vergleich
