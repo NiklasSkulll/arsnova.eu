@@ -65,6 +65,8 @@ EOF
   virsh net-start "$NET" 2>/dev/null || true
   if virsh dominfo "$NAME" >/dev/null 2>&1; then
     echo "$NAME existiert schon"
+    # Nach der Installation darf das ISO weg (Platz); dann das Laufwerk leeren, sonst startet die VM nicht.
+    [[ -f "$ISO" ]] || virsh change-media "$NAME" sdb --eject --config >/dev/null 2>&1 || true
     virsh domstate "$NAME" | grep -q running || virsh start "$NAME"
     warte_ssh 120
     return
