@@ -8,7 +8,7 @@
 
 ## Beobachtung
 
-`docs/operations/OPEN-WEIGHT-LLM-SECOND-HOST-RUNBOOK.md` Abschnitt 11 endet mit: „Zusätzlich muss ein Zugriff von einem beliebigen anderen Host auf Port 8080 scheitern.“ Ein Befehl und eine erwartete Ausgabe fehlen, anders als bei allen anderen Prüfungen des Runbooks. Damit ist die wichtigste Sicherheitsannahme der zweiten Rolle (nur der App-Host erreicht die Runtime) im Abnahmeprotokoll nicht nachvollziehbar belegt.
+`docs/operations/OPEN-WEIGHT-LLM-SECOND-HOST-RUNBOOK.md` Abschnitt 11 verlangt am Ende (Z. 601–603): „Zusätzlich muss ein Zugriff von einem beliebigen anderen Host auf Port 8080 scheitern. Dafür **keine** öffentliche Firewall-Freigabe zum Testen anlegen.“ Ein Befehl und eine erwartete Ausgabe fehlen, anders als bei den übrigen Prüfungen in §10 und §11. Damit ist eine zentrale Sicherheitsannahme der zweiten Rolle (nur der App-Host erreicht die Runtime) im Abnahmeprotokoll nicht nachvollziehbar belegt.
 
 ## Vorschlag
 
@@ -19,10 +19,10 @@ curl --silent --show-error --max-time 5 "http://<PRIVATE-IP-DES-INFERENZ-HOSTS>:
   && echo 'FEHLER: Port 8080 von diesem Host erreichbar' || echo 'OK: nicht erreichbar'
 ```
 
-Erwartet: `OK: nicht erreichbar` (Timeout oder abgelehnte Verbindung). Dazu ein Hinweis, dass ohne dritten Host im Segment die Firewall-Regel (`ufw status verbose`, Quelle nur App-Host) als Ersatzbeleg dient.
+Erwartet: `OK: nicht erreichbar` (Zeitüberschreitung oder abgelehnte Verbindung). Ohne `--fail` endet `curl` bei jeder HTTP-Antwort mit 0, also auch bei 401; jede Antwort zählt damit als erreichbar. Dazu ein Hinweis, dass ohne dritten Host im Segment die Firewall-Regel (`ufw status verbose`, Quelle nur App-Host) als Ersatzbeleg dient.
 
 **Kosten:** gering (nur Doku). **Risiko:** keins. **Rückweg:** Revert.
 
 ## Gültigkeitsgrenze
 
-Runbook am Branch-Stand `ed9e9a75`. Das Labor prüfte vom Rechner aus und über die Firewall-Regeln ([Aufbauprotokoll](2026-11-12-aufbau.md)); einen echten dritten Host im Labornetz gab es nicht.
+Runbook am Branch-Stand `e2e9c701` (unverändert gegenüber `a19ca70f`). Das Labor prüfte vom Rechner aus und über die Firewall-Regeln ([Aufbauprotokoll](2026-11-12-aufbau.md)); einen echten dritten Host im Labornetz gab es nicht.

@@ -8,7 +8,7 @@
 
 ## Beobachtung
 
-`docs/operations/OPEN-WEIGHT-LLM-SECOND-HOST-RUNBOOK.md` Abschnitt 6 (Z. 313) und Abschnitt 14.2 (Z. 904) installieren mit `npm ci --omit=dev --ignore-scripts`. Danach scheitert `scripts/open-weight-llm/prod-compose.mjs` (Z. 7: `import { parse } from 'dotenv'`) mit `ERR_MODULE_NOT_FOUND`.
+`docs/operations/OPEN-WEIGHT-LLM-SECOND-HOST-RUNBOOK.md` Abschnitt 6 (Z. 313) und Abschnitt 14.2 (Z. 904) installieren mit `npm ci --omit=dev --ignore-scripts`. Danach scheitert der erste Aufruf des Compose-Wrappers in §9 (Z. 436, `npm run llm:prod -- config`; das Skript `llm:prod` ist laut `package.json` Z. 41 `node scripts/open-weight-llm/prod-compose.mjs`) mit `ERR_MODULE_NOT_FOUND`, weil `prod-compose.mjs` in Z. 7 `dotenv` importiert.
 
 Ursache laut `package-lock.json`: `node_modules/dotenv` (16.6.1) ist nur als Dev-Abhängigkeit markiert (`"dev": true`). Die Produktionsversion 17.4.2 gehört zu `apps/backend` und liegt in `apps/backend/node_modules`, wo das Skript unter `scripts/` sie nicht findet.
 
@@ -27,4 +27,4 @@ Variante 1 hält die Installation schlank. In beiden Fällen ein Test oder CI-Sc
 
 ## Gültigkeitsgrenze
 
-Stand `a19ca70f`, Lockfile am Branch-Stand `ed9e9a75` geprüft; Ubuntu 24.04 mit Node.js 22 in der Labor-VM.
+Stand `a19ca70f`, Runbook, `package.json` und Lockfile am Branch-Stand `e2e9c701` geprüft (dort unverändert); Ubuntu 24.04 mit Node.js 22 in der Labor-VM.
