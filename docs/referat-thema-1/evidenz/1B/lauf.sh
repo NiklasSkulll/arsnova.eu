@@ -58,7 +58,7 @@ kalibrierung() {
   local f; f="$OUTBASE/kalibrierung-$(date +%Y%m%dT%H%M%S).json"
   jq -n --argjson t "$t" --arg zeit "$zeit" --argjson i "$i" --arg timeout "$timeout" \
     --arg profil "${LAB_PROFIL_IST:-unbekannt}" --arg rechner "${LAB_RECHNER:-unbekannt}" --arg commit "$(git rev-parse HEAD)" \
-    '{commit: $commit, rechner: $rechner, energieprofil: $profil, timings: $t, curl: $zeit, I_ms: $i, timeoutMs: $timeout,
+    '{commit: $commit, rechner: $rechner, energieprofil: $profil, timings: $t, curl: $zeit, I_ms: $i, timeoutMs: (if $timeout == "abbruch" then $timeout else ($timeout | tonumber) end),
       regel: "I <= 75 s: 90000; 75 s < I <= 270 s: 300000; sonst Abbruch (ADR 1B-005)"}' | tee "$f"
   [[ "$timeout" != abbruch ]] || { echo "I > 270 s: Abbruch, der Autor entscheidet." >&2; exit 3; }
   echo "$f"
