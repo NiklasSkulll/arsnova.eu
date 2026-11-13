@@ -152,7 +152,7 @@ lauf() {
   log "Kontrolle C0: erster Prompt direkt im llm-host"
   local c0='' c0t=null
   if [[ -s "$out/body.json" ]]; then c0="$(direkt <"$out/body.json")" || c0=''; fi
-  jq -e . >/dev/null 2>&1 <<<"$(tail -n 1 <<<"$c0")" && c0t="$(tail -n 1 <<<"$c0")"
+  jq -e 'type == "object"' >/dev/null 2>&1 <<<"$(tail -n 1 <<<"$c0")" && c0t="$(tail -n 1 <<<"$c0")"
 
   local llm_info app_img
   llm_info="$("${LLM[@]}" "docker inspect -f '{{json .Config.Image}} {{json .Args}}' arsnova-open-weight-llm; nproc; free -g | awk '/^Mem:/ {print \$2}'")"
