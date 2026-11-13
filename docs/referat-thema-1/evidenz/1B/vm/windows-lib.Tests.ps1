@@ -344,7 +344,7 @@ Describe 'Format-RamFresser' {
       @{ Name = 'notepad'; Bytes = 20MB }
     )
     $z = @(Format-RamFresser -Prozesse $p)
-    $z[0] | Should -BeLike '*WSL (VmmemWSL)*15*GB*wsl --shutdown*'
+    $z[0] | Should -BeLike '*WSL (VmmemWSL)*15*GB*.wslconfig*memory=6GB*'
     $z[1] | Should -BeLike '*Docker Desktop (com.docker.backend)*2*GB*beenden*'
     $z[2] | Should -BeLike '*msedge*1,6*GB*'
     ($z -join ' ') | Should -Not -BeLike '*notepad*'

@@ -281,7 +281,7 @@ function Format-RamFresser {
   $summe.GetEnumerator() | Where-Object { $_.Value -ge 0.5GB } | Sort-Object Value -Descending | Select-Object -First 5 | ForEach-Object {
     $gb = ($_.Value / 1GB).ToString('0.#', $kultur)
     $name = [string]$_.Key   # in switch waere $_ der gepruefte Wert, nicht der Eintrag
-    if ($name -match '^(?i)vmmem') { "WSL ($name) belegt $gb GB -> in PowerShell: wsl --shutdown (WSL danach normal wieder oeffnen)" }
+    if ($name -match '^(?i)vmmem') { "WSL ($name) belegt $gb GB -> dauerhaft begrenzen: in %USERPROFILE%\.wslconfig unter [wsl2] memory=6GB eintragen, einmal wsl --shutdown (oder kurz: wsl --shutdown)" }
     elseif ($name -match '^(?i)(com\.docker|docker desktop)') { "Docker Desktop ($name) belegt $gb GB -> Docker Desktop beenden" }
     else { "$name belegt $gb GB" }
   }

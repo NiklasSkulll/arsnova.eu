@@ -55,6 +55,7 @@ param(
   [string]$VmDir = '',   # leer = gemerkter Ort aus einstellungen.json, beim ersten up wird gefragt
   [switch]$EnableHyperV,
   [switch]$NurVorbereiten,
+  [ValidatePattern('^([0-9a-f]{40})?$')][string]$Commit = '',   # leer = HEAD; labor-wsl.sh setzt hier den Arbeitsstand
   [switch]$NoSecureBoot,
   [string]$OutDir = (Join-Path $env:USERPROFILE 'labor-1b')
 )
@@ -197,6 +198,7 @@ function Invoke-Vm([string]$Ip, [string]$Command) {
 function Invoke-VmScript([hashtable]$Groesse, [string]$VmMode) {
   $a = @{ Mode = $VmMode; SshKey = $SshKey; VmDir = $VmDir }
   if ($VmMode -eq 'up' -and -not $NurVorbereiten) { $a.GesamtSchritte = 11 }
+  if ($Commit -and $VmMode -in @('up', 'sync')) { $a.Commit = $Commit }
   if ($EnableHyperV) { $a.EnableHyperV = $true }
   if ($NurVorbereiten -and $VmMode -eq 'up') { $a.NurVorbereiten = $true }
   $a.RamReserveGB = $RamReserveGB

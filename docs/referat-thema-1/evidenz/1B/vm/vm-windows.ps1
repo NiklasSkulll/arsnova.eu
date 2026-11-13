@@ -52,6 +52,7 @@ param(
   [ValidateRange(2, 64)][int]$RamReserveGB = 4,
   [switch]$NurVorbereiten,
   [ValidateRange(0, 20)][int]$GesamtSchritte = 0,   # labor.ps1 zaehlt weiter (9-11)
+  [ValidatePattern('^([0-9a-f]{40})?$')][string]$Commit = '',   # leer = HEAD; sonst z. B. ein Arbeitsstand-Commit
   [switch]$EnableHyperV,
   [switch]$NoSecureBoot
 )
@@ -108,6 +109,29 @@ function Write-Utf8Lf([string]$Path, [string]$Text) {
 function Test-Admin {
   $id = [Security.Principal.WindowsIdentity]::GetCurrent()
   return (New-Object Security.Principal.WindowsPrincipal $id).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+
+# Mitglied der lokalen Gruppe Hyper-V-Administratoren (SID S-1-5-32-578): darf VMs ohne Admin-Fenster
+# starten, stoppen und abfragen. Netz und NAT anlegen (up, destroy) braucht weiter Admin.
+function Test-HyperVBerechtigt {
+  if (Test-Admin) { return $true }
+  $id = [Security.Principal.WindowsIdentity]::GetCurrent()
+  $sid = New-Object Security.Principal.SecurityIdentifier 'S-1-5-32-578'
+  return (New-Object Security.Principal.WindowsPrincipal $id).IsInRole($sid)
+}
+
+function Add-HyperVGruppe {
+  # Einmalig im Admin-Lauf: den angemeldeten Nutzer in Hyper-V-Administratoren aufnehmen, damit Alltags-
+  # befehle (status, start, stop, Laeufe) und Agenten in WSL ohne Admin-Fenster auskommen.
+  $nutzer = "$env:USERDOMAIN\$env:USERNAME"
+  try {
+    $drin = @(Get-LocalGroupMember -SID 'S-1-5-32-578' -ErrorAction Stop | Where-Object { $_.Name -eq $nutzer }).Count -gt 0
+    if (-not $drin) {
+      Add-LocalGroupMember -SID 'S-1-5-32-578' -Member $nutzer -ErrorAction Stop
+      Write-Info "$nutzer in Hyper-V-Administratoren aufgenommen: ab der naechsten Anmeldung gehen status/start/stop ohne Admin-Fenster."
+    }
+  }
+  catch { Write-Warn "Hyper-V-Administratoren nicht gesetzt ($($_.Exception.Message)); Alltagsbefehle brauchen dann ein Admin-Fenster." }
 }
 
 function Test-Erreichbar([string]$Ziel) {
@@ -194,6 +218,7 @@ function Invoke-Vorpruefung {
     throw "Vorpruefung: $($fatal.Count) Punkt(e) muessen behoben werden (siehe -> oben). Es wurde nichts veraendert."
   }
   New-Item -ItemType Directory -Force -Path $VmDir | Out-Null
+  if ($Mode -eq 'up') { Add-HyperVGruppe }
   Initialize-SshKey
 }
 
@@ -448,6 +473,7 @@ function Wait-Ready([string]$Ip, [string]$Name) {
 function Invoke-Sync {
   Write-Step 'Repo-Stand in beide VMs kopieren' '1-3 min'
   $stand = Get-RepoStand -Start $PSScriptRoot
+  if ($Commit) { $stand.Commit = $Commit }
   Write-Info "Repo: $($stand.Wurzel), Commit $($stand.Commit)"
   $arch = Join-Path $VmDir 'repo-git.tgz'
   $quelle = $stand.Wurzel
@@ -472,7 +498,8 @@ function Invoke-Sync {
     $c = $stand.Commit
     $cmd = "set -e; rm -rf /tmp/repo-git; mkdir -p /tmp/repo-git; tar -xzf /tmp/repo-git.tgz -C /tmp/repo-git; " +
       "test -d arsnova.eu || git clone -q --no-checkout /tmp/repo-git/.git arsnova.eu; " +
-      "cd arsnova.eu && git fetch -q /tmp/repo-git/.git && git checkout -q --detach $c && git log --oneline -1"
+      "cd arsnova.eu && git fetch -q /tmp/repo-git/.git HEAD '+refs/heads/*:refs/remotes/quelle/*' '+refs/labor/*:refs/labor/*' && " +
+      "git checkout -q --detach $c && git log --oneline -1"
     if ((Invoke-Ssh $vm.Ip $cmd) -ne 0) { throw "Checkout von $c in $($vm.Name) fehlgeschlagen." }
   }
   Remove-Item -Force $arch
@@ -552,8 +579,12 @@ function Invoke-Up {
 }
 
 try {
-  if ($Mode -ne 'pruefen' -and -not (Test-Admin)) {
-    throw 'Bitte PowerShell als Administrator starten (Rechtsklick > "Als Administrator ausfuehren").'
+  if ($Mode -in @('up', 'destroy') -and -not (Test-Admin)) {
+    throw 'Bitte PowerShell als Administrator starten (Rechtsklick > "Als Administrator ausfuehren"): up und destroy legen Netz und NAT an bzw. entfernen sie.'
+  }
+  if ($Mode -in @('status', 'stop', 'start', 'sync') -and -not (Test-HyperVBerechtigt)) {
+    throw ('Keine Hyper-V-Rechte: PowerShell als Administrator starten. Einmal labor.ps1 -Mode up als Administrator ' +
+      'traegt dich in Hyper-V-Administratoren ein; nach erneuter Anmeldung geht es ohne Admin-Fenster.')
   }
   switch ($Mode) {
     'up' { Invoke-Up }

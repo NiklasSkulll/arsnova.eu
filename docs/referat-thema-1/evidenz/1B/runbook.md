@@ -109,6 +109,14 @@ _Ergänzt 2026-11-13, aktualisiert am selben Tag._ Stand für Störversuche und 
 5. Bricht es ab, steht da, in welchem Schritt, warum und was zu tun ist, dazu der Pfad zum Log. Nach dem Beheben denselben Befehl erneut aufrufen; Fertiges wird übersprungen. Bei Fragen das Log schicken (enthält keine Tokens).
 6. Am Ende muss der Bericht nur `OK`-Zeilen enthalten; ihn aus `%USERPROFILE%\labor-1b\` ins eigene Aufbauprotokoll übernehmen. Der Start der VMs unter Hyper-V läuft hier zum ersten Mal auf echter Hardware; jede Abweichung notieren.
 
+**Arbeiten mit Codex in WSL (Schritte 3–4):**
+
+- WSL nicht beenden, sondern begrenzen: `%USERPROFILE%\.wslconfig` mit `[wsl2]` und `memory=6GB`, danach einmal `wsl --shutdown`. Dann passen WSL, Windows und die VMs (llm-host 12 GB, app-host 4 GB) in 32 GB.
+- Das erste `up` (als Administrator) trägt ihn in Hyper-V-Administratoren ein; nach erneuter Anmeldung brauchen `status`, `start`, `stop` und Läufe kein Admin-Fenster mehr.
+- Aus WSL steuert `evidenz/1B/labor-wsl.sh` das Labor über die Windows-Programme (`labor.ps1`, `ssh.exe`): `labor-wsl.sh status`, `labor-wsl.sh vm llm 'docker ps'`, `labor-wsl.sh lauf -LabN 1 -LabTag dev-x --arbeitsstand` (nimmt nicht committete Änderungen mit).
+- Codex beim Start sagen: „Lies `docs/referat-thema-1/AGENTS.md`, Abschnitt 1B-Labor für Agenten.“ Dort stehen Befehle und Regeln (Hypothese vor jedem Lauf, keine Tokens ins Repo, Läufe nur nach Rückfrage).
+- Die VMs laufen nur, wenn getestet wird: vorher `start`, danach `stop`.
+
 **Danach:** zwischen den Sitzungen `.\labor.ps1 -Mode stop`, vorher wieder `-Mode start`. Vor Kalibrierung und Läufen Abschnitt 4 (Energiemodus, Windows Update pausieren). Eigene Läufe mit `-LabTag` (z. B. `stoerung-…`); ADR-Nummern 1B-020 bis 1B-039. Am Ende `-Mode destroy`: entfernt VMs, Disks, Switch und NAT; `C:\ProgramData\arsnova-1b` danach löschen, wenn auch Image und Laborschlüssel-Daten weg sollen. Hyper-V bleibt dabei an. Wer es wieder aus haben will (etwa für VirtualBox oder VMware): Admin-PowerShell `Disable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-All`, neu starten. Während das Labor läuft, kein VPN mit „gesamten Verkehr tunneln“ verbinden: Dann erreicht der Rechner die VMs nicht mehr.
 
 Wiederverwendbar für Schritt 3: `lauf.sh` (Mitschnitt auf beiden Hosts, Speicher-CSV, Zeitzerlegung), `pruefen.sh` (Limits, Flags, Bind) und der Treiber `treiber.mjs`. Die Runtime im llm-host lässt sich für Ausfälle mit `docker stop arsnova-open-weight-llm` bzw. `docker compose … up -d` steuern; die Werte aus Schritt 2 stehen unter `messung/`.
