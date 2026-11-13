@@ -77,7 +77,7 @@ function Test-LaborGroesse {
 }
 
 # Vor dem Anlegen mit dem gerade freien RAM und Platz (wie groessen_ressourcen, ressourcenRegel):
-# dem Rechner bleiben mindestens 4 GiB RAM; der Platz reicht fuer den gemessenen Bedarf
+# dem Rechner bleibt mindestens die Reserve an RAM (Standard 4 GiB); der Platz reicht fuer den gemessenen Bedarf
 # (hoechstens 31 GiB) plus 10 GiB Reserve.
 function Test-LaborRessourcen {
   [CmdletBinding()]
@@ -85,12 +85,13 @@ function Test-LaborRessourcen {
     [Parameter(Mandatory)][int]$FreiRamGib,
     [Parameter(Mandatory)][int]$FreiDiskGib,
     [Parameter(Mandatory)][int]$PlanRamGib,
-    [Parameter(Mandatory)][int]$PlanDiskGib
+    [Parameter(Mandatory)][int]$PlanDiskGib,
+    [int]$ReserveGib = 4
   )
   $bedarf = [math]::Min(31, $PlanDiskGib)
   $abbruch = $null
   $warn = @()
-  if ($FreiRamGib - $PlanRamGib -lt 4) { $abbruch = 'ram-frei' }
+  if ($FreiRamGib - $PlanRamGib -lt $ReserveGib) { $abbruch = 'ram-frei' }
   elseif ($FreiDiskGib -lt $bedarf + 10) { $abbruch = 'disk-frei' }
   elseif ($FreiDiskGib -lt $PlanDiskGib + 10) { $warn += 'disk-wachstum' }
   [pscustomobject]@{ abbruch = $abbruch; warnungen = $warn }

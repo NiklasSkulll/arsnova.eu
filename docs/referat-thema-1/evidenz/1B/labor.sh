@@ -14,7 +14,8 @@
 #   labor.sh destroy   VMs, Disks und Netz entfernen (fragt nach)
 #
 # Ohne Rückfragen: LAB_JA=1. Eigene Größen: LAB_LLM_VCPU, LAB_LLM_RAM_GIB, LAB_LLM_DISK_GIB,
-# LAB_APP_VCPU, LAB_APP_RAM_GIB, LAB_APP_DISK_GIB (Pinning rechnet labor.sh). Bericht und Logs: LAB_OUTDIR (~/labor-1b).
+# LAB_APP_VCPU, LAB_APP_RAM_GIB, LAB_APP_DISK_GIB (Pinning rechnet labor.sh). RAM-Reserve für den
+# Rechner: LAB_RAM_RESERVE_GIB (Standard 4, mindestens 2; kleiner nur auf Testrechnern ohne andere Programme). Bericht und Logs: LAB_OUTDIR (~/labor-1b).
 # Weitere Variablen: vm/vm-linux.sh. Windows: labor.ps1.
 set -euo pipefail
 HERE="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
@@ -56,7 +57,7 @@ text() {
     ram-summe) echo "Zusammen zu viel RAM: dem Rechner müssen 2 GiB bleiben." ;;
     llm-disk) echo "llm-host: Platte mindestens 20 GiB (Modell, Runtime-Image, System)." ;;
     app-disk) echo "app-host: Platte mindestens 25 GiB (der App-Build braucht kurz ~18 GiB)." ;;
-    ram-frei) echo "Zu wenig freier RAM: nach dem Start der VMs blieben dem Rechner weniger als 4 GiB. Programme schließen oder kleinere Größen wählen." ;;
+    ram-frei) echo "Zu wenig freier RAM: nach dem Start der VMs bliebe dem Rechner weniger als die Reserve (${LAB_RAM_RESERVE_GIB:-4} GiB). Programme schließen oder kleinere Größen wählen." ;;
     disk-frei) echo "Zu wenig freier Platz: nötig sind der erwartete Bedarf (bis 31 GiB) plus 10 GiB Reserve." ;;
     disk-wachstum) echo "Die Platten können im schlimmsten Fall bis zur gewählten Größe wachsen; dann würde der Platz knapp. Während des Aufbaus den freien Platz im Auge behalten." ;;
     *) echo "$1" ;;
@@ -165,7 +166,9 @@ ressourcen_pruefen() {
   frei_disk="$(df -BG --output=avail "$ort" | tail -1 | tr -dc 0-9)"
   echo "Belegt: $1 GiB RAM fest, $3 von $4 Threads, Platte bis $2 GiB (real etwa 31 GiB)."
   echo "Frei jetzt: $frei_ram GiB RAM, $frei_disk GiB Platte unter $ort. Dem Rechner blieben etwa $((frei_ram - $1)) GiB RAM."
-  j="$(groessen_ressourcen "$frei_ram" "$frei_disk" "$1" "$2")"
+  local reserve="${LAB_RAM_RESERVE_GIB:-4}"
+  ((reserve >= 2)) || { echo "LAB_RAM_RESERVE_GIB mindestens 2" >&2; exit 1; }
+  j="$(groessen_ressourcen "$frei_ram" "$frei_disk" "$1" "$2" "$reserve")"
   for w in $(jq -r '.warnungen[]' <<<"$j"); do echo "  Hinweis: $(text "$w")"; done
   a="$(jq -r '.abbruch // empty' <<<"$j")"
   [[ -z "$a" ]] || { echo "Abbruch, es wurde nichts angelegt: $(text "$a")" >&2; exit 1; }

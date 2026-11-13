@@ -394,7 +394,7 @@
       "fehler": ""
     }
   ],
-  "ressourcenRegel": "Vor dem Anlegen, mit dem gerade freien RAM und Platz: Abbruch ram-frei, wenn nach den VMs weniger als 4 GiB RAM frei bleiben; Abbruch disk-frei, wenn der freie Platz kleiner ist als der erwartete Bedarf (Summe der Platten, höchstens 31 GiB, gemessen 2026-11-13) plus 10 GiB Reserve; Warnung disk-wachstum, wenn er kleiner ist als die Summe der Platten plus 10 GiB (die Disks könnten im schlimmsten Fall voll wachsen).",
+  "ressourcenRegel": "Vor dem Anlegen, mit dem gerade freien RAM und Platz: Abbruch ram-frei, wenn nach den VMs weniger als die Reserve (Standard 4 GiB, mindestens 2 GiB, nur für Testrechner ohne andere Programme kleiner) RAM frei bleiben; Abbruch disk-frei, wenn der freie Platz kleiner ist als der erwartete Bedarf (Summe der Platten, höchstens 31 GiB, gemessen 2026-11-13) plus 10 GiB Reserve; Warnung disk-wachstum, wenn er kleiner ist als die Summe der Platten plus 10 GiB (die Disks könnten im schlimmsten Fall voll wachsen).",
   "ressourcenFaelle": [
     {
       "name": "P50 nach dem Aufräumen",
@@ -494,6 +494,53 @@
       },
       "plan": {
         "ramGib": 18,
+        "diskGib": 45
+      },
+      "erwartet": {
+        "abbruch": "ram-frei",
+        "warnungen": []
+      }
+    },
+    {
+      "name": "Reserve 2 GiB: 2 GiB bleiben",
+      "frei": {
+        "ramGib": 16,
+        "diskGib": 60
+      },
+      "plan": {
+        "ramGib": 14,
+        "diskGib": 45
+      },
+      "reserveGib": 2,
+      "erwartet": {
+        "abbruch": null,
+        "warnungen": []
+      }
+    },
+    {
+      "name": "Reserve 2 GiB: nur 1 GiB bliebe",
+      "frei": {
+        "ramGib": 15,
+        "diskGib": 60
+      },
+      "plan": {
+        "ramGib": 14,
+        "diskGib": 45
+      },
+      "reserveGib": 2,
+      "erwartet": {
+        "abbruch": "ram-frei",
+        "warnungen": []
+      }
+    },
+    {
+      "name": "Standardreserve am selben Rechner",
+      "frei": {
+        "ramGib": 16,
+        "diskGib": 60
+      },
+      "plan": {
+        "ramGib": 14,
         "diskGib": 45
       },
       "erwartet": {

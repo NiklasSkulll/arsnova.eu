@@ -66,6 +66,7 @@ param(
   [ValidateRange(1, 512)][int]$AppRamGB = 6,
   [ValidateRange(20, 2048)][int]$LlmDiskGB = 20,
   [ValidateRange(25, 2048)][int]$AppDiskGB = 25,
+  [ValidateRange(2, 64)][int]$RamReserveGB = 4,
   [switch]$EnableHyperV,
   [switch]$InstallWslTools,
   [switch]$NoSecureBoot
@@ -265,17 +266,18 @@ function Assert-Preflight {
     . (Join-Path (Split-Path $PSScriptRoot -Parent) 'groessen.ps1')
     $needGB = $LlmRamGB + $AppRamGB
     $diskGB = $LlmDiskGB + $AppDiskGB
-    $freeGB = [int][Math]::Floor((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory / 1MB)
+    # Verfuegbar = frei + Standby (wie im Task-Manager); Klassenname ist nicht lokalisiert.
+    $freeGB = [int][Math]::Floor((Get-CimInstance Win32_PerfFormattedData_PerfOS_Memory).AvailableMBytes / 1024)
     $drive = Get-PSDrive -Name $VmDir.Substring(0, 1)
     $freeDisk = [int][Math]::Floor($drive.Free / 1GB)
     Write-Host "Belegt: $needGB GB RAM fest (statischer Speicher), $($LlmCpus + $AppCpus) vCPU, Platte bis $diskGB GB (real etwa 31 GB)."
     Write-Host "Frei jetzt: $freeGB GB RAM, $freeDisk GB auf $($drive.Name):. Windows blieben etwa $($freeGB - $needGB) GB RAM."
-    $r = Test-LaborRessourcen -FreiRamGib $freeGB -FreiDiskGib $freeDisk -PlanRamGib $needGB -PlanDiskGib $diskGB
+    $r = Test-LaborRessourcen -FreiRamGib $freeGB -FreiDiskGib $freeDisk -PlanRamGib $needGB -PlanDiskGib $diskGB -ReserveGib $RamReserveGB
     if ($r.warnungen -contains 'disk-wachstum') {
       Write-Warn "die Platten koennen im schlimmsten Fall bis $diskGB GB wachsen; dann wird der Platz auf $($drive.Name): knapp."
     }
     if ($r.abbruch -eq 'ram-frei') {
-      throw "Abbruch, nichts angelegt: nach dem Start blieben Windows weniger als 4 GB RAM. Programme schliessen (auch WSL: wsl --shutdown) oder kleinere Groessen waehlen."
+      throw "Abbruch, nichts angelegt: nach dem Start blieben Windows weniger als $RamReserveGB GB RAM. Programme schliessen (auch WSL: wsl --shutdown) oder kleinere Groessen waehlen."
     }
     if ($r.abbruch -eq 'disk-frei') {
       throw "Abbruch, nichts angelegt: auf $($drive.Name): sind $freeDisk GB frei; noetig sind etwa 31 GB plus 10 GB Reserve."

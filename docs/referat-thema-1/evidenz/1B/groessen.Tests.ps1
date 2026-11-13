@@ -46,8 +46,9 @@ Describe 'Test-LaborGroesse' {
 
 Describe 'Test-LaborRessourcen' {
   It 'PowerShell Ressourcen: <_.name>' -ForEach $ressourcenFaelle {
-    $ist = Test-LaborRessourcen -FreiRamGib $_.frei.ramGib -FreiDiskGib $_.frei.diskGib `
-      -PlanRamGib $_.plan.ramGib -PlanDiskGib $_.plan.diskGib
+    $a = @{ FreiRamGib = $_.frei.ramGib; FreiDiskGib = $_.frei.diskGib; PlanRamGib = $_.plan.ramGib; PlanDiskGib = $_.plan.diskGib }
+    if ($null -ne $_.reserveGib) { $a.ReserveGib = $_.reserveGib }
+    $ist = Test-LaborRessourcen @a
     "$($ist.abbruch)" | Should -Be "$($_.erwartet.abbruch)"
     @($ist.warnungen) -join ',' | Should -Be (@($_.erwartet.warnungen) -join ',')
   }

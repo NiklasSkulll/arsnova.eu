@@ -5,6 +5,7 @@
 #   win-test.sh vm      Netz, Wegwerf-Passwort, Unattend-ISO, Windows-VM installieren, auf SSH warten
 #   win-test.sh wsl     WSL mit Ubuntu (wsl --import aus dem offiziellen Archiv), Repo per git bundle
 #   win-test.sh labor   labor.ps1 -Mode up, pruefen, Entwicklungslauf (LAB_N=1), Logs nach WIN_OUT
+#                       (Zusatzargumente für up: WIN_LAB_ARGS, z. B. "-RamReserveGB 2")
 #   win-test.sh destroy Windows-VM, Disk und Netz entfernen (ISO bleibt)
 #
 # Voraussetzungen: Labor-VMs aus und Labornetz gestoppt (das Netz nutzt dieselbe Bridge virbr-1b,
@@ -42,7 +43,6 @@ warte_ssh() { # max. Minuten
 }
 
 vm() {
-  [[ -f "$ISO" ]] || { echo "ISO fehlt: $ISO" >&2; exit 1; }
   if virsh net-info arsnova-1b 2>/dev/null | grep -Eq '^Active: +yes'; then
     echo "Labornetz arsnova-1b ist aktiv (gleiche Bridge): Labor-VMs herunterfahren, virsh net-destroy arsnova-1b" >&2
     exit 1
@@ -63,7 +63,13 @@ vm() {
 EOF
   fi
   virsh net-start "$NET" 2>/dev/null || true
-  if virsh dominfo "$NAME" >/dev/null 2>&1; then echo "$NAME existiert schon"; warte_ssh 120; return; fi
+  if virsh dominfo "$NAME" >/dev/null 2>&1; then
+    echo "$NAME existiert schon"
+    virsh domstate "$NAME" | grep -q running || virsh start "$NAME"
+    warte_ssh 120
+    return
+  fi
+  [[ -f "$ISO" ]] || { echo "ISO fehlt: $ISO" >&2; exit 1; }
 
   local t; t="$(mktemp -d)"
   umask 077
@@ -134,7 +140,7 @@ labor() {
   log "labor.ps1 -Mode groessen"
  win "powershell -NoProfile -ExecutionPolicy Bypass -File $p -Mode groessen -Ja" | tee "$WIN_OUT/groessen.txt"
   log "labor.ps1 -Mode up (dauert lange: verschachtelt, App-Build)"
- win "powershell -NoProfile -ExecutionPolicy Bypass -File $p -Mode up -Ja -EnableHyperV -InstallWslTools" 2>&1 | tee "$WIN_OUT/up.txt"
+ win "powershell -NoProfile -ExecutionPolicy Bypass -File $p -Mode up -Ja -EnableHyperV -InstallWslTools ${WIN_LAB_ARGS:-}" 2>&1 | tee "$WIN_OUT/up.txt"
   log "labor.ps1 -Mode pruefen"
  win "powershell -NoProfile -ExecutionPolicy Bypass -File $p -Mode pruefen" 2>&1 | tee "$WIN_OUT/pruefen.txt" || true
   log "Entwicklungslauf mit einem Auftrag"

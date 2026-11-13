@@ -22,6 +22,7 @@
     powershell -ExecutionPolicy Bypass -File .\labor.ps1 -Mode up
 
   Ohne Rueckfragen: -Ja. Eigene Groessen: -LlmCpus, -LlmRamGB, -LlmDiskGB, -AppCpus, -AppRamGB, -AppDiskGB (0 = Empfehlung).
+  RAM-Reserve fuer Windows: -RamReserveGB (Standard 4, mindestens 2; kleiner nur auf Testrechnern).
   Hyper-V kann vCPUs nicht an Host-Threads binden; Ersatz: statischer Speicher, Reserve 100 %
   und doppeltes Gewicht fuer den llm-host (vm-windows.ps1). Das GGUF laedt die VM selbst.
   Bericht: $env:USERPROFILE\labor-1b\aufbau-<Zeit>.txt, ohne Tokens.
@@ -46,6 +47,7 @@ param(
   [ValidateRange(0, 512)][int]$AppRamGB = 0,
   [ValidateRange(0, 2048)][int]$LlmDiskGB = 0,
   [ValidateRange(0, 2048)][int]$AppDiskGB = 0,
+  [ValidateRange(2, 64)][int]$RamReserveGB = 4,
   [string]$SshKey = (Join-Path $env:USERPROFILE '.ssh\id_ed25519.pub'),
   [string]$VmDir = 'C:\ProgramData\arsnova-1b',
   [string]$WslDistro = '',
@@ -168,7 +170,7 @@ function Invoke-VmScript([hashtable]$Groesse, [string]$VmMode) {
   if ($Groesse) {
     $a.LlmCpus = $Groesse.LlmCpus; $a.LlmRamGB = $Groesse.LlmRamGB
     $a.AppCpus = $Groesse.AppCpus; $a.AppRamGB = $Groesse.AppRamGB
-    $a.LlmDiskGB = $Groesse.LlmDiskGB; $a.AppDiskGB = $Groesse.AppDiskGB
+    $a.LlmDiskGB = $Groesse.LlmDiskGB; $a.AppDiskGB = $Groesse.AppDiskGB; $a.RamReserveGB = $RamReserveGB
   }
   # vm-windows.ps1 meldet Fehler nur per Exit-Code 1 (kein throw), daher hier pruefen.
   $global:LASTEXITCODE = 0

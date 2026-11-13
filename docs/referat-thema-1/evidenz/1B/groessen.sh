@@ -114,14 +114,14 @@ groessen_pruefen() {
   return 0
 }
 
-# groessen_ressourcen FREI_RAM_GIB FREI_DISK_GIB PLAN_RAM_GIB PLAN_DISK_GIB
+# groessen_ressourcen FREI_RAM_GIB FREI_DISK_GIB PLAN_RAM_GIB PLAN_DISK_GIB [RESERVE_GIB, Standard 4]
 # Vor dem Anlegen mit dem gerade freien RAM und Platz (Regel in groessen-faelle.json, ressourcenRegel):
-# Dem Rechner bleiben mindestens 4 GiB RAM; der Platz reicht für den gemessenen Bedarf (höchstens 31 GiB)
+# Dem Rechner bleibt mindestens die Reserve an RAM; der Platz reicht für den gemessenen Bedarf (höchstens 31 GiB)
 # plus 10 GiB Reserve. Gibt JSON aus: {"abbruch":null|"ram-frei"|"disk-frei","warnungen":[…]}.
 groessen_ressourcen() {
-  local ram=$1 disk=$2 plan_ram=$3 plan_disk=$4 bedarf=$4
+  local ram=$1 disk=$2 plan_ram=$3 plan_disk=$4 bedarf=$4 reserve=${5:-4}
   ((bedarf > 31)) && bedarf=31
-  if ((ram - plan_ram < 4)); then
+  if ((ram - plan_ram < reserve)); then
     printf '{"abbruch":"ram-frei","warnungen":[]}\n'
   elif ((disk < bedarf + 10)); then
     printf '{"abbruch":"disk-frei","warnungen":[]}\n'

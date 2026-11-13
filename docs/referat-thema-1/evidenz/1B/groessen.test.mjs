@@ -77,7 +77,15 @@ for (const fall of ressourcenFaelle) {
         '-c',
         'source "$0"; groessen_ressourcen "$@"',
         join(here, 'groessen.sh'),
-        ...[fall.frei.ramGib, fall.frei.diskGib, fall.plan.ramGib, fall.plan.diskGib].map(String),
+        ...[
+          fall.frei.ramGib,
+          fall.frei.diskGib,
+          fall.plan.ramGib,
+          fall.plan.diskGib,
+          fall.reserveGib ?? '',
+        ]
+          .filter((x) => x !== '')
+          .map(String),
       ],
       { encoding: 'utf8' },
     );
