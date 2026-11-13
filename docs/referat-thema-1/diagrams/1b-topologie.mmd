@@ -16,17 +16,17 @@ flowchart TB
     app["`**app-host** · 192.168.150.10
     2 vCPU, 6 GiB
     App, postgres, redis, pdf-worker
-    Ports nur auf 127.0.0.1`"]
+    App-Ports nur auf 127.0.0.1`"]
     llm["`**llm-host** · 192.168.150.20
     4 vCPU, 12 GiB
     llama-server nur auf :8080
     Bearer-Token`"]
   end
   net["`**Internet**
-  nur für die Einrichtung`"]
+  ausgehend, für die Einrichtung`"]
 
   app e1@-->|"HTTP 8080, Bearer"| llm
-  LAP e2@-.->|"NAT, keine Portweiterleitung"| net
+  LAP e2@-.->|"ausgehendes NAT, keine Portweiterleitung"| net
 
   class app app
   class llm runtime

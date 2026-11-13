@@ -2,7 +2,7 @@
 
 Diagramme zu Auftrag 1B (Aufbau und Zeitzerlegung, Stand 2026-11-13). Abbildung 1 zeigt die Topologie des Labors, Abbildung 2 den Ablauf eines Summary-Auftrags mit den drei Schnitten der Zeitmessung (Netz, Adapter, Inferenz). Die [Belegtabelle](#belegtabelle) bindet jede Codeangabe an einen festen Commit.
 
-> **Code-Stand:** App-Code-Baseline [`a19ca70ff37d`](https://github.com/NiklasSkulll/arsnova.eu/tree/a19ca70ff37d) ([ADR 1B-001](adr/1B-001-baseline-fork-main-a19ca70f.md)). Der Produktionscode ist auf diesem Branch unverändert: `git diff --stat a19ca70ff37d HEAD -- apps libs docker scripts docker-compose*.yml` ist leer (geprüft 2026-11-13, `HEAD` = `7aab5d71`). Auch der Stand der Lab-VMs `747c8f7e` unterscheidet sich in diesen Pfaden nicht. Alle Zeilennummern zählen ab 1 und gelten für `a19ca70ff37d`, außer in der zweiten Tabelle (Skripte, dort `7aab5d71`).
+> **Code-Stand:** App-Code-Baseline [`a19ca70ff37d`](https://github.com/NiklasSkulll/arsnova.eu/tree/a19ca70ff37d) ([ADR 1B-001](adr/1B-001-baseline-fork-main-a19ca70f.md)). Der Produktionscode ist auf diesem Branch unverändert: `git diff --stat a19ca70ff37d HEAD -- apps libs docker scripts docker-compose*.yml` ist leer (geprüft 2026-11-13 bei `67d57e0a`). Auch der Stand der Lab-VMs `747c8f7e` unterscheidet sich in diesen Pfaden nicht. Alle Zeilennummern zählen ab 1 und gelten für `a19ca70ff37d`, außer in der zweiten Tabelle (Skripte, dort `7aab5d71`).
 
 Quellen der Diagramme: [`diagrams/1b-topologie.mmd`](diagrams/1b-topologie.mmd) und [`diagrams/1b-auftrag-sequenz.mmd`](diagrams/1b-auftrag-sequenz.mmd), gerendert nach [`diagrams/README.md`](diagrams/README.md).
 
@@ -12,16 +12,16 @@ Quellen: [ADR 1B-002](adr/1B-002-topologie-zwei-vms-ein-rechner.md), [ADR 1B-003
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="diagrams/1b-topologie.dark.svg">
-  <img alt="Ein Laptop mit KVM, 4 Kernen, 8 Threads und 31 GiB trägt ein privates Netz 192.168.150.0/24 mit zwei VMs: dem app-host 192.168.150.10 (2 vCPU, 6 GiB) mit App, postgres, redis und pdf-worker, deren Ports nur auf 127.0.0.1 liegen, und dem llm-host 192.168.150.20 (4 vCPU, 12 GiB) mit llama-server nur auf Port 8080 und Bearer-Token. Der app-host ruft den llm-host per HTTP auf Port 8080 mit Bearer-Token auf. Nach außen gibt es nur ausgehendes NAT für die Einrichtung, keine Portweiterleitung." src="diagrams/1b-topologie.light.svg">
+  <img alt="Ein Laptop mit KVM, 4 Kernen, 8 Threads und 31 GiB trägt ein privates Netz 192.168.150.0/24 mit zwei VMs: dem app-host 192.168.150.10 (2 vCPU, 6 GiB) mit App, postgres, redis und pdf-worker, deren App-Ports nur auf 127.0.0.1 liegen, und dem llm-host 192.168.150.20 (4 vCPU, 12 GiB) mit llama-server nur auf Port 8080 und Bearer-Token. Der app-host ruft den llm-host per HTTP auf Port 8080 mit Bearer-Token auf. Nach außen gibt es nur ausgehendes NAT (gebraucht für die Einrichtung, während der Messung weiter aktiv), keine Portweiterleitung." src="diagrams/1b-topologie.light.svg">
 </picture>
 
 _Abb. 1: Topologie des 1B-Labors. Eigene Darstellung (Jonas Weirauch, Auftrag 1B), KI-gestützt erstellt (Claude Code)._
 
-Abweichungen von der Vorgabe des Auftrags, jeweils nach der Quelle:
+Abweichungen und Grenzen, jeweils nach der Quelle:
 
-- Der app-host startet laut Protokoll und `docker-compose.prod.yml` auch `pdf-worker` (nicht nur app, postgres, redis); Encoder und spaCy laufen nicht ([ADR 1B-005](adr/1B-005-abweichungen-vom-release.md)).
+- Der app-host startet laut Protokoll und `docker-compose.prod.yml` auch `pdf-worker` (nicht nur app, postgres, redis); Encoder und spaCy laufen nicht ([Aufbauprotokoll](evidenz/1B/2026-11-12-aufbau.md#rechner-und-größen), [`app-start.sh`](evidenz/1B/app-start.sh) Z. 73).
 - Im llm-host laufen 4 CPUs und 4 Threads statt `cpus: '8.0'` und `OPEN_WEIGHT_LLM_THREADS: '8'` ([`llm-vm.override.yml`](evidenz/1B/llm-vm.override.yml), [ADR 1B-010](adr/1B-010-aufbau-automatisiert-mit-groessenempfehlung.md)).
-- CPU 4 und 5 sind Hyperthread-Geschwister von Kern 0 und 1 und damit nicht vom llm-host getrennt. Das ist eine Gültigkeitsgrenze ([ADR 1B-002](adr/1B-002-topologie-zwei-vms-ein-rechner.md#folgen)).
+- Der app-host liegt auf CPU 4 und 5, den Hyperthread-Geschwistern der Kerne 0 und 1 des llm-hosts, und ist damit nicht von ihm getrennt ([Aufbauprotokoll](evidenz/1B/2026-11-12-aufbau.md#rechner-und-größen), [`vm-linux.sh`](evidenz/1B/vm/vm-linux.sh) Z. 16–18). Das ist eine Gültigkeitsgrenze ([ADR 1B-002](adr/1B-002-topologie-zwei-vms-ein-rechner.md#folgen)).
 - `ufw` im llm-host lässt TCP 8080 nur von `192.168.150.10` zu ([ADR 1B-003](adr/1B-003-laborregel-virtuelles-netz.md#entscheidung)).
 
 ## Abbildung 2: ein Summary-Auftrag und die drei Schnitte
@@ -30,20 +30,22 @@ Messregeln (Rechnung, Kontrolle C0, Gültigkeit): [ADR 1B-006](adr/1B-006-zeitme
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="diagrams/1b-auftrag-sequenz.dark.svg">
-  <img alt="Der Treiber stößt per tRPC qa.requestSummary an; die API prüft Host-Token, Kontext und Cooldown, reiht den Job ein und antwortet pending, danach fragt der Treiber jede Sekunde den Status ab. Der Job beginnt mit T_job, baut den Kontext auf und ruft Adapter und LLM-Client. Ab dort zählt die Drahtzeit am app-host: GET /slots und POST /v1/chat/completions an den llama-server im llm-host, der die Inferenz als prompt_ms plus predicted_ms meldet. Netz ist Drahtzeit am app-host minus Drahtzeit am llm-host. Der Client verwirft die timings, das Quality-Gate prüft, der Job baut den Kontext erneut und vergleicht den Hash. T_job endet mit latencyMs im Log; Adapter ist latencyMs minus Drahtzeit. Zuletzt liest der Treiber den Endstatus." src="diagrams/1b-auftrag-sequenz.light.svg">
+  <img alt="Der Treiber stößt per tRPC qa.requestSummary an. Die API prüft Host-Token und ob Q&amp;A aktiv ist; die Queue baut den Kontext, prüft auf einen laufenden Job und den Cooldown von 30 s, bei dem ein gleicher Hash das alte Ergebnis liefert, reiht den Job ein, und die API antwortet pending. Während der Job sofort anläuft, fragt der Treiber nach jeweils 1 s Pause den Status ab. Der Job beginnt mit T_job, baut den Kontext auf und ruft Adapter und LLM-Client. Diese schicken GET /slots und POST /v1/chat/completions an den llama-server im llm-host; für jede Anfrage gilt eine eigene Drahtzeit vom ersten Anfragesegment bis zum Antwortstatus. Der llama-server meldet die Inferenz als prompt_ms plus predicted_ms. Der Client verwirft die timings, das Quality-Gate prüft, der Job baut den Kontext erneut, vergleicht den Hash und endet mit latencyMs im Log. Beim letzten Abruf baut die App den Kontext ein drittes Mal und vergleicht den Hash, bevor sie den Endstatus meldet." src="diagrams/1b-auftrag-sequenz.light.svg">
 </picture>
 
 _Abb. 2: Ein Summary-Auftrag und die Schnitte der Zeitmessung. Eigene Darstellung (Jonas Weirauch, Auftrag 1B), KI-gestützt erstellt (Claude Code)._
 
 Die drei Größen:
 
-| Größe        | Von … bis …                                                                     | Was sie enthält                                                             |
-| ------------ | ------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| **Netz**     | Drahtzeit am app-host minus Drahtzeit am llm-host, über `GET /slots` und `POST` | Transport zwischen den VMs                                                  |
-| **Adapter**  | `latencyMs` (Queue-Job) minus Drahtzeit am app-host                             | beide `prepare`-Läufe, Queue-Logik, Quality-Gate, DNS-Auflösung der Ziel-IP |
-| **Inferenz** | `timings.prompt_ms + timings.predicted_ms` aus der Antwort                      | Prefill und Decode im `llama-server`                                        |
+| Größe        | Von … bis …                                                                                                                                                                  | Was sie enthält                                                                                                                                                                                                             |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Netz**     | Summe der Drahtzeiten von `GET /slots` und `POST` am app-host minus dieselbe Summe am llm-host; jede Drahtzeit vom ersten Anfragesegment bis zum Frame mit dem Antwortstatus | Transport zwischen den Netzschnittstellen der beiden VMs                                                                                                                                                                    |
+| **Adapter**  | `latencyMs` (Queue-Job) minus Summe der Drahtzeiten am app-host                                                                                                              | beide `prepare`-Läufe, Queue-Logik, Prüfung der privaten Ziel-IP (IP-Literal, keine DNS-Auflösung), Body-Bau, Antwort-Parsing, Quality-Gate, TCP-Aufbau, Docker-Bridge und NAT im app-host, Pause zwischen `GET` und `POST` |
+| **Inferenz** | `timings.prompt_ms + timings.predicted_ms` aus der Antwort                                                                                                                   | Prefill und Decode im `llama-server`                                                                                                                                                                                        |
 
-Der Rest (Drahtzeit des POST am llm-host minus Inferenz) ist der vierte Posten „Server ohne Inferenz“ (Template, Tokenisierung, Serialisierung). Er gehört nicht zu den drei Hauptgrößen ([ADR 1B-006](adr/1B-006-zeitmessung-per-mitschnitt.md#entscheidung)).
+Der Rest (Drahtzeit des POST am llm-host minus Inferenz) ist der vierte Posten „Server ohne Inferenz“ (Template, Tokenisierung, Serialisierung). Er gehört nicht zu den drei Hauptgrößen ([ADR 1B-006](adr/1B-006-zeitmessung-per-mitschnitt.md#entscheidung)) und zählt nur den `POST`; die Formel im [Design Abschnitt 5](specs/2026-11-12-1b-zwei-host-design.md#5-zeitmessung-ki-vorschlag) nennt die ganze Drahtzeit am llm-host, gerechnet wird wie in [`zeitzerlegung.mjs`](evidenz/1B/messung/zeitzerlegung.mjs) Z. 183.
+
+Die Größe **Adapter** umfasst den gesamten App-Anteil des Jobs, nicht nur den Teilnehmer „Adapter und LLM-Client“ in Abb. 2.
 
 ## Belegtabelle
 
@@ -95,7 +97,7 @@ Lab-Skripte (Stand `7aab5d71`, nicht `a19ca70ff37d`):
 
 | Stelle                                         | Beleg                                                                                                                         |
 | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `evidenz/1B/treiber.mjs:168`, `:175`           | `qa.requestSummary.mutate`, danach Polling mit `qa.summaryRuntime.query` (Takt 1 s)                                           |
+| `evidenz/1B/treiber.mjs:168`, `:175`           | `qa.requestSummary.mutate`, danach Polling mit `qa.summaryRuntime.query` nach je 1 s Pause                                    |
 | `evidenz/1B/messung/zeitzerlegung.mjs:173-183` | `jobMs` (173), `appWire`, `srvWire` (175-176), `inferMs` (178), `netzMs`, `adapterMs` (180-181), `serverOhneInferenzMs` (183) |
 
 ## Hinweis zu älteren Zeilenangaben
