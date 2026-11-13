@@ -40,6 +40,21 @@ In [qemu-project/qemu#3215](https://gitlab.com/qemu-project/qemu/-/issues/3215) 
 
 Damit liegt der Startabbruch am CPU-Modell `host-passthrough`, nicht am Kernel allein. Belege: `~/labor-1b/windows-test/hyperv-check.txt`, `~/labor-1b/win-vm2.log` (nicht im Repo). Windows meldet Version 10.0.26300.
 
+## Verlauf Versuch 3 (Volltest mit WSL, 2026-11-13 Vormittag)
+
+Ziel: `labor.ps1 up` mit den neuen Schutzprüfungen (Commit `9a36b9d2`). Windows-VM mit 20 GiB RAM, Linux-Labor-VMs und Windows-ISO vorher gelöscht (Platz, mit Freigabe des Autors).
+
+| Zeit (2026-11-13) | Ereignis                                                                                                                                                |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 10:25             | VM startet mit Hyper-V, SSH nach 5 min                                                                                                                  |
+| 10:30             | `wsl.exe --install --no-distribution` über SSH ohne Wirkung („nicht installiert“), auch mit `--web-download`: der eingebaute Platzhalter will den Store |
+| 10:37             | `scp` nach Windows bricht ab („Connection closed“); `scp -O` (altes Protokoll) geht. Der sftp-Teil von Win32-OpenSSH 10.0.0.0p2 klemmt                  |
+| 10:45             | WSL 3.0.5 als MSI von GitHub (SHA-256 aus der Release-API geprüft) per `msiexec /qn /norestart`                                                         |
+| 10:46 –           | Windows nicht mehr erreichbar: kein ARP, schwarzer Bildschirm, ~2,7 vCPU Dauerlast                                                                      |
+| 11:09             | Harter Reset: Windows bootet nicht mehr bis SSH (15 min schwarzer Bildschirm); VM 11:24 ausgeschaltet                                                   |
+
+Vermutung (nicht belegt): Mit WSL startet zum ersten Mal eine VM innerhalb der Windows-VM (WSL 2 läuft als Hyper-V-VM), also dreifach verschachtelt; das hängt mit diesem Host-Kernel. Damit ist ein Volltest von `labor.ps1 up` in einer VM auf diesem Rechner nicht verlässlich möglich. `labor.ps1 up` selbst kam nicht zum Zug; seine neuen Prüfungen sind nur mit Pester getestet.
+
 ## Ergebnis Teiltest (PowerShell 5.1.26100, Commit `1c6cf6474bae`)
 
 | Modus                   | Ergebnis                                                                                                                                      |
