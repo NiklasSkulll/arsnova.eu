@@ -13,6 +13,8 @@
 # Bekannt (2026-11-13): Mit Host-Kernel 7.2.x startet Windows mit aktivem Hyper-V verschachtelt nicht
 # („Automatische Reparatur“), auch ohne evmcs; ohne vmx bootet es. Gemeldet als Regression ab 7.2
 # (discuss.cachyos.org/t/36134). Volltest erst mit einem Host-Kernel 7.1 oder nach einer Korrektur.
+# Versuch ohne Kernelwechsel: benanntes CPU-Modell, z. B. WIN_CPU=Skylake-Client-noTSX-IBRS,+vmx
+# (mit benannten Modellen bootete Windows in qemu-project/qemu#3215, mit Icelake nicht).
 set -euo pipefail
 HERE="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 REPO="$(git -C "$HERE" rev-parse --show-toplevel)"
@@ -72,7 +74,7 @@ EOF
 
   log "Windows-VM anlegen und installieren"
   virt-install --name "$NAME" --memory "${WIN_RAM_MIB:-18432}" --vcpus 4,sockets=1,cores=4,threads=1 \
-    --cpu host-passthrough --osinfo win11 --boot uefi \
+    --cpu "${WIN_CPU:-host-passthrough}" --osinfo win11 --boot uefi \
     --disk "path=$WIN_DIR/$NAME.qcow2,size=60,format=qcow2,bus=sata" \
     --disk "path=$ISO,device=cdrom,bus=sata" --disk "path=$WIN_DIR/unattend.iso,device=cdrom,bus=sata" \
     --network "network=$NET,mac=$MAC,model=e1000e" \
