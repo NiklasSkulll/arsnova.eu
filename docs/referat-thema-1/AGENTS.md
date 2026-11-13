@@ -78,6 +78,8 @@ Regeln und Befehle im [Runbook](evidenz/1B/runbook.md), Windows-Details in
   - Befehl in einer VM: `labor-wsl.sh vm llm 'docker ps'` bzw. `vm app '…'`.
   - Eigene Änderungen testen, ohne zu committen: `--arbeitsstand` an `sync`,
     `lauf` oder `kalibrierung` hängen.
+  - Messungen: `kalibrierung`, `lauf` (Ausfall B0: `-LabRuntimeAus`),
+    `kontrolle` (C0), `belege`; Reihenfolge im Runbook, Abschnitt 3.
   - `up` und `destroy` öffnen ein Admin-Fenster; nur auf ausdrücklichen
     Wunsch des Menschen.
 - **Vor jedem Lauf:** Hypothese, Messgröße und Schwelle aufschreiben (Design
