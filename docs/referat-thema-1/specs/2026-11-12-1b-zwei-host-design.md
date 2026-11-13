@@ -1,6 +1,6 @@
 # Design: 1B Schritte 1–2 – Zwei-Host-Deployment und ein echter Summary-Auftrag
 
-- **Stand:** 2026-11-12, Entwurf zur Freigabe durch den Autor (Jonas)
+- **Stand:** 2026-11-12, Entwurf zur Freigabe durch den Autor (Jonas); _aktualisiert 2026-11-13:_ vom Autor vor dem [Plan](2026-11-12-1b-zwei-host-plan.md) am 2026-11-12 freigegeben, der Nachtrag vom 2026-11-13 vor dessen Läufen
 - **Branch:** `feature-1B-two-host`, abgezweigt von Fork-`main` `a19ca70f` (upstream am 2026-11-12 nachgezogen)
 - **Umfang:** 1B Schritte 1–2 (Jonas). Schritte 3–4 (Niklas) bauen danach in einer eigenen PR darauf auf.
 - **Kennzeichnung:** „Autor“ = im Gespräch vom Autor entschieden. „KI-Vorschlag“ = Entscheidung des Agenten, vom Autor beim Lesen zu prüfen. „Bauende entscheiden“ = bewusst offen gelassen.
