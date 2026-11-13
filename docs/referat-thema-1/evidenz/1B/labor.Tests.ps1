@@ -19,16 +19,24 @@ Describe 'Select-LaborGroesse' {
   It 'uebernimmt die Empfehlung am Messrechner' {
     Mock Read-Host { '' }
     $g = Select-LaborGroesse
-    "$($g.LlmCpus)/$($g.LlmRamGB)/$($g.AppCpus)/$($g.AppRamGB)" | Should -Be '4/12/2/6'
+    "$($g.LlmCpus)/$($g.LlmRamGB)/$($g.AppCpus)/$($g.AppRamGB)/$($g.LlmDiskGB)/$($g.AppDiskGB)" | Should -Be '4/12/2/6/20/25'
   }
 
   It 'fragt nach ungueltigen eigenen Werten erneut' {
-    $script:antworten = [Collections.Queue]@('n', '3', '9', '2', '6', '3', '10', '2', '4')
+    $script:antworten = [Collections.Queue]@('n', '3', '9', '2', '6', '', '', '3', '10', '2', '4', '', '')
     Mock Read-Host { $script:antworten.Dequeue() }
     $g = Select-LaborGroesse
-    "$($g.LlmCpus)/$($g.LlmRamGB)/$($g.AppCpus)/$($g.AppRamGB)" | Should -Be '3/10/2/4'
+    "$($g.LlmCpus)/$($g.LlmRamGB)/$($g.AppCpus)/$($g.AppRamGB)/$($g.LlmDiskGB)/$($g.AppDiskGB)" | Should -Be '3/10/2/4/20/25'
     $script:antworten.Count | Should -Be 0
     Should -Invoke Write-Host -ParameterFilter { "$Object" -like '*Ungueltig*mindestens 10 GB*' } -Times 1
+  }
+
+  It 'nimmt eine groessere Platte an und lehnt eine zu kleine ab' {
+    $script:antworten = [Collections.Queue]@('n', '4', '12', '2', '6', '16', '25', '4', '12', '2', '6', '40', '30')
+    Mock Read-Host { $script:antworten.Dequeue() }
+    $g = Select-LaborGroesse
+    "$($g.LlmDiskGB)/$($g.AppDiskGB)" | Should -Be '40/30'
+    Should -Invoke Write-Host -ParameterFilter { "$Object" -like '*Ungueltig*Platte mindestens 20 GB*' } -Times 1
   }
 
   It 'lehnt ungueltige Parameter ohne Rueckfrage ab' {

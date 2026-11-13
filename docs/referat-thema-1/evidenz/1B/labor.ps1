@@ -14,12 +14,14 @@
                               -LabTag mit Praefix dev oder probe: kommt nicht ins Repo; ohne
                               -LabTimeoutMs gilt die juengste Kalibrierung von heute
     labor.ps1 -Mode status    VMs, Reserve, Docker, Repo-Stand
+    labor.ps1 -Mode stop      beide VMs herunterfahren (RAM und CPU wieder frei, Disks bleiben)
+    labor.ps1 -Mode start     beide VMs starten, auf die Dienste warten, pruefen
     labor.ps1 -Mode destroy   VMs, Disks, NAT und Switch entfernen (fragt nach)
 
   Aufruf in einer Admin-PowerShell:
     powershell -ExecutionPolicy Bypass -File .\labor.ps1 -Mode up
 
-  Ohne Rueckfragen: -Ja. Eigene Groessen: -LlmCpus, -LlmRamGB, -AppCpus, -AppRamGB (0 = Empfehlung).
+  Ohne Rueckfragen: -Ja. Eigene Groessen: -LlmCpus, -LlmRamGB, -LlmDiskGB, -AppCpus, -AppRamGB, -AppDiskGB (0 = Empfehlung).
   Hyper-V kann vCPUs nicht an Host-Threads binden; Ersatz: statischer Speicher, Reserve 100 %
   und doppeltes Gewicht fuer den llm-host (vm-windows.ps1). Das GGUF laedt die VM selbst.
   Bericht: $env:USERPROFILE\labor-1b\aufbau-<Zeit>.txt, ohne Tokens.
@@ -32,7 +34,7 @@
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '',
   Justification = 'Fehlalarm: die Skriptparameter werden in den Funktionen unten gelesen.')]
 param(
-  [ValidateSet('up', 'groessen', 'pruefen', 'kalibrierung', 'lauf', 'status', 'destroy')]
+  [ValidateSet('up', 'groessen', 'pruefen', 'kalibrierung', 'lauf', 'status', 'stop', 'start', 'destroy')]
   [string]$Mode = 'groessen',
   [switch]$Ja,
   [ValidateRange(1, 10)][int]$LabN = 10,
@@ -42,6 +44,8 @@ param(
   [ValidateRange(0, 512)][int]$LlmRamGB = 0,
   [ValidateRange(0, 64)][int]$AppCpus = 0,
   [ValidateRange(0, 512)][int]$AppRamGB = 0,
+  [ValidateRange(0, 2048)][int]$LlmDiskGB = 0,
+  [ValidateRange(0, 2048)][int]$AppDiskGB = 0,
   [string]$SshKey = (Join-Path $env:USERPROFILE '.ssh\id_ed25519.pub'),
   [string]$VmDir = 'C:\ProgramData\arsnova-1b',
   [string]$WslDistro = '',
@@ -72,6 +76,8 @@ function Get-LaborText([string]$Code) {
     'llm-ram' { 'llm-host: mindestens 10 GB (Container-Limit 8 GB plus System).' }
     'app-ram' { 'app-host: mindestens 4 GB.' }
     'ram-summe' { 'Zusammen zu viel RAM: dem Rechner muessen 2 GB bleiben.' }
+    'llm-disk' { 'llm-host: Platte mindestens 20 GB (Modell, Runtime-Image, System).' }
+    'app-disk' { 'app-host: Platte mindestens 25 GB (der App-Build braucht kurz ~18 GB).' }
     default { $Code }
   }
 }
@@ -91,42 +97,50 @@ function Test-Ja([string]$Frage, [bool]$Standard) {
   return $a -match '^(j|y)'
 }
 
-# Gibt @{ LlmCpus; LlmRamGB; AppCpus; AppRamGB } zurueck oder wirft bei ungueltigen Werten.
+# Gibt @{ LlmCpus; LlmRamGB; LlmDiskGB; AppCpus; AppRamGB; AppDiskGB } zurueck oder wirft bei ungueltigen Werten.
 function Select-LaborGroesse {
   $r = Get-LaborRechner
   Write-Host "Rechner: $($r.Kerne) Kerne, $($r.Threads) Threads, $($r.RamGib) GB RAM"
   $e = Get-LaborGroesse -Kerne $r.Kerne -Threads $r.Threads -RamGib $r.RamGib
-  $w = @{ LlmCpus = 0; LlmRamGB = 0; AppCpus = 0; AppRamGB = 0 }
+  $w = @{ LlmCpus = 0; LlmRamGB = 0; AppCpus = 0; AppRamGB = 0; LlmDiskGB = $script:GroessenLlmDisk; AppDiskGB = $script:GroessenAppDisk }
   if ($e.abbruch) {
     Write-Host "Keine Empfehlung: $(Get-LaborText $e.abbruch)"
     if ($LlmCpus -eq 0) { throw 'Rechner zu klein fuer das Labor.' }
   }
   else {
-    $w = @{ LlmCpus = $e.llm.vcpu; LlmRamGB = $e.llm.ramGib; AppCpus = $e.app.vcpu; AppRamGB = $e.app.ramGib }
-    Write-Host "Empfehlung:  llm-host $($w.LlmCpus) vCPU, $($w.LlmRamGB) GB (Reserve 100 %, Gewicht 200)"
-    Write-Host "             app-host $($w.AppCpus) vCPU, $($w.AppRamGB) GB"
+    $w = @{ LlmCpus = $e.llm.vcpu; LlmRamGB = $e.llm.ramGib; AppCpus = $e.app.vcpu; AppRamGB = $e.app.ramGib
+      LlmDiskGB = $e.llm.diskGib; AppDiskGB = $e.app.diskGib }
+    Write-Host "Empfehlung:  llm-host $($w.LlmCpus) vCPU, $($w.LlmRamGB) GB RAM, Platte bis $($w.LlmDiskGB) GB (Reserve 100 %, Gewicht 200)"
+    Write-Host "             app-host $($w.AppCpus) vCPU, $($w.AppRamGB) GB RAM, Platte bis $($w.AppDiskGB) GB"
     foreach ($c in @($e.warnungen)) { Write-Host "  Hinweis: $(Get-LaborText $c)" }
   }
   if ($LlmCpus -gt 0) { $w.LlmCpus = $LlmCpus }
   if ($LlmRamGB -gt 0) { $w.LlmRamGB = $LlmRamGB }
   if ($AppCpus -gt 0) { $w.AppCpus = $AppCpus }
   if ($AppRamGB -gt 0) { $w.AppRamGB = $AppRamGB }
+  if ($LlmDiskGB -gt 0) { $w.LlmDiskGB = $LlmDiskGB }
+  if ($AppDiskGB -gt 0) { $w.AppDiskGB = $AppDiskGB }
   if (-not (Test-Ja 'Uebernehmen? [J/n]' $true)) {
     while ($true) {
       $w.LlmCpus = Read-Zahl 'llm-host vCPU' $w.LlmCpus
       $w.LlmRamGB = Read-Zahl 'llm-host RAM GB' $w.LlmRamGB
       $w.AppCpus = Read-Zahl 'app-host vCPU' $w.AppCpus
       $w.AppRamGB = Read-Zahl 'app-host RAM GB' $w.AppRamGB
+      $w.LlmDiskGB = Read-Zahl 'llm-host Platte GB' $w.LlmDiskGB
+      $w.AppDiskGB = Read-Zahl 'app-host Platte GB' $w.AppDiskGB
       $f = Test-LaborGroesse -Kerne $r.Kerne -Threads $r.Threads -RamGib $r.RamGib `
-        -LlmVcpu $w.LlmCpus -LlmRamGib $w.LlmRamGB -AppVcpu $w.AppCpus -AppRamGib $w.AppRamGB
+        -LlmVcpu $w.LlmCpus -LlmRamGib $w.LlmRamGB -AppVcpu $w.AppCpus -AppRamGib $w.AppRamGB `
+        -LlmDiskGib $w.LlmDiskGB -AppDiskGib $w.AppDiskGB
       if (-not $f) { break }
       Write-Host "  Ungueltig: $(Get-LaborText $f)"
     }
   }
   $f = Test-LaborGroesse -Kerne $r.Kerne -Threads $r.Threads -RamGib $r.RamGib `
-    -LlmVcpu $w.LlmCpus -LlmRamGib $w.LlmRamGB -AppVcpu $w.AppCpus -AppRamGib $w.AppRamGB
+    -LlmVcpu $w.LlmCpus -LlmRamGib $w.LlmRamGB -AppVcpu $w.AppCpus -AppRamGib $w.AppRamGB `
+    -LlmDiskGib $w.LlmDiskGB -AppDiskGib $w.AppDiskGB
   if ($f) { throw "Ungueltige Groessen: $(Get-LaborText $f)" }
-  Write-Host "Gewaehlt: llm-host $($w.LlmCpus) vCPU, $($w.LlmRamGB) GB; app-host $($w.AppCpus) vCPU, $($w.AppRamGB) GB"
+  Write-Host ("Gewaehlt: llm-host $($w.LlmCpus) vCPU, $($w.LlmRamGB) GB, Platte $($w.LlmDiskGB) GB; " +
+    "app-host $($w.AppCpus) vCPU, $($w.AppRamGB) GB, Platte $($w.AppDiskGB) GB")
   return $w
 }
 
@@ -154,6 +168,7 @@ function Invoke-VmScript([hashtable]$Groesse, [string]$VmMode) {
   if ($Groesse) {
     $a.LlmCpus = $Groesse.LlmCpus; $a.LlmRamGB = $Groesse.LlmRamGB
     $a.AppCpus = $Groesse.AppCpus; $a.AppRamGB = $Groesse.AppRamGB
+    $a.LlmDiskGB = $Groesse.LlmDiskGB; $a.AppDiskGB = $Groesse.AppDiskGB
   }
   # vm-windows.ps1 meldet Fehler nur per Exit-Code 1 (kein throw), daher hier pruefen.
   $global:LASTEXITCODE = 0
@@ -213,6 +228,25 @@ function Invoke-LaborUp {
     & ssh.exe @o "labor@$AppIp" "bash arsnova.eu/$Ev/app-start.sh" | Out-Host
   if ($LASTEXITCODE -ne 0) { throw 'app-start.sh fehlgeschlagen' }
   Invoke-Pruefen
+}
+
+# Nach dem Start: auf SSH und die Container warten (restart: always), dann pruefen.
+function Invoke-LaborStart {
+  Invoke-VmScript $null 'start'
+  $o = Get-SshArg
+  foreach ($ip in $LlmIp, $AppIp) {
+    for ($i = 0; $i -lt 60; $i++) {
+      & ssh.exe @o "labor@$ip" 'true' 2>$null
+      if ($LASTEXITCODE -eq 0) { break }
+      Start-Sleep -Seconds 5
+    }
+  }
+  Write-Host 'VMs laufen; warte 90 s auf die Container.'
+  Start-Sleep -Seconds 90
+  for ($v = 1; $v -le 3; $v++) {
+    try { Invoke-Pruefen; return }
+    catch { if ($v -eq 3) { throw } ; Write-Host 'Noch nicht bereit, neuer Versuch in 60 s.'; Start-Sleep -Seconds 60 }
+  }
 }
 
 function Invoke-ImAppHost([string]$LaufMode) {
@@ -275,6 +309,8 @@ if ($MyInvocation.InvocationName -ne '.') {
     'kalibrierung' { Invoke-ImAppHost 'kalibrierung' }
     'lauf' { Invoke-ImAppHost 'lauf' }
     'status' { Invoke-VmScript $null 'status' }
+    'stop' { Invoke-VmScript $null 'stop' }
+    'start' { Invoke-LaborStart }
     'destroy' {
       if (Test-Ja 'Beide Labor-VMs mit Disks, NAT und Switch loeschen? [j/N]' $false) { Invoke-VmScript $null 'destroy' }
     }

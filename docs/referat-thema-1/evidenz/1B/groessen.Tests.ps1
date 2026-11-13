@@ -5,6 +5,7 @@ BeforeDiscovery {
   $script:daten = Get-Content -Raw (Join-Path $PSScriptRoot 'groessen-faelle.json') | ConvertFrom-Json
   $script:faelle = $daten.faelle
   $script:pruefFaelle = $daten.pruefFaelle
+  $script:ressourcenFaelle = $daten.ressourcenFaelle
 }
 
 BeforeAll {
@@ -25,6 +26,8 @@ Describe 'Get-LaborGroesse' {
       $ist.llm.ramGib | Should -Be $erwartet.llm.ramGib
       $ist.app.vcpu | Should -Be $erwartet.app.vcpu
       $ist.app.ramGib | Should -Be $erwartet.app.ramGib
+      $ist.llm.diskGib | Should -Be $erwartet.llm.diskGib
+      $ist.app.diskGib | Should -Be $erwartet.app.diskGib
       @($ist.warnungen) -join ',' | Should -Be (@($erwartet.warnungen) -join ',')
     }
   }
@@ -35,7 +38,17 @@ Describe 'Test-LaborGroesse' {
     $r = $_.rechner
     $w = $_.werte
     $ist = Test-LaborGroesse -Kerne $r.kerne -Threads $r.threads -RamGib $r.ramGib `
-      -LlmVcpu $w.llmVcpu -LlmRamGib $w.llmRamGib -AppVcpu $w.appVcpu -AppRamGib $w.appRamGib
+      -LlmVcpu $w.llmVcpu -LlmRamGib $w.llmRamGib -AppVcpu $w.appVcpu -AppRamGib $w.appRamGib `
+      -LlmDiskGib $w.llmDiskGib -AppDiskGib $w.appDiskGib
     "$ist" | Should -Be $_.fehler
+  }
+}
+
+Describe 'Test-LaborRessourcen' {
+  It 'PowerShell Ressourcen: <_.name>' -ForEach $ressourcenFaelle {
+    $ist = Test-LaborRessourcen -FreiRamGib $_.frei.ramGib -FreiDiskGib $_.frei.diskGib `
+      -PlanRamGib $_.plan.ramGib -PlanDiskGib $_.plan.diskGib
+    "$($ist.abbruch)" | Should -Be "$($_.erwartet.abbruch)"
+    @($ist.warnungen) -join ',' | Should -Be (@($_.erwartet.warnungen) -join ',')
   }
 }

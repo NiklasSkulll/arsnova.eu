@@ -1,6 +1,9 @@
 # Groessenregel fuer die 1B-Labor-VMs (ADR 1B-010), zum Einbinden per Dot-Sourcing.
 # Testfaelle: groessen-faelle.json; Tests: groessen.Tests.ps1. Gleiche Regel in groessen.sh.
 # Hyper-V kann vCPUs nicht an Host-Threads binden; daher hier ohne cpuset.
+# Platte: Obergrenze der duenn belegten Disk; der App-Build braucht kurz ~18 GiB (gemessen 2026-11-13).
+$script:GroessenLlmDisk = 20
+$script:GroessenAppDisk = 25
 
 function Get-LaborGroesse {
   [CmdletBinding()]
@@ -27,8 +30,8 @@ function Get-LaborGroesse {
 
   [pscustomobject]@{
     abbruch   = $null
-    llm       = [pscustomobject]@{ vcpu = $llmCpu; ramGib = $llmRam }
-    app       = [pscustomobject]@{ vcpu = 2; ramGib = $appRam }
+    llm       = [pscustomobject]@{ vcpu = $llmCpu; ramGib = $llmRam; diskGib = $script:GroessenLlmDisk }
+    app       = [pscustomobject]@{ vcpu = 2; ramGib = $appRam; diskGib = $script:GroessenAppDisk }
     warnungen = $warn
   }
 }
@@ -57,7 +60,9 @@ function Test-LaborGroesse {
     [Parameter(Mandatory)][int]$LlmVcpu,
     [Parameter(Mandatory)][int]$LlmRamGib,
     [Parameter(Mandatory)][int]$AppVcpu,
-    [Parameter(Mandatory)][int]$AppRamGib
+    [Parameter(Mandatory)][int]$AppRamGib,
+    [Parameter(Mandatory)][int]$LlmDiskGib,
+    [Parameter(Mandatory)][int]$AppDiskGib
   )
   $max = [math]::Min(8, $Kerne)
   if ($LlmVcpu -lt 2 -or $LlmVcpu -gt $max) { return 'llm-vcpu' }
@@ -66,5 +71,27 @@ function Test-LaborGroesse {
   if ($LlmRamGib -lt 10) { return 'llm-ram' }
   if ($AppRamGib -lt 4) { return 'app-ram' }
   if ($LlmRamGib + $AppRamGib -gt $RamGib - 2) { return 'ram-summe' }
+  if ($LlmDiskGib -lt $script:GroessenLlmDisk) { return 'llm-disk' }
+  if ($AppDiskGib -lt $script:GroessenAppDisk) { return 'app-disk' }
   return ''
+}
+
+# Vor dem Anlegen mit dem gerade freien RAM und Platz (wie groessen_ressourcen, ressourcenRegel):
+# dem Rechner bleiben mindestens 4 GiB RAM; der Platz reicht fuer den gemessenen Bedarf
+# (hoechstens 31 GiB) plus 10 GiB Reserve.
+function Test-LaborRessourcen {
+  [CmdletBinding()]
+  param(
+    [Parameter(Mandatory)][int]$FreiRamGib,
+    [Parameter(Mandatory)][int]$FreiDiskGib,
+    [Parameter(Mandatory)][int]$PlanRamGib,
+    [Parameter(Mandatory)][int]$PlanDiskGib
+  )
+  $bedarf = [math]::Min(31, $PlanDiskGib)
+  $abbruch = $null
+  $warn = @()
+  if ($FreiRamGib - $PlanRamGib -lt 4) { $abbruch = 'ram-frei' }
+  elseif ($FreiDiskGib -lt $bedarf + 10) { $abbruch = 'disk-frei' }
+  elseif ($FreiDiskGib -lt $PlanDiskGib + 10) { $warn += 'disk-wachstum' }
+  [pscustomobject]@{ abbruch = $abbruch; warnungen = $warn }
 }

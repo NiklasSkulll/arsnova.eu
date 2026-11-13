@@ -50,10 +50,37 @@ for (const fall of pruefFaelle) {
         '-c',
         'source "$0"; groessen_pruefen "$@"',
         join(here, 'groessen.sh'),
-        ...[kerne, threads, ramGib, w.llmVcpu, w.llmRamGib, w.appVcpu, w.appRamGib].map(String),
+        ...[
+          kerne,
+          threads,
+          ramGib,
+          w.llmVcpu,
+          w.llmRamGib,
+          w.appVcpu,
+          w.appRamGib,
+          w.llmDiskGib,
+          w.appDiskGib,
+        ].map(String),
       ],
       { encoding: 'utf8' },
     );
     assert.equal(out.trim(), fall.fehler);
+  });
+}
+
+const { ressourcenFaelle } = JSON.parse(readFileSync(join(here, 'groessen-faelle.json'), 'utf8'));
+for (const fall of ressourcenFaelle) {
+  test(`Bash Ressourcen: ${fall.name}`, () => {
+    const out = execFileSync(
+      'bash',
+      [
+        '-c',
+        'source "$0"; groessen_ressourcen "$@"',
+        join(here, 'groessen.sh'),
+        ...[fall.frei.ramGib, fall.frei.diskGib, fall.plan.ramGib, fall.plan.diskGib].map(String),
+      ],
+      { encoding: 'utf8' },
+    );
+    assert.deepEqual(JSON.parse(out), fall.erwartet);
   });
 }

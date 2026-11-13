@@ -37,6 +37,8 @@ for i in 1 2 3 4 5; do docker push -q "$TAG" >/dev/null && break; echo "Push $i 
 docker pull -q "$TAG" >/dev/null
 IMAGE="$(docker image inspect --format '{{range .RepoDigests}}{{println .}}{{end}}' "$TAG" | grep -F "$REG@sha256:" | head -n 1)"
 [[ -n "$IMAGE" ]] || { echo "Kein Registry-Digest für $TAG" >&2; exit 1; }
+# Build-Cache löschen (rund 1 GiB im llm-host, gemessen 2026-11-13).
+docker builder prune -af >/dev/null 2>&1 || true
 
 echo "== Modell"
 GGUF="$MODELDIR/$(jq -r .filename "$MANIFEST")"

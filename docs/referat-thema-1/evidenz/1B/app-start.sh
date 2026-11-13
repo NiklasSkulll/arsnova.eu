@@ -30,6 +30,8 @@ docker pull -q "$TAG" >/dev/null
 IMAGE="$(docker image inspect --format '{{range .RepoDigests}}{{println .}}{{end}}' "$TAG" | grep -F "$REG@sha256:" | head -n 1)"
 [[ -n "$IMAGE" ]] || { echo "Kein Registry-Digest für $TAG" >&2; exit 1; }
 export ARSNOVA_IMAGE="$IMAGE"
+# Build-Cache nach dem Build löschen: spart im app-host rund 6 GiB Platte (gemessen 2026-11-13).
+docker builder prune -af >/dev/null 2>&1 || true
 
 if [[ ! -f .env.production ]]; then
   echo "== .env.production erzeugen"

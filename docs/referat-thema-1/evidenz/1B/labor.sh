@@ -9,10 +9,12 @@
 #                      LAB_TAG mit Präfix dev oder probe: kommt nicht ins Repo; Timeout ohne
 #                      LAB_TIMEOUT_MS aus der jüngsten Kalibrierung mit gleichem Energieprofil
 #   labor.sh status    VMs, Pinning, Docker, Repo-Stand
+#   labor.sh stop      beide VMs herunterfahren (RAM und CPU wieder frei, Disks bleiben)
+#   labor.sh start     beide VMs starten, auf die Dienste warten, prüfen
 #   labor.sh destroy   VMs, Disks und Netz entfernen (fragt nach)
 #
-# Ohne Rückfragen: LAB_JA=1. Eigene Größen: LAB_LLM_VCPU, LAB_LLM_RAM_GIB, LAB_APP_VCPU,
-# LAB_APP_RAM_GIB (Pinning rechnet labor.sh). Bericht und Logs: LAB_OUTDIR (~/labor-1b).
+# Ohne Rückfragen: LAB_JA=1. Eigene Größen: LAB_LLM_VCPU, LAB_LLM_RAM_GIB, LAB_LLM_DISK_GIB,
+# LAB_APP_VCPU, LAB_APP_RAM_GIB, LAB_APP_DISK_GIB (Pinning rechnet labor.sh). Bericht und Logs: LAB_OUTDIR (~/labor-1b).
 # Weitere Variablen: vm/vm-linux.sh. Windows: labor.ps1.
 set -euo pipefail
 HERE="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
@@ -52,6 +54,11 @@ text() {
     llm-ram) echo "llm-host: mindestens 10 GiB (Container-Limit 8 GiB plus System)." ;;
     app-ram) echo "app-host: mindestens 4 GiB." ;;
     ram-summe) echo "Zusammen zu viel RAM: dem Rechner müssen 2 GiB bleiben." ;;
+    llm-disk) echo "llm-host: Platte mindestens 20 GiB (Modell, Runtime-Image, System)." ;;
+    app-disk) echo "app-host: Platte mindestens 25 GiB (der App-Build braucht kurz ~18 GiB)." ;;
+    ram-frei) echo "Zu wenig freier RAM: nach dem Start der VMs blieben dem Rechner weniger als 4 GiB. Programme schließen oder kleinere Größen wählen." ;;
+    disk-frei) echo "Zu wenig freier Platz: nötig sind der erwartete Bedarf (bis 31 GiB) plus 10 GiB Reserve." ;;
+    disk-wachstum) echo "Die Platten können im schlimmsten Fall bis zur gewählten Größe wachsen; dann würde der Platz knapp. Während des Aufbaus den freien Platz im Auge behalten." ;;
     *) echo "$1" ;;
   esac
 }
@@ -100,7 +107,8 @@ voraussetzungen() {
   fi
 }
 
-# Setzt LAB_LLM_VCPU, LAB_LLM_RAM_GIB, LAB_LLM_CPUSET, LAB_APP_VCPU, LAB_APP_RAM_GIB, LAB_APP_CPUSET.
+# Setzt LAB_LLM_VCPU, LAB_LLM_RAM_GIB, LAB_LLM_DISK_GIB, LAB_LLM_CPUSET und dasselbe für LAB_APP_….
+# Mit Argument „anlegen“ prüft es zusätzlich freien RAM und Platz und bricht ab, wenn es nicht reicht.
 groessen_waehlen() {
   local -a r
   mapfile -t r < <(groessen_rechner)
@@ -108,34 +116,60 @@ groessen_waehlen() {
   echo "Rechner: $(lscpu | sed -n 's/^Model name: *//p'), $kerne Kerne, $threads Threads, $ram GiB RAM"
   j="$(groessen_empfehlung "$kerne" "$threads" "$ram" "$topo")"
   local abbruch; abbruch="$(jq -r '.abbruch // empty' <<<"$j")"
-  local lv lr av ar
+  local lv lr av ar ld ad
   if [[ -n "$abbruch" ]]; then
     echo "Keine Empfehlung: $(text "$abbruch")"
     [[ -n "${LAB_LLM_VCPU:-}" ]] || exit 1
   else
     lv=$(jq .llm.vcpu <<<"$j") lr=$(jq .llm.ramGib <<<"$j") av=$(jq .app.vcpu <<<"$j") ar=$(jq .app.ramGib <<<"$j")
-    printf 'Empfehlung:  llm-host %d vCPU (CPU %s), %d GiB\n             app-host %d vCPU (CPU %s), %d GiB\n' \
-      "$lv" "$(jq -r .llm.cpuset <<<"$j")" "$lr" "$av" "$(jq -r .app.cpuset <<<"$j")" "$ar"
+    ld=$(jq .llm.diskGib <<<"$j") ad=$(jq .app.diskGib <<<"$j")
+    printf 'Empfehlung:  llm-host %d vCPU (CPU %s), %d GiB RAM, Platte bis %d GiB\n             app-host %d vCPU (CPU %s), %d GiB RAM, Platte bis %d GiB\n' \
+      "$lv" "$(jq -r .llm.cpuset <<<"$j")" "$lr" "$ld" "$av" "$(jq -r .app.cpuset <<<"$j")" "$ar" "$ad"
     for w in $(jq -r '.warnungen[]' <<<"$j"); do echo "  Hinweis: $(text "$w")"; done
   fi
   lv="${LAB_LLM_VCPU:-$lv}" lr="${LAB_LLM_RAM_GIB:-$lr}" av="${LAB_APP_VCPU:-$av}" ar="${LAB_APP_RAM_GIB:-$ar}"
+  ld="${LAB_LLM_DISK_GIB:-${ld:-$GROESSEN_LLM_DISK}}" ad="${LAB_APP_DISK_GIB:-${ad:-$GROESSEN_APP_DISK}}"
   if interaktiv && ! frage "Übernehmen? [J/n]" j; then
     while :; do
       read -r -p "llm-host vCPU [$lv]: " x && lv="${x:-$lv}"
       read -r -p "llm-host RAM GiB [$lr]: " x && lr="${x:-$lr}"
       read -r -p "app-host vCPU [$av]: " x && av="${x:-$av}"
       read -r -p "app-host RAM GiB [$ar]: " x && ar="${x:-$ar}"
-      local f; f="$(groessen_pruefen "$kerne" "$threads" "$ram" "$lv" "$lr" "$av" "$ar")"
+      read -r -p "llm-host Platte GiB [$ld]: " x && ld="${x:-$ld}"
+      read -r -p "app-host Platte GiB [$ad]: " x && ad="${x:-$ad}"
+      local f; f="$(groessen_pruefen "$kerne" "$threads" "$ram" "$lv" "$lr" "$av" "$ar" "$ld" "$ad")"
       [[ -z "$f" ]] && break
       echo "  Ungültig: $(text "$f")"
     done
   fi
-  local f; f="$(groessen_pruefen "$kerne" "$threads" "$ram" "$lv" "$lr" "$av" "$ar")"
+  local f; f="$(groessen_pruefen "$kerne" "$threads" "$ram" "$lv" "$lr" "$av" "$ar" "$ld" "$ad")"
   [[ -z "$f" ]] || { echo "Ungültige Größen: $(text "$f")" >&2; exit 1; }
   local sets; sets="$(groessen_pinning "$lv" "$av" "$topo")" || exit 1
   export LAB_LLM_VCPU=$lv LAB_LLM_RAM_GIB=$lr LAB_LLM_CPUSET=${sets% *}
   export LAB_APP_VCPU=$av LAB_APP_RAM_GIB=$ar LAB_APP_CPUSET=${sets#* }
-  echo "Gewählt: llm-host $lv vCPU (CPU $LAB_LLM_CPUSET), $lr GiB; app-host $av vCPU (CPU $LAB_APP_CPUSET), $ar GiB"
+  export LAB_LLM_DISK_GIB=$ld LAB_APP_DISK_GIB=$ad
+  echo "Gewählt: llm-host $lv vCPU (CPU $LAB_LLM_CPUSET), $lr GiB, Platte $ld GiB; app-host $av vCPU (CPU $LAB_APP_CPUSET), $ar GiB, Platte $ad GiB"
+  [[ "${1:-}" == anlegen ]] && ressourcen_pruefen "$((lr + ar))" "$((ld + ad))" "$((lv + av))" "$threads"
+}
+
+# ressourcen_pruefen PLAN_RAM PLAN_DISK PLAN_VCPU THREADS: Übersicht und harter Abbruch, wenn der Rechner
+# nach dem Start zu wenig RAM oder Platz hätte (groessen_ressourcen). Laufen die VMs schon, nichts zu prüfen.
+ressourcen_pruefen() {
+  local vm
+  for vm in arsnova-1b-llm arsnova-1b-app; do
+    LIBVIRT_DEFAULT_URI=qemu:///system virsh dominfo "$vm" >/dev/null 2>&1 && return 0
+  done
+  local frei_ram frei_disk ort="$VMDIR" j a w
+  frei_ram=$(($(awk '/^MemAvailable:/ {print $2}' /proc/meminfo) / 1024 / 1024))
+  [[ -d "$ort" ]] || ort="$(dirname "$ort")"
+  frei_disk="$(df -BG --output=avail "$ort" | tail -1 | tr -dc 0-9)"
+  echo "Belegt: $1 GiB RAM fest, $3 von $4 Threads, Platte bis $2 GiB (real etwa 31 GiB)."
+  echo "Frei jetzt: $frei_ram GiB RAM, $frei_disk GiB Platte unter $ort. Dem Rechner blieben etwa $((frei_ram - $1)) GiB RAM."
+  j="$(groessen_ressourcen "$frei_ram" "$frei_disk" "$1" "$2")"
+  for w in $(jq -r '.warnungen[]' <<<"$j"); do echo "  Hinweis: $(text "$w")"; done
+  a="$(jq -r '.abbruch // empty' <<<"$j")"
+  [[ -z "$a" ]] || { echo "Abbruch, es wurde nichts angelegt: $(text "$a")" >&2; exit 1; }
+  echo "Zurück zum Ausgangszustand jederzeit mit: labor.sh destroy"
 }
 
 modell_kopieren() { # spart den Download in der VM, wenn der Rechner das GGUF schon hat
@@ -187,7 +221,7 @@ pruefen() {
 
 up() {
   voraussetzungen
-  groessen_waehlen
+  groessen_waehlen anlegen
   bash "$HERE/vm/vm-linux.sh" up
   modell_kopieren
   echo "== llm-host einrichten"
@@ -257,8 +291,42 @@ im_app_host() { # modus: lauf.sh im app-host mit Hülle (Ruhezustand gesperrt, E
   fi
 }
 
+# stop/start: zwischen Messungen belegen die VMs keinen RAM; Daten und Einrichtung bleiben.
+vms_stop() {
+  local vm
+  export LIBVIRT_DEFAULT_URI=qemu:///system
+  for vm in arsnova-1b-app arsnova-1b-llm; do
+    virsh domstate "$vm" 2>/dev/null | grep -q running && virsh shutdown "$vm" >/dev/null
+  done
+  for _ in $(seq 1 36); do
+    virsh list --name | grep -q '^arsnova-1b-\(app\|llm\)$' || { echo "Beide VMs aus; RAM und CPU sind wieder frei."; return 0; }
+    sleep 5
+  done
+  echo "VMs nach 3 min noch nicht aus; hart ausschalten mit: virsh -c qemu:///system destroy arsnova-1b-app (bzw. -llm)" >&2
+  exit 1
+}
+
+vms_start() {
+  local vm ip ok=0
+  export LIBVIRT_DEFAULT_URI=qemu:///system
+  virsh net-start arsnova-1b >/dev/null 2>&1 || true
+  for vm in arsnova-1b-llm arsnova-1b-app; do
+    virsh domstate "$vm" >/dev/null 2>&1 || { echo "$vm fehlt: zuerst labor.sh up" >&2; exit 1; }
+    virsh domstate "$vm" | grep -q running || virsh start "$vm" >/dev/null
+  done
+  for ip in "$LLM" "$APP"; do
+    for _ in $(seq 1 60); do "${SSH[@]}" -o BatchMode=yes "labor@$ip" true 2>/dev/null && break; sleep 5; done
+  done
+  echo "VMs laufen; warte 90 s auf die Container (restart: always)."
+  sleep 90
+  for _ in 1 2 3; do pruefen && { ok=1; break; }; echo "Noch nicht bereit, neuer Versuch in 60 s."; sleep 60; done
+  ((ok))
+}
+
 case "${1:-}" in
   up) up ;;
+  stop) vms_stop ;;
+  start) vms_start ;;
   groessen) groessen_waehlen ;;
   kalibrierung | lauf) im_app_host "$1" ;;
   pruefen) pruefen ;;
@@ -267,5 +335,5 @@ case "${1:-}" in
     frage "Beide Labor-VMs mit Disks und das Labornetz löschen? [j/N]" n || exit 0
     bash "$HERE/vm/vm-linux.sh" destroy
     ;;
-  *) echo "Aufruf: $0 up|groessen|pruefen|kalibrierung|lauf|status|destroy" >&2; exit 2 ;;
+  *) echo "Aufruf: $0 up|groessen|pruefen|kalibrierung|lauf|status|stop|start|destroy" >&2; exit 2 ;;
 esac

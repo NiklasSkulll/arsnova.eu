@@ -53,7 +53,7 @@
   Justification = 'Fehlalarm: die Skriptparameter werden in den Funktionen unten gelesen; die Regel prueft nur den Skriptkoerper.')]
 param(
   [Parameter(Mandatory = $true)]
-  [ValidateSet('up', 'sync', 'status', 'destroy')]
+  [ValidateSet('up', 'sync', 'status', 'stop', 'start', 'destroy')]
   [string]$Mode,
   [string]$SshKey = (Join-Path $env:USERPROFILE '.ssh\id_ed25519.pub'),
   [string]$VmDir = 'C:\ProgramData\arsnova-1b',
@@ -64,6 +64,8 @@ param(
   [ValidateRange(1, 512)][int]$LlmRamGB = 12,
   [ValidateRange(1, 64)][int]$AppCpus = 2,
   [ValidateRange(1, 512)][int]$AppRamGB = 6,
+  [ValidateRange(20, 2048)][int]$LlmDiskGB = 20,
+  [ValidateRange(25, 2048)][int]$AppDiskGB = 25,
   [switch]$EnableHyperV,
   [switch]$InstallWslTools,
   [switch]$NoSecureBoot
@@ -83,8 +85,8 @@ $BaseVhdx = 'ubuntu-24.04-base.vhdx'
 $KnownHosts = (Join-Path $VmDir 'known_hosts') -replace '\\', '/'
 
 $Vms = @(
-  @{ Name = 'arsnova-1b-app'; Ip = '192.168.150.10'; Mac = '00155D1B0010'; Cpus = $AppCpus; RamGB = $AppRamGB; Reserve = 0; Weight = 100; DiskGB = 25; UserData = 'app-host.user-data.yaml' },
-  @{ Name = 'arsnova-1b-llm'; Ip = '192.168.150.20'; Mac = '00155D1B0020'; Cpus = $LlmCpus; RamGB = $LlmRamGB; Reserve = 100; Weight = 200; DiskGB = 30; UserData = 'llm-host.user-data.yaml' }
+  @{ Name = 'arsnova-1b-app'; Ip = '192.168.150.10'; Mac = '00155D1B0010'; Cpus = $AppCpus; RamGB = $AppRamGB; Reserve = 0; Weight = 100; DiskGB = $AppDiskGB; UserData = 'app-host.user-data.yaml' },
+  @{ Name = 'arsnova-1b-llm'; Ip = '192.168.150.20'; Mac = '00155D1B0020'; Cpus = $LlmCpus; RamGB = $LlmRamGB; Reserve = 100; Weight = 200; DiskGB = $LlmDiskGB; UserData = 'llm-host.user-data.yaml' }
 )
 
 # Hilfsskript fuer WSL. Nur einfache Argumente ohne Anfuehrungszeichen gehen an wsl.exe,
@@ -258,14 +260,27 @@ function Assert-Preflight {
   }
   New-Item -ItemType Directory -Force -Path $VmDir | Out-Null
 
-  $needGB = $LlmRamGB + $AppRamGB
-  $freeGB = [Math]::Round((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory / 1MB, 1)
-  if ($freeGB -lt $needGB) {
-    Write-Warn "frei sind $freeGB GB RAM, die VMs brauchen $needGB GB fest (statischer Speicher). WSL und andere Programme beenden oder -LlmRamGB/-AppRamGB senken."
-  }
-  $drive = Get-PSDrive -Name $VmDir.Substring(0, 1) -ErrorAction SilentlyContinue
-  if ($drive -and ($drive.Free / 1GB) -lt 40) {
-    Write-Warn "auf $($drive.Name): sind nur $([Math]::Round($drive.Free / 1GB, 1)) GB frei; empfohlen mindestens 40 GB (wachsende Disks, Docker-Images, Modell)."
+  # Ressourcen nur vor dem ersten Anlegen pruefen; laufende VMs belegen ihren RAM schon.
+  if (-not (Get-VM -Name 'arsnova-1b-*' -ErrorAction SilentlyContinue)) {
+    . (Join-Path (Split-Path $PSScriptRoot -Parent) 'groessen.ps1')
+    $needGB = $LlmRamGB + $AppRamGB
+    $diskGB = $LlmDiskGB + $AppDiskGB
+    $freeGB = [int][Math]::Floor((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory / 1MB)
+    $drive = Get-PSDrive -Name $VmDir.Substring(0, 1)
+    $freeDisk = [int][Math]::Floor($drive.Free / 1GB)
+    Write-Host "Belegt: $needGB GB RAM fest (statischer Speicher), $($LlmCpus + $AppCpus) vCPU, Platte bis $diskGB GB (real etwa 31 GB)."
+    Write-Host "Frei jetzt: $freeGB GB RAM, $freeDisk GB auf $($drive.Name):. Windows blieben etwa $($freeGB - $needGB) GB RAM."
+    $r = Test-LaborRessourcen -FreiRamGib $freeGB -FreiDiskGib $freeDisk -PlanRamGib $needGB -PlanDiskGib $diskGB
+    if ($r.warnungen -contains 'disk-wachstum') {
+      Write-Warn "die Platten koennen im schlimmsten Fall bis $diskGB GB wachsen; dann wird der Platz auf $($drive.Name): knapp."
+    }
+    if ($r.abbruch -eq 'ram-frei') {
+      throw "Abbruch, nichts angelegt: nach dem Start blieben Windows weniger als 4 GB RAM. Programme schliessen (auch WSL: wsl --shutdown) oder kleinere Groessen waehlen."
+    }
+    if ($r.abbruch -eq 'disk-frei') {
+      throw "Abbruch, nichts angelegt: auf $($drive.Name): sind $freeDisk GB frei; noetig sind etwa 31 GB plus 10 GB Reserve."
+    }
+    Write-Host 'Zurueck zum Ausgangszustand jederzeit mit: labor.ps1 -Mode destroy'
   }
   Initialize-Wsl
 }
@@ -521,11 +536,34 @@ function Invoke-Destroy {
   Write-Host "entfernt. Image und Basis-VHDX bleiben in $VmDir (fuer den naechsten Lauf)."
 }
 
+# stop/start: zwischen Messungen belegen die VMs keinen RAM; Disks und Einrichtung bleiben.
+function Invoke-Stop {
+  Assert-HyperV
+  foreach ($vm in $Vms) {
+    $v = Get-VM -Name $vm.Name -ErrorAction SilentlyContinue
+    if ($v -and $v.State -ne 'Off') { Stop-VM -Name $vm.Name -Force }
+  }
+  Write-Host 'Beide VMs aus; RAM und CPU sind wieder frei.'
+}
+
+function Invoke-Start {
+  Assert-HyperV
+  foreach ($vm in $Vms) {
+    if (-not (Get-VM -Name $vm.Name -ErrorAction SilentlyContinue)) { throw "$($vm.Name) fehlt: zuerst labor.ps1 -Mode up" }
+  }
+  foreach ($vm in ($Vms | Sort-Object { $_.Name } -Descending)) {
+    if ((Get-VM -Name $vm.Name).State -ne 'Running') { Start-VM -Name $vm.Name }
+  }
+  Write-Host 'VMs gestartet.'
+}
+
 try {
   switch ($Mode) {
     'up' { Invoke-Up }
     'sync' { Assert-HyperV; Initialize-Wsl; Invoke-Sync }
     'status' { Invoke-Status }
+    'stop' { Invoke-Stop }
+    'start' { Invoke-Start }
     'destroy' { Invoke-Destroy }
   }
   # Explizit 0, sonst bliebe der Code des letzten ssh-Aufrufs stehen (labor.ps1 prueft ihn).
