@@ -20,7 +20,7 @@ Im Zwei-Host-Lauf endeten alle Aufträge mit `effectiveMode: extractive` und `fa
 | Modell meldet `status: 'failed'`                                                                              | `qaSummaryRuntimeAdapter.ts` Z. 132                             | keine                                            |
 | Qualitätstor lehnt die Ausgabe ab                                                                             | `qaSummaryRuntimeAdapter.ts` Z. 133–136, Fallback Z. 147–150    | keine                                            |
 
-Die drei Fälle nach einer vollständigen Antwort (Tabellenzeilen 3–5) sind im Log also nicht voneinander und nicht von einer fehlerhaften Anfrage zu unterscheiden. Im Labor traf es den letzten Fall bei jedem Auftrag.
+Die drei Fälle nach einer vollständigen Antwort (Tabellenzeilen 3–5) sind im Log also nicht voneinander und nicht von einer fehlerhaften Anfrage zu unterscheiden. Im Labor traf es den letzten Fall bei jedem Auftrag. _Ergänzt 2026-11-14:_ Belegt an allen 10 Antworten des gewerteten Laufs: Die Funktion des Qualitätstors lehnt jede ab, keine der 40 Aussagen hat die Form „Stichwort: Text“, und das Log enthält keine Warnung `qa_summary:invalid_model_response` ([Laufprotokoll](2026-11-13-lauf.md#befund-jede-modellantwort-verworfen)).
 
 ## Vorschlag
 
@@ -28,7 +28,7 @@ Die drei Fälle nach einer vollständigen Antwort (Tabellenzeilen 3–5) sind im
 2. Der Adapter schreibt vor dem Fallback eine Warnung mit der Ursache (Qualitätstor mit Grund, `status: 'failed'`, Versionskonflikt) und der Zahl der betroffenen Aussagen, ohne Text.
 3. Optional ein eigener `fallbackReason` (etwa `quality_rejected`) im Schema in `libs/shared-types`.
 
-**Kosten:** gering. **Risiko:** gering; ein neuer `fallbackReason` müsste in Vorschau-UI und allen fünf Locales ergänzt werden. **Rückweg:** Revert.
+**Kosten:** gering. **Risiko:** gering. _Korrigiert 2026-11-14:_ Das Frontend zeigt Fallback-Gründe der Q&A-Zusammenfassung heute nicht einzeln an; ein neuer `fallbackReason` betrifft Schema, Backend und Tests, Oberfläche und die fünf Locales nur, wenn er sichtbar werden soll. Vorher stand hier, er müsse in Vorschau-UI und allen fünf Locales ergänzt werden. **Rückweg:** Revert.
 
 ## Gültigkeitsgrenze
 

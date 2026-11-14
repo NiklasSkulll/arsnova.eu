@@ -11,6 +11,8 @@
 **Spec:** [`2026-11-12-1b-zwei-host-design.md`](2026-11-12-1b-zwei-host-design.md) (freigegeben 2026-11-12, Commit `ea407f04`). Abschnittsnummern wie „Design 3.4“ beziehen sich darauf.
 
 > _Aktualisiert 2026-11-13:_ Häkchen nach dem Stand der Commits gesetzt (bis `81ddbbb7`). Offen: Task 11 Step 4 (volle Prüfung, nach dem Nachtrag M1–M4), Step 6 (PR nur nach Freigabe des Autors) und Task 12 Step 6 (Windows nur bis vor den VM-Start getestet, Grenze des Testaufbaus: [Windows-Test](../evidenz/1B/2026-11-13-windows-test.md)). Wo die Umsetzung vom Schritt abweicht (z. B. `labor.sh` statt `vm-linux.sh` als Einstieg, ADR 1B-010), steht das in den verlinkten Protokollen und ADRs.
+>
+> _Aktualisiert 2026-11-14 (Docs-Audit):_ Task 11 Step 4 erledigt (volle Prüfung nach M1–M4 am 2026-11-13 abends, wiederholt im Docs-Audit). Task 12 Step 1: Der Fall 4/4/16 fehlte (es gab nur 4/4/18) und ist nachgetragen; Erwartung aus der Regel in ADR 1B-010, beide Umsetzungen grün. Einige Tasks wurden unter anderen Commit-Messages committet als in ihrem letzten Schritt vorgeschlagen; die Nachweise stehen in den Protokollen.
 
 ## Global Constraints
 
@@ -265,7 +267,7 @@ Muss vor jedem Lauf committet sein (Nachweiskette).
 - [x] **Step 1:** `1B-ergebnis.md`: Abschnitte „Schritte 1–2 (Jonas)“ mit Aufgabenabdeckung, Befunden B und C, Gültigkeitsgrenze D, Entscheidung; „Schritte 3–4 (Niklas)“ als leere Gliederung; „Gemeinsames Kurzfazit“ als Platzhalter. Zahlen nur mit Link auf Protokoll oder ADR.
 - [x] **Step 2:** `1B-diagrams.md`: Topologie (Mermaid, Labor) und Belegtabelle mit Zeilennummern am Laufstand für alle zitierten Codestellen (per Serena/codebase-memory geprüft).
 - [x] **Step 3:** `1B-eigenanteil.md`: Abschnitt Jonas (eigener Anteil, KI-Nutzung mit Agenten und zentralen Prompts, Prüfung durch den Autor), Abschnitt Niklas leer.
-- [ ] **Step 4:** Volle Prüfung: `npx prettier --check docs/referat-thema-1/**/*.md`, `git diff --check`, `node --test docs/referat-thema-1/evidenz/1B/messung/`, Links in den neuen Dateien prüfen (Ziele existieren).
+- [x] **Step 4:** Volle Prüfung: `npx prettier --check docs/referat-thema-1/**/*.md`, `git diff --check`, `node --test docs/referat-thema-1/evidenz/1B/messung/`, Links in den neuen Dateien prüfen (Ziele existieren).
 - [x] **Step 5:** Commit `docs(referat): add the 1B result for steps 1-2`.
 - [ ] **Step 6:** PR gegen Fork-`main` erst nach Freigabe durch den Autor, mit vollständigem `.github/pull_request_template.md`.
 

@@ -203,3 +203,7 @@ Eine unabhängige Prüfung gegen Issue #8 und das Dossier fand Lücken: Netzbele
 **B0 laut Dossier** meint „Live-Aktionen ohne Inferenz“ als Basis für die Rückwirkung auf den App-Host; diese Basis gehört zu Schritt 3 (Niklas, gleiche Live-Last wie 1A). M3 misst den Teil für Schritte 1–2: was ein Auftrag kostet, wenn die zweite Rolle fehlt.
 
 **Wertung:** M2 bis M4 sind gewertete Läufe dieses Nachtrags; jeder Lauf trägt `umgebung` und Commit. Ergebnis im Laufprotokoll als eigener Abschnitt, Rohdaten unter `messung/`.
+
+## Nachtrag 2026-11-14: Korrektur aus dem Docs-Audit
+
+_Korrigiert 2026-11-14:_ Die Begründung der 31-s-Pause im [Nachtrag 2026-11-12](#nachtrag-2026-11-12-beim-aufbau-dazugekommen) gilt nicht für die tatsächlichen Läufe. Der Cache greift nur, wenn das letzte Ergebnis kein extraktiver Fallback mit `retry: 'manual'` ist (`apps/backend/src/lib/qaSummaryQueue.ts` Z. 494–508); jeder Auftrag endete aber genau so (`qaSummaryRuntimeAdapter.ts` Z. 147–150 mit Standard `manual`, Z. 93). Die Pause war im Lauf also nicht nötig, aber harmlos: Sie liegt zwischen den Aufträgen und geht in keine Messgröße ein.
