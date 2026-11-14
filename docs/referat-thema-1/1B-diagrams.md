@@ -2,7 +2,7 @@
 
 Diagramme zu Auftrag 1B (Aufbau und Zeitzerlegung, Stand 2026-11-13). Abbildung 1 zeigt die Topologie des Labors, Abbildung 2 den Ablauf eines Summary-Auftrags mit den drei Schnitten der Zeitmessung (Netz, Adapter, Inferenz). Die [Belegtabelle](#belegtabelle) bindet jede Codeangabe an einen festen Commit.
 
-> **Code-Stand:** App-Code-Baseline [`a19ca70ff37d`](https://github.com/NiklasSkulll/arsnova.eu/tree/a19ca70ff37d) ([ADR 1B-001](adr/1B-001-baseline-fork-main-a19ca70f.md)). Der Produktionscode ist auf diesem Branch unverändert: `git diff --stat a19ca70ff37d HEAD -- apps libs docker scripts docker-compose*.yml` ist leer (geprüft 2026-11-13 bei `67d57e0a`). Auch der Stand der Lab-VMs `747c8f7e` unterscheidet sich in diesen Pfaden nicht. Zeilennummern zählen ab 1. Im App-Code gelten sie für `a19ca70ff37d`; Zeilen in `evidenz/1B` gelten für `7aab5d71` (und unverändert für den geprüften Stand), sofern kein anderer Commit genannt ist.
+> **Code-Stand:** App-Code-Baseline [`a19ca70ff37d`](https://github.com/NiklasSkulll/arsnova.eu/tree/a19ca70ff37d) ([ADR 1B-001](adr/1B-001-baseline-fork-main-a19ca70f.md)). Der Produktionscode ist auf diesem Branch unverändert: `git diff --stat a19ca70ff37d HEAD -- apps libs docker scripts docker-compose*.yml` ist leer (geprüft 2026-11-13 bei `67d57e0a`). Auch der Stand der Lab-VMs `747c8f7e` unterscheidet sich in diesen Pfaden nicht. Zeilennummern zählen ab 1. Im App-Code gelten sie für `a19ca70ff37d`; Zeilen in `evidenz/1B` gelten für `8e9d1317`, den Stand des gewerteten Laufs, sofern kein anderer Commit genannt ist. _Korrigiert 2026-11-14 (Docs-Audit):_ Vorher stand hier `7aab5d71`; die Zeilen von `treiber.mjs` und `zeitzerlegung.mjs` hatten sich bis zum gewerteten Lauf verschoben und sind angepasst.
 
 Quellen der Diagramme: [`diagrams/1b-topologie.mmd`](diagrams/1b-topologie.mmd) und [`diagrams/1b-auftrag-sequenz.mmd`](diagrams/1b-auftrag-sequenz.mmd), gerendert nach [`diagrams/README.md`](diagrams/README.md).
 
@@ -43,9 +43,9 @@ Die drei Größen:
 | **Adapter**  | `latencyMs` (Queue-Job) minus Summe der Drahtzeiten am app-host                                                                                                                                                                                   | beide `prepare`-Läufe (mit DB-Abfragen), Queue-Logik, Prüfung der privaten Ziel-IP (IP-Literal, keine DNS-Auflösung), Body-Bau, Antwort-Parsing, Quality-Gate, Bindung der Modellausgabe, TCP-Aufbau, Docker-Bridge und NAT im app-host, Pause zwischen `GET` und `POST` |
 | **Inferenz** | `timings.prompt_ms + timings.predicted_ms` aus der Antwort                                                                                                                                                                                        | Prefill und Decode im `llama-server`                                                                                                                                                                                                                                     |
 
-Der Rest (Drahtzeit des POST am llm-host minus Inferenz) ist der vierte Posten „Server ohne Inferenz“ (u. a. HTTP und Token-Prüfung, Template, Tokenisierung, Serialisierung, Netzstapel im llm-host). Er gehört nicht zu den drei Hauptgrößen ([ADR 1B-006](adr/1B-006-zeitmessung-per-mitschnitt.md#entscheidung)) und zählt nur den `POST`; die Formel im [Design Abschnitt 5](specs/2026-11-12-1b-zwei-host-design.md#5-zeitmessung-ki-vorschlag) nennt die ganze Drahtzeit am llm-host, gerechnet wird wie in [`zeitzerlegung.mjs`](evidenz/1B/messung/zeitzerlegung.mjs) Z. 183.
+Der Rest (Drahtzeit des POST am llm-host minus Inferenz) ist der vierte Posten „Server ohne Inferenz“ (u. a. HTTP und Token-Prüfung, Template, Tokenisierung, Serialisierung, Netzstapel im llm-host). Er gehört nicht zu den drei Hauptgrößen ([ADR 1B-006](adr/1B-006-zeitmessung-per-mitschnitt.md#entscheidung)) und zählt nur den `POST`; die Formel im [Design Abschnitt 5](specs/2026-11-12-1b-zwei-host-design.md#5-zeitmessung-ki-vorschlag) nennt die ganze Drahtzeit am llm-host, gerechnet wird wie in [`zeitzerlegung.mjs`](evidenz/1B/messung/zeitzerlegung.mjs) Z. 189.
 
-Die Drahtzeit des `GET /slots` am llm-host gehört zu keinem Posten; die vier Posten ergeben zusammen `latencyMs` minus diese Zeit ([`zeitzerlegung.mjs`](evidenz/1B/messung/zeitzerlegung.mjs) Z. 175–183).
+Die Drahtzeit des `GET /slots` am llm-host gehört zu keinem Posten; die vier Posten ergeben zusammen `latencyMs` minus diese Zeit ([`zeitzerlegung.mjs`](evidenz/1B/messung/zeitzerlegung.mjs) Z. 181–189).
 
 Die Größe **Adapter** umfasst den gesamten App-Anteil des Jobs, nicht nur den Teilnehmer „Adapter und LLM-Client“ in Abb. 2.
 
@@ -98,12 +98,12 @@ Stand `a19ca70ff37d`. Jede Zeile wurde mit `git show a19ca70ff37d:<Pfad>` und Ze
 | llm-host: Netz und Limits                    | `LLM:19`, `LLM:21-23`, `LLM:32`        | `network_mode: host`; `mem_limit 8g`, `memswap_limit 10g`, `cpus '8.0'`; Threads `'8'` (Labor-Override: 4)                                                                                                                                   |
 | llm-host: Bindung und Token                  | `EP:45`, `EP:100-102`                  | `--api-key` (45); `--host "$bind_address" --port 8080` (102)                                                                                                                                                                                 |
 
-Lab-Skripte (Stand `7aab5d71`, nicht `a19ca70ff37d`):
+Lab-Skripte (Stand `8e9d1317`, nicht `a19ca70ff37d`):
 
 | Stelle                                         | Beleg                                                                                                                         |
 | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `evidenz/1B/treiber.mjs:168`, `:175`           | `qa.requestSummary.mutate`, danach Polling mit `qa.summaryRuntime.query` nach je 1 s Pause                                    |
-| `evidenz/1B/messung/zeitzerlegung.mjs:173-183` | `jobMs` (173), `appWire`, `srvWire` (175-176), `inferMs` (178), `netzMs`, `adapterMs` (180-181), `serverOhneInferenzMs` (183) |
+| `evidenz/1B/treiber.mjs:190`, `:197`           | `qa.requestSummary.mutate`, danach Polling mit `qa.summaryRuntime.query` nach je 1 s Pause                                    |
+| `evidenz/1B/messung/zeitzerlegung.mjs:177-189` | `jobMs` (177), `appWire`, `srvWire` (181-182), `inferMs` (184), `netzMs`, `adapterMs` (186-187), `serverOhneInferenzMs` (189) |
 
 ## Hinweis zu älteren Zeilenangaben
 
