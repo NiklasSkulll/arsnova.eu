@@ -1,3 +1,5 @@
+import { SessionMusicService } from '../session-music.service';
+import { SessionUnloadWarningService } from '../session-unload-warning.service';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { DOCUMENT } from '@angular/common';
 import { LOCALE_ID, type Provider, signal } from '@angular/core';
@@ -187,6 +189,7 @@ const {
   searchParticipantsQueryMock,
   getTeamsQueryMock,
   getLiveFreetextQueryMock,
+  setFreetextWordCloudEntryVisibilityMock,
   getCurrentQuestionForHostQueryMock,
   getHostVoteProgressQueryMock,
   getLeaderboardQueryMock,
@@ -244,7 +247,6 @@ const {
   onHostVoteProgressChangedSubscribeMock,
   clearHostTokenMock,
   dialogOpenMock,
-  persistCurrentHostTokenMock,
   clearStoredHostTokenMock,
   forceReconnectTrpcWsMock,
 } = vi.hoisted(() => ({
@@ -257,6 +259,7 @@ const {
   searchParticipantsQueryMock: vi.fn(),
   getTeamsQueryMock: vi.fn(),
   getLiveFreetextQueryMock: vi.fn(),
+  setFreetextWordCloudEntryVisibilityMock: vi.fn(),
   getCurrentQuestionForHostQueryMock: vi.fn(),
   getHostVoteProgressQueryMock: vi.fn(),
   getLeaderboardQueryMock: vi.fn(),
@@ -326,7 +329,6 @@ const {
   })),
   clearHostTokenMock: vi.fn(),
   dialogOpenMock: vi.fn(),
-  persistCurrentHostTokenMock: vi.fn(async () => true),
   clearStoredHostTokenMock: vi.fn(async () => undefined),
   forceReconnectTrpcWsMock: vi.fn(async () => undefined),
 }));
@@ -351,6 +353,7 @@ vi.mock('../../../core/trpc.client', () => ({
       searchParticipants: { query: searchParticipantsQueryMock },
       getTeams: { query: getTeamsQueryMock },
       getLiveFreetext: { query: getLiveFreetextQueryMock },
+      setFreetextWordCloudEntryVisibility: { mutate: setFreetextWordCloudEntryVisibilityMock },
       getCurrentQuestionForHost: { query: getCurrentQuestionForHostQueryMock },
       getHostVoteProgress: { query: getHostVoteProgressQueryMock },
       getLeaderboard: { query: getLeaderboardQueryMock },
@@ -974,13 +977,14 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
       imports: [SessionHostComponent],
       providers: [
         provideRouter([]),
+        SessionMusicService,
+        SessionUnloadWarningService,
         { provide: MatDialog, useValue: { open: dialogOpenMock, closeAll: vi.fn() } },
         { provide: MatSnackBar, useValue: { open: vi.fn() } },
         { provide: QuizStoreService, useValue: quizStoreMock },
         {
           provide: SessionTokenStorageService,
           useValue: {
-            persistCurrentHostToken: persistCurrentHostTokenMock,
             clearHostToken: clearStoredHostTokenMock,
           },
         },
@@ -1054,7 +1058,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
       },
     ] as never);
     component.activeChannel.set('qa');
-    component.presenterWindowOpen.set(true);
+    component.presentationStarted.set(true);
     fixture.detectChanges();
     const nav = fixture.nativeElement.querySelector(
       '.session-host__projection-pages',
@@ -1181,7 +1185,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
       },
     ] as never);
     component.activeChannel.set('qa');
-    component.presenterWindowOpen.set(true);
+    component.presentationStarted.set(true);
     fixture.detectChanges();
 
     const nav = fixture.nativeElement.querySelector(
@@ -1245,7 +1249,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
         hasUpvoted: false,
       },
     ] as never);
-    component.presenterWindowOpen.set(true);
+    component.presentationStarted.set(true);
     // preferredChannel-Initialisierung einmal abarbeiten, danach manuelle Tab-Wechsel.
     component.activeChannel.set('qa');
     fixture.detectChanges();
@@ -1587,7 +1591,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
       archived: 0,
     });
     component.activeChannel.set('qa');
-    component.presenterWindowOpen.set(true);
+    component.presentationStarted.set(true);
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
@@ -1654,7 +1658,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
         hasUpvoted: false,
       },
     ] as never);
-    component.presenterWindowOpen.set(true);
+    component.presentationStarted.set(true);
     fixture.detectChanges();
 
     expect(fixture.componentInstance.showPresenterViewButton()).toBe(false);
@@ -1719,7 +1723,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
       },
     ] as never);
     component.activeChannel.set('qa');
-    component.presenterWindowOpen.set(true);
+    component.presentationStarted.set(true);
     fixture.detectChanges();
     const displayMode = TestBed.inject(HostDisplayModeService);
     displayMode.setHostSessionActive(true);
@@ -3396,8 +3400,8 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
         panelClass: 'presentation-start-dialog-panel',
         backdropClass: 'presentation-start-dialog-backdrop',
         data: expect.objectContaining({
-          startPresenterView: expect.any(Function),
           phoneAlreadyConnected: expect.any(Boolean),
+          requestFullscreen: expect.any(Function),
         }),
       }),
     );
@@ -3405,7 +3409,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
     fixture.destroy();
   });
 
-  it('setzt eine beendete Projektionsansicht beim erneuten Öffnen fort', async () => {
+  it('setzt eine ausgeblendete Live-Projektion beim erneuten Öffnen fort', async () => {
     getInfoQueryMock.mockResolvedValue({
       ...defaultSession,
       status: 'ACTIVE',
@@ -3415,31 +3419,20 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
       presenterSurface: 'default',
       presenterPage: { context: 'quiz:0:ACTIVE', index: 0, count: 1 },
     });
-    const existingPresenter = {
-      closed: false,
-      location: { pathname: '/session/ABC123/present' },
-      focus: vi.fn(),
-      moveTo: vi.fn(),
-      resizeTo: vi.fn(),
-      document,
-      sessionStorage,
-    };
-    const open = vi.spyOn(window, 'open').mockReturnValue(existingPresenter as unknown as Window);
     const fixture = setup();
     fixture.detectChanges();
     await fixture.whenStable();
+    const component = fixture.componentInstance;
+    component.presentationStarted.set(true);
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    const open = vi.spyOn(window, 'open');
+    expect(component.presenterViewActionLabel()).toBe('Live-Projektion fortsetzen');
+    dialogOpenMock.mockClear();
+    await component.openPresenterView();
 
-    const component = fixture.componentInstance as unknown as {
-      launchPresenterViewWindow(): Promise<Window | null>;
-      session: typeof fixture.componentInstance.session;
-    };
-    expect(fixture.componentInstance.presenterViewActionLabel()).toBe(
-      'Präsentationsansicht fortsetzen',
-    );
-    const opened = await component.launchPresenterViewWindow();
-
-    expect(opened).toBe(existingPresenter);
-    expect(open).toHaveBeenCalled();
+    expect(navigate).toHaveBeenCalledExactlyOnceWith('/session/ABC123/present');
+    expect(dialogOpenMock).not.toHaveBeenCalled();
+    expect(open).not.toHaveBeenCalled();
     expect(setQaPresenterSortModeMutateMock).toHaveBeenCalledWith({
       code: 'ABC123',
       sortMode: 'BEST',
@@ -3456,17 +3449,6 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
       'Zur Präsentationsansicht wechseln',
     );
 
-    dialogOpenMock.mockClear();
-    open.mockClear();
-    await fixture.componentInstance.openPresenterView();
-    expect(open).toHaveBeenCalled();
-    expect(dialogOpenMock).not.toHaveBeenCalled();
-
-    existingPresenter.closed = true;
-    fixture.componentInstance.onHostWindowFocus();
-    expect(fixture.componentInstance.presenterViewActionLabel()).toBe(
-      'Präsentationsansicht öffnen',
-    );
     open.mockRestore();
     fixture.destroy();
   });
@@ -3744,6 +3726,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
 
     expect(fixture.componentInstance.showPresenterViewButton()).toBe(false);
     expect(fixture.nativeElement.querySelector('[data-testid="open-presenter-view"]')).toBeNull();
+    fixture.componentInstance.presentationStarted.set(true);
     const { menu } = await openHostMoreActions(fixture);
     expect(fixture.componentInstance.projectionControlsOffered()).toBe(false);
     expect(menu.querySelector('[data-testid="mobile-presenter-view-action"]')).toBeNull();
@@ -3751,7 +3734,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
     expect(frameAction).not.toBeNull();
     expect(menu.querySelector('.session-host__view-toggle--fullscreen')).toBeNull();
     expect(menu.textContent).not.toContain('Präsentationsansicht');
-    expect(menu.textContent).not.toContain('Projektionsansicht');
+    expect(menu.textContent).not.toContain('Live-Projektion');
     expect(menu.textContent).toContain('App-Rahmen');
     expect(menu.textContent).toContain('Session beenden');
     frameAction!.click();
@@ -3788,7 +3771,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
     const { menu } = await openHostMoreActions(fixture);
     expect(menu.querySelector('[data-testid="mobile-presenter-view-action"]')).toBeNull();
     expect(menu.textContent).not.toContain('Präsentationsansicht');
-    expect(menu.textContent).not.toContain('Projektionsansicht beenden');
+    expect(menu.textContent).not.toContain('Live-Projektion ausblenden');
     fixture.destroy();
     vi.unstubAllGlobals();
   });
@@ -7072,82 +7055,80 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
     fixture.destroy();
   });
 
-  it('blockiert beforeunload nur mit aktivem Schutz', async () => {
+  it('warnt während der Abstimmung und räumt den Schutz beim Widerruf auf', async () => {
     getInfoQueryMock.mockResolvedValue({ ...defaultSession, status: 'ACTIVE' });
-
     const fixture = setup();
+    Object.defineProperty(TestBed.inject(SessionUnloadWarningService), 'enabled', { value: true });
     fixture.detectChanges();
     await fixture.whenStable();
-    const component = fixture.componentInstance as unknown as SpecAccess<
-      SessionHostComponent,
-      {
-        unloadWarningEnabled: boolean;
-      }
-    >;
+    fixture.detectChanges();
 
-    component.unloadWarningEnabled = true;
-    const blockedEvent = new Event('beforeunload', { cancelable: true }) as BeforeUnloadEvent;
-    component.onBeforeUnload(blockedEvent);
-    expect(blockedEvent.defaultPrevented).toBe(true);
+    expect(window.dispatchEvent(new Event('beforeunload', { cancelable: true }))).toBe(false);
 
-    component.unloadWarningEnabled = false;
-    const allowedEvent = new Event('beforeunload', { cancelable: true }) as BeforeUnloadEvent;
-    component.onBeforeUnload(allowedEvent);
-    expect(allowedEvent.defaultPrevented).toBe(false);
-
+    fixture.componentInstance.hostAccessRevoked.set(true);
+    fixture.detectChanges();
+    expect(window.dispatchEvent(new Event('beforeunload', { cancelable: true }))).toBe(true);
     fixture.destroy();
   });
 
-  it('warnt in der leeren Lobby nicht vor beforeunload', async () => {
-    getInfoQueryMock.mockResolvedValue({ ...defaultSession, status: 'LOBBY' });
-    getParticipantsQueryMock.mockResolvedValue({ participantCount: 0, participants: [] });
+  it.each([0, 3])(
+    'warnt in der Lobby mit %i Teilnehmenden nur bei belegter Lobby',
+    async (count) => {
+      getInfoQueryMock.mockResolvedValue({ ...defaultSession, status: 'LOBBY' });
+      getParticipantsQueryMock.mockResolvedValue({ participantCount: count, participants: [] });
+      const fixture = setup();
+      Object.defineProperty(TestBed.inject(SessionUnloadWarningService), 'enabled', {
+        value: true,
+      });
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.componentInstance['participantsPayload'].set({
+        participantCount: count,
+        participants: [],
+      });
+      fixture.detectChanges();
+
+      expect(window.dispatchEvent(new Event('beforeunload', { cancelable: true }))).toBe(
+        count === 0,
+      );
+      fixture.destroy();
+    },
+  );
+
+  it('behält bei Rückkehr in die gefüllte Lobby die Warnung bis zur Teilnehmerantwort', async () => {
+    getInfoQueryMock.mockResolvedValue({ ...defaultSession, status: 'LOBBY', participantCount: 3 });
+    let resolveParticipants!: (value: { participantCount: number; participants: [] }) => void;
+    getParticipantsQueryMock.mockReturnValue(
+      new Promise((resolve) => {
+        resolveParticipants = resolve;
+      }),
+    );
 
     const fixture = setup();
+    const warning = TestBed.inject(SessionUnloadWarningService);
+    Object.defineProperty(warning, 'enabled', { value: true });
+    warning.sync('ABC123', 'LOBBY', 3);
     fixture.detectChanges();
-    await fixture.whenStable();
-    const component = fixture.componentInstance as unknown as SpecAccess<
-      SessionHostComponent,
-      {
-        unloadWarningEnabled: boolean;
-        participantsPayload: {
-          set(value: { participantCount: number; participants: unknown[] }): void;
-        };
-      }
-    >;
 
-    component.unloadWarningEnabled = true;
-    component.participantsPayload.set({ participantCount: 0, participants: [] });
-    const event = new Event('beforeunload', { cancelable: true }) as BeforeUnloadEvent;
-    component.onBeforeUnload(event);
-    expect(event.defaultPrevented).toBe(false);
+    try {
+      await vi.waitFor(() => {
+        fixture.detectChanges();
+        expect(fixture.componentInstance.session()?.participantCount).toBe(3);
+        expect(getParticipantsQueryMock).toHaveBeenCalled();
+      });
+      expect(fixture.componentInstance.participantsPayload()).toBeNull();
+      expect(window.dispatchEvent(new Event('beforeunload', { cancelable: true }))).toBe(false);
 
-    fixture.destroy();
-  });
-
-  it('warnt in der Lobby mit Teilnehmenden vor beforeunload', async () => {
-    getInfoQueryMock.mockResolvedValue({ ...defaultSession, status: 'LOBBY' });
-    getParticipantsQueryMock.mockResolvedValue({ participantCount: 3, participants: [] });
-
-    const fixture = setup();
-    fixture.detectChanges();
-    await fixture.whenStable();
-    const component = fixture.componentInstance as unknown as SpecAccess<
-      SessionHostComponent,
-      {
-        unloadWarningEnabled: boolean;
-        participantsPayload: {
-          set(value: { participantCount: number; participants: unknown[] }): void;
-        };
-      }
-    >;
-
-    component.unloadWarningEnabled = true;
-    component.participantsPayload.set({ participantCount: 3, participants: [] });
-    const event = new Event('beforeunload', { cancelable: true }) as BeforeUnloadEvent;
-    component.onBeforeUnload(event);
-    expect(event.defaultPrevented).toBe(true);
-
-    fixture.destroy();
+      resolveParticipants({ participantCount: 0, participants: [] });
+      await vi.waitFor(() => {
+        fixture.detectChanges();
+        expect(fixture.componentInstance.participantsPayload()?.participantCount).toBe(0);
+        expect(window.dispatchEvent(new Event('beforeunload', { cancelable: true }))).toBe(true);
+      });
+    } finally {
+      resolveParticipants({ participantCount: 0, participants: [] });
+      fixture.destroy();
+    }
   });
 
   it('schaltet Musik beim Preset-Wechsel sofort um', async () => {
@@ -8198,6 +8179,62 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
     expect(fixture.componentInstance.wordCloudExpanded()).toBe(true);
     expect(scrollToSpy).toHaveBeenCalled();
     scrollToSpy.mockRestore();
+    fixture.destroy();
+  });
+
+  it('blendet ein Wort nur über Weitere Aktionen wieder ein', async () => {
+    const questionId = '11111111-1111-4111-8111-111111111111';
+    getInfoQueryMock.mockResolvedValue({ ...defaultSession, status: 'ACTIVE' });
+    getCurrentQuestionForHostQueryMock.mockResolvedValue({
+      questionId,
+      order: 5,
+      text: 'Warum bleibt ein Satellit im Orbit?',
+      type: 'FREETEXT',
+      difficulty: 'EASY',
+      answers: [],
+    });
+    getLiveFreetextQueryMock.mockResolvedValue({
+      ...defaultLiveFreetext,
+      questionId,
+      questionOrder: 5,
+      questionType: 'FREETEXT',
+      responses: ['Gravitation', 'Orbit'],
+      wordCloudVisibility: { questionId, hiddenLabels: ['Gravitation'] },
+    });
+    setFreetextWordCloudEntryVisibilityMock.mockResolvedValue({
+      questionId,
+      hiddenLabels: [],
+    });
+    const fixture = setup();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await vi.waitUntil(() => fixture.componentInstance.freetextVisibilitySnapshot() !== null);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).not.toContain('Ausgeblendete Wörter');
+
+    const { menu } = await openHostMoreActions(fixture);
+    const hiddenWords = Array.from(menu.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => button.textContent?.includes('Ausgeblendete Wörter'),
+    )!;
+    hiddenWords.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    document
+      .querySelector<HTMLButtonElement>('[aria-label="Wort wieder einblenden · Gravitation"]')!
+      .click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(setFreetextWordCloudEntryVisibilityMock).toHaveBeenCalledWith(
+      {
+        code: 'ABC123',
+        questionId,
+        label: 'Gravitation',
+        hidden: false,
+      },
+      expect.anything(),
+    );
+    expect(fixture.componentInstance.freetextVisibilitySnapshot()?.hiddenLabels).toEqual([]);
     fixture.destroy();
   });
 
@@ -16848,6 +16885,50 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
     fixture.destroy();
   });
 
+  it('setzt beim Rückwechsel in den Host die laufende Countdown-Frist fort', async () => {
+    const questionId = 'bbbbbbbb-2222-4222-8222-222222222222';
+    const now = Date.now();
+    getInfoQueryMock.mockResolvedValue({
+      ...defaultSession,
+      serverTime: new Date(now).toISOString(),
+      status: 'ACTIVE',
+      currentQuestion: 0,
+      currentRound: 1,
+    });
+    getCurrentQuestionForHostQueryMock.mockResolvedValue({
+      questionId,
+      order: 0,
+      totalQuestions: 3,
+      text: 'Welche Antwort ist richtig?',
+      type: 'SINGLE_CHOICE',
+      difficulty: 'MEDIUM',
+      currentRound: 1,
+      timer: 30,
+      answers: [],
+    });
+    const fixture = setup();
+    const music = TestBed.inject(SessionMusicService);
+    music.enter('ABC123');
+    music.resolveCountdownDeadline('ABC123', {
+      timerSeconds: 30,
+      activeAt: new Date(now - 25_000).toISOString(),
+      currentDeadlineMs: null,
+      currentKey: null,
+      nextKey: '0:1:30',
+    });
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(fixture.componentInstance.countdownSfxPhase()).toBe(true);
+    });
+    fixture.componentInstance.musicMuted.set(false);
+    fixture.detectChanges();
+    expect(fixture.componentInstance.countdownSeconds()).toBeLessThanOrEqual(7);
+    expect(fixture.componentInstance.activeMusicTrack()).toBeNull();
+    fixture.destroy();
+  });
+
   it('aktiviert nach einer beendeten Countdown-Phase wieder Lesephasen-Musik', async () => {
     getInfoQueryMock.mockResolvedValue({
       ...defaultSession,
@@ -17912,49 +17993,130 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
     fixture.destroy();
   });
 
-  it('beendet im Menü nur die Projektionsansicht und lässt das Quiz weiterlaufen', async () => {
-    getInfoQueryMock.mockResolvedValue({
-      ...defaultSession,
-      status: 'ACTIVE',
-      presenterSurface: 'default',
-    });
+  it.each(['quiz', 'qa', 'quickFeedback'] as const)(
+    'zeigt im %s-Kanal nach der Rückkehr aus dem Presenter kein Ausblenden an',
+    async (channel) => {
+      getInfoQueryMock.mockResolvedValue({
+        ...defaultSession,
+        status: 'ACTIVE',
+        presenterSurface: 'default',
+        channels: {
+          quiz: { enabled: true },
+          qa: { enabled: true, open: true, title: 'Fragen', moderationMode: false },
+          quickFeedback: { enabled: true, open: true },
+        },
+      });
+      const fixture = setup();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.componentInstance.presentationStarted.set(true);
+      fixture.componentInstance.activeChannel.set(channel);
+      fixture.detectChanges();
+
+      const { menu } = await openHostMoreActions(fixture);
+      expect(fixture.componentInstance.presenterViewActionLabel()).toBe(
+        'Zur Präsentationsansicht wechseln',
+      );
+      expect(menu.textContent).not.toContain('Live-Projektion ausblenden');
+      expect(menu.textContent).toContain('Session beenden');
+      fixture.destroy();
+    },
+  );
+
+  it('bleibt bei abgebrochener Presenter-Navigation im Host und erlaubt einen neuen Versuch', async () => {
     const fixture = setup();
     fixture.detectChanges();
     await fixture.whenStable();
+    const component = fixture.componentInstance;
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(false);
+    dialogOpenMock.mockReturnValueOnce({ afterClosed: () => of('start') });
+
+    await component.openPresenterView();
+
+    expect(navigate).toHaveBeenCalledWith('/session/ABC123/present');
+    expect(component.presentationStarted()).toBe(false);
+    expect(component.presenterNavigationPending()).toBe(false);
     fixture.detectChanges();
-
     const { menu } = await openHostMoreActions(fixture);
-    const endPresentation = Array.from(menu.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Projektionsansicht beenden'),
-    );
-    expect(endPresentation).toBeTruthy();
-    endPresentation!.click();
-    fixture.componentInstance.pendingHostMoreAction.set('endPresentation');
-    fixture.componentInstance.runHostMoreAction();
-    await fixture.whenStable();
-
-    expect(fixture.componentInstance.session()?.presenterSurface).toBe('ended');
-    expect(setPresenterSurfaceMutateMock).toHaveBeenCalledWith({
-      code: 'ABC123',
-      surface: 'ended',
-    });
-    expect(fixture.componentInstance.effectiveStatus()).toBe('ACTIVE');
-    expect(fixture.componentInstance.presenterSurfacePending()).toBe(false);
-    expect(fixture.nativeElement.querySelector('.session-host__projection-pages')).toBeNull();
+    expect(menu.textContent).not.toContain('Live-Projektion ausblenden');
     fixture.destroy();
   });
 
-  it('hält Hero-Rahmen und Navigator nach Beenden der Projektionsansicht als Host-Bearbeitungshilfe', async () => {
-    setPresenterSurfaceMutateMock.mockImplementation(
-      async (input: { surface?: string; page?: { count?: number; index?: number } }) => ({
-        presenterSurface: (input.surface ?? 'ended') as 'ended',
-        presenterPage: {
-          context: 'qa-questions',
-          index: input.page?.index ?? 1,
-          count: input.page?.count ?? 3,
-        },
-      }),
+  it('fordert Vollbild direkt beim erneuten Wechsel an und beendet es bei abgebrochener Navigation', async () => {
+    const fixture = setup();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const component = fixture.componentInstance;
+    component.presentationStarted.set(true);
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(false);
+    const documentRef = TestBed.inject(DOCUMENT);
+    let fullscreenElement: Element | null = null;
+    let finishFullscreenRequest!: () => void;
+    const requestFullscreen = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          finishFullscreenRequest = () => {
+            fullscreenElement = documentRef.documentElement;
+            resolve();
+          };
+        }),
     );
+    const exitFullscreen = vi.fn(async () => {
+      fullscreenElement = null;
+    });
+    const properties: [object, string, PropertyDescriptor][] = [
+      [documentRef, 'fullscreenEnabled', { value: true }],
+      [documentRef, 'fullscreenElement', { get: () => fullscreenElement }],
+      [documentRef, 'exitFullscreen', { value: exitFullscreen }],
+      [documentRef.documentElement, 'requestFullscreen', { value: requestFullscreen }],
+    ];
+    const previous = properties.map(([target, key]) =>
+      Object.getOwnPropertyDescriptor(target, key),
+    );
+    for (const [target, key, descriptor] of properties) {
+      Object.defineProperty(target, key, { configurable: true, ...descriptor });
+    }
+    try {
+      const pending = component.openPresenterView();
+      expect(requestFullscreen).toHaveBeenCalledOnce();
+      expect(navigate).not.toHaveBeenCalled();
+      await pending;
+      expect(navigate).toHaveBeenCalledWith('/session/ABC123/present');
+      expect(exitFullscreen).not.toHaveBeenCalled();
+
+      finishFullscreenRequest();
+      await Promise.resolve();
+      expect(exitFullscreen).toHaveBeenCalledOnce();
+      expect(fullscreenElement).toBeNull();
+
+      fullscreenElement = documentRef.documentElement;
+      await component.openPresenterView();
+      expect(requestFullscreen).toHaveBeenCalledOnce();
+      expect(exitFullscreen).toHaveBeenCalledOnce();
+      expect(fullscreenElement).toBe(documentRef.documentElement);
+    } finally {
+      properties.forEach(([target, key], index) => {
+        const descriptor = previous[index];
+        if (descriptor) Object.defineProperty(target, key, descriptor);
+        else Reflect.deleteProperty(target, key);
+      });
+      fixture.destroy();
+    }
+  });
+
+  it('wechselt aus einer laufenden Session in ihre Präsentationsansicht ohne End-Dialog', async () => {
+    getInfoQueryMock.mockResolvedValue({ ...defaultSession, status: 'ACTIVE' });
+    const fixture = setup();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    dialogOpenMock.mockClear();
+
+    await expect(fixture.componentInstance.canDeactivate('abc123')).resolves.toBe(true);
+    expect(dialogOpenMock).not.toHaveBeenCalled();
+    fixture.destroy();
+  });
+
+  it('hält Hero-Rahmen und Navigator bei einer bereits ausgeblendeten Live-Projektion als Host-Bearbeitungshilfe', async () => {
     const fixture = setup();
     fixture.detectChanges();
     await fixture.whenStable();
@@ -17962,7 +18124,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
     component.session.set({
       ...defaultSession,
       preferredChannel: 'qa',
-      presenterSurface: 'default',
+      presenterSurface: 'ended',
       presenterPage: { context: 'qa-questions', index: 1, count: 3 },
       channels: {
         quiz: { enabled: true },
@@ -18008,13 +18170,6 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
     ] as never);
     fixture.detectChanges();
 
-    expect(component.isQaPresenterHeroCard('active-1')).toBe(true);
-
-    await component.endPresentationView();
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    expect(component.session()?.presenterSurface).toBe('ended');
     expect(component.projectionNavigationIsQaQuestions()).toBe(true);
     expect(component.showProjectionPageNavigation()).toBe(true);
     expect(component.qaPresenterHeroQuestionId()).toBe('active-1');
@@ -18195,7 +18350,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
         quickFeedback: { enabled: false, open: false },
       },
     });
-    component.presenterWindowOpen.set(true);
+    component.presentationStarted.set(true);
     component.activeChannel.set('qa');
     component.qaQuestions.set([]);
     fixture.detectChanges();
@@ -18440,7 +18595,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
         quickFeedback: { enabled: false, open: false },
       },
     });
-    component.presenterWindowOpen.set(true);
+    component.presentationStarted.set(true);
     component.activeChannel.set('qa');
     qaListQueryMock.mockResolvedValue(qaHostSnapshot(mixedQuestions));
     qaPresentProjectionQueryMock.mockResolvedValue({
@@ -18581,7 +18736,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
         quickFeedback: { enabled: false, open: false },
       },
     });
-    component.presenterWindowOpen.set(true);
+    component.presentationStarted.set(true);
     seedQaPresenterStage(component, [mixedQuestions[0]!] as never);
     component.qaQuestions.set(mixedQuestions as never);
     fixture.detectChanges();
@@ -18665,7 +18820,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
         quickFeedback: { enabled: false, open: false },
       },
     });
-    component.presenterWindowOpen.set(true);
+    component.presentationStarted.set(true);
     component.activeChannel.set('qa');
     seedQaPresenterStage(component, stageOrder as never);
     qaListQueryMock.mockImplementation(async (input?: { sort?: string; search?: string }) => {
@@ -18771,7 +18926,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
         quickFeedback: { enabled: false, open: false },
       },
     });
-    component.presenterWindowOpen.set(true);
+    component.presentationStarted.set(true);
     component.activeChannel.set('qa');
     seedQaPresenterStage(component, questions as never);
     qaPresentProjectionQueryMock.mockImplementation(async () => ({
@@ -18884,7 +19039,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
         quickFeedback: { enabled: false, open: false },
       },
     });
-    component.presenterWindowOpen.set(true);
+    component.presentationStarted.set(true);
     component.activeChannel.set('qa');
     seedQaPresenterStage(component, questions as never);
     qaPresentProjectionQueryMock.mockImplementation(async () => ({
@@ -18978,7 +19133,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
         quickFeedback: { enabled: false, open: false },
       },
     });
-    component.presenterWindowOpen.set(true);
+    component.presentationStarted.set(true);
     component.activeChannel.set('qa');
     seedQaPresenterStage(component, questions as never);
     qaPresentProjectionQueryMock.mockImplementation(async () => ({
@@ -19076,7 +19231,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
         quickFeedback: { enabled: false, open: false },
       },
     });
-    component.presenterWindowOpen.set(true);
+    component.presentationStarted.set(true);
     component.activeChannel.set('qa');
     seedQaPresenterStage(component, questions as never);
     qaPresentProjectionQueryMock.mockImplementation(async () => ({
@@ -19160,7 +19315,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
         quickFeedback: { enabled: false, open: false },
       },
     });
-    component.presenterWindowOpen.set(true);
+    component.presentationStarted.set(true);
     component.activeChannel.set('qa');
     seedQaPresenterStage(component, questions as never);
     qaPresentProjectionQueryMock.mockImplementation(async () => ({
@@ -19266,7 +19421,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
         quickFeedback: { enabled: false, open: false },
       },
     });
-    component.presenterWindowOpen.set(true);
+    component.presentationStarted.set(true);
     component.activeChannel.set('qa');
     seedQaPresenterStage(component, stageQuestions as never);
     qaListQueryMock.mockImplementation(async (input?: { statuses?: string[] }) => {
@@ -19360,7 +19515,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
         quickFeedback: { enabled: false, open: false },
       },
     });
-    component.presenterWindowOpen.set(true);
+    component.presentationStarted.set(true);
     component.activeChannel.set('qa');
     seedQaPresenterStage(component, questions as never);
     qaListQueryMock.mockImplementation(async (input?: { search?: string }) => {
@@ -19463,7 +19618,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
         quickFeedback: { enabled: false, open: false },
       },
     });
-    component.presenterWindowOpen.set(true);
+    component.presentationStarted.set(true);
     component.activeChannel.set('qa');
     seedQaPresenterStage(component, questions as never);
     qaListQueryMock.mockImplementation(async (input?: { search?: string; statuses?: string[] }) => {
@@ -19627,7 +19782,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
         quickFeedback: { enabled: false, open: false },
       },
     });
-    component.presenterWindowOpen.set(true);
+    component.presentationStarted.set(true);
     component.activeChannel.set('qa');
     (
       component as unknown as SpecAccess<
@@ -19812,7 +19967,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
     fixture.destroy();
   });
 
-  it('übernimmt presentProjection auch nach Projektionsende für den Host-Hero-Rahmen', async () => {
+  it('übernimmt presentProjection auch bei einem ausgeblendeten Presenter für den Host-Hero-Rahmen', async () => {
     let resolveProjection!: (value: { questions: QaQuestionDTO[]; state: string }) => void;
     qaPresentProjectionQueryMock.mockImplementation(
       () =>
@@ -19820,10 +19975,6 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
           resolveProjection = resolve;
         }),
     );
-    setPresenterSurfaceMutateMock.mockResolvedValue({
-      presenterSurface: 'ended',
-      presenterPage: { context: 'qa-questions', index: 0, count: 1 },
-    });
     const focusHero = {
       passagesRedacted: false,
       id: 'focus-hero',
@@ -19856,9 +20007,10 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
     fixture.detectChanges();
     await vi.waitUntil(() => qaPresentProjectionQueryMock.mock.calls.length > 0);
 
-    await component.endPresentationView();
+    component.session.update((session) =>
+      session ? { ...session, presenterSurface: 'ended' } : session,
+    );
     fixture.detectChanges();
-    expect(component.session()?.presenterSurface).toBe('ended');
 
     resolveProjection({
       questions: [focusHero] as never,
@@ -19871,42 +20023,6 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
     expect(component.isQaPresenterHeroCard('focus-hero')).toBe(true);
     fixture.destroy();
   });
-
-  it.each(['qa', 'quickFeedback'] as const)(
-    'hält das Beenden der Projektionsansicht auch im %s-Kanal erreichbar',
-    async (channel) => {
-      getInfoQueryMock.mockResolvedValue({
-        ...defaultSession,
-        status: 'ACTIVE',
-        presenterSurface: 'default',
-        channels: {
-          quiz: { enabled: true },
-          qa: { enabled: true, open: true, title: 'Fragen', moderationMode: false },
-          quickFeedback: { enabled: true, open: true },
-        },
-      });
-      const fixture = setup();
-      fixture.detectChanges();
-      await fixture.whenStable();
-      fixture.componentInstance.activeChannel.set(channel);
-      fixture.detectChanges();
-
-      const { menu } = await openHostMoreActions(fixture);
-      const endPresentation = Array.from(menu.querySelectorAll('button')).find((button) =>
-        button.textContent?.includes('Projektionsansicht beenden'),
-      );
-      expect(endPresentation).toBeTruthy();
-      endPresentation!.click();
-
-      await vi.waitUntil(() => fixture.componentInstance.session()?.presenterSurface === 'ended');
-      expect(setPresenterSurfaceMutateMock).toHaveBeenCalledWith({
-        code: 'ABC123',
-        surface: 'ended',
-      });
-      expect(fixture.componentInstance.effectiveStatus()).toBe('ACTIVE');
-      fixture.destroy();
-    },
-  );
 
   it.each(['control', 'sessionEnd', 'channel'] as const)(
     'sperrt Weitere Aktionen während %s und verwirft eine überholte Menüauswahl',
@@ -24678,7 +24794,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
     const text = fixture.nativeElement.textContent as string;
     expect(text).toContain('Lernstand und Selbsteinschätzung');
     expect(text).toContain('Anteil Fehlkonzept-Hinweis');
-    expect(text).toContain('Nachbesprechungsplan ansehen');
+    expect(text).toContain('Nachbesprechungsplan herunterladen');
     const host = fixture.nativeElement as HTMLElement;
     const finished = host.querySelector('#host-session-finished-card');
     const summary = host.querySelector('.session-host__finished-confidence-question-markdown');
@@ -24688,7 +24804,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
       finished!.compareDocumentPosition(summary!) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(finished?.querySelectorAll('.mat-mdc-unelevated-button')).toHaveLength(1);
-    let resolveExport!: (result: 'pdf-download' | 'pdf-view') => void;
+    let resolveExport!: () => void;
     const exportPlan = vi
       .spyOn(TestBed.inject(SessionResultsExportService), 'exportPdfFromSessionCode')
       .mockImplementationOnce(
@@ -24719,10 +24835,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
     expect(finishedFocus).not.toHaveBeenCalled();
     planButton.click();
     fixture.detectChanges();
-    expect(exportPlan).toHaveBeenCalledWith(
-      'ABC123',
-      expect.objectContaining({ profile: 'visual', disposition: 'view' }),
-    );
+    expect(exportPlan).toHaveBeenCalledWith('ABC123', 'visual');
     expect(planButton.getAttribute('aria-busy')).toBe('true');
     expect(planButton.getAttribute('aria-disabled')).toBe('true');
     expect(document.activeElement).toBe(planButton);
@@ -24731,7 +24844,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
     );
     planButton.click();
     expect(exportPlan).toHaveBeenCalledTimes(1);
-    resolveExport('pdf-view');
+    resolveExport();
     await vi.waitUntil(() => !fixture.componentInstance.exportExporting(), {
       timeout: 1000,
       interval: 10,
@@ -24739,7 +24852,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
     fixture.detectChanges();
     expect(document.activeElement).toBe(planButton);
     expect(planButton.getAttribute('aria-disabled')).not.toBe('true');
-    expect(fixture.componentInstance.exportStatus()).toBe('Nachbesprechungsplan geöffnet.');
+    expect(fixture.componentInstance.exportStatus()).toBe('PDF-Download gestartet.');
     const exportTrigger = host.querySelector<HTMLButtonElement>('.session-host__export-more-btn');
     expect(exportTrigger?.textContent).toContain('Exportieren');
     exportTrigger!.focus();
@@ -24747,10 +24860,9 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
     fixture.detectChanges();
     await fixture.whenStable();
     const exportMenu = document.querySelector('.cdk-overlay-container [role="menu"]');
-    expect(exportMenu?.textContent).toContain('Standard (mit Diagrammen)');
     expect(exportMenu?.textContent).toContain('Barrierefrei (PDF/UA-1)');
     expect(exportMenu?.textContent).toContain('Rohdaten als CSV exportieren');
-    let resolveMenuExport!: (result: 'pdf-download') => void;
+    let resolveMenuExport!: () => void;
     exportPlan.mockImplementationOnce(
       () =>
         new Promise((resolve) => {
@@ -24762,10 +24874,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
     );
     accessiblePdf!.click();
     fixture.detectChanges();
-    expect(exportPlan).toHaveBeenLastCalledWith(
-      'ABC123',
-      expect.objectContaining({ profile: 'pdfUa', disposition: 'download' }),
-    );
+    expect(exportPlan).toHaveBeenLastCalledWith('ABC123', 'pdfUa');
     expect(exportTrigger!.disabled).toBe(false);
     expect(exportTrigger!.getAttribute('aria-disabled')).toBe('true');
     expect(exportTrigger!.getAttribute('aria-busy')).toBe('true');
@@ -24778,7 +24887,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
     fixture.detectChanges();
     expect(exportMenuTrigger.menuOpen).toBe(false);
     expect(exportPlan).toHaveBeenCalledTimes(2);
-    resolveMenuExport('pdf-download');
+    resolveMenuExport();
     await vi.waitUntil(() => !fixture.componentInstance.exportExporting(), {
       timeout: 1000,
       interval: 10,
@@ -26549,9 +26658,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
       storeHostBrowserCapability('ABC123', 'browser-capability-abcdefghijklmnopqrstuvwxyz');
       issueHostAccessTokenMutateMock.mockClear();
       const service = TestBed.inject(SessionResultsExportService);
-      const placeholder = { closed: false, close: vi.fn() } as unknown as Window;
-      vi.spyOn(service, 'openViewPlaceholder').mockReturnValue(placeholder);
-      const closePlaceholder = vi.spyOn(service, 'closeViewPlaceholder');
+      const open = vi.spyOn(window, 'open');
       const issued = {
         hostToken: 'refreshed-host-token-abcdefghijklmnopqrstuvwxyz',
         hostTokenExpiresAt: '2026-11-03T13:00:00.000Z',
@@ -26567,25 +26674,20 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
       const exportPlan = vi
         .spyOn(service, 'exportPdfFromSessionCode')
         .mockRejectedValueOnce(unauthorized)
-        .mockResolvedValueOnce('pdf-view');
+        .mockResolvedValueOnce(undefined);
 
-      const pending = fixture.componentInstance.exportSessionResultsPdf('visual', 'view');
+      const pending = fixture.componentInstance.exportSessionResultsPdf('visual');
       await Promise.resolve();
 
-      expect(service.openViewPlaceholder).toHaveBeenCalledOnce();
       expect(releaseRenewal).toHaveLength(1);
       expect(exportPlan).not.toHaveBeenCalled();
-      expect(closePlaceholder).not.toHaveBeenCalled();
+      expect(open).not.toHaveBeenCalled();
 
       releaseRenewal[0]?.(issued);
       await vi.waitUntil(() => releaseRenewal.length === 2);
       expect(exportPlan).toHaveBeenCalledTimes(1);
-      expect(exportPlan).toHaveBeenNthCalledWith(
-        1,
-        'ABC123',
-        expect.objectContaining({ disposition: 'view', viewPlaceholder: placeholder }),
-      );
-      expect(closePlaceholder).not.toHaveBeenCalled();
+      expect(exportPlan).toHaveBeenNthCalledWith(1, 'ABC123', 'visual');
+      expect(open).not.toHaveBeenCalled();
 
       releaseRenewal[1]?.(issued);
       await pending;
@@ -26597,13 +26699,9 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
         browserCapability: 'browser-capability-abcdefghijklmnopqrstuvwxyz',
       });
       expect(exportPlan).toHaveBeenCalledTimes(2);
-      expect(exportPlan).toHaveBeenNthCalledWith(
-        2,
-        'ABC123',
-        expect.objectContaining({ disposition: 'view', viewPlaceholder: placeholder }),
-      );
-      expect(closePlaceholder).not.toHaveBeenCalled();
-      expect(fixture.componentInstance.exportStatus()).toBe('Nachbesprechungsplan geöffnet.');
+      expect(exportPlan).toHaveBeenNthCalledWith(2, 'ABC123', 'visual');
+      expect(open).not.toHaveBeenCalled();
+      expect(fixture.componentInstance.exportStatus()).toBe('PDF-Download gestartet.');
       expect(fixture.componentInstance.hostSteeringCallout()).toBeNull();
       clearHostBrowserCapability('ABC123');
       fixture.destroy();
@@ -26650,7 +26748,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
       expect(fixture.componentInstance.hostSteeringCallout()?.title).toBe('Host-Zugang abgelaufen');
       expect(fixture.componentInstance.hostSteeringCallout()?.retry).toBeUndefined();
       expect(calloutEl(fixture)?.querySelector('[data-testid="host-steering-retry"]')).toBeNull();
-      expect(calloutEl(fixture)?.textContent ?? '').toContain('Nachbesprechungsplan ansehen');
+      expect(calloutEl(fixture)?.textContent ?? '').toContain('Nachbesprechungsplan herunterladen');
       fixture.destroy();
     });
 
@@ -26668,11 +26766,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
       const planButton = host.querySelector<HTMLButtonElement>('.session-host__export-pdf-btn');
       expect(planButton).not.toBeNull();
       const service = TestBed.inject(SessionResultsExportService);
-      vi.spyOn(service, 'openViewPlaceholder').mockReturnValue({
-        closed: false,
-        close: vi.fn(),
-      } as unknown as Window);
-      let resolveExport!: (result: 'pdf-view') => void;
+      let resolveExport!: () => void;
       const exportPlan = vi.spyOn(service, 'exportPdfFromSessionCode').mockImplementationOnce(
         () =>
           new Promise((resolve) => {
@@ -26692,7 +26786,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
       );
       expect(host.querySelector('#host-steering-callout')).toBeNull();
 
-      resolveExport('pdf-view');
+      resolveExport();
       await vi.waitUntil(() => !fixture.componentInstance.exportExporting(), {
         timeout: 1000,
         interval: 10,
@@ -26703,7 +26797,7 @@ describe('SessionHostComponent', { timeout: 60_000 }, () => {
       expect(planButton!.getAttribute('aria-disabled')).not.toBe('true');
       expect(planButton!.getAttribute('aria-busy')).not.toBe('true');
       expect(host.querySelector('.session-host__export-progress')).toBeNull();
-      expect(host.textContent).toContain('Nachbesprechungsplan geöffnet.');
+      expect(host.textContent).toContain('PDF-Download gestartet.');
       expect(host.querySelector('#host-steering-callout')).toBeNull();
 
       exportPlan.mockRejectedValueOnce({ data: { code: 'UNAUTHORIZED' } });

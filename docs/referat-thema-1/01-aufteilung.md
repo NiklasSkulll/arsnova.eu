@@ -15,10 +15,13 @@ Wir haben uns für **Option 1** entschieden:
 
 Die gemeinsamen Artefakte sind wie in der Tabelle
 [unten](#gemeinsame-artefakte-gleichmäßig-verteilen-und-kennzeichnen) verteilt.
+**Geklärt:** Eine Abstimmung der Aufteilung mit dem Prüfer ist nicht nötig
+(mündliche Ansage in der Vorlesung, notiert 2026-10-24; siehe
+[00-rahmen](./00-rahmen-und-pruefung.md#offene-fragen-an-den-prüfer)).
+
 **Nachweisstand:** Für A1 sind eigener Rechner und aktueller Fork-`main` gemäß
 [Issue #6](https://github.com/NiklasSkulll/arsnova.eu/issues/6) geklärt.
-Eine gesonderte Bestätigung dieser konkreten Zweier-Aufteilung ist dadurch
-nicht belegt und bleibt offen. Die A1-Messwerkzeuge und Fixture liegen vor;
+Die A1-Messwerkzeuge und Fixture liegen vor;
 die tatsächliche Übernahme durch 1B/1C wird in der
 [Übergabeunterlage](./1A-abschluss-und-uebergabe.md) abgeglichen.
 Niklas' zusätzliche 1B-Schritte 3–4 werden nicht mit dem Abschluss von 1A
@@ -139,6 +142,26 @@ erledigen. Bei zwei Personen ließe sich beantragen:
 | Fake-`llama-server` für Latenz und Ausfall (1B Lücke 4)                             | X, optional Y für G3 | X                  |
 | Gruppensynthese (eine Seite)                                                        | beide                | gemeinsam          |
 
+Stand 2026-10-24: Für die 1C-Tests hat Jonas (Y) die Sechs-Fragen-Fixture als
+Datenbank-Helfer selbst gebaut
+(`apps/backend/src/__tests__/lib/qa-summary-pg-fixture.ts`), ebenso eine
+Test-Runtime für Latenz und Ausfall
+(`apps/backend/src/__tests__/lib/open-weight-test-runtime.ts`). Beides weicht
+von der vorgeschlagenen Zuordnung ab; ob X die Helfer für 1A/1B übernimmt, ist
+mit Niklas abzustimmen.
+
+_Aktualisiert 2026-11-12:_ Die Test-Runtime ist kein Ersatz für den
+vorgeschlagenen Fake-`llama-server`. Sie läuft im Vitest-Prozess
+(`node:http`-Server auf `127.0.0.1` mit freiem Port, verdrahtet per
+`vi.stubEnv`), bildet nur `GET /slots?fail_on_no_slot=1` (Status per
+`slotsStatus`, Standard 200 mit Antwort `[]`) und `POST /v1/chat/completions` sowie den
+Legacy-Text-Pfad nach;
+`/health` oder `/props` gibt es nur, wenn ein Test sie als zusätzliche Route
+übergibt. Als eigenständiger Fake-Server für einen zweiten Host (1B) taugt sie
+so nicht. Für Latenz und Ausfall auf dem echten Pfad wäre der aufzeichnende
+Proxy (`apps/backend/src/__tests__/lib/recording-proxy.ts`) der Ort; er hat
+aber noch keine Option für Verzögerung oder Fehler.
+
 ## Wer übernimmt was
 
 Folgende Kriterien helfen bei der Wahl, wer X und wer Y wird:
@@ -149,11 +172,40 @@ Folgende Kriterien helfen bei der Wahl, wer X und wer Y wird:
   sinnvoll 1C.
 - **Interesse:** Betrieb und Ressourcen (X) oder Verträge und Datenfluss (Y)?
 
+## Gemeinsame Präsentation (Empfehlung, offen)
+
+Stand 2026-11-10, Empfehlung von Jonas; _aktualisiert 2026-11-12:_ mit Niklas so gut
+wie vereinbart, endgültig steht es noch nicht fest. Die Präsentation ist gemeinsam und deckt 1A, 1B und 1C ab; jeder
+stellt seinen Teil aus der [Entscheidung](#entscheidung-2026-10-23) vor.
+
+**Empfohlene Reihenfolge:** 1A → 1B (beide Hälften) → 1C. Sie folgt dem Weg
+der Analyse: erst die Reserve des App-Hosts, dann die Auslagerung auf den
+zweiten Host, dann der Kontextpfad bis zur Inferenz; 1C baut auf dem auf,
+was 1B zeigt.
+
+| Teil                                                 | Wer    |
+| ---------------------------------------------------- | ------ |
+| 1A Ressourcen auf dem App-Host                       | Niklas |
+| 1B Schritte 1–2 (Zwei-Host-Aufbau, echter Auftrag)   | Jonas  |
+| 1B Schritte 3–4 (Latenz, Ausfall, Betriebsaufwand)   | Niklas |
+| 1C Autorisierter Kontext und asynchroner Adapterpfad | Jonas  |
+
+- **Folge:** dreimal Sprecherwechsel; die Übergänge werden geplant (etwa
+  von 1B 1–2 zu 3–4: „Der Pfad läuft auf dem zweiten Host – was passiert,
+  wenn der langsam wird oder ausfällt?“).
+- **Verworfen:** 1B 1–2 direkt vor 1C ziehen. Dann wechselt der Sprecher
+  nur einmal statt dreimal, aber 1B wird auseinandergerissen und Schritt 3–4
+  käme vor dem Aufbau aus Schritt 1–2.
+- **Offen:** Zeitaufteilung (Vorgabe: 15 min je Prüfling, Vortrag und
+  Befragung zusammen; siehe
+  [Rahmendokument](./00-rahmen-und-pruefung.md#leistungsbestandteile-und-bewertung)),
+  wer Einstieg und Gruppensynthese übernimmt, gemeinsames Foliendesign.
+
 ## Nächste Schritte
 
 1. **Erledigt:** Option 1 gewählt und X/Y zugeordnet (Tabelle oben).
 2. Die Aufteilung schriftlich festhalten: je Person Titel, Hypothese,
-   Gegenalternative, eigener Test und Anteil an gemeinsamen Artefakten. Dann
-   vor Beginn mit dem Prüfer abstimmen.
+   Gegenalternative, eigener Test und Anteil an gemeinsamen Artefakten. Die Zuordnung ist
+   wie oben dokumentiert geklärt; offene gemeinsame Artefakte werden abgestimmt.
 3. **A1 verfügbar:** Laboraufbau, Fixture und Live-Messwerkzeuge sind dokumentiert.
    Die gemeinsame Übernahme sowie die private Runtime für 1B/1C gesondert abgleichen.

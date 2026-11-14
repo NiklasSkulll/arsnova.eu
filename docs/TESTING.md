@@ -140,6 +140,87 @@ persistente Plattformprojektion und konkurrierende Richtungsstimmen. Der
 Migrations-Backfill läuft in einer kurzlebigen Datenbank und entfernt sie
 anschließend wieder.
 
+### Snapshot-Hash der Q&A-Zusammenfassung (PostgreSQL + Redis)
+
+Der Migration-Job prüft außerdem, dass echte Datenbankänderungen den
+`snapshotHash` aus `prepareFreshModerationSummaryContext` ändern. Nur so kann
+die Summary-Queue eine veraltete Modellantwort als `source_changed` verwerfen:
+
+```bash
+RUN_PG_QA_SUMMARY_HASH_TESTS=1 REDIS_URL=redis://localhost:6379 \
+  npm run test -w @arsnova/backend -- \
+  --run src/__tests__/qa.summary-hash.pg.test.ts
+```
+
+Die Suite prüft zuerst die Stabilität des Hashs ohne Änderung, auch beim
+direkten Packen am Packing-Cache vorbei. Danach prüft sie, dass sich der Hash
+nach einer Q&A-Stimme, einer neuen Frage, einem Beitritt, einer Löschung durch
+den Host (`qa.moderate`) und einer eigenen Löschung durch Teilnehmende
+(`qa.deleteOwn`) ändert und dass die Trigger die zugehörigen Revisionen
+erhöhen. Als Gegenprobe darf eine Quizstimme auf eine laufende Frage den Hash
+nicht ändern, während eine Stimme auf eine freigegebene Frage ihn ändert.
+Gemockt ist nur die Host-Tokenprüfung; Fragen, Stimmen,
+Teilnahme-Capabilities und Trigger laufen gegen die migrierte Datenbank.
+
+### Ende-zu-Ende-Pfad der Q&A-Zusammenfassung (PostgreSQL + Redis)
+
+Der Migration-Job prüft den Auftrag zur Moderationszusammenfassung vom
+tRPC-Router bis zur Runtime-Schnittstelle: `qa.summaryContextPreview`,
+`qa.requestSummary`, `qa.summaryRuntime` und `qa.moderate` → Summary-Queue →
+`prepareFreshModerationSummaryContext` → Open-Weight-Client → echtes HTTP →
+eine Test-Runtime im Testprozess auf `127.0.0.1`:
+
+```bash
+RUN_PG_QA_SUMMARY_E2E_TESTS=1 REDIS_URL=redis://localhost:6379 \
+  npm run test -w @arsnova/backend -- \
+  --run src/__tests__/qa.summary-e2e.pg.test.ts
+```
+
+Grundlage ist das Sechs-Fragen-Referenzszenario aus #456 mit 200
+Teilnehmenden; Fragen und Stimmen entstehen über die echten DB-Funktionen
+(`src/__tests__/lib/qa-summary-pg-fixture.ts`, gemeinsam mit der Hash-Suite).
+Die Suite prüft, dass die User-Nachricht im rohen Runtime-Body bytegleich dem
+Kontext der Host-Vorschau ist, dass Host-Token, Sitzungs- und
+Teilnehmendenkennungen sowie Hüllenfelder (`snapshotHash`, `packedAt`, Budget)
+den Server nicht verlassen und dass eine Stimme zwischen Vorschau und Auftrag
+den neuen Stand sendet. Außerdem prüft sie die Fallbacks bei einer Antwort mit
+fremder Ausgabe-Version (`invalid_response`), bei nicht erreichbarer Runtime
+(`unavailable`) und bei Überschreitung des Client-Timeouts (`timeout`), dass
+`qa.requestSummary` `pending` liefert, während die Runtime die Antwort noch
+hält, und dass eine Stimme oder eine Löschung durch den Host während der
+Inferenz die Modellaussage als `source_changed` verwirft, eine Quizstimme auf
+eine laufende Frage dagegen nicht. Die Test-Runtime
+(`src/__tests__/lib/open-weight-test-runtime.ts`) ist kein Modell: Sie
+speichert den rohen Body und antwortet mit einer festen, vertragsgültigen
+Ausgabe. Gemockt ist nur die Host-Tokenprüfung.
+
+Weitere Fälle derselben Suite: ein belegter Inferenz-Slot (`busy`, ohne
+Completion-Aufruf), eine volle Queue (`queue_full` für den dritten Auftrag),
+`CONFLICT` ohne angelegten Job, wenn während des Kontextaufbaus eine
+Q&A-Stimme eingeht, der Legacy-Text-Pfad bei abgeschaltetem
+Open-Weight-Pfad (einschließlich unbekannter Quellen-IDs) und ein
+abgelaufener Packing-Cache, nach dem der gesendete Kontext weiter der
+Host-Vorschau entspricht.
+
+Achtung: Der Test „Negativprobe: … Blitzlicht-Runde vom Typ YESNO …“
+(Befund T3.1) hält das heutige, fehlerhafte Verhalten fest: Ohne
+Datenänderung entsteht bei jedem Kontextaufbau ein neuer `snapshotHash`, und
+die Modellaussage wird als `source_changed` verworfen. Wird der Befund
+behoben ([Fork-Issue #18](https://github.com/NiklasSkulll/arsnova.eu/issues/18)),
+wird dieser Test rot; dann ist er umzukehren (gleicher Hash, `ready`), wie die
+Kontrolle mit `TEMPO` daneben.
+
+Nicht Teil der CI sind die Mess- und Laborsuiten der Q&A-Zusammenfassung; sie
+laufen nur auf ausdrücklichen Wunsch:
+`qa.summary-measurement.pg.test.ts` mit `RUN_QA_SUMMARY_MEASUREMENT=1`
+(Suite „Q&A summary local measurement“) bzw. unabhängig davon
+`RUN_QA_SUMMARY_MEASUREMENT_M6=1` und `RUN_QA_SUMMARY_MEASUREMENT_M7=1` (Suite
+„Q&A summary local measurement with full context and voting“) und
+`qa.summary-labor.pg.test.ts` mit `RUN_QA_SUMMARY_LABOR=1`, gegen eine echte
+private Runtime oder zusätzlich mit `QA_SUMMARY_LABOR_FAKE_RUNTIME=1` als
+Trockenlauf. Ablauf und Variablen:
+[Labor-Runbook](referat-thema-1/evidenz/1C/labor-runbook.md).
+
 ### tRPC-DoD-Non-Regression-Gate
 
 Für jede neue Query/Mutation und jede Query/Mutation mit geändertem
@@ -316,7 +397,9 @@ Der Worker-Smoke prüft im echten Compose-Service Netzwerk-/Secret-Abwesenheit,
 UID, Capabilities, `NoNewPrivs`, read-only Rootfs, Socketmodus und die
 PID-/RAM-/CPU-/`tmpfs`-Grenzen. Der App-Smoke prüft den read-only Socket-Mount
 und rendert einen 200-Fragen-/500-Teilnehmenden-Bericht im `pdfUa`-Profil über
-den Unix-Socket. CI beendet den Worker dazwischen einmal hart und erwartet einen
+den Unix-Socket. Der Smoke prüft, dass das Ergebnis mehrere Seiten enthält. CI
+prüft während dieses Render-Tests zusätzlich, dass der PID-Limit-Zähler des
+Workers nicht steigt. CI beendet den Worker zuvor einmal hart und erwartet einen
 healthy `restart: always`, bevor der PDF-Smoke Socket-Cleanup und
 Wiederanbindung bestätigt; die exakte Policy wird am laufenden Container
 assertiert und deckt auch Host-/Daemon-Neustarts ab. Der Unit-Test mit einem nie
@@ -580,7 +663,7 @@ Beim allerersten manuellen Cutover muss der Ziel-Commit inline per `git fetch`, 
 | `a11y:axe:static`                  | axe für statische Kernrouten/-zustände                                                                                      |
 | `a11y:layout`                      | Reflow, Fokus, 24px-Ziele, Skip-Link, Join-Fokus und mobiles Disclosure                                                     |
 | `check:viewport`                   | Alias/älterer 320px-Reflow-Smoke                                                                                            |
-| `smoke:host-present-auth`          | Host/Present-Auth-Smoke                                                                                                     |
+| `smoke:host-present-auth`          | Host-/Presenter-Zugriff, Live-Beitritt und nativer Schließdialog nach dem Ansichtswechsel während der Abstimmung            |
 | `smoke:host-pairing-security`      | Story 2.10: Host / Smartphone / Presenter, Missbrauch + Lifecycle + Widerruf                                                |
 | `smoke:presenter-viewports`        | Gefüllte Presenter-Lobby in vier Tablet-/Beamer-Viewports                                                                   |
 | `smoke:host-music`                 | Host-Musik-/Sound-Smoke                                                                                                     |
@@ -1182,12 +1265,15 @@ BASE_URL=http://localhost:4200 TRPC_URL=http://localhost:3000/trpc \
 Die Skripte erzeugen ausschließlich Test-Sessions auf der angegebenen Instanz.
 Nicht gegen Produktion ausführen. Sie prüfen 720p, 1080p und 1920 × 1200 in beiden
 Presets. Das erste prüft den vollständigen Text einschließlich Code, die
-Host-gesteuerte Navigation und Wiederherstellung nach Reload. Das zweite prüft
+Navigation per Host-Befehl und Presenter-Tastaturbedienung sowie die
+Wiederherstellung nach Reload. Zusätzlich prüft
+es acht gleichzeitig sichtbare Antwortoptionen in Abstimmung und Ergebnisansicht
+einschließlich Schriftgröße, Ergebnisbalken und Korrektheitsmarkierung. Das zweite prüft
 Lobby 0/10/200, Schätzverteilung mit Statistik, Freitext-Wortwolke, angeheftete
 Q&A-Frage mit Warteschlange, verborgenes/freigegebenes Blitzlicht und Rangliste.
 Screenshots liegen unter `tmp/projection-pages` bzw. `tmp/presenter-scenarios`
 (im Arbeitsverzeichnis); `SMOKE_ARTIFACT_DIR` überschreibt den Pfad.
-`PROJECTION_DELAYED_MEDIA=1` hält drei Bildantworten bis nach der ersten
+`PROJECTION_DELAYED_MEDIA=1` hält drei Bilder im Fragetext bis nach der ersten
 Seitenberechnung zurück und prüft Neumessung sowie vollständige Bilddarstellung.
 `PROJECTION_THEME=dark` prüft das dunkle Theme. `PROJECTION_PRESETS` und
 `PROJECTION_SIZES` begrenzen den ersten Lauf; `PROJECTION_SCENARIOS` wählt im

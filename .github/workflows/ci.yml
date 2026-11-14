@@ -389,6 +389,22 @@ jobs:
           src/__tests__/session.capabilities.pg.test.ts
           src/__tests__/qa.scale.pg.test.ts
 
+      - name: Q&A summary snapshot hash PostgreSQL regression
+        if: needs.changes.outputs.docs_only != 'true'
+        working-directory: apps/backend
+        env:
+          REDIS_URL: redis://localhost:6379
+          RUN_PG_QA_SUMMARY_HASH_TESTS: '1'
+        run: npx vitest run src/__tests__/qa.summary-hash.pg.test.ts
+
+      - name: Q&A summary end-to-end PostgreSQL regression
+        if: needs.changes.outputs.docs_only != 'true'
+        working-directory: apps/backend
+        env:
+          REDIS_URL: redis://localhost:6379
+          RUN_PG_QA_SUMMARY_E2E_TESTS: '1'
+        run: npx vitest run src/__tests__/qa.summary-e2e.pg.test.ts
+
       - name: Q&A scale migration backfill regression
         if: needs.changes.outputs.docs_only != 'true'
         working-directory: apps/backend
@@ -2194,8 +2210,18 @@ jobs:
             sleep 1
           done
 
+          worker_pid_limit_hits() {
+            docker compose -f docker-compose.prod.yml --env-file .env.production \
+              exec -T pdf-worker awk '$1 == "max" { print $2 }' /sys/fs/cgroup/pids.events
+          }
+          pid_limit_hits_before="$(worker_pid_limit_hits)"
           docker compose -f docker-compose.prod.yml --env-file .env.production \
             exec -T app node /app/scripts/container-runtime-smoke.mjs
+          pid_limit_hits_after="$(worker_pid_limit_hits)"
+          if [[ ! "$pid_limit_hits_before" =~ ^[0-9]+$ || "$pid_limit_hits_after" != "$pid_limit_hits_before" ]]; then
+            echo "PDF-Worker hat beim Rendern das PID-Limit erreicht oder der Zähler fehlt."
+            exit 1
+          fi
 
           # deploy.sh Schritt 5b: Image ohne npm, Gate nur über node.
           if docker compose -f docker-compose.prod.yml --env-file .env.production \
@@ -2333,6 +2359,34 @@ jobs:
             export DEPLOY_BRANCH="${DEPLOY_BRANCH:-main}"
             export DEPLOY_SHA="$DEPLOY_SHA"
             export DEPLOY_IMAGE="$DEPLOY_IMAGE"
+            # Der Checkout selbst braucht freien Platz. Ein volles Dateisystem
+            # darf den Server daher nicht vor deploy.sh in einem angerissenen
+            # Zustand lassen. Nur reproduzierbaren Build-Cache und unreferenzierte
+            # Images entfernen; Volumes und laufende Container bleiben unberührt.
+            echo "Speicherbelegung vor risikoarmer Deploy-Bereinigung:"
+            df -h /
+            docker system df
+            docker builder prune -af --reserved-space 10GB
+            # Aktive Images (insbesondere der laufende Last-known-good-Stand)
+            # bleiben erhalten. Der 24h-Filter bewahrt zusätzlich frisch
+            # gepullte, noch nicht gestartete Release-Kandidaten.
+            docker image prune -af --filter "until=24h"
+            echo "Speicherbelegung nach risikoarmer Deploy-Bereinigung:"
+            df -h /
+            MIN_DEPLOY_FREE_KIB=15728640
+            deploy_free_kib="$(df -Pk / | awk 'NR == 2 { print $4 }')"
+            case "$deploy_free_kib" in
+              ''|*[!0-9]*)
+                echo "Fehler: Freier Speicher auf / konnte nicht zuverlässig bestimmt werden." >&2
+                exit 1
+                ;;
+            esac
+            if [ "$deploy_free_kib" -lt "$MIN_DEPLOY_FREE_KIB" ]; then
+              deploy_free_gib="$(awk -v kib="$deploy_free_kib" 'BEGIN { printf "%.2f", kib / 1024 / 1024 }')"
+              echo "Fehler: Nach der sicheren Bereinigung sind auf / nur ${deploy_free_gib} GiB frei; für den Deploy sind mindestens 15 GiB erforderlich." >&2
+              exit 1
+            fi
+            echo "Deploy-Speicher-Gate OK: mindestens 15 GiB auf / frei."
             cd "$DEPLOY_DIR"
             # Bootstrap: Ziel-Commit AUSCHECKEN, bevor deploy.sh startet.
             # Sonst würde der erste Post-Merge-Lauf noch das alte 1B-Skript
