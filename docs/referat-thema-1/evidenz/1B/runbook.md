@@ -1,15 +1,17 @@
 # 1B-Labor: Nachbau und Lauf
 
-Zwei VMs auf einem Rechner: app-host `192.168.150.10` (App aus `docker-compose.prod.yml`) und llm-host `192.168.150.20` (Runtime aus `docker-compose.llm.yml`). Entscheidungen: [ADR 1B-002](../../adr/1B-002-topologie-zwei-vms-ein-rechner.md) bis [ADR 1B-010](../../adr/1B-010-aufbau-automatisiert-mit-groessenempfehlung.md). Linux ist getestet. Windows läuft seit 2026-11-13 ohne WSL ([WINDOWS.md](vm/WINDOWS.md)); geprüft mit Pester und auf echtem Windows 11 bis kurz vor dem Start der VMs. Den Start unter Hyper-V selbst prüft erst der erste echte Aufbau, der von Niklas ([Windows-Test](2026-11-13-windows-test.md)).
+Zwei VMs auf einem Rechner: app-host `192.168.150.10` (App aus `docker-compose.prod.yml`) und llm-host `192.168.150.20` (Runtime aus `docker-compose.llm.yml`). Entscheidungen: [ADR 1B-002](../../adr/1B-002-topologie-zwei-vms-ein-rechner.md) bis [ADR 1B-012](../../adr/1B-012-windows-aufbau-ohne-wsl.md). Linux ist getestet. Windows läuft ohne WSL; die Schritte unter Windows stehen in [WINDOWS.md](vm/WINDOWS.md), der Teststand im [Windows-Test](2026-11-13-windows-test.md). Dieses Runbook gilt für beide Systeme; Befehle stehen in der Linux-Form, die Windows-Parameter in [WINDOWS.md, Abschnitt 3](vm/WINDOWS.md#3-parameter).
+
+_Aktualisiert 2026-11-14 (Docs-Audit):_ Schritt 1 des Laufs, fehlende Modi und Variablen, Abschnitt 9 (Tests) ergänzt; die Windows-Anleitung aus Abschnitt 8 steht jetzt in WINDOWS.md.
 
 ## 1. Voraussetzungen
 
 | Was             | Linux                                                                                                                    | Windows                                                                  |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
-| Rechner         | mindestens 16 GiB RAM und 2 physische Kerne; empfohlen 24 GiB und 4 Kerne                                                | dasselbe                                                                 |
+| Rechner         | mindestens 16 GiB RAM und 2 physische Kerne mit SMT (ohne SMT 4); empfohlen 24 GiB und 4 Kerne                           | dasselbe                                                                 |
 | Virtualisierung | KVM (`/dev/kvm`), libvirt, `virt-install`, `qemu-img`, `xorriso`, `jq`; `labor.sh` nennt fehlende Pakete je Distribution | Windows 10/11 Pro, Education oder Enterprise mit Hyper-V; kein WSL nötig |
 | Rechte          | Gruppe `libvirt`; sudo nur für ufw-Freigaben und das VM-Verzeichnis (fragt nach)                                         | Admin-PowerShell                                                         |
-| Netz            | Internet für Ubuntu-Image, Pakete, Docker-Images und das GGUF (2,4 GiB)                                                  | dasselbe                                                                 |
+| Netz            | Internet für Ubuntu-Image, Pakete, Docker-Images und das GGUF (2,3 GiB)                                                  | dasselbe                                                                 |
 | Strom           | Netzteil; Energieprofil siehe Abschnitt 4                                                                                | dasselbe                                                                 |
 
 ## 2. Aufbau
@@ -19,59 +21,67 @@ bash docs/referat-thema-1/evidenz/1B/labor.sh groessen   # nur Empfehlung ansehe
 bash docs/referat-thema-1/evidenz/1B/labor.sh up         # alles aufbauen und prüfen
 ```
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\docs\referat-thema-1\evidenz\1B\labor.ps1 -Mode groessen
-powershell -ExecutionPolicy Bypass -File .\docs\referat-thema-1\evidenz\1B\labor.ps1 -Mode up
-```
+`up` zeigt die Größenempfehlung für den Rechner und fragt, ob sie übernommen wird. Danach baut es die VMs, richtet den llm-host ein (Runtime-Image in lokaler Registry, GGUF prüfen oder laden, `.env.llm` mit Token nur in der VM, Wrapper-Prüfungen, Start), dann den app-host (App-Image, `.env.production`, Migrationen, Start), und prüft zuletzt alles. Liegt das GGUF schon unter `models/open-weight-llm/` im Clone, kopiert `labor.sh` es in den llm-host statt es zu laden. Jeder Schritt zeigt unter Linux und Windows dieselbe Zeile, etwa `[5/7] llm-host einrichten … (dauert 5-20 min) - seit Beginn 25:00, noch etwa 37:00, fertig gegen 20:40` (Linux 7 Schritte, Windows 11; Schätzung aus den Aufbauten am ThinkPad P50). `up` startet keine Messung; Kalibrierung und Läufe nur auf eigenen Befehl (Abschnitt 3). Ohne Rückfragen: `LAB_JA=1`. Dauer am ThinkPad P50: 48 min beim Aufbau von null am 2026-11-13 abends ([Laufprotokoll, Nachtrag](2026-11-13-lauf.md#nachtrag-2026-11-13-abends-ergänzende-messungen-m1m4)).
 
-`up` zeigt die Größenempfehlung für den Rechner und fragt, ob sie übernommen wird. Danach baut es die VMs, richtet den llm-host ein (Runtime-Image in lokaler Registry, GGUF prüfen oder laden, `.env.llm` mit Token nur in der VM, Wrapper-Prüfungen, Start), dann den app-host (App-Image, `.env.production`, Migrationen, Start), und prüft zuletzt alles. _Ergänzt 2026-11-13:_ Jeder Schritt zeigt unter Linux und Windows dieselbe Zeile, etwa `[5/7] llm-host einrichten … (dauert 5-20 min) - seit Beginn 25:00, noch etwa 37:00, fertig gegen 20:40` (Linux 7 Schritte, Windows 11; Schätzung aus den Aufbauten am ThinkPad P50). `up` startet keine Messung; Kalibrierung und Läufe nur auf eigenen Befehl (Abschnitt 3). Ohne Rückfragen: `LAB_JA=1` bzw. `-Ja`. Dauer am ThinkPad P50 im Energiesparprofil: etwa 45 min, davon rund 20 min App-Build.
+**Schutz für den Rechner:** Vor dem Anlegen zeigt `up`, was es belegt und was dem Rechner bleibt, und **bricht ab, ohne etwas anzulegen**, wenn
 
-**Schutz für den Rechner** (_ergänzt 2026-11-13_): Vor dem Anlegen zeigt `up`, was es belegt und was dem Rechner bleibt, und **bricht ab, ohne etwas anzulegen**, wenn
-
-- nach dem Start der VMs weniger als die RAM-Reserve frei bliebe (Standard 4 GiB; `LAB_RAM_RESERVE_GIB` bzw. `-RamReserveGB`, mindestens 2, kleiner nur auf Testrechnern ohne andere Programme), oder
+- nach dem Start der VMs weniger als die RAM-Reserve frei bliebe (Standard 4 GiB; `LAB_RAM_RESERVE_GIB`, mindestens 2, kleiner nur auf Testrechnern ohne andere Programme), oder
 - der freie Platz kleiner ist als der gemessene Bedarf (etwa 31 GiB) plus 10 GiB Reserve.
 
-Unter Windows zählt der verfügbare RAM wie im Task-Manager (frei plus Cache), geprüft direkt vor dem Start der VMs. Läuft WSL oder Docker Desktop, belegen sie selbst RAM; vor `up` hilft `wsl --shutdown`.
+Unter Windows zählt der verfügbare RAM wie im Task-Manager (frei plus Cache), geprüft vor dem Aufbau und noch einmal direkt vor dem Start der VMs. Läuft WSL oder Docker Desktop, belegen sie selbst RAM ([WINDOWS.md, Abschnitt 1](vm/WINDOWS.md#1-vorbereitung-einmal)).
 
 | Belegt (Empfehlung bei 24 GiB RAM und mehr) | llm-host                         | app-host            | Hinweis                        |
 | ------------------------------------------- | -------------------------------- | ------------------- | ------------------------------ |
 | RAM (fest, solange die VM läuft)            | 12 GiB                           | 6 GiB               | knapp: 10 + 4 GiB              |
 | vCPU                                        | physische Kerne, höchstens 8     | 2                   | ohne SMT bleiben 2 Kerne frei  |
-| Platte (Obergrenze, dünn belegt)            | 20 GiB (real ~12)                | 25 GiB (real ~12)   | App-Build braucht kurz ~18 GiB |
+| Platte (Obergrenze, dünn belegt)            | 20 GiB (real ~9)                 | 25 GiB (real ~15)   | App-Build braucht kurz ~18 GiB |
 | Last                                        | volle vCPUs nur während Inferenz | gering, außer Build | Leerlauf fast null             |
 
-Eigene Größen: `LAB_LLM_VCPU`, `LAB_LLM_RAM_GIB`, `LAB_LLM_DISK_GIB`, `LAB_APP_…` bzw. `-LlmCpus`, `-LlmRamGB`, `-LlmDiskGB`, `-App…`; ohne `-Ja` fragt `up` sie einzeln ab und lehnt zu kleine Werte ab. Nach dem Build löschen beide VMs ihren Docker-Build-Cache (im app-host rund 6 GiB).
+Platte real: am ThinkPad P50 nach allen Läufen gemessen (2026-11-14). Eigene Größen: `LAB_LLM_VCPU`, `LAB_LLM_RAM_GIB`, `LAB_LLM_DISK_GIB`, `LAB_APP_VCPU`, `LAB_APP_RAM_GIB`, `LAB_APP_DISK_GIB` (Pinning rechnet `labor.sh`). Lehnt man die Empfehlung auf die Frage „Übernehmen?“ ab, fragt `up` die Größen einzeln ab und lehnt zu kleine Werte ab. Hinweise zu knappen Größen zeigt `up` nur für die Empfehlung, nicht für eigene Werte. Nach dem Build löschen beide VMs ihren Docker-Build-Cache (im app-host rund 6 GiB).
 
-**Ein und aus:** `labor.sh stop` bzw. `labor.ps1 -Mode stop` fährt beide VMs herunter; dann belegen sie weder RAM noch CPU, Daten und Einrichtung bleiben. `start` fährt sie wieder hoch, wartet auf die Dienste und prüft alles.
+**Ein und aus:** `labor.sh stop` fährt beide VMs herunter; dann belegen sie weder RAM noch CPU, Daten und Einrichtung bleiben. `start` fährt sie wieder hoch, wartet auf die Dienste und prüft alles.
 
-Ergebnis: Aufbaubericht `~/labor-1b/aufbau-<Zeit>.txt` mit je einer Zeile `OK` oder `FEHLER` pro Prüfung. Erneut prüfen: `labor.sh pruefen`. `up` ist mehrfach aufrufbar; bestehende VMs mit anderer Größe lehnt es ab (dann `destroy`).
+**Zustand:** `labor.sh status` (VMs, Pinning, Docker, Repo-Stand), `labor.sh umgebung` (Rechner, Hypervisor und VMs als JSON; steht auch in jedem Ergebnis).
+
+Ergebnis: Aufbaubericht `~/labor-1b/aufbau-<Zeit>.txt` mit je einer Zeile `OK` oder `FEHLER` pro Prüfung, dazu `INFO`-Zeilen; dort liegen auch `llm-start.log` und `app-start.log`. Erneut prüfen: `labor.sh pruefen`. `up` ist mehrfach aufrufbar; bestehende VMs mit anderer Größe lehnt es ab (dann `destroy`, Abschnitt 5).
+
+Weitere Variablen: `LAB_OUTDIR` (Bericht, Logs und Rohdaten, Standard `~/labor-1b`), `LAB_VMDIR` (VM-Verzeichnis, Standard `/var/lib/libvirt/images/arsnova-1b`), `LAB_SSH_KEY` und `LAB_COMMIT` (Repo-Stand für die VMs, muss ein Vorfahre von `HEAD` sein; `vm/vm-linux.sh`).
 
 ## 3. Lauf
 
 Reihenfolge, jeweils vom Rechner aus:
 
-1. Einen Prompt-Body erzeugen, falls noch keiner da ist: `LAB_TAG=dev-body LAB_N=1 LAB_PROFIL=unveraendert labor.sh lauf`.
+1. Einen Prompt-Body erzeugen, falls noch keiner da ist: `LAB_TAG=dev-body LAB_N=1 LAB_TIMEOUT_MS=300000 LAB_PROFIL=unveraendert labor.sh lauf`. Der Timeout ist hier Pflicht, weil es noch keine Kalibrierung gibt.
 2. Kalibrierung: `labor.sh kalibrierung` → I = `prompt_ms + predicted_ms` und Timeout (90 000 oder 300 000 ms; über 270 s Abbruch).
 3. Probelauf: `LAB_TAG=probe LAB_N=2 labor.sh lauf`.
 4. Gewerteter Lauf: `LAB_N=10 labor.sh lauf`.
 
-Ohne `LAB_TIMEOUT_MS` nimmt `lauf` den Timeout aus der jüngsten Kalibrierung von heute und bricht ab, wenn deren Energieprofil nicht zum Lauf passt. Bricht ein Lauf ab, stoppt ein `trap` Mitschnitte und Speicherprotokoll; die Rohdaten bleiben im app-host unter `~/labor-1b/`.
+Ohne `LAB_TIMEOUT_MS` nimmt `lauf` den Timeout aus der jüngsten Kalibrierung von heute und bricht ab, wenn deren Energieprofil nicht zum Lauf passt. `LAB_TIMEOUT_MS` erlaubt nur 90000 oder 300000, `LAB_N` 1 bis 10. Bricht ein Lauf ab, stoppt ein `trap` Mitschnitte und Speicherprotokoll; die Rohdaten bleiben im app-host unter `~/labor-1b/`.
 
-Windows: `labor.ps1 -Mode kalibrierung`, `labor.ps1 -Mode lauf -LabN 10` usw. _Ergänzt 2026-11-13:_ Auch die Messungen des Nachtrags gibt es unter beiden Systemen: Kontrolle C0 (`labor.sh kontrolle` bzw. `-Mode kontrolle`), Netz- und Konfigurationsbelege ohne Secrets (`labor.sh belege` bzw. `-Mode belege`) und Aufträge bei gestoppter Runtime, B0 (`LAB_RUNTIME_AUS=1 LAB_TAG=b0 labor.sh lauf` bzw. `-Mode lauf -LabRuntimeAus -LabTag b0`). Ein zweites Ergebnis am selben Tag bekommt die Endung `-2`.
+Ein Lauf startet die Runtime frisch (höchstens 10 Aufträge je Runtime, [ADR 1B-007](../../adr/1B-007-umgang-mit-1c-fallen.md)), schneidet auf beiden Hosts mit, legt per Treiber eine Session mit dem 1C-Referenzszenario an (200 Teilnehmende über die API) und löst die Aufträge mit 31 s Abstand aus. Danach Zeitzerlegung und die Kontrolle C0 Direktprompt an einer frischen Runtime (nicht bei B0) (Begriffe: [ADR 1B-011](../../adr/1B-011-zeitbegriffe-und-leitfrage.md)). Rohdaten: `~/labor-1b/<Lauf>/`; Ergebnis: `evidenz/1B/messung/<Datum>-lauf[-Tag].json` (nicht bei Tag `dev…` oder `probe…`).
 
-Ein Lauf startet die Runtime frisch (höchstens 10 Aufträge je Runtime, [ADR 1B-007](../../adr/1B-007-umgang-mit-1c-fallen.md)), schneidet auf beiden Hosts mit, legt per Treiber eine Session mit dem 1C-Referenzszenario an (200 Teilnehmende über die API) und löst die Aufträge mit 31 s Abstand aus (Cooldown 30 s, sonst Cache). Danach Zeitzerlegung und Kontrolle C0 an einer frischen Runtime. Rohdaten: `~/labor-1b/<Lauf>/`; Ergebnis: `evidenz/1B/messung/<Datum>-lauf[-Tag].json` (nicht bei Tag `dev…` oder `probe…`; ein zweiter Lauf am selben Tag bekommt die Endung `-2`).
+**Messmodi** (Nachtrag M1–M4, unter Linux und Windows):
+
+| Messung                  | Linux                                        | Ergebnis unter `messung/`        |
+| ------------------------ | -------------------------------------------- | -------------------------------- |
+| Lauf, Probe, Entwicklung | `labor.sh lauf` mit `LAB_N`, `LAB_TAG`       | `<Datum>-lauf[-Tag].json`        |
+| B0, Runtime ausgefallen  | `LAB_RUNTIME_AUS=1 LAB_TAG=b0 labor.sh lauf` | `<Datum>-lauf-b0.json`           |
+| C0 nach M2 (n = 30)      | `labor.sh kontrolle`                         | `<Datum>-kontrolle-c0.json`      |
+| Netz- und Konfig.-Belege | `labor.sh belege`                            | `<Datum>-belege/` (ohne Secrets) |
+
+Ein zweites Ergebnis am selben Tag bekommt die Endung `-2`, `-3` …; nichts wird überschrieben. `kontrolle` und `belege` schreiben immer nach `messung/`, auch bei Entwicklungsständen. Ein Ausfall wird nicht von Hand vorbereitet: `lauf` startet die Runtime immer frisch, ein vorheriges `docker stop` wäre wirkungslos; `LAB_RUNTIME_AUS=1` stoppt sie nach dem Neustart und vor dem ersten Auftrag.
+
+Nur beim Aufruf von `lauf.sh` direkt im app-host wirken außerdem `LAB_BODY` (Prompt-Body der Kalibrierung, sonst der jüngste `body.json`) und `LAB_N_C0` (Wiederholungen von `kontrolle`, Standard 30); `labor.sh` reicht sie nicht weiter. `lauf.sh auswerten <Verzeichnis>` wiederholt die Auswertung auf vorhandenen Rohdaten.
 
 ## 4. Energieprofil
 
-`labor.sh lauf` hält unter Linux das Profil `performance` per `powerprofilesctl launch` und stellt es danach zurück, wie 1C. `LAB_PROFIL=unveraendert` lässt es wie es ist (nur Entwicklungsläufe). Das Ergebnis nennt das Profil. Kalibrierung und gewerteter Lauf brauchen dasselbe Profil. Windows ändert nichts und hält das aktive Schema fest.
+`labor.sh lauf` hält unter Linux das Profil `performance` per `powerprofilesctl launch` und stellt es danach zurück, wie 1C. `LAB_PROFIL=unveraendert` lässt es wie es ist (nur Entwicklungsläufe). Das Ergebnis nennt das Profil. Kalibrierung und gewerteter Lauf brauchen dasselbe Profil. Während `kalibrierung`, `lauf`, `kontrolle` und `belege` sperrt `labor.sh` außerdem den Ruhezustand (`systemd-inhibit`). Windows: [WINDOWS.md, Abschnitt 4](vm/WINDOWS.md#4-vor-kalibrierung-und-lauf).
 
-**Windows, von Hand vor Kalibrierung und Lauf:** Energiemodus „Beste Leistung“ (Einstellungen → System → Netzbetrieb und Akku), Netzteil an, Windows Update für die Dauer pausieren (Einstellungen → Windows Update → Updates aussetzen). `labor.ps1` ändert beides nicht und hält nur das aktive Schema fest.
-
-**Messruhe in den VMs:** Hintergrund-Updates (`apt-daily*`, `unattended-upgrades`, `fwupd-refresh` u. a.) schaltet das `user-data` unter Linux und Windows ab; `pruefen` meldet „Hintergrund-Updates aus“. Anlass: Am 2026-11-13 lief `apt-daily-upgrade` mitten im gewerteten Lauf in beiden VMs.
+**Messruhe in den VMs:** Hintergrund-Updates (`apt-daily*`, `unattended-upgrades`, `fwupd-refresh` u. a.) schaltet das `user-data` unter Linux und Windows ab; `pruefen` meldet „Hintergrund-Updates aus“ (geprüft werden `apt-daily.timer` und `apt-daily-upgrade.timer`). Anlass: Am 2026-11-13 lief `apt-daily-upgrade` mitten im gewerteten Lauf in beiden VMs.
 
 ## 5. Rückbau
 
-`labor.sh destroy` bzw. `labor.ps1 -Mode destroy`: VMs, Disks und Labornetz. Das Ubuntu-Image bleibt im VM-Verzeichnis liegen.
+`labor.sh destroy`: VMs, Disks und Labornetz (fragt nach). Das Ubuntu-Image bleibt im VM-Verzeichnis liegen. Windows: [WINDOWS.md, Abschnitt 5](vm/WINDOWS.md#5-zwischen-den-sitzungen-und-rückbau).
 
 ## 6. Stolperfallen
 
@@ -80,7 +90,7 @@ Ein Lauf startet die Runtime frisch (höchstens 10 Aufträge je Runtime, [ADR 1B
 | Aktive Host-ufw: VMs bekommen keine IP, kein ausgehendes NAT                | Freigabe nur auf `virbr-1b` für DHCP, DNS und Weiterleitung; `labor.sh` bietet sie an |
 | Updates im Hintergrund während eines Laufs (VM oder Host)                   | VMs: `user-data` schaltet sie ab, `pruefen` prüft es; Host: siehe Abschnitt 4         |
 | VM-Verzeichnis im Home (Modus 700): libvirt-qemu kann die Disks nicht lesen | `/var/lib/libvirt/images/arsnova-1b` (Standard)                                       |
-| Runbook §6 `npm ci --omit=dev`: Produktionswrapper findet `dotenv` nicht    | `llm-start.sh` installiert ohne `--omit=dev` (Befund für das Ergebnis)                |
+| Runbook §6 `npm ci --omit=dev`: Produktionswrapper findet `dotenv` nicht    | `llm-start.sh` installiert ohne `--omit=dev` (Issue #21)                              |
 | Push großer Layer in `registry:2` läuft in einen Timeout                    | Wiederholung (bis 5 Versuche) in `llm-start.sh` und `app-start.sh`                    |
 | Neubau des Runtime-Images ergibt einen anderen Digest                       | Digest je Lauf aus dem Ergebnis nehmen, nicht aus einem älteren Bericht               |
 | Windows PowerShell 5.1 hängt beim Pipen CRLF an                             | `app-start.sh` entfernt `\r` am Token                                                 |
@@ -89,34 +99,28 @@ Ein Lauf startet die Runtime frisch (höchstens 10 Aufträge je Runtime, [ADR 1B
 | sudo ohne Terminal (`LAB_JA=1`) fragt kein Passwort ab                      | ufw-Schritt wird dann nur angezeigt; einmalig von Hand setzen                         |
 | Lange Hintergrundjobs eines Agenten werden bei Speicherdruck beendet        | Aufbau und Schlafsperre als `systemd-run --user`-Unit starten                         |
 
+„Runbook §6“ meint hier das [Second-Host-Runbook](../../../operations/OPEN-WEIGHT-LLM-SECOND-HOST-RUNBOOK.md) des Release.
+
 ## 7. Datenregeln
 
-Mitschnitte enthalten den Runtime-Token im `Authorization`-Header und bleiben in `~/labor-1b`. Ins Repo kommen nur Ergebnis-JSON, Berichte ohne Secrets und Protokolle. Die Szenariodaten sind synthetisch (1C-Fixture).
+Mitschnitte enthalten den Runtime-Token im `Authorization`-Header und bleiben in `~/labor-1b` (Windows: `%USERPROFILE%\labor-1b`); sie kommen nie ins Repo. Ins Repo kommen nur Ergebnis-JSON, Berichte und Belege ohne Secrets und Protokolle. Die Szenariodaten sind synthetisch (1C-Fixture).
 
 ## 8. Übergabe an Niklas (Schritte 3–4)
 
-_Ergänzt 2026-11-13, aktualisiert am selben Tag._ Stand für Störversuche und Betriebsaufwand auf dem eigenen Rechner. Auftrag: Issue [#9](https://github.com/NiklasSkulll/arsnova.eu/issues/9). Gemeinsame Zeitbegriffe (T_host … T_transport): [ADR 1B-011](../../adr/1B-011-zeitbegriffe-und-leitfrage.md). Vergleichswerte aus Schritt 2 (normaler Dienst, kalt und warm, C0, B0): [1B-Ergebnis](../../1B-ergebnis.md). Das Skript schützt den Rechner (Abschnitt 2): Reicht RAM oder Platz nicht, legt es nichts an und sagt, was zu tun ist.
+Stand für Störversuche und Betriebsaufwand auf dem eigenen Rechner. Auftrag: Issue [#9](https://github.com/NiklasSkulll/arsnova.eu/issues/9). Schritt-für-Schritt unter Windows, auch mit Codex in WSL: [WINDOWS.md](vm/WINDOWS.md). Für Codex: [`AGENTS.md`, Abschnitt 1B-Labor für Agenten](../../AGENTS.md#1b-labor-für-agenten-codex-claude).
 
-**Vorbereitung (einmal):**
+- **Begriffe und Vergleichswerte:** gemeinsame Zeitbegriffe (T_host … T_transport) in [ADR 1B-011](../../adr/1B-011-zeitbegriffe-und-leitfrage.md); Werte aus Schritt 2 (normaler Dienst, kalt und warm, C0, B0) im [1B-Ergebnis](../../1B-ergebnis.md), Rohdaten unter `messung/`.
+- **Wiederverwendbar für Schritt 3:** `lauf.sh` (Mitschnitt auf beiden Hosts, Speicher-CSV, Zeitzerlegung), `pruefen.sh` (Limits, Flags, Bind), der Treiber `treiber.mjs` und der Ausfall B0 (Abschnitt 3). Für hohe Antwortlatenz ist ein eigener Weg nötig.
+- **Regeln:** vor jedem gewerteten Lauf Hypothese, Messgröße und Schwelle aufschreiben (eigenes Design oder datierter Nachtrag); eigene Läufe mit eigenem Tag (z. B. `stoerung-…`); ADR-Nummern 1B-020 bis 1B-039; Datenregeln wie Abschnitt 7.
+- **Schutz:** Reicht RAM oder Platz nicht, legt das Skript nichts an und sagt, was zu tun ist (Abschnitt 2).
 
-1. Repo aktualisieren, Branch `feature-1B-two-host` (bis zum Merge). Liegt der Clone in WSL unter `/mnt/d/…`, ist das unter Windows einfach `D:\…`; WSL selbst braucht das Labor nicht.
-2. **PowerShell als Administrator** öffnen (Rechtsklick > „Als Administrator ausführen“) und in den Ordner `docs\referat-thema-1\evidenz\1B` des Clones wechseln, etwa `cd D:\<projekte>\arsnova.eu\docs\referat-thema-1\evidenz\1B` (ein Clone nur im WSL-Dateisystem geht auch über `\\wsl.localhost\Ubuntu\…`).
-3. `powershell -ExecutionPolicy Bypass -File .\labor.ps1 -Mode vorpruefung`: fragt zuerst, wohin die VM-Disks sollen (zeigt den freien Platz je Laufwerk und empfiehlt das mit dem meisten, etwa `D:\arsnova-1b`; die Wahl gilt für alle späteren Aufrufe, ändern mit `-VmDir`), prüft dann alles, ändert nichts, und sagt zu jedem `FEHLER`, was zu tun ist. Typisch beim ersten Mal: Hyper-V ist aus. Dann denselben Befehl mit `-EnableHyperV` am Ende, Windows **neu starten**, Schritt 3 wiederholen.
+## 9. Tests
 
-**Aufbau:**
+Die Laborskripte haben eigene Tests, getrennt von `npm test`:
 
-4. Vorher Docker Desktop beenden und WSL begrenzen oder beenden: WSL 2 reserviert sich bis zur Hälfte des RAMs (im Task-Manager `VmmemWSL`), dann reicht er für die VMs nicht. Wer Codex in WSL nutzt, begrenzt WSL (siehe unten, `.wslconfig`); sonst genügt `wsl --shutdown`. _Korrigiert 2026-11-13:_ vorher stand hier nur `wsl --shutdown`, im Widerspruch zum Abschnitt für Codex. Danach `powershell -ExecutionPolicy Bypass -File .\labor.ps1 -Mode up`: zeigt die Empfehlung und was dem Rechner bleibt, fragt einmal, dann läuft es allein (etwa 45–60 min; jeder Schritt mit `[n/11]`, Zeit seit Beginn, geschätzter Restzeit und voraussichtlichem Ende). Solange das Fenster offen ist, geht der Rechner nicht in den Ruhezustand; Netzteil anschließen. Wer erst sehen will, was angelegt wird: zuerst mit `-NurVorbereiten` (startet keine VM).
-5. Bricht es ab, steht da, in welchem Schritt, warum und was zu tun ist, dazu der Pfad zum Log. Nach dem Beheben denselben Befehl erneut aufrufen; Fertiges wird übersprungen. Bei Fragen das Log schicken (enthält keine Tokens).
-6. Am Ende muss der Bericht nur `OK`-Zeilen enthalten; ihn aus `%USERPROFILE%\labor-1b\` ins eigene Aufbauprotokoll übernehmen. Der Start der VMs unter Hyper-V läuft hier zum ersten Mal auf echter Hardware; jede Abweichung notieren.
+```bash
+node --test docs/referat-thema-1/evidenz/1B/*.test.mjs docs/referat-thema-1/evidenz/1B/messung/*.test.mjs
+pwsh -NoProfile -Command "Invoke-Pester -Path docs/referat-thema-1/evidenz/1B -Output Detailed"
+```
 
-**Arbeiten mit Codex in WSL (Schritte 3–4):**
-
-- WSL nicht beenden, sondern begrenzen: `%USERPROFILE%\.wslconfig` mit `[wsl2]` und `memory=6GB`, danach einmal `wsl --shutdown`. Bei 32 GB empfiehlt `up` llm-host 12 GB und app-host 6 GB, zusammen 18 GB, und verlangt beim Start zusätzlich 4 GB Reserve: verfügbar sein müssen also etwa 22 GB. Mit WSL auf 6 GB und Windows selbst (3–5 GB) wird das knapp; vorher Browser und andere große Programme schließen. Reicht es nicht, bricht `up` vor dem Anlegen ab und nennt die größten Verbraucher; dann mit `-AppRamGB 4` erneut starten (der App-Build in der VM wird langsamer; `up` zeigt dazu einen Hinweis). _Korrigiert 2026-11-13:_ vorher stand hier app-host 4 GB.
-- Das erste `up` (als Administrator) trägt ihn in Hyper-V-Administratoren ein; nach erneuter Anmeldung brauchen `status`, `start`, `stop` und Läufe kein Admin-Fenster mehr.
-- Aus WSL steuert `evidenz/1B/labor-wsl.sh` das Labor über die Windows-Programme (`labor.ps1`, `ssh.exe`): `labor-wsl.sh status`, `labor-wsl.sh vm llm 'docker ps'`, `labor-wsl.sh lauf -LabN 1 -LabTag dev-x --arbeitsstand` (nimmt nicht committete Änderungen mit).
-- Codex beim Start sagen: „Lies `docs/referat-thema-1/AGENTS.md`, Abschnitt 1B-Labor für Agenten.“ Dort stehen Befehle und Regeln (Hypothese vor jedem Lauf, keine Tokens ins Repo, Läufe nur nach Rückfrage).
-- Die VMs laufen nur, wenn getestet wird: vorher `start`, danach `stop`.
-
-**Danach:** zwischen den Sitzungen `.\labor.ps1 -Mode stop`, vorher wieder `-Mode start`. Vor Kalibrierung und Läufen Abschnitt 4 (Energiemodus, Windows Update pausieren). Eigene Läufe mit `-LabTag` (z. B. `stoerung-…`); ADR-Nummern 1B-020 bis 1B-039. Am Ende `-Mode destroy`: entfernt VMs, Disks, Switch und NAT; den VM-Ordner danach löschen, wenn auch das Basis-Image weg soll (der beim ersten `up` gewählte Ort, z. B. `D:\arsnova-1b`, gemerkt in `%USERPROFILE%\labor-1b\einstellungen.json`; ohne Wahl `C:\ProgramData\arsnova-1b`). Hyper-V bleibt dabei an. Wer es wieder aus haben will (etwa für VirtualBox oder VMware): Admin-PowerShell `Disable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-All`, neu starten. Während das Labor läuft, kein VPN mit „gesamten Verkehr tunneln“ verbinden: Dann erreicht der Rechner die VMs nicht mehr.
-
-Wiederverwendbar für Schritt 3: `lauf.sh` (Mitschnitt auf beiden Hosts, Speicher-CSV, Zeitzerlegung), `pruefen.sh` (Limits, Flags, Bind) und der Treiber `treiber.mjs`. Ein Ausfall der Runtime wird nicht von Hand vorbereitet: `lauf` startet die Runtime immer frisch, ein vorheriges `docker stop` wäre wirkungslos. Stattdessen `LAB_RUNTIME_AUS=1` bzw. `-LabRuntimeAus`: Der Lauf stoppt die Runtime nach dem Neustart und vor dem ersten Auftrag (B0, so gemessen im [Nachtrag M3](2026-11-13-lauf.md#nachtrag-2026-11-13-abends-ergänzende-messungen-m1m4)). Für hohe Antwortlatenz ist ein eigener Weg nötig (Schritt 3). Die Werte aus Schritt 2 stehen unter `messung/`. Vor jedem gewerteten Lauf Hypothese, Messgröße und Schwelle aufschreiben (eigenes Design oder datierter Nachtrag). Rohdaten bleiben unter `%USERPROFILE%\labor-1b\` und kommen nie ins Repo (die Mitschnitte enthalten den Token); ins Repo kommen nur die Ergebnisdateien, die `labor.ps1` nach `messung/` kopiert. _Korrigiert 2026-11-13:_ vorher stand hier, die Runtime lasse sich für Ausfälle mit `docker stop` steuern.
+Die Pester-Tests brauchen Pester 5 (`Install-Module Pester -MinimumVersion 5`) und laufen auch unter Linux mit `pwsh`. `qualitaetstor.test.mjs` lädt das Qualitätstor der App über `tsx` aus `node_modules`; vorher einmal `npm ci` im Clone.
