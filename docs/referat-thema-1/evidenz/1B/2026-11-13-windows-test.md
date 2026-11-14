@@ -59,6 +59,8 @@ Vermutung (nicht belegt): Mit WSL startet zum ersten Mal eine VM innerhalb der W
 
 Neue Windows-VM (ohne WSL-Features), 17 GiB RAM, zweite Platte mit 80 GB (in Windows `F:`, weil `D:` und `E:` die DVD-Laufwerke der Test-VM sind), Repo als frischer Clone nach `C:\1b`, Commit `ae828293`. Geprüft bis kurz vor dem Start der Labor-VMs, weil verschachtelte VMs mit Host-Kernel 7.2 hängen (Versuch 3).
 
+_Korrigiert 2026-11-14 (Docs-Audit):_ Dass verschachtelte VMs mit Host-Kernel 7.2 hängen, ist die Vermutung aus Versuch 3, nicht belegt.
+
 | Schritt                         | Ergebnis                                                                                                                                                                                                                                                                                                                      |
 | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | erster Lauf (Commit `fbb106cd`) | **zwei Fehler gefunden:** Vorprüfung bricht unter `Set-StrictMode` ab (`.Count` auf leerem Ergebnis, etwa ohne Akku); Wachhalten scheitert (`0x80000001` ist in PowerShell ein negativer Int32). Behoben mit Tests in `b44bee8b`                                                                                              |
@@ -107,4 +109,5 @@ Nicht getestet: VMs anlegen, WSL-Teil, `llm-start.sh`/`app-start.sh` über Windo
 - **W1 (behoben):** `vm-windows.ps1` meldet Fehler nur mit `exit 1`; `labor.ps1` prüfte den Exit-Code nicht. Jetzt wirft `Invoke-VmScript` bei Code ≠ 0, und `vm-windows.ps1` endet bei Erfolg mit `exit 0`. Pester-Test `Invoke-VmScript` (rot vor, grün nach dem Fix), alle 25 Pester-Tests grün.
 - **W2 (behoben, nur Testaufbau):** Die Firewall-Regel des OpenSSH-Pakets gilt nur im Profil „Privat“, das NAT-Netz der VM ist „Öffentlich“. `setup.ps1` setzt die Regel jetzt auf alle Profile.
 - **W3 (behoben, nur Testaufbau):** `ssh-keygen -N ""` über `cmd /c` scheiterte an der Quotierung; `win-test.sh` nutzt jetzt `-N '""'` (in der VM geprüft). Die Wartezeit auf SSH ist auf 240 min erhöht.
+  _Aktualisiert 2026-11-14 (Docs-Audit):_ Seit dem Weg ohne WSL (`effede2f`) erzeugt `win-test.sh` keinen Schlüssel mehr; das macht `vm/vm-windows.ps1` (Z. 251). W3 betrifft nur den alten Weg.
 - **W4 (offen, klein):** Die Meldung von `wsl.exe` erscheint als UTF-16 mit Leerzeichen zwischen den Zeichen; nur Kosmetik.
