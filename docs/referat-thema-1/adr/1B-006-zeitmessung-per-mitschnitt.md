@@ -20,6 +20,8 @@ Gemessen wird ohne Eingriff in den Release-Pfad: `tcpdump` auf beiden VMs, `timi
 
 Drahtzeit heißt: erstes Anfragesegment mit Nutzdaten bis zur vollständigen Antwort. Jede Differenz stammt aus Zeitpunkten eines Rechners; ein Uhrenabgleich der VMs ist nicht nötig. Kontrolle C0: derselbe POST-Body einmal direkt im Inferenz-Host. Die Auswertung hat einen eigenen Test (`evidenz/1B/messung/zeitzerlegung.test.mjs`).
 
+_Ergänzt 2026-11-14 (Docs-Audit):_ Nach der Vollständigkeitsprüfung kam eine zweite Kontrolle nach Dossier 10.3 dazu (M2: kurze Anfrage, je n = 30, Hypothese H_C0; [Design-Nachtrag 2026-11-13](../specs/2026-11-12-1b-zwei-host-design.md#nachtrag-2026-11-13-ergänzende-messungen-nach-der-vollständigkeitsprüfung), Ergebnis im [Laufprotokoll](../evidenz/1B/2026-11-13-lauf.md#nachtrag-2026-11-13-abends-ergänzende-messungen-m1m4)). Zur Unterscheidung der beiden C0-Messungen siehe [ADR 1B-011](1B-011-zeitbegriffe-und-leitfrage.md).
+
 ## Alternativen
 
 - **Proxy aus 1C als eigenständiger Server:** verworfen; er läge als zusätzlicher Hop im Pfad und müsste an eine Netzschnittstelle binden.

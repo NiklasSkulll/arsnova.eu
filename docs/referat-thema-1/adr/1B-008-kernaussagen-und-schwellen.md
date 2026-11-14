@@ -44,3 +44,5 @@ C wird aus dem Aufbau belegt: je Zeitkomponente, ob sie im Release-Betrieb ohne 
 ## Folgen
 
 - Änderungen an Schwellen oder Regeln nach diesem ADR nur als datierter Nachtrag vor dem gewerteten Lauf.
+
+_Ergänzt 2026-11-14 (Docs-Audit):_ Zwei datierte Nachträge im Design ergänzen dieses ADR, die Schwellen oben bleiben unverändert: Auftrag 1 (kalt) und 2–10 (warm) werden getrennt berichtet (vom Autor bestätigt, [Nachtrag 2026-11-12](../specs/2026-11-12-1b-zwei-host-design.md#nachtrag-2026-11-12-beim-aufbau-dazugekommen)); die Hypothesen H_C0, H_B0 und H_B3 kalt standen vor den Läufen M2–M4 fest ([Nachtrag 2026-11-13](../specs/2026-11-12-1b-zwei-host-design.md#nachtrag-2026-11-13-ergänzende-messungen-nach-der-vollständigkeitsprüfung)). Ergebnisse im [Laufprotokoll](../evidenz/1B/2026-11-13-lauf.md#nachtrag-2026-11-13-abends-ergänzende-messungen-m1m4).

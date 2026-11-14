@@ -28,3 +28,5 @@ Beide Hosts laufen als KVM-VMs auf dem Laptop, in einem privaten virtuellen Netz
 - Gültigkeitsgrenze: Beide „Hosts“ teilen CPU, Cache und Speicherbandbreite; die App-VM liegt auf den Hyperthread-Geschwistern der Runtime-Kerne. Für die Zeitzerlegung unkritisch, für die Rückwirkung auf den App-Host (Schritt 3) nicht ausreichend.
 - Das virtuelle Netz modelliert das private Produktionsnetz, ist aber nicht dasselbe.
 - Niklas nutzt für die Schritte 3–4 die Dateien, nicht die Geräte ([ADR 1B-009](1B-009-portabilitaet-linux-windows.md)).
+
+_Ergänzt 2026-11-14 (Docs-Audit):_ Ein Same-Host-Vergleich (S1, App und Runtime in einer VM) wurde bewusst nicht gemessen; den Vergleich mit und ohne Strecke zwischen den Hosts liefert M2 (C0 nach Dossier 10.3). Begründung im [Design-Nachtrag 2026-11-13](../specs/2026-11-12-1b-zwei-host-design.md#nachtrag-2026-11-13-ergänzende-messungen-nach-der-vollständigkeitsprüfung), Ergebnis im [Laufprotokoll](../evidenz/1B/2026-11-13-lauf.md#nachtrag-2026-11-13-abends-ergänzende-messungen-m1m4).

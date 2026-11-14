@@ -6,6 +6,8 @@ Festlegungen. Jede ADR fasst zusammen und verlinkt auf die Quelle (Dossier,
 Design, Protokoll, Rohdaten); Zahlen stehen nur mit Beleg. Einstieg in das
 Gesamtergebnis: [`1C-ergebnis.md`](../1C-ergebnis.md).
 
+_Ergänzt 2026-11-14:_ Seit 2026-11-12 enthält der Ordner auch die ADRs zu Auftrag 1B ([Abschnitt unten](#adrs-zu-1b), Einstieg: [`1B-ergebnis.md`](../1B-ergebnis.md)). Auch 1B ändert keinen Produktionscode ([ADR 1B-001](1B-001-baseline-fork-main-a19ca70f.md)).
+
 Grundlage der Form: [Dokumentationsdesign](../specs/2026-11-05-1c-doku-design.md).
 
 ## Statuswerte
@@ -112,3 +114,4 @@ _Ergänzt 2026-11-12._ Nummernkreis `1B-001`–`1B-019` für Jonas (Schritte 1�
 | [1B-009](1B-009-portabilitaet-linux-windows.md)                 | Portabler Aufbau, unter Linux getestet, unter Windows dokumentiert | methodisch | Methodik  |
 | [1B-010](1B-010-aufbau-automatisiert-mit-groessenempfehlung.md) | Aufbau mit einem Befehl, VM-Größen aus einer Regel                 | methodisch | Methodik  |
 | [1B-011](1B-011-zeitbegriffe-und-leitfrage.md)                  | Zeitbegriffe nach Dossier 8.1 und Leitfrage der Schritte 1–2       | methodisch | Methodik  |
+| [1B-012](1B-012-windows-aufbau-ohne-wsl.md)                     | Windows-Aufbau ohne WSL, nur mit Windows-Bordmitteln               | methodisch | Methodik  |
