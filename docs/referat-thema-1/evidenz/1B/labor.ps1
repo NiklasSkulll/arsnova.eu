@@ -552,7 +552,7 @@ if ($MyInvocation.InvocationName -ne '.') {
   Resolve-LaborVmDir ($Mode -in @('up', 'vorpruefung'))
   if ($Mode -eq 'vorpruefung') { Save-LaborVmDir }
   # Kein Ruhezustand, solange Aufbau oder Messung laeuft (endet mit diesem Fenster).
-  if ($Mode -in @('up', 'start', 'kalibrierung', 'lauf')) { try { Set-WachHalten $true } catch { Write-Host "HINWEIS: Ruhezustand nicht gesperrt ($($_.Exception.Message))" } }
+  if ($Mode -in @('up', 'start', 'kalibrierung', 'lauf', 'kontrolle', 'belege')) { try { Set-WachHalten $true } catch { Write-Host "HINWEIS: Ruhezustand nicht gesperrt ($($_.Exception.Message))" } }
   switch ($Mode) {
     'vorpruefung' {
       Invoke-VmScript $null 'pruefen'

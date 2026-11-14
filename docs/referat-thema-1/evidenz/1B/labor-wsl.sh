@@ -3,11 +3,11 @@
 # die Windows-Programme auf: labor.ps1 (powershell.exe) und ssh.exe. So gilt die Windows-Route zum internen
 # Hyper-V-Switch; ob WSL selbst 192.168.150.0/24 erreicht, ist nicht dokumentiert und wird nicht gebraucht.
 #
-#   labor-wsl.sh status|start|stop|vorpruefung|groessen|umgebung|pruefen   wie labor.ps1 -Mode …
-#   labor-wsl.sh kalibrierung|lauf|kontrolle|belege [Parameter]  z. B. lauf -LabN 1 -LabTag dev-x; B0: lauf -LabRuntimeAus
+#   labor-wsl.sh status|start|stop|sync|vorpruefung|groessen|umgebung|pruefen   wie labor.ps1 -Mode …
+#   labor-wsl.sh kalibrierung|lauf|kontrolle|belege [Parameter]  z. B. lauf -LabN 1 -LabTag dev-x -LabTimeoutMs 300000; B0: lauf -LabRuntimeAus
 #   labor-wsl.sh up|destroy [Parameter]      mit Admin-Rückfrage (UAC), läuft in eigenem Fenster
 #   labor-wsl.sh vm app|llm '<befehl>'       Befehl in einer VM (Laborschlüssel, known_hosts aus dem VM-Ordner)
-#   --arbeitsstand (bei sync, lauf, kalibrierung, up): nimmt auch nicht committete Änderungen mit. Dafür legt
+#   --arbeitsstand (bei sync, up, kalibrierung, lauf, kontrolle, belege): nimmt auch nicht committete Änderungen mit. Dafür legt
 #     das Skript einen Commit unter refs/labor/arbeitsstand an (der Zweig bleibt unverändert). Läufe mit
 #     Arbeitsstand sind Entwicklungsläufe: LabTag mit dev- beginnen, nicht werten.
 #
