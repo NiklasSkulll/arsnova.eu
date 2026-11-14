@@ -4,6 +4,15 @@
 
 **Stand:** 2026-10-16 · **Codebasis:** Branch `referat/thema-1-notes`, Commit `27966e75` (HEAD). Der Tag `v1.3.0` zeigt auf `87c39334` (2026-10-08) und liegt 131 Commits zurück. Zwischen `v1.3.0` und HEAD sind die spaCy-Kerndateien (`docker/spacy/*`, `spacyClient.ts`, `nlpSidecarConfig.ts`, `wordCloudNormalizer.ts`, beide Compose-Dateien, `deploy.sh`, Lastskripte) **unverändert**; geändert wurden nur `wordCloud.ts` (Label-Telemetrie, +6/−2), `wordCloudNlpTelemetry.ts` (+6), `wordCloudAnalysisCache.ts` (+12), `health.ts` (+30, `openWeightLlmProbe`), ADR-0035, `word-cloud-spacy.md` und `.env.production.example` (geprüft mit `git diff --stat v1.3.0..HEAD`).
 **Zweck:** Arbeits- und Evidenzmaterial für Gruppenauftrag 1A. Alle Zeilenangaben im Dokument sind 1-basiert und sind **HEAD-Zeilen (`27966e75`)**, auch wo das nicht eigens dasteht. Die Release-Baseline ist vermutlich der Tag `v1.3.0`; die Abweichungen stehen in Abschnitt 0. Vor Übernahme ins Handout gegen den vom Prüfer festgelegten 1.3-Commit prüfen.
+**Aktualisierung 13.11.2026:** Dieses Dossier bleibt die historische Code-Landkarte.
+Für den tatsächlich ausgeführten A1-Versuch gelten die inzwischen geklärte
+[Baseline und Laborfreigabe](./00-rahmen-und-pruefung.md#geklärte-a1-baseline-und-laborumgebung),
+der eingefrorene [Versuchsvertrag](./1A-experiment-contract.md) und die
+[Auswertung](./1A-auswertung.md). Messbasis ist Fork-`main`
+`8f91e0417bc5aace461c3644a0b6b26c9284035b`, Version 1.4.0, auf dem eigenen
+Rechner. Frühere offene Baseline-/Laborfragen weiter unten sind historische
+Recherchefragen; sie werden nicht erneut als Voraussetzung für A1 behandelt.
+
 **Kennzeichnung:** „Repo-Fakt“ = im Code/in Doku belegt. „Allgemeinwissen“ = Linux-/Docker-Wissen ohne Repo-Beleg. „Vorschlag“ = eigene Planung, kein Repo-Fakt.
 
 ---

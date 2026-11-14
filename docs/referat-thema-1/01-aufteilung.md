@@ -1,6 +1,6 @@
 # Aufteilung 1A/1B/1C auf zwei Personen
 
-Stand: 2026-10-23. Grundlage: [CLOUD-COMPUTING-REFERAT-PRUEFUNG.md](../didaktik/CLOUD-COMPUTING-REFERAT-PRUEFUNG.md)
+Stand: 2026-11-13; Aufteilungsentscheidung vom 2026-10-23. Grundlage: [CLOUD-COMPUTING-REFERAT-PRUEFUNG.md](../didaktik/CLOUD-COMPUTING-REFERAT-PRUEFUNG.md)
 Abschnitte 4.1.2, 4.1.3 und 4.3 sowie die Lückenlisten der Dossiers 1A, 1B
 und 1C. Die Aufwandsschätzungen sind eigene Einschätzungen, keine Vorgabe.
 
@@ -15,7 +15,14 @@ Wir haben uns für **Option 1** entschieden:
 
 Die gemeinsamen Artefakte sind wie in der Tabelle
 [unten](#gemeinsame-artefakte-gleichmäßig-verteilen-und-kennzeichnen) verteilt.
-**Offen:** Die Aufteilung muss noch mit dem Prüfer abgestimmt werden.
+**Nachweisstand:** Für A1 sind eigener Rechner und aktueller Fork-`main` gemäß
+[Issue #6](https://github.com/NiklasSkulll/arsnova.eu/issues/6) geklärt.
+Eine gesonderte Bestätigung dieser konkreten Zweier-Aufteilung ist dadurch
+nicht belegt und bleibt offen. Die A1-Messwerkzeuge und Fixture liegen vor;
+die tatsächliche Übernahme durch 1B/1C wird in der
+[Übergabeunterlage](./1A-abschluss-und-uebergabe.md) abgeglichen.
+Niklas' zusätzliche 1B-Schritte 3–4 werden nicht mit dem Abschluss von 1A
+als erledigt erklärt.
 
 ## Feste Regeln für jede Variante
 
@@ -144,8 +151,9 @@ Folgende Kriterien helfen bei der Wahl, wer X und wer Y wird:
 
 ## Nächste Schritte
 
-1. Option wählen und X/Y zuordnen.
+1. **Erledigt:** Option 1 gewählt und X/Y zugeordnet (Tabelle oben).
 2. Die Aufteilung schriftlich festhalten: je Person Titel, Hypothese,
    Gegenalternative, eigener Test und Anteil an gemeinsamen Artefakten. Dann
    vor Beginn mit dem Prüfer abstimmen.
-3. Laborinstanz und Fixtures zuerst bauen, weil beide davon abhängen.
+3. **A1 verfügbar:** Laboraufbau, Fixture und Live-Messwerkzeuge sind dokumentiert.
+   Die gemeinsame Übernahme sowie die private Runtime für 1B/1C gesondert abgleichen.

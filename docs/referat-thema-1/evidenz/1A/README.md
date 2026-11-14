@@ -56,7 +56,26 @@ print('25 Laufnachweise und 50 Ressourcenartefakte geprüft.')
 PY
 ```
 
-`complete` bestätigt Erfassung und Rückweg, keine bestandenen
-Leistungsgrenzen. Die Bewertung der Hypothesen und die Betriebsentscheidung
-gehören zu Schritt 7. Aufbau, Prüfungen und Gültigkeitsgrenzen stehen in der
-[Versuchsreihe](../../1A-versuchsreihe.md).
+`complete` bestätigt Erfassung und Rückweg, keine bestandenen Leistungsgrenzen.
+Die in Schritt 7 ergänzte [Auswertung](./auswertung/auswertung.md),
+[JSON-Ausgabe](./auswertung/auswertung.json) und
+[CSV-Tabelle](./auswertung/live-vergleiche.csv) prüfen alle gepaarten
+Wiederholungen. Die [Betriebsentscheidung](../../1A-auswertung.md) erläutert
+die nicht bestätigten Hypothesen und die Gültigkeitsgrenzen; das
+[Prüfprotokoll](./auswertung/pruefungen.json) hält die Abschlussprüfungen fest.
+Aufbau und Erfassungsnachweise stehen in der [Versuchsreihe](../../1A-versuchsreihe.md).
+
+## Abschlussnacharbeit
+
+Die [Compose-Rekonstruktion](./compose-rekonstruktion/README.md) ist eine
+nachträgliche Ergänzung und wird nicht in die Originalmessungen eingemischt.
+[Nacharbeitsprüfungen und Review](./nacharbeit/README.md) ergänzen das ursprüngliche
+Prüfprotokoll. Der Unterschied zwischen fehlender damaliger Compose-Aufnahme
+und heutiger Rekonstruktion bleibt ausdrücklich sichtbar.
+
+## Bereinigter Abschlussstand
+
+Die [Bereinigungsprüfung](./bereinigung/README.md) gilt nach dem Verwerfen
+der sachfremden Compiler- und Frontend-Testkorrekturen. Die älteren Protokolle
+unter `auswertung/` und `nacharbeit/` bleiben unveränderte historische Nachweise
+und belegen keine erfolgreichen Gesamtprüfungen des aktuellen Stands.

@@ -9,7 +9,7 @@ Wir ergänzen reproduzierbare Testdaten und Messwerkzeuge und untersuchen damit 
 Hypothesen, Lastprofil, Wiederholungen und Grenzwerte werden vor den Messungen festgelegt.
 Aus den Messungen soll anschließend eine begründete Betriebsentscheidung entstehen: spaCy unter den untersuchten Bedingungen zulassen oder mit `NLP_ENABLED=false` bei der lexikalischen Wortwolke bleiben.
 
-**Stand: 12.11.2026 — Schritte 1–6 abgeschlossen; Schritt 7 noch offen.**
+**Stand: 12.11.2026 — Schritte 1–7 technisch umgesetzt; persönliche Abgabefreigabe und PR-Merge noch offen.**
 **Grundlage:** [Umsetzungsplan](./1A-umsetzungsplan.md) und [Versuchsvertrag](./1A-experiment-contract.md).
 **Dateiangaben:** »Neu« und »bearbeitet« beziehen sich auf den jeweiligen Umsetzungsschritt, nicht auf den aktuellen Git-Status.
 
@@ -19,6 +19,8 @@ Alle folgenden Befehle gelten für das Repository-Wurzelverzeichnis mit installi
 nvm use
 npm run build -w @arsnova/shared-types
 ```
+
+---
 
 ## 1 Versuchsvertrag festhalten
 
@@ -43,6 +45,8 @@ npx prettier --check docs/referat-thema-1/1A-experiment-contract.md
 
 Prüft die Formatierung des Vertrags; die fachlichen Regeln müssen zusätzlich mit Auftrag und späteren Laufmanifesten abgeglichen werden.
 Dieser Dokumentationsschritt führt noch keine Lastmessung durch.
+
+---
 
 ## 2 Gemeinsame Fixture reproduzierbar bereitstellen
 
@@ -75,6 +79,8 @@ node scripts/load/resource-isolation-fixture.mjs --print > /tmp/arsnova-1a-fixtu
 Validiert die Standardidentität, führt die Fixture-Tests aus und schreibt bei Bedarf die vollständigen synthetischen Eingaben außerhalb des Repositories.
 Dabei werden weder Sessions angelegt noch Lastversuche gestartet.
 
+---
+
 ## 3 Live-Messungen in Artillery vervollständigen
 
 ### 3.1 Übersicht
@@ -104,6 +110,8 @@ npm run load:artillery:metrics:test
 
 Prüft Messinstrumentierung und Fehlerbehandlung mit lokalen Testservern und synthetischen Stichproben.
 Für den zeitlich festgelegten gemeinsamen A1-Lastversuch ist der Ablauf aus Schritt 6 maßgeblich, nicht allein der eigenständige Artillery-Runner.
+
+---
 
 ## 4 Gezielte Analyse-Last hinzufügen
 
@@ -141,6 +149,8 @@ npm run load:resource-isolation:analysis -- \
   --run --sessions-file /tmp/arsnova-1a-analysesessions.json
 ```
 
+---
+
 ## 5 Container-Metriken und kontrollierte Störung ergänzen
 
 ### 5.1 Übersicht
@@ -172,6 +182,8 @@ npm run load:resource-isolation:infrastructure:test
 
 Die Validierungen benötigen keine Container; die Tests verwenden synthetische Docker-/cgroup-Daten und lokale Unix-Sockets.
 Für reale cgroup-Werte muss der Collector auf dem Linux-Dockerhost dessen `/proc`- und cgroup-v2-Dateisystem lesen können; einen vorbereiteten Laborlauf beschreibt die [Infrastrukturanleitung](./1A-container-metriken-und-proxy.md).
+
+---
 
 ## 6 Versuchsreihe automatisieren und ausführen
 
@@ -272,28 +284,47 @@ gzip -dc docs/referat-thema-1/evidenz/1A/reihe-2026-11-12/V2/block-01/ressourcen
 ```
 
 Zeigt den Gesamtabschluss, die dokumentierte Nachprüfung und beispielhaft eine vollständige Ressourcenzeitreihe.
-`complete: true` bestätigt die Erfassung und Rückwegprüfung; die Bewertung der Leistungsgrenzen steht noch aus.
+`complete: true` bestätigt die Erfassung und Rückwegprüfung; die getrennte Bewertung der Leistungsgrenzen steht in Schritt 7 und der verlinkten Auswertung.
+
+---
 
 ## 7 Auswertung, Abschlussprüfungen und Abgabe
 
 ### 7.1 Übersicht
 
-**Dieser Schritt ist noch offen; die nachfolgenden Punkte beschreiben den verbleibenden Arbeitsstand.**
-Die fünf vollständigen Blöcke müssen entsprechend dem vorab festgelegten Vertrag gepaart ausgewertet werden: V0 gegen V1 sowie V2, V3 und V4 jeweils gegen V1 desselben Blocks.
-Dabei sind Live-Latenzen, Fehler und Abdeckung getrennt von Analyseverfügbarkeit, Fallbacks und Ressourcenverbrauch zu bewerten.
-Aus den Einzelbefunden mit ihrer Spannweite und Gültigkeitsgrenze folgen erst die Bewertung von H1/H2 und die Betriebsentscheidung.
-Zusätzlich stehen die geplante Erweiterung des Hotpfad-Tests, die abschließenden Projektprüfungen und die Aufbereitung für Handout und Folien einschließlich Eigenanteil und KI-Kennzeichnung aus.
+Die vollständigen fünf Blöcke wurden nach dem unveränderten Vertrag gepaart ausgewertet: V0 gegen V1 sowie V2, V3 und V4 gegen V1 desselben Blocks.
+Live-Latenzen, Fehler und Abdeckung bleiben von Analyseverfügbarkeit, Fallbacks und Ressourcenverbrauch getrennt.
+H1 und H2 werden wegen relativer Grenzverletzungen nicht bestätigt; die absoluten Quizziele und die Ressourcenregeln im Normalbetrieb bestehen, trotzdem bleibt `NLP_ENABLED=false` die begründete Gegenalternative.
+Der Hotpfadschutz umfasst jetzt Quick Feedback einschließlich einer Negativprobe; die A1-npm-Befehle und ihre Testintegration sind vorhanden, während sachfremde Compiler- und Frontend-Testkorrekturen verworfen wurden.
+Die [Auswertung](./1A-auswertung.md), PDF-Abgabeentwürfe, ein Eigenanteilsnachweis und eine vorbereitete PR-Beschreibung liegen vor; persönliche Gegenprüfung, Einreichung, Commit und Merge werden nicht vorweggenommen.
 
 ### 7.2 Änderungen am Projekt
 
-- **Bisher keine Implementierung oder Auswertungsdateien aus Schritt 7 erstellt.** Die vorhandenen Rohmessungen aus Schritt 6 sind die Grundlage für die noch zu erstellende Auswertung.
-- [apps/backend/src/**tests**/wordCloud.hotpath-isolation.test.ts](../../apps/backend/src/__tests__/wordCloud.hotpath-isolation.test.ts) — **Bearbeitung noch geplant:** Der bestehende Test prüft bereits Vote-, Q&A- und Join-Router; die im Plan vorgesehene Aufnahme von `quickFeedback.ts` ist noch nicht umgesetzt.
-- [docs/referat-thema-1/evidenz/1A/](./evidenz/1A/) — **Ergänzungen noch geplant:** Nachvollziehbare Auswertung und begründete Entscheidung anhand der vollständigen Reihe; daraus später Handout und Folien als PDF.
-- [.github/pull_request_template.md](../../.github/pull_request_template.md) — **vorhandene Vorlage, noch auszufüllen:** Bei einer späteren PR die vollständige Vorlage verwenden und offene Prüfungen sowie begründete Ausnahmen angeben.
+- [scripts/load/lib/resource-isolation-evaluation.mjs](../../scripts/load/lib/resource-isolation-evaluation.mjs) — **neu:** Berechnet Rohperzentile, inklusive Live-Grenzen, Analyseverfügbarkeit und generationstreue Ressourcenwerte.
+- [scripts/load/evaluate-resource-isolation.mjs](../../scripts/load/evaluate-resource-isolation.mjs) — **neu:** Prüft die komplette Reihe und schreibt JSON, CSV und Markdown mit allen Einzelvergleichen und Hypothesenbefunden.
+- [scripts/load/lib/resource-isolation-evaluation.test.mjs](../../scripts/load/lib/resource-isolation-evaluation.test.mjs) und [scripts/load/evaluate-resource-isolation.test.mjs](../../scripts/load/evaluate-resource-isolation.test.mjs) — **jeweils neu:** Prüfen Grenzfälle, leere oder fehlerhafte Daten, verspätete Analysen, beschädigte Artefakte und echte CLI-Ausgaben anhand der versionierten Reihe.
+- [scripts/load/render-resource-isolation-pdfs.mjs](../../scripts/load/render-resource-isolation-pdfs.mjs) und [scripts/load/render-resource-isolation-pdfs.test.mjs](../../scripts/load/render-resource-isolation-pdfs.test.mjs) — **jeweils neu:** Erzeugen beleggebundene, maskierte Abgabevorlagen und prüfen beim tatsächlichen PDF-Bau Seitenumfang, Wortanzahl und Überläufe.
+- [wordCloud.hotpath-isolation.test.ts](../../apps/backend/src/__tests__/wordCloud.hotpath-isolation.test.ts) (`apps/backend/src/__tests__/wordCloud.hotpath-isolation.test.ts`) — **bearbeitet:** Nimmt Quick Feedback in den Schutz vor direkten Inferenzimporten auf und prüft dies mit einer kontrollierten Negativprobe.
+- [package.json](../../package.json) — **bearbeitet:** Ergänzt Auswertung, Vorlagentests und Dokumentbau; die neuen Tests gehören zu `npm test` und `test:coverage`.
+- [docs/referat-thema-1/evidenz/1A/auswertung/](./evidenz/1A/auswertung/) — **neu:** Enthält die aus unveränderten Rohdaten berechneten Ergebnisse und das Abschlussprüfprotokoll.
+- [docs/referat-thema-1/abgabe/](./abgabe/README.md) — **neu:** Enthält bearbeitbare HTML-Vorlagen, generierte HTML-/PDF-Entwürfe, drei Diagramme und ein Herkunftsmanifest.
+- [docs/referat-thema-1/1A-auswertung.md](./1A-auswertung.md), [docs/referat-thema-1/1A-eigenanteil.md](./1A-eigenanteil.md) und [docs/referat-thema-1/1A-pr-beschreibung.md](./1A-pr-beschreibung.md) — **jeweils neu:** Dokumentieren Entscheidung und Grenzen, Anforderungen und KI-Unterstützung sowie die vollständige vorbereitete PR-Vorlage.
+- [docs/TESTING.md](../TESTING.md), [docs/referat-thema-1/README.md](./README.md), [Evidenzindex](./evidenz/1A/README.md) und diese Gesamtübersicht — **jeweils bearbeitet:** Synchronisieren Befehle, Nachweisorte und Abschlussstand.
 
 ### 7.3 Durchführung
 
-Die folgenden Befehle sind für die Abschlussprüfung vorgesehen und führen für sich keine A1-Hypothesenauswertung durch:
+```bash
+npm run load:resource-isolation:evaluate -- --validate
+npm run load:resource-isolation:evaluation:test
+npm run load:resource-isolation:evaluate -- \
+  --run \
+  --evidence-root docs/referat-thema-1/evidenz/1A/reihe-2026-11-12 \
+  --output-dir /tmp/arsnova-1a-auswertung-neu
+npm run load:resource-isolation:documents
+```
+
+Die Auswertung liest nur Nachweise und verlangt einen neuen Ausgabeordner; der Dokumentbau verwendet die bereits versionierte Auswertung, nicht automatisch die neue `/tmp`-Ausgabe.
+Vollständige Befunde und reproduzierbare Unterlagen sind in [1A-auswertung.md](./1A-auswertung.md) und [abgabe/README.md](./abgabe/README.md) erklärt.
 
 ```bash
 npm run test -w @arsnova/backend -- src/__tests__/wordCloud.hotpath-isolation.test.ts
@@ -305,8 +336,48 @@ npm run lint
 npm run build:prod
 ```
 
-Die gezielten A1-Testbefehle aus den Schritten 2–6 gehören bereits zu `npm test`; reale Docker-Lastmessungen werden dadurch nicht gestartet.
-Die dokumentierten 77 A1-Tests sowie fünf Sidecar- und zwei Compose-Tests bestanden vor der vollständigen Reihe am 12.11.2026, ebenso Lint und Formatierungsprüfungen.
-Der Typecheck scheiterte dort weiterhin mit TS5095 an der unveränderten Backend-Konfiguration; der frühere vollständige Testdurchlauf scheiterte an einem Frontend-Test zur `weightingHint`-Formulierung und wurde für den erneuten Messlauf nicht wiederholt.
-Die ergänzende unabhängige Abschlussprüfung von Schritt 6 konnte wegen fehlenden Werkzeugzugriffs der Prüfer nicht stattfinden; der Abschlussstand wurde selbst geprüft.
-Diese offenen Punkte und die eigentliche Auswertung bleiben vor dem Gesamtabschluss von Aufgabe 1A zu bearbeiten.
+Die [Bereinigungsprüfung](./evidenz/1A/bereinigung/README.md) dokumentiert den aktuellen Stand. Die älteren Prüfprotokolle unter `auswertung/` und `nacharbeit/` gelten für den damaligen Umfang einschließlich inzwischen verworfener Korrekturen; vorhandene Tests werden nicht mit ausgeführten Läufen gleichgesetzt.
+Die vollständigen Projektprüfungen ersetzen nicht die getrennte Bewertung der Performance-Hypothesen oder die persönliche fachliche Abgabefreigabe.
+
+### 7.4 Nacharbeit zur Abschlussprüfung
+
+Die [Compose-Rekonstruktion](./evidenz/1A/compose-rekonstruktion/README.md)
+ergänzt fünf nachträglich aufgelöste Positivlisten-Auszüge, abgeglichen gegen
+alle 25 ursprünglichen Manifeste. Die fehlende damalige Aufnahme bleibt als
+Nachweisgrenze ausdrücklich benannt. Das neue Werkzeug
+`scripts/load/reconstruct-resource-isolation-compose.mjs` und sein Test sind
+von den eingefrorenen Messwerkzeugen getrennt; die ursprünglichen Rohdaten
+und der Versuchsvertrag bleiben unverändert.
+
+Rahmen, Aufteilung, Auswertung, Eigenanteil und PDF-Entwürfe weisen den aktuellen
+Stand einheitlich aus. Die [Abschluss-/Übergabeunterlage](./1A-abschluss-und-uebergabe.md)
+enthält KI-Aufträge, persönliche Gegenprüfungen und gemeinsame Artefakte; die
+[Nacharbeitsprüfungen](./evidenz/1A/nacharbeit/README.md) dokumentieren die
+technischen Resultate und den unabhängigen Reviewstand.
+
+```bash
+npm run load:resource-isolation:compose:reconstruct -- \
+  --output-dir /tmp/arsnova-1a-compose-rekonstruktion-neu
+npm run load:resource-isolation:evaluation:test
+```
+
+Die Rekonstruktion benötigt Docker Compose, startet jedoch keine Container.
+Persönliche Freigabe, tatsächliche Übergabe, Commit, PR und Merge werden
+jeweils erst nach ihrer Durchführung als erledigt markiert.
+
+---
+
+## Abgrenzung der verworfenen Korrekturen
+
+Beim Abschluss wurden auch vorhandene Projektfehler außerhalb des A1-Messauftrags korrigiert. Diese Änderungen wurden anschließend auf Wunsch verworfen; sie gehören nicht zum aktuellen Commit. Die folgende Übersicht bewahrt die Begründung und trennt sie vom verbleibenden A1-Umfang.
+
+| Datei                                                                                                                      | Zwischenzeitliche Änderung und Zweck                                                                                                      | Aktueller Stand                                                                                               |
+| -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| [apps/backend/tsconfig.json](../../apps/backend/tsconfig.json)                                                             | `moduleResolution` von `bundler` auf `node` geändert, um TS5095 bei `CommonJS` zu beheben. Die Datei wirkt auch auf den Produktionsbuild. | Verworfen; ursprüngliche Konfiguration unverändert.                                                           |
+| [apps/frontend/tsconfig.json](../../apps/frontend/tsconfig.json)                                                           | `dom.iterable` für bereits vorhandene NodeList-Iteration ergänzt; Typdefinitionen ohne Laufzeitcode.                                      | Verworfen; ursprüngliche Konfiguration unverändert.                                                           |
+| [apps/frontend/tsconfig.spec.json](../../apps/frontend/tsconfig.spec.json)                                                 | `DOM.Iterable` für die überschreibende Testkonfiguration ergänzt.                                                                         | Verworfen; ursprüngliche Konfiguration unverändert.                                                           |
+| [session-host.component.spec.ts](../../apps/frontend/src/app/features/session/session-host/session-host.component.spec.ts) | Sachfremde Wording-Erwartung entfernt und den Korpusvertrag mit `ALL_ELIGIBLE` geprüft.                                                   | Verworfen; ursprünglicher Test unverändert.                                                                   |
+| [package.json](../../package.json)                                                                                         | A1-Befehle für Auswertung, Dokumentbau und Compose-Rekonstruktion sowie Tests in `test`/`test:coverage` ergänzt.                          | Wiederhergestellt; ausschließlich npm-Skripte, keine Abhängigkeiten, Build- oder Startkonfiguration geändert. |
+| [wordCloud.hotpath-isolation.test.ts](../../apps/backend/src/__tests__/wordCloud.hotpath-isolation.test.ts)                | Quick Feedback in den Isolationsschutz aufgenommen und eine Negativprobe ergänzt.                                                         | Wiederhergestellt; A1-Testumfang, keine Routeränderung.                                                       |
+
+Die Compilerkorrekturen waren für die eigentliche Messreihe nicht erforderlich: Die gemessene Anwendung stammt aus dem unveränderten Baseline-Image. Die früheren Fehler, Korrekturen und erfolgreichen Läufe bleiben im historischen [Prüfprotokoll](./evidenz/1A/auswertung/pruefungen.json) nachvollziehbar. Sie belegen keinen erfolgreichen Gesamtcheck des bereinigten Stands; dafür gilt die [aktuelle Bereinigungsprüfung](./evidenz/1A/bereinigung/README.md).

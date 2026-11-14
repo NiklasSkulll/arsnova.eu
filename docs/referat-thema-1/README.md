@@ -20,6 +20,11 @@ an kqc-real.
 | [1A-analyse-last.md](./1A-analyse-last.md)                                   | Hostautorisierte Analyse-Last mit festem Korpus, Zeitplan, Ergebniszählung und lokaler Prüfung   |
 | [1A-container-metriken-und-proxy.md](./1A-container-metriken-und-proxy.md)   | Lesende Container-Erfassung, cgroup-Auswertung und kontrollierter Unix-Socket-Verzögerungsproxy  |
 | [1A-versuchsreihe.md](./1A-versuchsreihe.md)                                 | Isolierter Laboraufbau, randomisierte V0–V4-Blöcke, Vorlauf, Messung und geprüfter Rollback      |
+| [1A-auswertung.md](./1A-auswertung.md)                                       | Gepaarte Auswertung, nicht bestätigte Hypothesen, Ressourcenbudget und Betriebsentscheidung      |
+| [1A-komplette-Aufgabe-fertig.md](./1A-komplette-Aufgabe-fertig.md)           | Übersicht aller sieben Schritte mit Dateien, Befehlen und aktuellem Abschlussstand               |
+| [1A-eigenanteil.md](./1A-eigenanteil.md)                                     | Anforderungsabgleich, Git-Prüfgrundlage und transparente Abgrenzung agentengestützter Beiträge   |
+| [1A-abschluss-und-uebergabe.md](./1A-abschluss-und-uebergabe.md)             | Persönliche Prüfaufgaben, gemeinsame Artefakte, KI-Aufträge und tatsächlicher Übergabestand      |
+| [abgabe/README.md](./abgabe/README.md)                                       | Vierseitiger Handoutentwurf, neun PDF-Folien, Diagramme und reproduzierbarer Dokumentbau         |
 | [1B-private-inferenz-zweiter-host.md](./1B-private-inferenz-zweiter-host.md) | Zwei-Host-Deployment, LLM-Client, Messbarkeit, Lücken für 1B                                     |
 | [1C-kontext-und-adapterpfad.md](./1C-kontext-und-adapterpfad.md)             | #456-Kontext, Verträge, Snapshot/Hash, Async-Pfad, Testlücken für 1C                             |
 
@@ -27,6 +32,16 @@ Unter `evidenz/1A/` liegen die A1-Messnachweise mit synthetischen Daten.
 Die erste Reihe bleibt nach ihrem angeforderten Abbruch erhalten; der erneute
 vollständige Durchlauf liegt getrennt unter `evidenz/1A/reihe-2026-11-12/`.
 Ablauf und Zuordnung beschreibt die [Versuchsreihe](./1A-versuchsreihe.md).
+Die [Auswertung](./1A-auswertung.md) trifft daraus die begründete Entscheidung;
+Der [Compose-Nachtrag](./evidenz/1A/compose-rekonstruktion/README.md) ist ausdrücklich
+eine Rekonstruktion. [Abschluss und Übergabe](./1A-abschluss-und-uebergabe.md) sowie
+[Nacharbeitsprüfungen](./evidenz/1A/nacharbeit/README.md) weisen persönliche und
+formale Freigaben getrennt von technischen Ergebnissen aus.
+
+Der [bereinigte Abschlussstand](./evidenz/1A/bereinigung/README.md) trennt die
+wiederhergestellten A1-npm-Befehle und den Quick-Feedback-Isolationstest von
+verworfenen Compiler- und Frontend-Testkorrekturen. Frühere Gesamtprüfungen
+belegen ausschließlich ihren damaligen Umfang.
 
 ## Arbeitsweise im Fork
 
@@ -79,7 +94,7 @@ Alle Dossiers enthalten Code-Stellen (Datei:Zeile), Versuchsideen und Lücken.
 ## Offene Punkte
 
 - Fragen an den Prüfer klären (siehe
-  [00-rahmen-und-pruefung.md](./00-rahmen-und-pruefung.md#offene-fragen-an-den-prüfer)),
+  [00-rahmen-und-pruefung.md](./00-rahmen-und-pruefung.md#klärungsstand-der-fragen-an-den-prüfer)),
   vor allem diese:
   - Für 1A geklärt: aktueller `main` als Baseline und eigener Rechner als Labor
     gemäß [Issue #6, Stand 2026-11-10](https://github.com/NiklasSkulll/arsnova.eu/issues/6).

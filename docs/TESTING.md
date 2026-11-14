@@ -898,6 +898,57 @@ aus. Sie benötigen die festgehaltenen Baseline-Images, Dockerhost-Zähler und
 eine private Konfigurationsdatei. Anleitung, Zeitbedarf und Nachweisgrenzen
 stehen in der [A1-Versuchsreihe](referat-thema-1/1A-versuchsreihe.md).
 
+### A1-Auswertung und Abgabeentwürfe
+
+```bash
+npm run load:resource-isolation:evaluate -- --validate
+npm run load:resource-isolation:evaluation:test
+npm run load:resource-isolation:evaluate -- \
+  --run \
+  --evidence-root docs/referat-thema-1/evidenz/1A/reihe-2026-11-12 \
+  --output-dir /tmp/arsnova-1a-auswertung-neu
+npm run load:resource-isolation:documents
+```
+
+Der Ausgabeordner der Auswertung muss neu sein. Der Evaluator arbeitet lesend
+auf der vollständigen versionierten Reihe, prüft beide Phasen aller 25 Läufe
+und deren Ressourcen-Prüfsummen und schreibt JSON, CSV und Markdown. Relative
+und absolute Live-Regeln gelten gleichzeitig und inklusiv; ungültige Daten
+führen zum Fehler, gültig gemessene Grenzverletzungen bleiben Ergebnisse.
+
+Die Auswertungs-/Vorlagentests gehören zu `npm test` und `test:coverage`,
+benötigen aber keine Container oder Browser. Der gesonderte Dokumentbau
+benötigt das vorhandene Playwright-Chromium und liest die versionierte
+Auswertung unter `evidenz/1A/auswertung/`; er verwendet nicht automatisch
+die oben als Gegenprüfung neu berechnete `/tmp`-Ausgabe. Er erzeugt drei
+Chart.js-Grafiken, HTML, vier A4-Handoutseiten und neun PDF-Folien und prüft
+Überläufe, echte PDF-Seitenzahl und Handout-Wortumfang mit pdf-parse.
+
+Die [Auswertung](referat-thema-1/1A-auswertung.md) und die
+[Abgabeanleitung](referat-thema-1/abgabe/README.md) dokumentieren Befunde,
+Reproduzierbarkeit und persönliche Freigaben. Die zwischenzeitlichen Änderungen
+an Backend-/Frontend-Compilerkonfiguration und dem sachfremden Frontend-Test
+wurden verworfen. Frühere erfolgreiche Gesamtprüfungen gelten deshalb nur für
+ihren damaligen Stand. Die [Bereinigungsprüfung](referat-thema-1/evidenz/1A/bereinigung/README.md)
+dokumentiert den aktuellen Umfang und verbleibende Projektfehler; diese werden
+nicht innerhalb des A1-Messauftrags korrigiert.
+
+### A1-Compose-Rekonstruktion nach der Messung
+
+```bash
+npm run load:resource-isolation:compose:reconstruct -- \
+  --output-dir /tmp/arsnova-1a-compose-rekonstruktion-neu
+npm run load:resource-isolation:evaluation:test
+```
+
+Die reine Konfigurationsauflösung startet keine Container. Docker Compose wird
+benötigt; die Ausgabe ist ein bereinigter Positivlisten-Auszug und ausdrücklich
+als nachträgliche Rekonstruktion gekennzeichnet. Images, Limits und aufgezeichnete
+Flags werden gegen alle 25 ursprünglichen Laufmanifeste geprüft. Eine fehlende
+Aufnahme zum damaligen Messzeitpunkt wird dadurch nicht ersetzt. Die neuen
+Negativtests der Bereinigung und des Abgleichs gehören zu `npm test` und kommen
+ohne Docker aus. [Nachtrag und Grenzen](referat-thema-1/evidenz/1A/compose-rekonstruktion/README.md).
+
 ### Artillery-Lasttest (Realtime, bis 500 TN)
 
 Unified Live-Session: Join-Welle, Quiz-Vote, Q&A (20 %), Blitzlicht, WebSocket-Status/Host-Progress, Ergebnis-Fan-out.
