@@ -14,7 +14,7 @@
 
 ### Commits
 
-Stand nach dem Docs-Audit (2026-11-14, einschließlich des Commits, der diese Zahlen einträgt): 125 Commits auf `feature-1B-two-host` gegenüber `a19ca70f` (Fork-`main`, Baseline nach [ADR 1B-001](adr/1B-001-baseline-fork-main-a19ca70f.md)), alle von Jonas Weirauch, keine Merges; 38 vom 2026-11-12, 80 vom 2026-11-13, 7 vom 2026-11-14. Nach Typ: 56 `docs`, 36 `fix`, 19 `feat`, 14 `test`; der Typ sagt nichts über den Anteil der KI. Gezählt mit `git rev-list --count a19ca70f..HEAD` und `git log --format=%s a19ca70f..HEAD`. Außerhalb von `docs/referat-thema-1/` ändert der Branch nichts (`git diff --stat a19ca70f HEAD -- . ':!docs/referat-thema-1'` ist leer), also auch keinen Produktionscode.
+Stand nach der Prüfung der Nachträge (2026-11-14, einschließlich des Commits, der diese Zahlen einträgt): 126 Commits auf `feature-1B-two-host` gegenüber `a19ca70f` (Fork-`main`, Baseline nach [ADR 1B-001](adr/1B-001-baseline-fork-main-a19ca70f.md)), alle von Jonas Weirauch, keine Merges; 38 vom 2026-11-12, 80 vom 2026-11-13, 8 vom 2026-11-14. Nach Typ: 57 `docs`, 36 `fix`, 19 `feat`, 14 `test`; der Typ sagt nichts über den Anteil der KI. Gezählt mit `git rev-list --count a19ca70f..HEAD` und `git log --format=%s a19ca70f..HEAD`. Außerhalb von `docs/referat-thema-1/` ändert der Branch nichts (`git diff --stat a19ca70f HEAD -- . ':!docs/referat-thema-1'` ist leer), also auch keinen Produktionscode.
 
 ### Gemeinsame Artefakte
 
@@ -58,7 +58,7 @@ Hypothesenschwellen, Messmethode per Mitschnitt und Zeitzerlegung sind KI-Vorsch
 
 ### Prüfung durch den Autor
 
-Am 2026-11-13 hat der Autor die Ergebnisse der Schritte 1–2 geprüft (Ergebnisbericht und Protokolle einschließlich des Nachtrags M1–M4); Einwände hatte er keine. Vermerkt ist das in der Kopfzeile jedes Protokolls. _Korrigiert 2026-11-14:_ Danach kamen in den Protokollen noch datierte Ergänzungen und Leerraum-Korrekturen in zwei Belegdateien hinzu (`e2e9c701`, Branch-Review) sowie die datierten Hinweise aus dem Docs-Audit vom 2026-11-14 (im Aufbauprotokoll nach dem Einfrieren, mit Zustimmung des Autors). Die Prüfung des Autors deckt diese Nachträge noch nicht ab.
+Am 2026-11-13 hat der Autor die Ergebnisse der Schritte 1–2 geprüft (Ergebnisbericht und Protokolle einschließlich des Nachtrags M1–M4); Einwände hatte er keine. Vermerkt ist das in der Kopfzeile jedes Protokolls. _Korrigiert 2026-11-14:_ Danach kamen in den Protokollen noch datierte Ergänzungen und Leerraum-Korrekturen in zwei Belegdateien hinzu (`e2e9c701`, Branch-Review) sowie die datierten Hinweise aus dem Docs-Audit vom 2026-11-14 (im Aufbauprotokoll nach dem Einfrieren, mit Zustimmung des Autors). Am 2026-11-14 hat der Autor diese Nachträge und das [Präsentationsgerüst](1B-praesentation-geruest.md) geprüft, ohne Einwände; vermerkt in den Kopfzeilen.
 
 ### Was dieses Dokument nicht aussagt
 

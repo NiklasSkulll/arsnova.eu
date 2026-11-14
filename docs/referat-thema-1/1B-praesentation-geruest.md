@@ -1,6 +1,6 @@
 # Gerüst: Folien und Handout zu Auftrag 1B, Schritte 1–2
 
-Diese Datei ist eine Gliederung, kein Vortragstext. Jeder Punkt nennt eine Kernaussage, eine Kernzahl mit Quelle und, wo vorhanden, ein Diagramm. Die Zahlen haben ihr Zuhause in ADRs und Protokollen; vor der Übernahme in Folien oder Handout dort nachprüfen ([Rahmendokument, KI-Nutzung](00-rahmen-und-pruefung.md#ki-nutzung)). Stand: 2026-11-13, Entwurf der KI, vom Autor zu prüfen. _Aktualisiert 2026-11-14 (Docs-Audit):_ Commit-Angaben, Log-Aussage auf B4, Quelle für 17,8 ms und Gültigkeitszeile korrigiert.
+Diese Datei ist eine Gliederung, kein Vortragstext. Jeder Punkt nennt eine Kernaussage, eine Kernzahl mit Quelle und, wo vorhanden, ein Diagramm. Die Zahlen haben ihr Zuhause in ADRs und Protokollen; vor der Übernahme in Folien oder Handout dort nachprüfen ([Rahmendokument, KI-Nutzung](00-rahmen-und-pruefung.md#ki-nutzung)). Stand: 2026-11-13, Entwurf der KI · Prüfung durch den Autor: 2026-11-14, ohne Einwände. _Aktualisiert 2026-11-14 (Docs-Audit):_ Commit-Angaben, Log-Aussage auf B4, Quelle für 17,8 ms und Gültigkeitszeile korrigiert.
 
 ## Rahmen
 

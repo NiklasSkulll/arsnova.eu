@@ -1,6 +1,6 @@
 # 1B: Ergebnisbericht – private Inferenz auf einem zweiten Host
 
-Stand: 2026-11-13 (Entwurf, Schritte 1–2 von Jonas) · Prüfung durch den Autor: 2026-11-13, ohne Einwände · _Aktualisiert 2026-11-14 (Docs-Audit):_ Aufgabenabdeckung, Befunde und Issue-Links präzisiert, Qualitätstor an allen Aufträgen belegt
+Stand: 2026-11-13 (Entwurf, Schritte 1–2 von Jonas) · Prüfung durch den Autor: 2026-11-13, ohne Einwände; Nachträge bis 2026-11-14 geprüft am 2026-11-14, ohne Einwände · _Aktualisiert 2026-11-14 (Docs-Audit):_ Aufgabenabdeckung, Befunde und Issue-Links präzisiert, Qualitätstor an allen Aufträgen belegt
 
 Auftrag, Leitfrage und Hintergrund: [1B-Dossier](1B-private-inferenz-zweiter-host.md). Design und Plan: [Design](specs/2026-11-12-1b-zwei-host-design.md), [Plan](specs/2026-11-12-1b-zwei-host-plan.md). Diagramme und Code-Belege: [1B-Diagramme](1B-diagrams.md). Entscheidungen: [ADR 1B-001 bis 1B-012](adr/README.md).
 
