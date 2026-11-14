@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
@@ -120,4 +121,35 @@ test('bewahrt Ressourcen verlustfrei komprimiert und verhindert das Überschreib
   );
   assert.match(await readFile(join(dir, 'V1/block-01/report.xml'), 'utf8'), /failures="0"/);
   await assert.rejects(() => schreibeLaufNachweis(dir, lauf, report));
+});
+
+test('speichert bereinigte Compose-Aufnahmen pro Phase mit Prüfsumme und ohne eingebettete Kopie', async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), 'a1-compose-nachweis-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const aufnahme = { services: { app: { image: config.applicationImage } } };
+  await schreibeLaufNachweis(
+    dir,
+    { variant: 'V0', run: 'block-01' },
+    {
+      complete: true,
+      manifest: {},
+      resolvedCompose: aufnahme,
+      warmup: { manifest: {}, resolvedCompose: aufnahme },
+    },
+  );
+  const basis = join(dir, 'V0/block-01');
+  const nachweis = JSON.parse(await readFile(join(basis, 'lauf.json'), 'utf8'));
+  assert.equal(nachweis.resolvedCompose, undefined);
+  assert.equal(nachweis.manifest.resolvedCompose.file, 'compose-messung.json');
+  assert.equal(
+    nachweis.manifest.resolvedCompose.sha256,
+    createHash('sha256')
+      .update(await readFile(join(basis, 'compose-messung.json')))
+      .digest('hex'),
+  );
+  assert.equal(nachweis.warmup.manifest.resolvedCompose.file, 'compose-aufwaermung.json');
+  assert.deepEqual(
+    JSON.parse(await readFile(join(basis, 'compose-messung.json'), 'utf8')),
+    aufnahme,
+  );
 });

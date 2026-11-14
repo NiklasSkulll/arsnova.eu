@@ -7,6 +7,11 @@ nicht geändert. Ein vollständiger Laufnachweis bedeutet zunächst vollständig
 Erfassung und überprüften Rollback. Ob die Hypothesen bestehen, wird erst in
 Schritt 7 über die gepaarten Wiederholungen ausgewertet.
 
+**Nachtrag 14.11.2026:** Für die neue Messung auf dem übernommenen main-Stand
+`a19ca70f` gilt die [neue Ausführungsanleitung](./1A-neue-messreihe.md).
+Die folgenden Baseline-, Lauf- und Ergebnisangaben bleiben der historischen
+Reihe vom 12.11.2026 zugeordnet und werden nicht auf den neuen Stand umetikettiert.
+
 ## Baseline und tatsächliches Labor
 
 [Issue #6, Stand 2026-11-10](https://github.com/NiklasSkulll/arsnova.eu/issues/6),

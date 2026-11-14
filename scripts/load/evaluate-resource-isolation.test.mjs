@@ -5,6 +5,8 @@ import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { promisify } from 'node:util';
 import test from 'node:test';
+import { createHash } from 'node:crypto';
+import { ladeReihendefinition } from './lib/resource-isolation-series.mjs';
 import { leseVersuchsreihe, werteVersuchsreiheAus } from './evaluate-resource-isolation.mjs';
 
 const exec = promisify(execFile);
@@ -102,4 +104,147 @@ test('CLI schreibt JSON, CSV und Markdown und überschreibt keine bestehenden Au
     81,
   );
   await assert.rejects(() => exec(process.execPath, args, { timeout: 30000 }));
+});
+
+const definitionsdatei = 'docs/referat-thema-1/specs/2026-11-14-1a-messreihe-main-a19ca70f.json';
+const hash = (daten) => createHash('sha256').update(daten).digest('hex');
+
+// Ausschließlich temporäre Testdaten: keine neue reale Messung behaupten.
+async function neueTestreihe(t) {
+  const ordner = await mkdtemp(join(tmpdir(), 'a1-neue-testreihe-'));
+  t.after(() => rm(ordner, { recursive: true, force: true }));
+  await cp(quelle, ordner, { recursive: true });
+  const reihe = await ladeReihendefinition(definitionsdatei);
+  await cp(definitionsdatei, join(ordner, 'reihendefinition.json'));
+  await cp(reihe.addendumFile, join(ordner, 'vorabnachtrag.md'));
+  const abschluss = JSON.parse(await readFile(join(ordner, 'abschluss.json'), 'utf8'));
+  Object.assign(abschluss, {
+    baselineCommit: reihe.baselineCommit,
+    seriesDefinitionSha256: reihe.definitionSha256,
+  });
+  await writeFile(join(ordner, 'abschluss.json'), JSON.stringify(abschluss));
+  const plan = JSON.parse(await readFile(join(ordner, 'plan.json'), 'utf8'));
+  for (const lauf of plan.runs) {
+    const dir = join(ordner, lauf.variant, lauf.run);
+    const nachweis = JSON.parse(await readFile(join(dir, 'lauf.json'), 'utf8'));
+    for (const [phase, file] of [
+      [nachweis, 'compose-messung.json'],
+      [nachweis.warmup, 'compose-aufwaermung.json'],
+    ]) {
+      const m = phase.manifest;
+      Object.assign(m, {
+        baselineCommit: reihe.baselineCommit,
+        seriesDefinitionSha256: reihe.definitionSha256,
+      });
+      m.services['pdf-worker'].pidsLimit = 256;
+      const compose = {
+        services: Object.fromEntries(
+          Object.entries(m.services).map(([name, d]) => [
+            name,
+            {
+              image: d.imageId,
+              cpus: d.cpuLimit ?? undefined,
+              mem_limit: d.memoryLimitBytes ?? undefined,
+              pids_limit: d.pidsLimit ?? undefined,
+              environment: d.flags ?? {},
+            },
+          ]),
+        ),
+      };
+      const bytes = JSON.stringify(compose);
+      await writeFile(join(dir, file), bytes);
+      m.resolvedCompose = { file, sha256: hash(bytes), mediaType: 'application/json' };
+    }
+    await writeFile(join(dir, 'lauf.json'), JSON.stringify(nachweis));
+    const report = JSON.parse(await readFile(join(dir, 'report.json'), 'utf8'));
+    report.metrics.manifest = nachweis.manifest;
+    await writeFile(join(dir, 'report.json'), JSON.stringify(report));
+  }
+  return { ordner, reihe };
+}
+
+test('wertet eine ausdrücklich gewählte neue Baseline mit 256 PDF-Prozessen und 50 Compose-Belegen aus', async (t) => {
+  const { ordner, reihe } = await neueTestreihe(t);
+  const daten = await leseVersuchsreihe(ordner, reihe);
+  assert.equal(daten.files.filter((f) => /compose-/.test(f.file)).length, 50);
+  assert.equal(werteVersuchsreiheAus(daten).comparisons.length, 80);
+  const ausgabe = join(ordner, 'neue-auswertung');
+  await exec(
+    process.execPath,
+    [
+      'scripts/load/evaluate-resource-isolation.mjs',
+      '--run',
+      '--evidence-root',
+      ordner,
+      '--output-dir',
+      ausgabe,
+      '--series-file',
+      definitionsdatei,
+    ],
+    { timeout: 30000 },
+  );
+  const ergebnis = JSON.parse(await readFile(join(ausgabe, 'auswertung.json'), 'utf8'));
+  assert.equal(ergebnis.source.identity.baselineCommit, reihe.baselineCommit);
+  assert.equal(ergebnis.source.identity.seriesDefinitionSha256, reihe.definitionSha256);
+  await assert.rejects(() => leseVersuchsreihe(ordner), /Baseline/);
+});
+
+test('CLI validiert die neue Reihendefinition statt weiterhin die alte Baseline auszugeben', async () => {
+  const { stdout } = await exec(process.execPath, [
+    'scripts/load/evaluate-resource-isolation.mjs',
+    '--validate',
+    '--series-file',
+    definitionsdatei,
+  ]);
+  const daten = JSON.parse(stdout);
+  assert.equal(daten.baselineCommit, 'a19ca70ff37dcb5510a77ab2745c06b70ccc3565');
+  assert.match(daten.seriesDefinitionSha256, /^[a-f0-9]{64}$/);
+});
+
+test('verweigert fehlende oder beschädigte Compose-Aufnahmen und abweichende Dienstlimits', async (t) => {
+  const { ordner, reihe } = await neueTestreihe(t);
+  const file = join(ordner, 'V1/block-01/lauf.json');
+  const original = JSON.parse(await readFile(file, 'utf8'));
+  const berichtdatei = join(ordner, 'V1/block-01/report.json');
+  const originalbericht = JSON.parse(await readFile(berichtdatei, 'utf8'));
+  const speichern = async (nachweis) => {
+    await writeFile(file, JSON.stringify(nachweis));
+    await writeFile(
+      berichtdatei,
+      JSON.stringify({
+        ...originalbericht,
+        metrics: { ...originalbericht.metrics, manifest: nachweis.manifest },
+      }),
+    );
+  };
+  const ohne = structuredClone(original);
+  delete ohne.manifest.resolvedCompose;
+  await speichern(ohne);
+  await assert.rejects(() => leseVersuchsreihe(ordner, reihe), /Compose/);
+  const kaputt = structuredClone(original);
+  kaputt.manifest.resolvedCompose.sha256 = 'a'.repeat(64);
+  await speichern(kaputt);
+  await assert.rejects(() => leseVersuchsreihe(ordner, reihe), /Compose/);
+  const composefile = join(ordner, 'V1/block-01/compose-messung.json');
+  const compose = JSON.parse(await readFile(composefile, 'utf8'));
+  compose.services['pdf-worker'].pids_limit = 128;
+  const bytes = JSON.stringify(compose);
+  await writeFile(composefile, bytes);
+  const falsch = structuredClone(original);
+  falsch.manifest.resolvedCompose.sha256 = hash(bytes);
+  await speichern(falsch);
+  await assert.rejects(() => leseVersuchsreihe(ordner, reihe), /pdf-worker/);
+});
+
+test('verweigert vermischte Reihendefinitionen und fehlende Aufwärmbelege', async (t) => {
+  const { ordner, reihe } = await neueTestreihe(t);
+  const file = join(ordner, 'V1/block-01/lauf.json');
+  const original = JSON.parse(await readFile(file, 'utf8'));
+  const gemischt = structuredClone(original);
+  gemischt.warmup.manifest.seriesDefinitionSha256 = 'b'.repeat(64);
+  await writeFile(file, JSON.stringify(gemischt));
+  await assert.rejects(() => leseVersuchsreihe(ordner, reihe), /Reihendefinition/);
+  await writeFile(file, JSON.stringify(original));
+  await rm(join(ordner, 'V1/block-01/compose-aufwaermung.json'));
+  await assert.rejects(() => leseVersuchsreihe(ordner, reihe), /ENOENT/);
 });

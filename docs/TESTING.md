@@ -1282,3 +1282,27 @@ zweiten Lauf einzelne Zustände aus (zum Beispiel `numeric-results,freetext-resu
 720p-Fall pro Zustand. Native Vollbildberechtigung wird in diesen
 Geometrieprüfungen simuliert; Dialog-/Popup-/Guard-Tests prüfen den Einstieg separat.
 Die reale HDMI-Probe aus der letzten Reihe bleibt eine zusätzliche manuelle Abnahme.
+
+### A1-Messreihe auf main a19ca70f
+
+Für eine neue Messung mit dem nach dem Merge übernommenen Anwendungsstand gilt
+[die neue Versuchsanleitung](referat-thema-1/1A-neue-messreihe.md). Sie trennt
+bereits ausgeführte Projektprüfungen von neuem Imagebau, Vorlauf, vollständiger
+25-Läufe-Reihe und deren Auswertung. Der sachfremde ursprüngliche Frontend-Test
+zur Formulierung »viel Zustimmung« bleibt unverändert und als Fehler dokumentiert.
+
+```bash
+npm run load:resource-isolation:evaluation:test
+npm run load:resource-isolation:experiment:test
+npm run load:resource-isolation:evaluate -- --validate \
+  --series-file docs/referat-thema-1/specs/2026-11-14-1a-messreihe-main-a19ca70f.json
+```
+
+`--series-file` muss bei der neuen Auswertung als letztes Argumentpaar stehen.
+Die private Laborzuordnung verwendet denselben absoluten Pfad im Feld
+`seriesDefinitionFile` und einen neuen `evidenceRoot`. Definition und Nachtrag
+werden mit ihrem Hash gebunden; die Auswertung verlangt 50 tatsächlich vor den
+Phasen aufgelöste, bereinigte Compose-Aufnahmen. Der Standardaufruf ohne
+Reihendefinition bleibt auf die alte Baseline begrenzt. Historische Rohdaten,
+Vertrag und Berichte werden nicht überschrieben. Die alten PDF-Vorlagen und
+Compose-Rekonstruktion bleiben auf ihre bisherigen Quellen begrenzt.

@@ -31,6 +31,9 @@ import {
   istDirekterAufruf,
 } from './lib/resource-isolation-experiment.mjs';
 
+import { ladeReihendefinition } from './lib/resource-isolation-series.mjs';
+import { bereinigeCompose, pruefeManifestAbgleich } from './lib/resource-isolation-compose.mjs';
+
 const exec = promisify(execFile);
 const komprimieren = promisify(gzip);
 const projekt = 'arsnova-1a';
@@ -70,6 +73,16 @@ export async function schreibeLaufNachweis(evidenceRoot, lauf, report) {
   const ordner = join(evidenceRoot, lauf.variant, lauf.run);
   await mkdir(ordner);
   const ausgabe = structuredClone(report);
+  for (const [phase, file] of [
+    [ausgabe, 'compose-messung.json'],
+    [ausgabe.warmup, 'compose-aufwaermung.json'],
+  ]) {
+    if (!phase?.resolvedCompose) continue;
+    const daten = Buffer.from(`${JSON.stringify(phase.resolvedCompose, null, 2)}\n`);
+    await writeFile(join(ordner, file), daten, { flag: 'wx' });
+    phase.manifest.resolvedCompose = { file, sha256: sha256(daten), mediaType: 'application/json' };
+    delete phase.resolvedCompose;
+  }
   for (const [name, phase] of [
     ['ressourcen', ausgabe],
     ['aufwaermung-ressourcen', ausgabe.warmup],
@@ -110,6 +123,8 @@ async function werkzeugHash() {
           'run-resource-isolation.mjs',
           'resource-isolation-live.mjs',
           'lib/resource-isolation-experiment.mjs',
+          'lib/resource-isolation-series.mjs',
+          'lib/resource-isolation-compose.mjs',
           'host-analyze-loop.mjs',
           'lib/host-analyze-loop.mjs',
           'lib/resource-isolation-fixture.mjs',
@@ -134,6 +149,7 @@ export function pruefeVersuchsKonfiguration(config) {
     ![config.applicationImage, config.spacyImage].every((image) =>
       /^sha256:[a-f0-9]{64}$/.test(image ?? ''),
     ) ||
+    (config.seriesDefinitionFile !== undefined && !isAbsolute(config.seriesDefinitionFile)) ||
     config.generatorLocation !== 'same-host'
   )
     throw new Error(
@@ -213,7 +229,7 @@ async function docker(args, { input, timeout = 240000 } = {}) {
   });
 }
 
-async function erstelleLabor(config, evidenceRoot) {
+async function erstelleLabor(config, evidenceRoot, reihe) {
   const baselineCompose = await readFile(
     join(config.baselineDirectory, 'docker-compose.prod.yml'),
     'utf8',
@@ -224,6 +240,8 @@ async function erstelleLabor(config, evidenceRoot) {
   if (baselineCompose !== erwartet)
     throw new Error('Baseline-Compose stimmt nicht mit dem festgehaltenen Commit überein.');
   const prod = parse(baselineCompose);
+  if (reihe && Number(prod.services['pdf-worker'].pids_limit) !== reihe.pdfWorkerPidsLimit)
+    throw new Error('PDF-Prozesslimit der Baseline stimmt nicht mit der Reihendefinition überein.');
   const revision = (await exec('git', ['rev-parse', 'HEAD'], { cwd: root })).stdout.trim();
   const toolsSha256 = await werkzeugHash();
   const contractSha256 = sha256(
@@ -520,6 +538,9 @@ async function erstelleLabor(config, evidenceRoot) {
     process.stdout.write(
       `${lauf.variant}/${lauf.run}: ${kind === 'warmup' ? 'Aufwärmung' : 'Messfenster'} vorbereiten\n`,
     );
+    const resolvedCompose = bereinigeCompose(
+      JSON.parse(await compose('--profile', 'nlp', 'config', '--format', 'json')),
+    );
     stage = `${kind.toUpperCase()}_SESSIONS`;
     const dir = await mkdtemp(join(privat, `${kind}-`));
     const session = await createArtillery500Session(trpcUrl);
@@ -586,6 +607,7 @@ async function erstelleLabor(config, evidenceRoot) {
       const startAt = new Date(Date.now() + 5000).toISOString();
       const diagnostics = [await diagnose('BEFORE', startAtMs)];
       const dienstmanifest = await pruefeZustand(lauf.variant);
+      pruefeManifestAbgleich(resolvedCompose, { services: dienstmanifest });
       child.send({ ...phaseProfil, startAtMs });
       process.stdout.write(
         `${lauf.variant}/${lauf.run}: ${kind === 'warmup' ? 'Aufwärmung' : 'Messfenster'} ${phaseProfil.durationMs / 1000} Sekunden\n`,
@@ -671,8 +693,10 @@ async function erstelleLabor(config, evidenceRoot) {
         (['V0', 'V1'].includes(lauf.variant) || normalisierung > 0);
       return {
         complete,
+        resolvedCompose,
         manifest: {
           kind,
+          ...(reihe ? { seriesDefinitionSha256: reihe.definitionSha256 } : {}),
           labAlias: config.labAlias,
           baselineCommit: config.baselineCommit,
           toolsCommit: revision,
@@ -759,12 +783,23 @@ async function main(args) {
   if (args.length !== 3 || !['--pilot', '--run'].includes(args[0]) || args[1] !== '--config-file')
     throw new Error('Genau --validate oder --pilot/--run mit --config-file verwenden.');
   const config = pruefeVersuchsKonfiguration(JSON.parse(await readFile(args[2], 'utf8')));
+  const reihe = config.seriesDefinitionFile
+    ? await ladeReihendefinition(config.seriesDefinitionFile)
+    : null;
+  if (
+    reihe &&
+    (config.baselineCommit !== reihe.baselineCommit ||
+      config.orderSeed !== reihe.orderSeed ||
+      !config.evidenceRoot)
+  )
+    throw new Error('Laborzuordnung und explizite Reihendefinition stimmen nicht überein.');
   const pilot = args[0] === '--pilot';
   const evidenceBase = resolve(
     config.evidenceRoot ?? join(root, 'docs/referat-thema-1/evidenz/1A'),
   );
   const evidenceRoot = pilot ? join(evidenceBase, 'vorlauf') : evidenceBase;
   const identitaet = {
+    ...(reihe ? { seriesDefinitionSha256: reihe.definitionSha256 } : {}),
     baselineCommit: config.baselineCommit,
     applicationImage: config.applicationImage,
     spacyImage: config.spacyImage,
@@ -782,6 +817,14 @@ async function main(args) {
     pruefeVorlaufNachweis(vorlauf, identitaet);
   }
   await mkdir(evidenceRoot, { recursive: true });
+  if (reihe) {
+    const daten = await readFile(config.seriesDefinitionFile);
+    const nachtrag = await readFile(join(root, reihe.addendumFile));
+    if (sha256(daten) !== reihe.definitionSha256 || sha256(nachtrag) !== reihe.addendumSha256)
+      throw new Error('Reihendefinition vor Beginn verändert.');
+    await writeFile(join(evidenceRoot, 'reihendefinition.json'), daten, { flag: 'wx' });
+    await writeFile(join(evidenceRoot, 'vorabnachtrag.md'), nachtrag, { flag: 'wx' });
+  }
   await writeFile(
     join(evidenceRoot, 'plan.json'),
     `${JSON.stringify({ kind: pilot ? 'pilot' : 'confirmatory', profile: pilot ? vorlaufprofil : profil, runs: erstelleVersuchsplan(config.orderSeed) }, null, 2)}\n`,
@@ -793,7 +836,7 @@ async function main(args) {
   process.on('SIGTERM', abbrechen);
   let labor;
   try {
-    labor = await erstelleLabor(config, evidenceRoot);
+    labor = await erstelleLabor(config, evidenceRoot, reihe);
     await fuehreVersuchsreiheAus({
       plan: pilot
         ? erstelleVersuchsplan(config.orderSeed).filter((lauf) => lauf.block === 1)
@@ -807,6 +850,12 @@ async function main(args) {
       wiederherstellen: () => labor.wiederherstellen(),
       speichern: (lauf, report) => labor.speichern(lauf, report),
     });
+    if (
+      reihe &&
+      (await ladeReihendefinition(config.seriesDefinitionFile)).definitionSha256 !==
+        reihe.definitionSha256
+    )
+      throw new Error('Reihendefinition während des Versuchs verändert.');
     await writeFile(
       join(evidenceRoot, 'abschluss.json'),
       `${JSON.stringify({ complete: true, ...identitaet }, null, 2)}\n`,

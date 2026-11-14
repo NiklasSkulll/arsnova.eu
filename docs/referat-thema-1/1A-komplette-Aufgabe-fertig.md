@@ -381,3 +381,9 @@ Beim Abschluss wurden auch vorhandene Projektfehler außerhalb des A1-Messauftra
 | [wordCloud.hotpath-isolation.test.ts](../../apps/backend/src/__tests__/wordCloud.hotpath-isolation.test.ts)                | Quick Feedback in den Isolationsschutz aufgenommen und eine Negativprobe ergänzt.                                                         | Wiederhergestellt; A1-Testumfang, keine Routeränderung.                                                       |
 
 Die Compilerkorrekturen waren für die eigentliche Messreihe nicht erforderlich: Die gemessene Anwendung stammt aus dem unveränderten Baseline-Image. Die früheren Fehler, Korrekturen und erfolgreichen Läufe bleiben im historischen [Prüfprotokoll](./evidenz/1A/auswertung/pruefungen.json) nachvollziehbar. Sie belegen keinen erfolgreichen Gesamtcheck des bereinigten Stands; dafür gilt die [aktuelle Bereinigungsprüfung](./evidenz/1A/bereinigung/README.md).
+
+**Testfehler bei `npm test`:**
+
+- In [session-host.component.spec.ts (line 10257)](/mnt/d/gitprojekte/arsnova.eu/apps/frontend/src/app/features/session/session-host/session-host.component.spec.ts:10257) wird »viel Zustimmung« erwartet.
+- Der aktuelle Hinweis beschreibt stattdessen die Differenz zwischen Dafür- und Dagegen-Stimmen.
+- Die Korrektur kann ausschließlich im Test erfolgen. Dabei sollte dessen eigentlicher Zweck erhalten bleiben: sicherstellen, dass die Wortwolke den vollständigen zulässigen Fragenkorpus verwendet. Die sachfremde Wording-Erwartung sollte entfernt oder durch eine passende Vertragsprüfung ersetzt werden.

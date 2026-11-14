@@ -38,6 +38,13 @@ gehört **nicht** in die PR an kqc-real.
 | [1A-abschluss-und-uebergabe.md](./1A-abschluss-und-uebergabe.md)             | Persönliche Prüfaufgaben, gemeinsame Artefakte, KI-Aufträge und tatsächlicher Übergabestand                                                                                                                                           |
 | [abgabe/README.md](./abgabe/README.md)                                       | Vierseitiger Handoutentwurf, neun PDF-Folien, Diagramme und reproduzierbarer Dokumentbau                                                                                                                                              |
 
+**Neue A1-Messung vorbereitet (14.11.2026):**
+[Anleitung für main a19ca70f](./1A-neue-messreihe.md) mit
+[Vorabnachtrag](./specs/2026-11-14-1a-messreihe-main-a19ca70f.md) und
+[Reihendefinition](./specs/2026-11-14-1a-messreihe-main-a19ca70f.json).
+Neue Messwerte liegen dadurch noch nicht vor; die nachfolgenden Angaben
+beschreiben weiterhin die ursprüngliche Reihe.
+
 Unter `evidenz/1A/` liegen die A1-Messnachweise mit synthetischen Daten.
 Die erste Reihe bleibt nach ihrem angeforderten Abbruch erhalten; der erneute
 vollständige Durchlauf liegt getrennt unter `evidenz/1A/reihe-2026-11-12/`.

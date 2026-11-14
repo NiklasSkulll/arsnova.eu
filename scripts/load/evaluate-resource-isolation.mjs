@@ -14,10 +14,13 @@ import {
   fasseRessourcenZusammen,
 } from './lib/resource-isolation-evaluation.mjs';
 
+import { HISTORISCHE_REIHE, ladeReihendefinition } from './lib/resource-isolation-series.mjs';
+import { pruefeManifestAbgleich } from './lib/resource-isolation-compose.mjs';
+
 const sha256 = (daten) => createHash('sha256').update(daten).digest('hex');
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const vertragSha = 'f7d3eba4b82a3f3a47c914665ac8a7be4988b9061deff6b857a79d2fcf766ab7';
-const baselineCommit = '8f91e0417bc5aace461c3644a0b6b26c9284035b';
+
 const aktionszahlen = { join: 500, vote: 500, qaSubmit: 100, blitzlicht: 500 };
 const varianten = ['V0', 'V1', 'V2', 'V3', 'V4'];
 const profil = {
@@ -33,7 +36,7 @@ const fordere = (bedingung, text) => {
 };
 
 /** Ausschließlich vollständige, unverändert identifizierte V2-Vertragsdaten lesen. */
-export async function leseVersuchsreihe(ordner) {
+export async function leseVersuchsreihe(ordner, reihe = HISTORISCHE_REIHE) {
   const files = [];
   const json = async (pfad) => {
     const daten = await readFile(join(ordner, pfad));
@@ -46,7 +49,7 @@ export async function leseVersuchsreihe(ordner) {
   );
   fordere(
     identity.complete === true &&
-      identity.baselineCommit === baselineCommit &&
+      identity.baselineCommit === reihe.baselineCommit &&
       identity.contractSha256 === vertragSha &&
       identity.fixtureSha256 === fixture.sha256 &&
       identity.orderSeed === fixture.seed,
@@ -57,6 +60,20 @@ export async function leseVersuchsreihe(ordner) {
       vertragSha,
     'Der vorab festgelegte Vertrag wurde verändert.',
   );
+  if (reihe.definitionSha256) {
+    fordere(
+      identity.seriesDefinitionSha256 === reihe.definitionSha256,
+      'Abweichende Reihendefinition im Abschluss.',
+    );
+    await json('reihendefinition.json');
+    fordere(
+      files.at(-1).sha256 === reihe.definitionSha256,
+      'Gespeicherte Reihendefinition verändert.',
+    );
+    const nachtrag = await readFile(join(ordner, 'vorabnachtrag.md'));
+    fordere(sha256(nachtrag) === reihe.addendumSha256, 'Gespeicherter Vorabnachtrag verändert.');
+    files.push({ file: 'vorabnachtrag.md', sha256: sha256(nachtrag) });
+  }
   const plan = await json('plan.json');
   fordere(
     plan.kind === 'confirmatory' &&
@@ -98,6 +115,24 @@ export async function leseVersuchsreihe(ordner) {
           isDeepStrictEqual(m.profile, phaseProfil),
         'Abweichende Laufidentität, Fixture, Werkzeugrevision oder Reihenfolge.',
       );
+      if (reihe.definitionSha256)
+        fordere(
+          m.seriesDefinitionSha256 === reihe.definitionSha256,
+          'Abweichende Reihendefinition in einer Phase.',
+        );
+      if (reihe.requiresResolvedCompose) {
+        const file = kind === 'warmup' ? 'compose-aufwaermung.json' : 'compose-messung.json';
+        fordere(
+          m.resolvedCompose?.file === file && m.resolvedCompose.mediaType === 'application/json',
+          'Compose-Aufnahme fehlt oder ist falsch zugeordnet.',
+        );
+        const compose = await json(`${pfad}/${file}`);
+        fordere(
+          files.at(-1).sha256 === m.resolvedCompose.sha256,
+          'Compose-Prüfsumme stimmt nicht.',
+        );
+        pruefeManifestAbgleich(compose, m);
+      }
       hardware ??= m.hardware;
       fordere(
         isDeepStrictEqual(hardware, m.hardware) && m.generatorLocation === 'same-host',
@@ -130,7 +165,7 @@ export async function leseVersuchsreihe(ordner) {
           fordere(
             dienst.cpuLimit === 1 &&
               dienst.memoryLimitBytes === 1073741824 &&
-              dienst.pidsLimit === 128,
+              dienst.pidsLimit === reihe.pdfWorkerPidsLimit,
             'Abweichende PDF-Worker-Limits.',
           );
         if (alias === 'spacy')
@@ -412,9 +447,19 @@ export function erstelleAuswertungsMarkdown(auswertung) {
 }
 
 async function main(args) {
+  let reihe = HISTORISCHE_REIHE;
+  const position = args.indexOf('--series-file');
+  if (position !== -1) {
+    fordere(
+      position === args.length - 2,
+      '--series-file verlangt genau einen abschließenden Dateipfad.',
+    );
+    reihe = await ladeReihendefinition(args[position + 1]);
+    args = args.slice(0, position);
+  }
   if (args.length === 1 && args[0] === '--validate') {
     process.stdout.write(
-      `${JSON.stringify({ contractSha256: vertragSha, baselineCommit, thresholds: A1_GRENZEN }, null, 2)}\n`,
+      `${JSON.stringify({ contractSha256: vertragSha, baselineCommit: reihe.baselineCommit, ...(reihe.definitionSha256 ? { seriesDefinitionSha256: reihe.definitionSha256 } : {}), thresholds: A1_GRENZEN }, null, 2)}\n`,
     );
     return;
   }
@@ -425,7 +470,7 @@ async function main(args) {
       args[3] === '--output-dir',
     'Genau --validate oder --run --evidence-root … --output-dir … verwenden.',
   );
-  const auswertung = werteVersuchsreiheAus(await leseVersuchsreihe(args[2]));
+  const auswertung = werteVersuchsreiheAus(await leseVersuchsreihe(args[2], reihe));
   const { format: formatiere, resolveConfig } = await import('prettier');
   const formatierung = await resolveConfig(join(root, 'package.json'));
   auswertung.evaluationSha256 = sha256(
