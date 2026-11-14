@@ -180,6 +180,31 @@
       }
     },
     {
+      "name": "4 Kerne ohne SMT, 16 GiB (knapp, Rechner 2 GiB)",
+      "eingabe": {
+        "kerne": 4,
+        "threads": 4,
+        "ramGib": 16,
+        "kernJeCpu": [0, 1, 2, 3]
+      },
+      "erwartet": {
+        "abbruch": null,
+        "llm": {
+          "vcpu": 2,
+          "ramGib": 10,
+          "cpuset": "0,1",
+          "diskGib": 20
+        },
+        "app": {
+          "vcpu": 2,
+          "ramGib": 4,
+          "cpuset": "2,3",
+          "diskGib": 25
+        },
+        "warnungen": ["llm-unter-4", "app-ram-4", "llm-ram-10", "host-ram-2"]
+      }
+    },
+    {
       "name": "zu wenig RAM: 2/4, 8 GiB",
       "eingabe": {
         "kerne": 2,
