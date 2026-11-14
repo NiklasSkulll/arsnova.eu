@@ -14,7 +14,7 @@
 
 ### Commits
 
-Stand nach der Prüfung der Nachträge (2026-11-14, einschließlich des Commits, der diese Zahlen einträgt): 127 Commits auf `feature-1B-two-host` gegenüber `a19ca70f` (Fork-`main`, Baseline nach [ADR 1B-001](adr/1B-001-baseline-fork-main-a19ca70f.md)), alle von Jonas Weirauch, keine Merges; 38 vom 2026-11-12, 80 vom 2026-11-13, 9 vom 2026-11-14. Nach Typ: 58 `docs`, 36 `fix`, 19 `feat`, 14 `test`; der Typ sagt nichts über den Anteil der KI. Gezählt mit `git rev-list --count a19ca70f..HEAD` und `git log --format=%s a19ca70f..HEAD`. Außerhalb von `docs/referat-thema-1/` ändert der Branch nichts (`git diff --stat a19ca70f HEAD -- . ':!docs/referat-thema-1'` ist leer), also auch keinen Produktionscode.
+Stand nach der Prüfung der Nachträge (2026-11-14, einschließlich des Commits, der diese Zahlen einträgt): 129 Commits auf `feature-1B-two-host` gegenüber `a19ca70f` (Fork-`main`, Baseline nach [ADR 1B-001](adr/1B-001-baseline-fork-main-a19ca70f.md)), alle von Jonas Weirauch, keine Merges; 38 vom 2026-11-12, 80 vom 2026-11-13, 11 vom 2026-11-14. Nach Typ: 59 `docs`, 37 `fix`, 19 `feat`, 14 `test`; der Typ sagt nichts über den Anteil der KI. Gezählt mit `git rev-list --count a19ca70f..HEAD` und `git log --format=%s a19ca70f..HEAD`. Außerhalb von `docs/referat-thema-1/` ändert der Branch nichts (`git diff --stat a19ca70f HEAD -- . ':!docs/referat-thema-1'` ist leer), also auch keinen Produktionscode.
 
 ### Gemeinsame Artefakte
 

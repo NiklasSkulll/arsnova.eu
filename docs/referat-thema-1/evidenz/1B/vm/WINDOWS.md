@@ -13,7 +13,7 @@ Netz `192.168.150.0/24`, Gateway `.1` auf dem Rechner, ausgehend NAT, von außen
 
 ## 1. Vorbereitung (einmal)
 
-1. Repo aktualisieren, Branch `feature-1B-two-host` (bis zum Merge). Liegt der Clone in WSL unter `/mnt/d/…`, ist das unter Windows einfach `D:\…`. Ein Clone als Git-Worktree wird abgelehnt; das Skript aus dem Haupt-Clone starten.
+1. Repo aktualisieren und den eigenen Branch anlegen ([Runbook, Abschnitt 8](../runbook.md#8-übergabe-an-niklas-schritte-34)). Den Clone mit dem Git **in WSL** anlegen (etwa unter `/mnt/d/…`, unter Windows dann `D:\…`), nicht mit Git for Windows: Dessen Standard `core.autocrlf=true` macht aus den `.sh`-Dateien CRLF-Dateien, dann scheitern `labor-wsl.sh` und `--arbeitsstand`. Gibt es schon einen Windows-Clone: `git config core.autocrlf false`, dann `git checkout -- .` (vorher eigene Änderungen sichern). Ein Clone als Git-Worktree wird abgelehnt; das Skript aus dem Haupt-Clone starten.
 2. **PowerShell als Administrator** öffnen (Rechtsklick > „Als Administrator ausführen“) und in den Ordner `docs\referat-thema-1\evidenz\1B` des Clones wechseln, etwa `cd D:\<projekte>\arsnova.eu\docs\referat-thema-1\evidenz\1B` (ein Clone nur im WSL-Dateisystem geht auch über `\\wsl.localhost\Ubuntu\…`).
 3. `powershell -ExecutionPolicy Bypass -File .\labor.ps1 -Mode vorpruefung`: fragt zuerst, wohin die VM-Disks sollen (zeigt den freien Platz je Laufwerk und empfiehlt das lokale NTFS/ReFS-Laufwerk mit dem meisten, etwa `D:\arsnova-1b`; die Wahl gilt für alle späteren Aufrufe, ändern mit `-VmDir`). Dann prüft es alles und sagt zu jedem `FEHLER`, was zu tun ist. Am System ändert es ohne `-EnableHyperV` nichts. Es merkt sich den Ort in `%USERPROFILE%\labor-1b\einstellungen.json`; erst wenn kein `FEHLER` bleibt, legt es den VM-Ordner und den Laborschlüssel `%USERPROFILE%\.ssh\arsnova-1b_ed25519` an. Typisch beim ersten Mal: Hyper-V ist aus. Dann denselben Befehl mit `-EnableHyperV` am Ende, Windows **neu starten**, Schritt 3 wiederholen.
 4. Docker Desktop beenden. WSL 2 reserviert sich bis zur Hälfte des RAMs (im Task-Manager `VmmemWSL`); ohne Codex in WSL genügt vor `up` ein `wsl --shutdown`, mit Codex WSL begrenzen (Abschnitt 6).
@@ -22,10 +22,12 @@ Geprüft werden: Admin-Rechte, Windows-Edition (Home hat kein Hyper-V), Hyper-V 
 
 ## 2. Aufbau
 
+Im Folgenden steht `labor.ps1 -Mode X` kurz für `powershell -ExecutionPolicy Bypass -File .\labor.ps1 -Mode X` im Ordner `evidenz\1B`; ein bloßes `.\labor.ps1` scheitert an der Standard-Execution-Policy von Windows. Unter Windows und in WSL nie `labor.sh` aufrufen, das ist der Linux-Weg.
+
 `powershell -ExecutionPolicy Bypass -File .\labor.ps1 -Mode up` zeigt die Empfehlung und was dem Rechner bleibt, fragt einmal, dann läuft es allein (etwa 45–60 min; jeder Schritt mit `[n/11]`, Zeit seit Beginn, geschätzter Restzeit und voraussichtlichem Ende). Solange das Skript läuft (`up`, `start`, `kalibrierung`, `lauf`), geht der Rechner nicht in den Ruhezustand; Netzteil anschließen, im Akkubetrieb weist es darauf hin. Wer erst sehen will, was angelegt wird: zuerst mit `-NurVorbereiten` (startet keine VM).
 
-- Bricht es ab, steht da, in welchem Schritt, warum und was zu tun ist, dazu der Pfad zum Log. Nach dem Beheben denselben Befehl erneut aufrufen; Fertiges wird übersprungen. Bei Fragen das Log schicken (enthält keine Tokens).
-- Am Ende darf der Bericht `%USERPROFILE%\labor-1b\aufbau-<Zeit>.txt` keine `FEHLER`-Zeile enthalten; ihn ins eigene Aufbauprotokoll übernehmen. Der Start der VMs unter Hyper-V läuft hier zum ersten Mal auf echter Hardware; jede Abweichung notieren.
+- Bricht es ab, steht da, in welchem Schritt, warum und was zu tun ist, dazu der Pfad zum Log. Nach dem Beheben denselben Befehl erneut aufrufen; Fertiges wird übersprungen. Bei Fragen das Log an Jonas schicken (enthält keine Tokens).
+- Am Ende darf der Bericht `%USERPROFILE%\labor-1b\aufbau-<Zeit>.txt` keine `FEHLER`-Zeile enthalten; ihn ins eigene Aufbauprotokoll `evidenz/1B/<Datum>-aufbau-windows.md` übernehmen. Der Start der VMs unter Hyper-V läuft hier zum ersten Mal auf echter Hardware; jede Abweichung notieren.
 - Das erste `up` (als Administrator) trägt den Nutzer in die Gruppe Hyper-V-Administratoren ein; nach erneuter Anmeldung brauchen `status`, `start`, `stop` und Läufe kein Admin-Fenster mehr.
 
 Jeder Aufruf außer `pruefen` (der schreibt den Bericht) legt ein Log `%USERPROFILE%\labor-1b\log-<Modus>-<Zeit>.txt` an, ohne Tokens.
@@ -41,7 +43,7 @@ Jeder Aufruf außer `pruefen` (der schreibt den Bericht) legt ein Log `%USERPROF
 | `-LlmDiskGB`, `-AppDiskGB`                       | 20, 25                                      | Obergrenze der Platten (mindestens 20 bzw. 25)                                                                                                      |
 | `-RamReserveGB`                                  | 4                                           | RAM, der Windows bleiben muss (mindestens 2)                                                                                                        |
 | `-EnableHyperV`                                  | aus                                         | Hyper-V aktivieren (danach Neustart)                                                                                                                |
-| `-NoSecureBoot`                                  | aus                                         | Secure Boot aus, falls das Image mit dem Template nicht startet                                                                                     |
+| `-NoSecureBoot`                                  | aus                                         | Secure Boot aus, falls das Image mit dem Template nicht startet; wirkt nur beim Anlegen, vorher `destroy`                                           |
 | `-SshKey`                                        | `%USERPROFILE%\.ssh\arsnova-1b_ed25519.pub` | eigener Laborschlüssel für `labor`                                                                                                                  |
 | `-VmDir`                                         | beim ersten Aufruf gefragt                  | Image, Disks, Seeds, `known_hosts`; gemerkt nur bei `vorpruefung` und `up`; nie einchecken                                                          |
 | `-LabN`                                          | 10                                          | Aufträge je Lauf, 1 bis 10                                                                                                                          |
@@ -55,11 +57,11 @@ Die Messmodi und ihre Reihenfolge sind dieselben wie unter Linux ([Runbook, Absc
 
 ## 4. Vor Kalibrierung und Lauf
 
-Von Hand: Energiemodus „Beste Leistung“ (Einstellungen → System → Netzbetrieb und Akku), Netzteil an, Windows Update für die Dauer pausieren (Einstellungen → Windows Update → Updates aussetzen). `labor.ps1` ändert beides nicht. Es hält nur den aktiven Energiesparplan fest (`powercfg /getactivescheme`) und vergleicht ihn zwischen Kalibrierung und Lauf; den Energiemodus „Beste Leistung“ zeigt `powercfg` nicht an, ein geänderter Modus fällt dem Vergleich also nicht auf.
+`kalibrierung` und `lauf` sperren den Ruhezustand, solange sie laufen; `kontrolle` und `belege` ebenfalls (seit 2026-11-14). Von Hand: Energiemodus „Beste Leistung“ (Einstellungen → System → Netzbetrieb und Akku), Netzteil an, Windows Update für die Dauer pausieren (Einstellungen → Windows Update → Updates aussetzen). `labor.ps1` ändert beides nicht. Es hält nur den aktiven Energiesparplan fest (`powercfg /getactivescheme`) und vergleicht ihn zwischen Kalibrierung und Lauf; den Energiemodus „Beste Leistung“ zeigt `powercfg` nicht an, ein geänderter Modus fällt dem Vergleich also nicht auf.
 
 ## 5. Zwischen den Sitzungen und Rückbau
 
-- Zwischen den Sitzungen `.\labor.ps1 -Mode stop`, vorher wieder `-Mode start`. Die VMs laufen nur, wenn getestet wird.
+- Zwischen den Sitzungen `labor.ps1 -Mode stop`, vorher wieder `labor.ps1 -Mode start` (fährt hoch, wartet auf die Dienste und prüft). Die VMs laufen nur, wenn getestet wird. Nach einem Neustart von Windows sind sie aus und starten nicht von selbst; dann ebenfalls `-Mode start`.
 - Am Ende `-Mode destroy`: entfernt nur Objekte namens `arsnova-1b…` (VMs, Disks, Switch und NAT). Basis-Image und Download bleiben im VM-Ordner; den Ordner löschen, wenn auch sie weg sollen (der beim ersten Aufruf gewählte Ort, gemerkt in `%USERPROFILE%\labor-1b\einstellungen.json`; ohne Wahl `C:\ProgramData\arsnova-1b`).
 - Hyper-V bleibt an. Wer es wieder aus haben will (etwa für VirtualBox oder VMware): Admin-PowerShell `Disable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-All`, neu starten.
 - Während das Labor läuft, kein VPN mit „gesamten Verkehr tunneln“ verbinden: Dann erreicht der Rechner die VMs nicht mehr.
@@ -67,11 +69,13 @@ Von Hand: Energiemodus „Beste Leistung“ (Einstellungen → System → Netzbe
 ## 6. Arbeiten mit Codex in WSL
 
 - WSL nicht beenden, sondern begrenzen: `%USERPROFILE%\.wslconfig` mit `[wsl2]` und `memory=6GB`, danach einmal `wsl --shutdown`. Bei 32 GB empfiehlt `up` llm-host 12 GB und app-host 6 GB, zusammen 18 GB, und verlangt beim Start zusätzlich 4 GB Reserve: verfügbar sein müssen also etwa 22 GB. Mit WSL auf 6 GB und Windows selbst (3–5 GB) wird das knapp; vorher Browser und andere große Programme schließen. Reicht es nicht, bricht `up` vor dem Anlegen ab und nennt die größten Verbraucher; dann mit `-AppRamGB 4` erneut starten (der App-Build in der VM wird langsamer).
-- Aus WSL steuert `evidenz/1B/labor-wsl.sh` das Labor über die Windows-Programme (`labor.ps1`, `ssh.exe`); WSL braucht die VMs dafür nicht direkt zu erreichen. Ohne Argumente zeigt es seine Hilfe. Beispiele: `labor-wsl.sh status`, `labor-wsl.sh vm llm 'docker ps'`, `labor-wsl.sh lauf -LabN 1 -LabTag dev-x --arbeitsstand`.
-  - `--arbeitsstand` nimmt nicht committete Änderungen mit (Commit unter `refs/labor/arbeitsstand`, der Zweig bleibt unverändert); er wirkt bei allen Modi, die den Repo-Stand in die VMs bringen (`sync`, `up`, `kalibrierung`, `lauf`, `kontrolle`, `belege`). Solche Läufe sind Entwicklungsläufe: `-LabTag dev-…`, nicht werten.
+- Aus WSL steuert `evidenz/1B/labor-wsl.sh` das Labor über die Windows-Programme (`labor.ps1`, `ssh.exe`); WSL braucht die VMs dafür nicht direkt zu erreichen. Ohne Argumente zeigt es seine Hilfe. Beispiele: `labor-wsl.sh status`, `labor-wsl.sh vm llm 'docker ps'`, `labor-wsl.sh lauf -LabN 1 -LabTag dev-x -LabTimeoutMs 300000 --arbeitsstand`. Ohne `-LabTimeoutMs` braucht `lauf` eine Kalibrierung vom selben Tag, und die Kalibrierung braucht einen Prompt-Body aus einem früheren Lauf; auf einem frischen Labor also zuerst [Runbook, Abschnitt 3](../runbook.md#3-lauf), Schritt 1.
+  - `--arbeitsstand` nimmt nicht committete Änderungen mit (Commit unter `refs/labor/arbeitsstand`, der Zweig bleibt unverändert); er wirkt bei allen Modi, die den Repo-Stand in die VMs bringen (`sync`, `up`, `kalibrierung`, `lauf`, `kontrolle`, `belege`). Solche Läufe sind Entwicklungsläufe: `-LabTag dev-…`, nicht werten. `kontrolle` und `belege` nie mit `--arbeitsstand`: Sie schreiben immer nach `messung/`; ist es doch passiert, die neue Datei oder den Ordner dort wieder löschen.
   - `up` und `destroy` öffnen ein Admin-Fenster (UAC) und zeigen danach die letzten 40 Zeilen des Logs. `vorpruefung` braucht ebenfalls Admin-Rechte und scheitert aus WSL ohne Admin-Fenster; sie einmal in einer Admin-PowerShell aufrufen.
   - `vm` nutzt immer den Laborschlüssel `%USERPROFILE%\.ssh\arsnova-1b_ed25519` und den VM-Ordner aus `einstellungen.json`.
   - Die WSL-Interop muss an sein (`/etc/wsl.conf`, `[interop] enabled=true`).
+- **Codex-Sandbox:** `labor-wsl.sh` braucht die Windows-Interop (`powershell.exe`, `ssh.exe`), Netz und Schreibzugriff auf `.git` (für `--arbeitsstand`) sowie auf `%USERPROFILE%\labor-1b`. In einer eingeschränkten Sandbox diese Befehle freigeben oder Codex mit vollem Zugriff auf den Clone starten; mit echtem Codex ist das noch nicht ausprobiert.
+- **Lange Läufe:** `kalibrierung` dauert einige Minuten, ein Lauf mit 10 Aufträgen 35–45 min, `up` 45–60 min. Solche Befehle startet Niklas besser selbst in einem eigenen WSL-Terminal, etwa `bash docs/referat-thema-1/evidenz/1B/labor-wsl.sh lauf -LabN 10 -LabTag stoerung-x 2>&1 | tee ~/lauf-stoerung-x.log`; Codex liest danach Log und Ergebnis. Bricht ein Lauf ab: im Task-Manager prüfen, ob noch `powershell.exe` läuft, und `labor-wsl.sh vm app 'pgrep -af lauf.sh'`.
 - Codex beim Start sagen: „Lies `docs/referat-thema-1/AGENTS.md`, Abschnitt 1B-Labor für Agenten.“ Dort stehen Befehle und Regeln (Hypothese vor jedem Lauf, keine Tokens ins Repo, Läufe nur nach Rückfrage).
 
 ## 7. Was `-Mode up` tut
@@ -89,8 +93,11 @@ Die VM-Schicht ist `vm-windows.ps1`, die Hilfsfunktionen stehen in `windows-lib.
 ## 8. Noch nicht auf echter Hardware verifiziert
 
 - Start der VMs unter Hyper-V und cloud-init darin. In einer KVM-VM auf dem Laptop nicht verlässlich testbar: In [Versuch 3](../2026-11-13-windows-test.md#verlauf-versuch-3-volltest-mit-wsl-2026-11-13-vormittag) hing Windows, als zum ersten Mal eine VM in der Windows-VM startete (Ursache vermutet, nicht belegt). Der Rest bis kurz vor dem Start ist dort getestet (Versuche 4–5).
-- Ob das generische Ubuntu-Image mit dem Secure-Boot-Template startet. Microsoft listet Ubuntu 24.04 mit UEFI und Secure Boot als unterstützt ([Ubuntu auf Hyper-V](https://learn.microsoft.com/windows-server/virtualization/hyper-v/supported-ubuntu-virtual-machines-on-hyper-v)); falls nicht: `-NoSecureBoot`.
+- Ob das generische Ubuntu-Image mit dem Secure-Boot-Template startet. Microsoft listet Ubuntu 24.04 mit UEFI und Secure Boot als unterstützt ([Ubuntu auf Hyper-V](https://learn.microsoft.com/windows-server/virtualization/hyper-v/supported-ubuntu-virtual-machines-on-hyper-v)); falls nicht (die Bootausgabe in `vmconnect localhost arsnova-1b-llm` zeigt einen Secure-Boot-Fehler und `up` wartet 20 min vergeblich): erst `labor.ps1 -Mode destroy`, dann `labor.ps1 -Mode up -NoSecureBoot`.
 - Ob cloud-init die Schnittstelle als `eth0` umbenennt; der Treffer läuft über die MAC, der Name ist nur kosmetisch.
+- Alles danach: Einrichtung beider VMs über `ssh.exe` (`llm-start.sh`, `app-start.sh`), `pruefen`, `kalibrierung`, `lauf`, `kontrolle`, `belege` samt Rückholen der Ergebnisse, die Aufnahme in die Gruppe Hyper-V-Administratoren, das Admin-Fenster aus WSL und `labor-wsl.sh` insgesamt (bisher nur mit Attrappen getestet) sowie ein Clone unter `\\wsl.localhost\…`.
+
+Niklas führt diese Schritte als Erster auf echter Hardware aus. Jede Abweichung mit dem Log (`%USERPROFILE%\labor-1b\log-*.txt`) im eigenen Aufbauprotokoll `evidenz/1B/<Datum>-aufbau-windows.md` festhalten und Jonas Bescheid geben.
 
 ## 9. CPU-Pinning
 

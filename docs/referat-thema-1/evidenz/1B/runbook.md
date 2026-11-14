@@ -1,6 +1,6 @@
 # 1B-Labor: Nachbau und Lauf
 
-Zwei VMs auf einem Rechner: app-host `192.168.150.10` (App aus `docker-compose.prod.yml`) und llm-host `192.168.150.20` (Runtime aus `docker-compose.llm.yml`). Entscheidungen: [ADR 1B-002](../../adr/1B-002-topologie-zwei-vms-ein-rechner.md) bis [ADR 1B-012](../../adr/1B-012-windows-aufbau-ohne-wsl.md). Linux ist getestet. Windows läuft ohne WSL; die Schritte unter Windows stehen in [WINDOWS.md](vm/WINDOWS.md), der Teststand im [Windows-Test](2026-11-13-windows-test.md). Dieses Runbook gilt für beide Systeme; Befehle stehen in der Linux-Form, die Windows-Parameter in [WINDOWS.md, Abschnitt 3](vm/WINDOWS.md#3-parameter).
+Zwei VMs auf einem Rechner: app-host `192.168.150.10` (App aus `docker-compose.prod.yml`) und llm-host `192.168.150.20` (Runtime aus `docker-compose.llm.yml`). Entscheidungen: [ADR 1B-002](../../adr/1B-002-topologie-zwei-vms-ein-rechner.md) bis [ADR 1B-012](../../adr/1B-012-windows-aufbau-ohne-wsl.md). Linux ist getestet. Windows läuft ohne WSL; die Schritte unter Windows stehen in [WINDOWS.md](vm/WINDOWS.md), der Teststand im [Windows-Test](2026-11-13-windows-test.md). Dieses Runbook gilt für beide Systeme; Befehle stehen in der Linux-Form (unter Windows, auch in WSL, nie `labor.sh`, sondern `labor.ps1` bzw. `labor-wsl.sh` mit denselben Modi), die Windows-Parameter in [WINDOWS.md, Abschnitt 3](vm/WINDOWS.md#3-parameter).
 
 _Aktualisiert 2026-11-14 (Docs-Audit):_ Schritt 1 des Laufs, fehlende Modi und Variablen, Abschnitt 9 (Tests) ergänzt; die Windows-Anleitung aus Abschnitt 8 steht jetzt in WINDOWS.md.
 
@@ -52,7 +52,7 @@ Weitere Variablen: `LAB_OUTDIR` (Bericht, Logs und Rohdaten, Standard `~/labor-1
 Reihenfolge, jeweils vom Rechner aus:
 
 1. Einen Prompt-Body erzeugen, falls noch keiner da ist: `LAB_TAG=dev-body LAB_N=1 LAB_TIMEOUT_MS=300000 LAB_PROFIL=unveraendert labor.sh lauf`. Der Timeout ist hier Pflicht, weil es noch keine Kalibrierung gibt.
-2. Kalibrierung: `labor.sh kalibrierung` → I = `prompt_ms + predicted_ms` und Timeout (90 000 oder 300 000 ms; über 270 s Abbruch).
+2. Kalibrierung: `labor.sh kalibrierung` → I = `prompt_ms + predicted_ms` und Timeout (90 000 oder 300 000 ms; über 270 s Abbruch, dann nicht weiter messen, siehe Abschnitt 8).
 3. Probelauf: `LAB_TAG=probe LAB_N=2 labor.sh lauf`.
 4. Gewerteter Lauf: `LAB_N=10 labor.sh lauf`.
 
@@ -109,9 +109,21 @@ Mitschnitte enthalten den Runtime-Token im `Authorization`-Header und bleiben in
 
 Stand für Störversuche und Betriebsaufwand auf dem eigenen Rechner. Auftrag: Issue [#9](https://github.com/NiklasSkulll/arsnova.eu/issues/9). Schritt-für-Schritt unter Windows, auch mit Codex in WSL: [WINDOWS.md](vm/WINDOWS.md). Für Codex: [`AGENTS.md`, Abschnitt 1B-Labor für Agenten](../../AGENTS.md#1b-labor-für-agenten-codex-claude).
 
-- **Begriffe und Vergleichswerte:** gemeinsame Zeitbegriffe (T_host … T_transport) in [ADR 1B-011](../../adr/1B-011-zeitbegriffe-und-leitfrage.md); Werte aus Schritt 2 (normaler Dienst, kalt und warm, C0, B0) im [1B-Ergebnis](../../1B-ergebnis.md), Rohdaten unter `messung/`.
-- **Wiederverwendbar für Schritt 3:** `lauf.sh` (Mitschnitt auf beiden Hosts, Speicher-CSV, Zeitzerlegung), `pruefen.sh` (Limits, Flags, Bind), der Treiber `treiber.mjs` und der Ausfall B0 (Abschnitt 3). Für hohe Antwortlatenz ist ein eigener Weg nötig.
-- **Regeln:** vor jedem gewerteten Lauf Hypothese, Messgröße und Schwelle aufschreiben (eigenes Design oder datierter Nachtrag); eigene Läufe mit eigenem Tag (z. B. `stoerung-…`); ADR-Nummern 1B-020 bis 1B-039; Datenregeln wie Abschnitt 7.
+- **Branch:** Bis zum Merge von PR #23 liegt das Labor nur auf `feature-1B-two-host`. Eigene Arbeit davon abzweigen, etwa `git fetch origin && git switch -c feature-1B-private-inference-3-4-labor origin/feature-1B-two-host`, nach dem Merge auf `main` rebasen. Der in #9 genannte Branch `feature-1B-private-inference-3-4` stammt vom 2026-10-23 und enthält das Labor nicht; ob er ersetzt oder ein neuer Name genutzt wird, entscheidet Niklas.
+- **Begriffe und Vergleichswerte:** gemeinsame Zeitbegriffe (T_host … T_transport) in [ADR 1B-011](../../adr/1B-011-zeitbegriffe-und-leitfrage.md); Werte aus Schritt 2 (normaler Dienst, kalt und warm, C0, B0) im [1B-Ergebnis](../../1B-ergebnis.md), Rohdaten unter `messung/`. Absolute Zeiten anderer Rechner sind damit nicht vergleichbar, nur Verhältnisse; der normale Dienst wird deshalb auf dem eigenen Rechner neu gemessen.
+- **Wiederverwendbar:** `lauf.sh` (Mitschnitt auf beiden Hosts, Speicher-CSV der Runtime, Zeitzerlegung), `pruefen.sh` (Limits, Flags, Bind), der Treiber `treiber.mjs` und der Ausfall B0. **B0 entspricht F1 aus #9** (Container gestoppt, schneller Fehler); Vergleichswert H_B0 im 1B-Ergebnis. S1 (Same-Host) ist in Schritt 2 nicht gemessen; wer S1 für Schritt 4 braucht, misst es selbst.
+- **Was das Labor für Schritt 3 noch nicht kann:**
+  - **Hohe Latenz und Firewall-DROP:** `lauf` hat außer `LAB_RUNTIME_AUS` keinen Haken für Störungen. Netzverzögerung und DROP lassen sich von Hand in der llm-host-VM setzen, vor dem Lauf, mit Rücknahme danach. Vorschlag, im Labor noch nicht ausprobiert (aus WSL jeweils `labor-wsl.sh vm llm '…'`):
+    - Verzögerung nur für Antworten von Port 8080 (sonst wird auch SSH langsam): `IF=$(ip -o route get 192.168.150.10 | awk '{for(i=1;i<=NF;i++) if($i=="dev") print $(i+1)}')`, dann `sudo tc qdisc add dev $IF root handle 1: prio`, `sudo tc qdisc add dev $IF parent 1:3 handle 30: netem delay 500ms`, `sudo tc filter add dev $IF parent 1:0 protocol ip u32 match ip sport 8080 0xffff flowid 1:3`. Rücknahme: `sudo tc qdisc del dev $IF root`. Überlebt den Neustart der Runtime durch `lauf`, nicht den Neustart der VM.
+    - DROP statt RST: `sudo ufw insert 1 deny from 192.168.150.10 to any port 8080 proto tcp` (ufw `deny` verwirft, `reject` antwortet). Rücknahme: `sudo ufw delete deny from 192.168.150.10 to any port 8080 proto tcp`. `pruefen` meldet währenddessen erwartungsgemäß `FEHLER`.
+    - Fake-Server mit Verzögerung über dem Timeout (L3 in #9): braucht einen neuen Haken in `lauf.sh` nach dem Neustart der Runtime (Vorbild `LAB_RUNTIME_AUS`), weitergereicht über `labor.ps1` (Parameter und `Get-LaufEnv`) und `labor.sh`; der Fake-Server muss auf `192.168.150.20:8080` lauschen, weil ufw nur diesen Port freigibt. Die 1C-Test-Runtime (`apps/backend/src/__tests__/lib/open-weight-test-runtime.ts`) läuft nur in Vitest und ist kein eigenständiger Server.
+  - **Rückwirkung auf den App-Host:** Die Speicher-CSV erfasst nur den Runtime-Container im llm-host, und der Treiber erzeugt keine Live-Last. Für CPU und RSS des App-Containers (`arsnova-v3-app`) und für p95 und Fehlerrate der Live-Aktionen fehlen noch eine Aufzeichnung im app-host (etwa wie die Speicherschleife in `lauf.sh`) und Live-Last (Messskript aus #6, sonst `npm run load:smoke:qa-classroom-30` im app-host gegen `127.0.0.1:3000`). Beides ist Teil von Schritt 3.
+- **Regeln:**
+  - Vor jedem gewerteten Lauf Hypothese, Messgröße und Schwelle aufschreiben: eigenes Design `specs/<Datum>-1b-stoerungen-design.md` oder ein datierter Nachtrag. Vor jedem Lauf, auch zur Entwicklung, fragt Codex Niklas.
+  - Gewertete Läufe nur auf einem committeten Stand ohne `--arbeitsstand`; der Commit im Ergebnis-JSON muss auf dem eigenen Branch liegen. Eigene Läufe mit eigenem Tag (z. B. `stoerung-…`).
+  - Jede Störung samt Rücknahme protokollieren und nach dem Lauf zurücknehmen; danach `pruefen`.
+  - Ablage: Laufprotokolle als `evidenz/1B/<Datum>-lauf-<Tag>.md` nach dem Muster von [`2026-11-13-lauf.md`](2026-11-13-lauf.md), eigene Entscheidungen als ADR 1B-020 bis 1B-039; Ergebnis-JSON landen automatisch in `messung/`. Datenregeln wie Abschnitt 7.
+  - Bricht die Kalibrierung ab (I > 270 s), nicht weiter messen: Rechner, I und Größen an Jonas melden und die Entscheidung als ADR festhalten (etwa mehr vCPU für den llm-host).
 - **Schutz:** Reicht RAM oder Platz nicht, legt das Skript nichts an und sagt, was zu tun ist (Abschnitt 2).
 
 ## 9. Tests
