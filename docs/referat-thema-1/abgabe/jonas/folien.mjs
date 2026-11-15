@@ -6,7 +6,7 @@
 // Fläche: inhalt füllt die Diagrammfläche der Folie (1380 × 560 px, .folie-flaeche in stil.css).
 // Titel, Fußzeile mit Seitenzahl und quelle sowie der wandernde Marker (station) setzt der Bau.
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 
@@ -199,6 +199,7 @@ const LAUF_1B = 'evidenz/1B/messung/2026-11-13-lauf.json';
 const NACHLAUF_1C = 'evidenz/1C/messung/2026-11-09-labor-nachlauf.json.gz';
 const AUFBAU_VON_NULL = 'evidenz/1B/messung/2026-11-13-aufbau-von-null.txt';
 const EXTRAKTIV = '../../apps/backend/src/lib/qaSummaryExtractive.ts';
+const CLIP = 'abgabe/jonas/medien/clip.json';
 const KOMPASS_HTML =
   '../../apps/frontend/src/app/features/session/session-host/moderation-compass-dialog.component.html';
 
@@ -310,7 +311,14 @@ export function ladeFolienDaten(root) {
     .slice(0, 8);
   if (!/^[0-9a-f]{8}$/.test(antwortCommit)) throw new Error(`${ANTWORT}: Commit nicht gefunden`);
   const abgeleitet = { gateBeobachtet: z.b1.verworfen + z.c1.gateAntwortenGesamt.wert };
-  return { ...z, antwort, auftrag, aufbau, nutzlast, nachbau, antwortCommit, abgeleitet };
+  // Angaben zum Lehrenden-Clip (Entwicklungslauf, evidenz/1B/2026-11-15-clip.md), falls vorhanden.
+  // Der aufgenommene Hinweis muss dem Hinweis im App-Code entsprechen.
+  const clipPfad = resolve(root, CLIP);
+  const clip = existsSync(clipPfad) ? json(clipPfad) : null;
+  if (clip && !clip.hinweis.startsWith(hinweis.replace(/…$/, '').trim())) {
+    throw new Error(`${CLIP}: Hinweis weicht vom App-Code ab`);
+  }
+  return { ...z, antwort, auftrag, aufbau, nutzlast, nachbau, antwortCommit, abgeleitet, clip };
 }
 
 // ---------------------------------------------------------------- Bausteine
@@ -989,7 +997,11 @@ export function folien(daten) {
           'ADR 1C-018 (empfohlen: Instruktion, Grammatik und Gate abstimmen, nicht umgesetzt; Issue #13), ADR 1C-019, Laufprotokoll 1B, Befund',
         ),
     ),
-    notiz: `Und jetzt das Gate. Hier scheitert unser Auftrag. Links steht die echte Antwort des Modells, gekürzt, im Original. Das Gate prüft vor allem die Form: mindestens zwei Aussagen, jede mit einem Stichwort vorn, getrennt durch Doppelpunkt oder Strich, verschiedene Stichwörter, ganze Sätze, keine Metasätze aus einer kurzen Liste. Ausgaben mit Status failed und unsichere ohne Aussagen lässt es durch, aber jede geprüfte Antwort hatte Aussagen. Sprache und Thema prüft es nicht. Diese Antwort scheitert an der Form; inhaltlich passt sie auch nicht, sie ist englisch und fasst Moderationszustände zusammen. Im 1B-Lauf wurden ${b.verworfen} von ${n} Antworten verworfen, im 1C-Nachlauf bestand keine von ${c.gateAntwortenGesamt.wert}. Das gilt für ein Modell und eine Fixture. Vor Version 1.4.0, mit älterer Instruktion und ohne Gate, endeten in 1C ${c.fullContextVorGate.wert} Aufträgen mit Modellzusammenfassung. Zwei Upstream-Commits haben Instruktion und Gate zugleich geändert; erst der zweite prüft auch unsichere Antworten, und die meisten geprüften Antworten waren unsicher. Welcher Teil wie viel bewirkt, ist nicht getrennt gemessen. Rechts ein Nachbau der Lehrenden-Sicht: die Fragen im Wortlaut und der allgemeine Hinweis aus dem App-Code, den Grund erfährt die Lehrperson nicht. Meine Empfehlung: Instruktion, Grammatik und Gate gemeinsam abstimmen. Umgesetzt ist das nicht.`,
+    notiz: `Und jetzt das Gate. Hier scheitert unser Auftrag. Links steht die echte Antwort des Modells, gekürzt, im Original. Das Gate prüft vor allem die Form: mindestens zwei Aussagen, jede mit einem Stichwort vorn, getrennt durch Doppelpunkt oder Strich, verschiedene Stichwörter, ganze Sätze, keine Metasätze aus einer kurzen Liste. Ausgaben mit Status failed und unsichere ohne Aussagen lässt es durch, aber jede geprüfte Antwort hatte Aussagen. Sprache und Thema prüft es nicht. Diese Antwort scheitert an der Form; inhaltlich passt sie auch nicht, sie ist englisch und fasst Moderationszustände zusammen. Im 1B-Lauf wurden ${b.verworfen} von ${n} Antworten verworfen, im 1C-Nachlauf bestand keine von ${c.gateAntwortenGesamt.wert}. Das gilt für ein Modell und eine Fixture. Vor Version 1.4.0, mit älterer Instruktion und ohne Gate, endeten in 1C ${c.fullContextVorGate.wert} Aufträgen mit Modellzusammenfassung. Zwei Upstream-Commits haben Instruktion und Gate zugleich geändert; erst der zweite prüft auch unsichere Antworten, und die meisten geprüften Antworten waren unsicher. Welcher Teil wie viel bewirkt, ist nicht getrennt gemessen. ${
+      daten.clip
+        ? 'Rechts die Lehrenden-Sicht aus dem Labor, gerafft: Klick, Warten, Ersatzzusammenfassung mit Hinweis. Hier war es ein Timeout, nicht das Gate; die Lehrperson sieht dasselbe.'
+        : 'Rechts ein Nachbau der Lehrenden-Sicht: die Fragen im Wortlaut und der allgemeine Hinweis aus dem App-Code, den Grund erfährt die Lehrperson nicht.'
+    } Meine Empfehlung: Instruktion, Grammatik und Gate gemeinsam abstimmen. Umgesetzt ist das nicht.`,
     zeitS: 75,
     kurzfassung: true,
     quelle: `${qAntwort}; Lauf 1B · ThinkPad P50 · ${H.hauptlauf.commit.slice(0, 8)}; Nachlauf · Laptop · def56700; ADR 1C-018 · 9f230abc; Nachbau: Nutzlast labor.quiet.runs[${nl.lauf}], Hinweis qaSummaryExtractive.ts`,

@@ -511,8 +511,36 @@ test('Layout-Gegenprobe: zweizeiliger Titel und überlappender Beleg werden geme
 test('Clip wird als data-URI in J13 eingebettet', () => {
   const clip = join(ordner, 'clip.webm');
   writeFileSync(clip, Buffer.from([0x1a, 0x45, 0xdf, 0xa3, 1, 2, 3, 4]));
-  const html = baueDeck(F, { niklas: { teil1: [], teil2: [] }, clip, eingebettet: true });
+  const standbild = join(ordner, 'standbild.png');
+  writeFileSync(standbild, Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+  const clipInfo = {
+    datum: '2026-11-15',
+    profil: 'power-saver',
+    wartezeitS: 301.2,
+    raffungS: 4,
+    grund: 'timeout',
+    timeoutMs: 300000,
+    hinweis: 'Eine ausführliche Zusammenfassung war diesmal nicht möglich.',
+  };
+  const html = baueDeck(F, {
+    niklas: { teil1: [], teil2: [] },
+    clip,
+    clipInfo,
+    standbild,
+    eingebettet: true,
+  });
   assert.match(html, /<video[^>]+src="data:video\/webm;base64,GkXfowECAwQ="/);
+  // Im PDF steht das Standbild statt des Videos (Druck-CSS der Vorlage).
+  assert.match(html, /<img class="clip-standbild" src="data:image\/png;base64,iVBORw=="/);
+  assert.match(html, /Wartezeit 301 s, im Clip auf 4 s gerafft/);
+  assert.match(html, /2026-11-15, Energieprofil power-saver/);
+  // Grund dieses Laufs ehrlich nennen: Timeout, nicht das Gate; Hinweis wörtlich.
+  assert.match(html, /Abbruch nach 300 s \(Timeout\), nicht das Gate/);
+  assert.match(html, /„Eine ausführliche Zusammenfassung war diesmal nicht möglich\.“/);
+  assert.throws(
+    () => baueDeck(F, { niklas: { teil1: [], teil2: [] }, clip, eingebettet: true }),
+    /clipInfo/,
+  );
   assert.doesNotMatch(html, /data-nachbau/);
   // Der Vermerk gehört zum ersetzten Block: Mit Clip steht nirgends „keine Bildschirmaufnahme“
   // (Schlussprüfung I1), dafür die Bildunterschrift des Clips; ohne Clip umgekehrt.

@@ -1,0 +1,13 @@
+{
+  "datum": "2026-11-15",
+  "profil": "power-saver",
+  "wartezeitS": 304.2,
+  "raffungS": 4,
+  "gerafftS": 301.2,
+  "startS": 6.5,
+  "hinweis": "Eine ausführliche Zusammenfassung war diesmal nicht möglich. Deshalb werden die wichtigsten Fragen im Wortlaut angezeigt.",
+  "quelle": "evidenz/1B/2026-11-15-clip.md",
+  "grund": "timeout",
+  "latenzMs": 301554,
+  "timeoutMs": 300000
+}

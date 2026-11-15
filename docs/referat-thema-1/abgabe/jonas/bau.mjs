@@ -280,7 +280,11 @@ async function main() {
   if (eins) niklasQuellen.teil1 = { pfad: eins, stand: o['niklas1-stand'] };
   if (o.niklas2) niklasQuellen.teil2 = { pfad: o.niklas2, stand: o['niklas2-stand'] };
 
+  // Clip für J13 mit Angaben (medien/clip.json: Datum, Profil, Zeiten) und Standbild für das PDF.
   const clip = join(HIER, 'medien/clip.webm');
+  const clipJson = join(HIER, 'medien/clip.json');
+  const standbild = join(HIER, 'medien/clip-standbild.png');
+  const mitClip = existsSync(clip);
   const festeEingaben = [
     ...DATEN.map((p) => join(ROOT, p)),
     ...[...new Set(Object.values(FESTWERTE).map((f) => f.quelle))]
@@ -290,7 +294,7 @@ async function main() {
       .filter((n) => /\.(mjs|js|css|html)$/.test(n) && !n.endsWith('.test.mjs'))
       .map((n) => join(HIER, n)),
     ...alleDateien(join(HIER, 'schriften')),
-    ...(existsSync(clip) ? [clip] : []),
+    ...(mitClip ? [clip, clipJson, standbild] : []),
   ];
   const fehlend = festeEingaben.filter((p) => !existsSync(p));
   if (fehlend.length) {
@@ -317,7 +321,7 @@ async function main() {
     }
     const rohHtml = baueDeck(alle, {
       niklas,
-      clip: existsSync(clip) ? clip : undefined,
+      ...(mitClip ? { clip, clipInfo: JSON.parse(readFileSync(clipJson, 'utf8')), standbild } : {}),
       eingebettet: true,
     });
     // Wie der Pre-commit-Hook formatieren, bevor gehasht wird, damit das Manifest stimmen bleibt.

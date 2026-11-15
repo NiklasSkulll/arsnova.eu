@@ -480,7 +480,8 @@ test('W12: R12 nennt je Entscheidung Kosten, Risiko oder Betriebsfolge; J15 verw
 });
 
 test('W14/I-06: Ohne freigegebenen Clip zeigt J13 den Nachbau; die Notiz nennt ihn so', () => {
-  assert.match(nach('J13').notiz, /Nachbau/);
+  const ohneClip = folien({ ...daten, clip: null }).find((f) => f.id === 'J13');
+  assert.match(ohneClip.notiz, /Nachbau/);
 });
 
 test('Abdeckung: R8–R10 nennen Berechtigung, Konsistenzfälle und Rollen mit Belegen', () => {
@@ -560,7 +561,8 @@ test('I-06: J13 zeigt den Nachbau der Lehrenden-Sicht mit echtem Inhalt und Hinw
   );
   assert.ok(quelle.includes(daten.nachbau.hinweis), 'Hinweis wörtlich aus dem App-Code');
   assert.ok(decode(j13).includes(daten.nachbau.hinweis));
-  assert.match(nach('J13').notiz, /Nachbau/);
+  // Die Notiz nennt den Nachbau nur ohne Clip (mit Clip ersetzt deck.mjs den Nachbau).
+  assert.match(folien({ ...daten, clip: null }).find((f) => f.id === 'J13').notiz, /Nachbau/);
 });
 
 test('I-10: Messstand mit git describe; kein „Fork-main, Version 1.4.0 (8e9d1317)“', () => {
@@ -663,4 +665,14 @@ test('R5: Gate-Wechsel mit a998ada0, Validierung am Stand 248029dc, Nutzlastpfad
     new RegExp(`1B ${daten.b1.verworfen}, 1C ${daten.c1.gateAntwortenGesamt.wert}`),
   );
   assert.equal(nach('J11').station, null);
+});
+
+test('J13: Clip-Angaben stimmen mit dem App-Hinweis überein, die Notiz nennt den Grund des Clip-Laufs', () => {
+  assert.ok(daten.clip, 'medien/clip.json fehlt');
+  assert.equal(daten.clip.hinweis.startsWith(daten.nachbau.hinweis.replace(/…$/, '').trim()), true);
+  const j13 = folien(daten).find((f) => f.id === 'J13');
+  assert.match(j13.notiz, /Timeout/);
+  assert.doesNotMatch(j13.notiz, /Rechts ein Nachbau/);
+  const ohne = folien({ ...daten, clip: null }).find((f) => f.id === 'J13');
+  assert.match(ohne.notiz, /Rechts ein Nachbau/);
 });
