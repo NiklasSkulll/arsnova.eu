@@ -9,7 +9,7 @@
     },
     "teil2": { "quelle": "Platzhalter (Teil noch nicht geliefert)", "stand": null, "sha256": null }
   },
-  "folien": { "gemeinsamesDeck": 16, "jonasUndReserve": 25 },
+  "folien": { "gemeinsamesDeck": 16, "jonasUndReserve": 26 },
   "handoutWoerter": 1786,
   "eingaben": [
     {
@@ -122,7 +122,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/folien.mjs",
-      "sha256": "7df2dc15efdfe80f4db5a6516c6d14f550d9d839de356ab6250edd9216184708"
+      "sha256": "86e58978a72d88a1ebb33142cfde1f3bc057481652e6a213fcf0481589806383"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/grafik.mjs",
@@ -188,31 +188,31 @@
   "ausgaben": [
     {
       "datei": "jonas-deck.html",
-      "bytes": 1859788,
-      "sha256": "335596462518d03a7b66807e1cf8bf0b29d72e42a4fd8e57380d5d97c5fb7046"
+      "bytes": 1861907,
+      "sha256": "d9c25410ffb5ff1cbd31315c8a2f31468a753f72586fb1cb93dd52240671afd5"
     },
     {
       "datei": "gemeinsames-deck.pdf",
-      "bytes": 1646177,
-      "sha256": "40cf185bcaa19b175a19a1778a72864109006cd980ba3dc4818a7d0e9c8a4fb5",
-      "seiten": 37
+      "bytes": 1649175,
+      "sha256": "e9b5151ed1b009e1d1baea8c3446f7f07b7bf172f168b885b73d4c6d80b6b3f5",
+      "seiten": 38
     },
     {
       "datei": "jonas-folien.pdf",
-      "bytes": 629543,
-      "sha256": "338abb2f5221ccf9f03ef067d9a1c7209ea73fb04c0691ec4aa5726ef318e046",
-      "seiten": 25
+      "bytes": 632640,
+      "sha256": "9882fe6996060d06fef6eefb52bc3623cc4f9f670f2c301110806b4020ab2571",
+      "seiten": 26
     },
     {
       "datei": "jonas-handout.pdf",
       "bytes": 278699,
-      "sha256": "b50e874511c813cf401d4915ba045997701c6f4029dfcad27f4f4122137bfe40",
+      "sha256": "96ecb917347c5aa46254b53ea9f0a571b96f8d5e230562d199629b4cf7b9ee69",
       "seiten": 5
     },
     {
       "datei": "sprechnotizen.md",
-      "bytes": 21576,
-      "sha256": "a0b33aa103cdd019297d2aaf215f98f4561dc69dab72e7fd325be78ea07ca6cd"
+      "bytes": 22232,
+      "sha256": "692fa2b65df02076deb0ce7056a487f1aa9298d24d89970b74ec39397234dd64"
     }
   ]
 }

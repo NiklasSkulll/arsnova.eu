@@ -994,46 +994,50 @@ export function folien(daten) {
 
   // ------------------------------------------------------------ J15
   const folge = (was, text) =>
-    `<li style="margin:0 0 3px"><b style="font-weight:600">${was}</b> <span style="color:var(--text-2)">${text}</span></li>`;
+    `<li style="margin:0 0 10px"><b style="font-weight:600">${was}</b> <span style="color:var(--text-2)">${text}</span></li>`;
   const spalte = (auftrag, linie, kopf, punkte) =>
     `<div style="border-left:6px solid ${linie};padding-left:18px">` +
     `<p style="margin:0 0 6px">${etikett(auftrag)} <span style="color:var(--gedaempft)">${kopf}</span></p>` +
     `<ul style="margin:0;padding:0;list-style:none">${punkte.join('')}</ul></div>`;
+  // Entscheidungen je Auftrag mit Kosten, Risiko, Betriebsfolge: im Detail auf R12, J15 verweist darauf.
+  const entscheidungen =
+    `<div style="display:grid;grid-template-columns:880px 1fr;column-gap:50px;font-size:24px;line-height:1.35">` +
+    spalte(
+      '1C',
+      'var(--petrol)',
+      'Kosten, Risiko, Betrieb; Änderungen empfohlen, nicht umgesetzt',
+      [
+        folge(
+          'Bleibt (1C-010 bis 1C-013):',
+          'wenig Zeit; Risiko: unter Voting verwirft jede Stimme während der Inferenz die Antwort, Häufigkeit offen (1C-017)',
+        ),
+        folge('Gate (1C-018):', 'Abnahmemessung; Risiko: lockere Schwelle zeigt Metaaussagen'),
+        folge('Timeout (1C-023):', 'eine Kalibrierung je Host; Slot länger belegt'),
+        folge('Cache (1C-024):', 'eine Zeile; Risiko: nur ein Slot und ein Auftragstyp gemessen'),
+        folge('Zählung (1C-014):', 'Änderung am Packer; Risiko: Fenster läuft über'),
+        folge(
+          'Snapshot, Blitzlicht (1C-015, 1C-016):',
+          'klein; Risiko: Fenster ohne Rundenlaufzeit',
+        ),
+      ],
+    ) +
+    spalte('1B', 'var(--bernstein)', 'Konfiguration', [
+      folge('Topologie bleibt:', 'Hebel am Inferenz-Host'),
+      folge('Aufwand der zweiten Rolle:', 'Niklas'),
+      folge('Logs (#19, #20):', 'Kosten: Logzeilen; empfohlen, nicht umgesetzt'),
+      folge('Vorher:', 'Gate passend zum Modell (#13)'),
+    ]) +
+    `</div>`;
   F.push({
     id: 'J15',
     teil: 'jonas',
     auftrag: 'beide',
     titel: 'Entscheidung und Fragen',
     inhalt: flaeche(
-      `<div style="display:grid;grid-template-columns:900px 1fr;column-gap:40px;font-size:22px;line-height:1.3">` +
-        spalte(
-          '1C',
-          'var(--petrol)',
-          'Kosten, Risiko, Betrieb; Änderungen empfohlen, nicht umgesetzt',
-          [
-            folge(
-              'Bleibt (1C-010 bis 1C-013):',
-              'wenig Zeit; Risiko: unter Voting verwirft jede Stimme während der Inferenz die Antwort, Häufigkeit offen (1C-017)',
-            ),
-            folge('Gate (1C-018):', 'Abnahmemessung; Risiko: lockere Schwelle zeigt Metaaussagen'),
-            folge('Timeout (1C-023):', 'eine Kalibrierung je Host; Slot länger belegt'),
-            folge(
-              'Cache (1C-024):',
-              'eine Zeile; Risiko: nur ein Slot und ein Auftragstyp gemessen',
-            ),
-            folge('Zählung (1C-014):', 'Änderung am Packer; Risiko: Fenster läuft über'),
-            folge(
-              'Snapshot, Blitzlicht (1C-015, 1C-016):',
-              'klein; Risiko: Fenster ohne Rundenlaufzeit',
-            ),
-          ],
-        ) +
-        spalte('1B', 'var(--bernstein)', 'Konfiguration', [
-          folge('Topologie bleibt:', 'Hebel am Inferenz-Host'),
-          folge('Aufwand der zweiten Rolle:', 'Niklas'),
-          folge('Logs (#19, #20):', 'Kosten: Logzeilen; empfohlen, nicht umgesetzt'),
-          folge('Vorher:', 'Gate passend zum Modell (#13)'),
-        ]) +
+      `<div style="display:grid;grid-template-columns:1fr;row-gap:12px;font-size:26px;line-height:1.35">` +
+        `<p style="margin:0;padding-left:18px;border-left:6px solid var(--petrol)">${etikett('1C')} Nachprüfung, Validierung, Entkopplung und Vorschau bleiben; Gate, Timeout, Cache, Zählung, Snapshot und Blitzlicht empfohlen, nicht umgesetzt</p>` +
+        `<p style="margin:0;padding-left:18px;border-left:6px solid var(--bernstein)">${etikett('1B')} Topologie bleibt, Hebel am Inferenz-Host; Logs empfohlen, nicht umgesetzt; Aufwand der zweiten Rolle: Niklas</p>` +
+        `<p style="margin:0;font-size:var(--s-min);color:var(--gedaempft)">Details: R12 (Kosten, Risiko und Betriebsfolge je Entscheidung)</p>` +
         `</div>` +
         `<p style="margin:30px 0 8px;font-weight:700;font-size:28px;color:var(--blau)">Zur Diskussion</p>` +
         `<ol style="margin:0;padding-left:36px;font-size:26px;line-height:1.35">` +
@@ -1043,7 +1047,7 @@ export function folien(daten) {
         `</ol>` +
         `<p style="margin:auto 0 0;font-size:28px;font-weight:700">Und wenn der zweite Host langsam ist oder ausfällt? <span style="color:var(--blau)">→ Niklas</span></p>`,
     ),
-    notiz: `Meine Entscheidung. Für 1C bleiben Nachprüfung, strikte Validierung, Entkopplung und die Gleichheit von Vorschau und Nutzlast. Das kostet wenig Zeit, aber unter laufendem Voting verwirft jede Stimme während der Inferenz die Antwort; wie oft, ist offen. Zu ändern empfehle ich Gate, Timeout, Prompt-Cache, Byte-Schätzung, Themen-Snapshot und Blitzlicht-Hash, jeweils mit dem Preis, der auf der Folie steht. Umgesetzt ist nichts. Für 1B: Die Topologie kostet keine relevante Zeit, der Hebel liegt am Inferenz-Host; den Aufwand der zweiten Rolle zeigt Niklas. Drei Fragen würde ich gern diskutieren, die erste zum Upgrade. Und damit an Niklas: Was passiert, wenn der zweite Host ausfällt?`,
+    notiz: `Meine Entscheidung. Für 1C bleiben Nachprüfung, strikte Validierung, Entkopplung und die Gleichheit von Vorschau und Nutzlast. Das kostet wenig Zeit, aber unter laufendem Voting verwirft jede Stimme während der Inferenz die Antwort; wie oft, ist offen. Zu ändern empfehle ich Gate, Timeout, Prompt-Cache, Byte-Schätzung, Themen-Snapshot und Blitzlicht-Hash, jeweils mit einem Preis; die Liste steht in der Reserve R12. Umgesetzt ist nichts. Für 1B: Die Topologie kostet keine relevante Zeit, der Hebel liegt am Inferenz-Host; den Aufwand der zweiten Rolle zeigt Niklas. Drei Fragen würde ich gern diskutieren, die erste zum Upgrade. Und damit an Niklas: Was passiert, wenn der zweite Host ausfällt?`,
     zeitS: 50,
     kurzfassung: true,
     quelle: `1C-ergebnis.md, Abschnitt 5, ADRs 1C-010 bis 1C-024, Abschnitt Folgen (Laptop und PC · 9f230abc; Laptop · def56700); 1B-ergebnis.md, Entscheidung (${rechnerKurz(H.hauptlauf.rechner)} · ${H.hauptlauf.commit.slice(0, 8)})`,
@@ -1439,6 +1443,19 @@ export function folien(daten) {
     `Falls nach dem Betrieb gefragt wird: Die App schreibt nur die Gesamtzeit eines Auftrags ins Log. Inferenz, Netz und Adapter sieht man nur mit einem Mitschnitt, und warum das Gate verwirft, steht nirgends, nur der grobe Grund invalid_response. Ich empfehle, Zeiten und den Grund eines Fallbacks ohne Prompttext zu loggen, Issues 19 und 20; umgesetzt ist das nicht.`,
     `evidenz/1B/2026-11-13-lauf.md, Befund C; ${q1B}`,
     `Lauf 1B, Befund C · ${haupt} · ${P50}`,
+  );
+
+  reserve(
+    'R12',
+    'beide',
+    'Reserve: Entscheidungen im Detail',
+    entscheidungen +
+      beleg(
+        '1C-ergebnis.md, Abschnitt 5; ADRs 1C-010 bis 1C-024, Abschnitt Folgen; 1B-ergebnis.md, Entscheidung',
+      ),
+    'Falls nach den Entscheidungen im Einzelnen gefragt wird: Für 1C bleiben Nachprüfung, Validierung, Entkopplung und Vorschau; das kostet wenig Zeit, das Risiko liegt beim Voting. Empfohlen, aber nicht umgesetzt sind Änderungen an Gate, Timeout, Cache, Zählung, Snapshot und Blitzlicht, je mit Kosten und Risiko. Für 1B bleibt die Topologie, der Hebel liegt am Inferenz-Host; die Logs empfehle ich zu erweitern.',
+    `1C-ergebnis.md, Abschnitt 5, ADRs 1C-010 bis 1C-024, Abschnitt Folgen (Laptop und PC · 9f230abc; Laptop · def56700); 1B-ergebnis.md, Entscheidung (${rechnerKurz(H.hauptlauf.rechner)} · ${H.hauptlauf.commit.slice(0, 8)})`,
+    `1C-ergebnis.md, ADRs 1C-010 bis 1C-024 (Folgen) · 1B-ergebnis.md, Entscheidung · ${haupt}`,
   );
 
   return F;

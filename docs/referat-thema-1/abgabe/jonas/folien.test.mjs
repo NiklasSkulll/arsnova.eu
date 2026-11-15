@@ -187,11 +187,11 @@ test('Rahmenfolien G0 und G9 sind als Entwurf markiert', () => {
   assert.equal(F.at(-1).teil === 'reserve' || F.at(-1).id === 'G9', true);
 });
 
-test('Reservefolien R1–R11 (Design Abschnitt 5, Abdeckung, J14 als R11)', () => {
+test('Reservefolien R1–R12 (Design Abschnitt 5, Abdeckung, J14 als R11, Entscheidungen als R12)', () => {
   const r = F.filter((f) => f.teil === 'reserve');
   assert.deepEqual(
     r.map((f) => f.id),
-    ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10', 'R11'],
+    ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10', 'R11', 'R12'],
   );
   const text = r.map((f) => f.titel).join(' | ');
   for (const wort of [
@@ -206,6 +206,7 @@ test('Reservefolien R1–R11 (Design Abschnitt 5, Abdeckung, J14 als R11)', () =
     'Konsistenz',
     'ADR-0035',
     'Betrieb',
+    'Entscheidungen',
   ])
     assert.ok(text.includes(wort), wort);
 });
@@ -468,9 +469,14 @@ test('W6/W7/W8: Speicher bei wechselnden Prompts, warm = identischer Snapshot, R
   assert.match(r1, /Laptop/);
 });
 
-test('W12: J15 nennt je Entscheidung Kosten, Risiko oder Betriebsfolge', () => {
-  const s = sichtbar(nach('J15').inhalt);
+test('W12: R12 nennt je Entscheidung Kosten, Risiko oder Betriebsfolge; J15 verweist auf R12', () => {
+  const s = sichtbar(nach('R12').inhalt);
   for (const re of [/Kosten/, /Risiko/, /Betrieb/]) assert.match(s, re);
+  const j15 = sichtbar(nach('J15').inhalt);
+  assert.match(j15, /Details: R12/);
+  assert.match(j15, /nicht umgesetzt/);
+  assert.match(j15, /1C/);
+  assert.match(j15, /1B/);
 });
 
 test('W14/I-06: Ohne freigegebenen Clip zeigt J13 den Nachbau; die Notiz nennt ihn so', () => {
@@ -531,7 +537,7 @@ test('I-04: KI-Anteil und Methode nennen die Ausnahmen der Vorabfestlegung', () 
 
 test('I-05/R3-I4: Nachprüfung mit belegtem Preis unter Voting, ohne Vorhersage als Tatsache', () => {
   assert.ok(!/kostet fast nichts/.test(nach('J12').titel));
-  for (const id of ['J12', 'J15']) {
+  for (const id of ['J12', 'J15', 'R12']) {
     const t = alles(nach(id));
     assert.match(t, /Voting/, id);
     assert.match(t, /Stimme/, id);
@@ -620,7 +626,8 @@ test('R3-Minor: geprüfte Antworten, App-Überschrift im Nachbau, Ausnahmen in G
   assert.ok(html.includes(daten.nachbau.titel), 'Überschrift aus dem Template');
   assert.ok(decode(nach('J13').inhalt).includes(daten.nachbau.titel));
   assert.match(sichtbar(nach('G9').inhalt), /Ausnahmen/);
-  assert.ok((sichtbar(nach('J15').inhalt).match(/Risiko/g) ?? []).length >= 4);
+  assert.ok((sichtbar(nach('R12').inhalt).match(/Risiko/g) ?? []).length >= 4);
+  assert.match(sichtbar(nach('J15').inhalt), /Details: R12/);
   assert.match(nach('J10').notiz, /langsame/);
 });
 
