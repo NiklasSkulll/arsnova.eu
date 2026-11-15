@@ -105,11 +105,11 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/bau.mjs",
-      "sha256": "17935c96f3b429e354fbd7500c9eb233cc919d5c9ad895d5be06c5e41cc7b684"
+      "sha256": "4d3820022938788d0ee4ff35f5cbc1b4f3abd0add60a3a0929cf48c364ccfc7c"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/deck-vorlage.html",
-      "sha256": "9141984370aef5b9ed6e62cfd7713f47428a5cf3cf2f604ea1a4a293c150e48b"
+      "sha256": "4bbfe5275f56c336861d19e6d8d22127ef7eb794c63fb298f0646e6c9e95959e"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/deck.js",
@@ -117,15 +117,15 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/deck.mjs",
-      "sha256": "86728f506993ad63618c1d53829f5b0a7f905a46eba83b81979c1c8c7ac25379"
+      "sha256": "24eedc927589537c11f220b1e156c6c8be9d003d110993a1ecfc83d13d5bed82"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/folien.mjs",
-      "sha256": "67fd482f563e5ae140e3b990e54eafd10025aa38de524a7011db6d9b14a8ccaa"
+      "sha256": "81f93a3df7ebfba21e31c32d314ebf30d1d9dae75e25c402ba8a250e2886450b"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/grafik.mjs",
-      "sha256": "d60aac07ae16680c9950e92f5da727f3d750157b42c59e245f6aff27de975710"
+      "sha256": "905e049a18b51f2b16f71e9a46b5abcb0cb83bdbc3a530e53975b962436f7bcd"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/handout-latex.mjs",
@@ -140,6 +140,10 @@
       "sha256": "3dcfc1c905becbc6efdb34a8be1d6b0791affca41400e854e06a701ab941caed"
     },
     {
+      "pfad": "docs/referat-thema-1/abgabe/jonas/layout-pruefung.mjs",
+      "sha256": "ee946dd41c28d87a8b75230743cb627754f0938a1cb5e88f33df2845f8aedbb7"
+    },
+    {
       "pfad": "docs/referat-thema-1/abgabe/jonas/literatur.mjs",
       "sha256": "56942f081deb020ce02f045ff62ba335a4e39a12825d0a17579a15f56823bf4d"
     },
@@ -149,7 +153,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/stil.css",
-      "sha256": "8ae2ac5dfaab1a951a7e4aa2048c1e0841bbeec4cac5f2467459d52c523bd6ee"
+      "sha256": "165402ae943ec8f95a7c0f0106443a00515d5486d124626193c2c8f6b0eb9abd"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/zahlen.mjs",
@@ -207,19 +211,19 @@
   "ausgaben": [
     {
       "datei": "jonas-deck.html",
-      "bytes": 5263339,
-      "sha256": "86774c9a8023c9c14aaf5d471b578d4b9a7e13508db23b235090d1610ae6e0ad"
+      "bytes": 5263539,
+      "sha256": "bb4a8404db96ee1568d42273e2b7d465a2dcfb9f0421b50ef3be68fdf745bdba"
     },
     {
       "datei": "gemeinsames-deck.pdf",
       "bytes": 1742321,
-      "sha256": "d82d6289e992e53aa05dc6af8e5c292cfdf5466ca01e2b58a411db4bfac4b223",
+      "sha256": "c76cf8a88326ad304e6c6c926d378ab8a3a3f78955818d32a78c90f666c9c60d",
       "seiten": 39
     },
     {
       "datei": "jonas-folien.pdf",
       "bytes": 742267,
-      "sha256": "431cef0b2d16deee9dc7553472cffd551f4dc848f5ec1737a812ca8f2f972ca9",
+      "sha256": "2164840483bbe87b4dacf3c13a9d5b361b6a86c23347a2d5f11dd855897b37e0",
       "seiten": 27
     },
     {
