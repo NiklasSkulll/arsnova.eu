@@ -1,0 +1,158 @@
+/* Folienstil Jonas (Richtung M): weißer Grund, Blau für Titel und Pfad, Petrol = 1C,
+   Bernstein = 1B, Rot = Ablehnung. Inter für Text, IBM Plex Mono für Messwerte.
+   Schriften liegen offline unter schriften/ (SIL OFL, Lizenzdateien daneben). */
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url('schriften/inter-latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: block;
+  src: url('schriften/inter-latin-600-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+  src: url('schriften/inter-latin-700-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: block;
+  src: url('schriften/inter-latin-800-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url('schriften/ibm-plex-mono-latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: block;
+  src: url('schriften/ibm-plex-mono-latin-600-normal.woff2') format('woff2');
+}
+
+:root {
+  /* Farben (Global Constraints); dieselben Werte stehen als FARBEN in grafik.mjs. */
+  --blau: #0b5ea8;
+  --blau-niklas: #005a9c;
+  --petrol: #0f766e;
+  --petrol-hell: #e3f1ee;
+  --bernstein: #b45309;
+  --bernstein-text: #9a4a0b;
+  --bernstein-mittel: #e9b47a;
+  --bernstein-hell: #fbefe0;
+  --rot: #b42318;
+  --tinte: #16202c;
+  --text-2: #3d4757;
+  --gedaempft: #566173;
+  --linie: #c9d2de;
+  --raster: #e8edf3;
+  --grund: #ffffff;
+
+  /* Schrift */
+  --f-text: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  --f-mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  --s-min: 22px;
+  --s-text: 28px;
+  --s-titel: 58px;
+
+  /* Folie */
+  --folie-breite: 1600px;
+  --folie-hoehe: 900px;
+  --rand: 110px;
+  --linie-min: 2px;
+}
+
+.folie {
+  position: relative;
+  box-sizing: border-box;
+  width: var(--folie-breite);
+  height: var(--folie-hoehe);
+  overflow: hidden;
+  background: var(--grund);
+  color: var(--tinte);
+  font-family: var(--f-text);
+  font-size: var(--s-text);
+  line-height: 1.35;
+}
+
+.folie-titel {
+  position: absolute;
+  left: var(--rand);
+  right: var(--rand);
+  top: 72px;
+  margin: 0;
+  color: var(--blau);
+  font-weight: 800;
+  font-size: var(--s-titel);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+/* Diagrammfläche: Grafiken aus grafik.mjs haben viewBox 0 0 1380 560 und sitzen hier im Maßstab 1:1. */
+.folie-flaeche {
+  position: absolute;
+  left: var(--rand);
+  top: 190px;
+  width: 1380px;
+  height: 560px;
+}
+.folie-flaeche > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.folie-fuss {
+  position: absolute;
+  left: var(--rand);
+  right: var(--rand);
+  top: 790px;
+  padding-top: 18px;
+  border-top: var(--linie-min) solid var(--linie);
+  color: var(--gedaempft);
+  font-family: var(--f-mono);
+  font-size: var(--s-min);
+}
+
+.mono,
+.messwert {
+  font-family: var(--f-mono);
+}
+.messwert {
+  font-weight: 600;
+}
+
+.etikett {
+  display: inline-block;
+  padding: 2px 12px;
+  border-radius: 6px;
+  font-family: var(--f-text);
+  font-size: var(--s-min);
+  font-weight: 700;
+}
+.etikett-1c {
+  background: var(--petrol-hell);
+  color: var(--petrol);
+}
+.etikett-1b {
+  background: var(--bernstein-hell);
+  color: var(--bernstein-text);
+}
+.ablehnung {
+  color: var(--rot);
+}
