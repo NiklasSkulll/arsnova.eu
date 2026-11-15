@@ -29,6 +29,12 @@ test('handoutMakros enthält jede Zahl des HTML-Handouts unverändert', () => {
   for (const [k, v] of Object.entries(w.z)) assert.equal(m[k], v, k);
   assert.equal(m.auNr, w.au.nr);
   assert.match(m.netz, /^\d+,\d{2}$/);
+  // 1C-Kennzahlen und 1B-Zählungen direkt aus dem Datenmodul
+  assert.equal(m.cEinsOomAuftrag, '19');
+  assert.equal(m.cEinsGateAntworten, '0 von 28');
+  assert.equal(m.cEinsBytesJeToken, '3,15');
+  assert.equal(m.bEinsVerworfen, '10');
+  assert.equal(m.bEinsNKaltLaeufe, '5');
   const namen = Object.keys(m).map(makroName);
   assert.equal(new Set(namen).size, namen.length, 'Makronamen eindeutig');
 });

@@ -14,6 +14,7 @@ import { parseArgs } from 'node:util';
 import { ladeFolienDaten } from './folien.mjs';
 import { wegSvg, zeitzerlegungSvg } from './grafik.mjs';
 import { handoutWerte } from './handout.mjs';
+import { fmt } from './zahlen.mjs';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HIER, '../..');
@@ -49,6 +50,13 @@ export function handoutMakros(daten) {
   const w = handoutWerte(daten);
   const werte = { ...w.z };
   for (const [k, v] of Object.entries(w.fw)) werte[`fest${k[0].toUpperCase()}${k.slice(1)}`] = v;
+  const gross = (k) => `${k[0].toUpperCase()}${k.slice(1)}`;
+  for (const [k, v] of Object.entries(daten.c1)) {
+    const wert = v?.wert ?? v;
+    // Nachkommastellen wie im Datenmodul (dort schon gerundet), deutsches Komma.
+    werte[`cEins${gross(k)}`] = String(wert).replace('.', ',');
+  }
+  for (const k of ['verworfen', 'nKaltLaeufe', 'nB0']) werte[`bEins${gross(k)}`] = fmt(daten.b1[k]);
   Object.assign(werte, {
     anzahl: w.n,
     nWarm: w.nWarm,
