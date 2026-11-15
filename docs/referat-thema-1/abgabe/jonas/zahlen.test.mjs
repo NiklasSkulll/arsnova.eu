@@ -98,6 +98,15 @@ test('Review 1: 1C-Zahlen für die Rahmung (vor dem Gate) und den Vertrag (N1)',
   assert.equal(ZAHLEN_1C.n1LaeufeMitAufruf.wert, 18);
 });
 
+test('Review 2: T_host über alle Aufträge, Antworten gesamt, Bytes je Token, M7-Vorhersage', () => {
+  const { b1 } = ladeZahlen(ROOT);
+  assert.equal(fmt(b1.hostMedianMs, 1), '56,5');
+  assert.equal(fmt(b1.serverOhneMedianMs, 1), '17,4'); // ADR 1B-011, Korrektur: alle zehn 56,5 ms
+  assert.equal(ZAHLEN_1C.gateAntwortenGesamt.wert, 28);
+  assert.equal(fmt(ZAHLEN_1C.bytesJeToken.wert, 2), '3,15');
+  assert.equal(fmt(ZAHLEN_1C.m7VorhersagePc.wert, 2), '0,97');
+});
+
 test('Gruppengrößen und verworfene Antworten für Beschriftungen', () => {
   const { b1 } = ladeZahlen(ROOT);
   assert.equal(b1.nWarm, 9);

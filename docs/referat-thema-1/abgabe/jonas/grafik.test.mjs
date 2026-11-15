@@ -59,7 +59,8 @@ test('zeitzerlegungSvg: Werte, Schwellen und Gruppen der Mediane', () => {
   assert.ok(svg.includes('warm, n = 9'));
   assert.ok(svg.includes('200,5 s'));
   // M3: der Kaltbalken ist ein Median aus den Nachtragsläufen
-  assert.ok(svg.includes('Kalt, Median') && svg.includes('n = 5, Nachtrag'));
+  assert.ok(svg.includes('T_job kalt') && svg.includes('Median, n = 5'));
+  assert.ok(svg.includes('langsame CPU')); // ADR 1B-008: Anteil nur mit Hinweis
   assert.ok(!zeitzerlegungSvg(b1, { kalt: false }).includes('200,5 s'));
 });
 

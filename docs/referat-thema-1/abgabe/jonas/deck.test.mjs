@@ -408,5 +408,5 @@ test('Clip wird als data-URI in J13 eingebettet', () => {
   writeFileSync(clip, Buffer.from([0x1a, 0x45, 0xdf, 0xa3, 1, 2, 3, 4]));
   const html = baueDeck(F, { niklas: { teil1: [], teil2: [] }, clip, eingebettet: true });
   assert.match(html, /<video[^>]+src="data:video\/webm;base64,GkXfowECAwQ="/);
-  assert.doesNotMatch(html, /Platz für den Clip/);
+  assert.doesNotMatch(html, /data-nachbau/);
 });

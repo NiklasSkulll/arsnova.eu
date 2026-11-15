@@ -57,6 +57,8 @@ const DATEN = [
   'evidenz/1B/messung/2026-11-15-abgelehnte-antwort.json',
   'evidenz/1B/messung/2026-11-13-aufbau-von-null.txt',
   'evidenz/1C/messung/2026-11-09-labor-nachlauf.json.gz',
+  // Hinweistext des extraktiven Fallbacks für den Nachbau auf J13 (App-Code, nur gelesen)
+  '../../apps/backend/src/lib/qaSummaryExtractive.ts',
 ];
 
 const sha256 = (daten) => createHash('sha256').update(daten).digest('hex');

@@ -18,22 +18,21 @@ const nach = (id) => F.find((f) => f.id === id);
 const jonas = F.filter((f) => f.teil === 'jonas');
 const summe = (liste) => liste.reduce((s, f) => s + f.zeitS, 0);
 
-/** Zeiten aus Design Abschnitt 5 (Sekunden), angepasst nach der fachlichen Prüfung 1 (Offenlegung, Abdeckung). */
+/** Zeiten nach der fachlichen Prüfung 2 (I-07): Hauptteil höchstens 690 s, J14 in die Reserve (R11). */
 const PLAN = {
   J1: 40,
-  J2: 70,
+  J2: 60,
   J3: 40,
-  J4: 60,
-  J5: 45,
-  J6: 65,
-  J7: 45,
-  J8: 50,
-  J9: 50,
+  J4: 50,
+  J5: 40,
+  J6: 60,
+  J7: 40,
+  J8: 45,
+  J9: 45,
   J10: 25,
-  J11: 55,
-  J12: 55,
+  J11: 50,
+  J12: 50,
   J13: 75,
-  J14: 40,
   J15: 50,
 };
 
@@ -71,6 +70,7 @@ function grafiken() {
 
 /** Kennungen, die Ziffern enthalten, aber keine Messwerte sind. */
 const KENNUNGEN = [
+  /\bv1\.[34]\.0-\d+\b/g, // git describe
   /\b1[BC]-\d{3}\b/g, // ADR-Nummern
   /\bADR-\d{4}\b/g,
   /#\d+/g, // Issues
@@ -120,18 +120,22 @@ function whitelist() {
   blaetter(auftragZahlen);
   for (const iso of [requestedAt, finishedAt]) ziffern(iso.slice(11, 23).replace('.', ','));
   blaetter(daten.nutzlast.zahlen);
+  blaetter(daten.abgeleitet);
+  for (const f of daten.nachbau.fragen) ziffern(f);
   for (const f of Object.values(FESTWERTE)) zahl(f.wert);
   return w;
 }
 
-test('Jonas-Folien J1–J15 in Reihenfolge mit den geplanten Zeiten, Summe 700–790 s', () => {
+test('Jonas-Folien in Reihenfolge mit den geplanten Zeiten, Hauptteil ≤ 690 s, mit Rahmen ≤ 750 s', () => {
   assert.deepEqual(
     jonas.map((f) => f.id),
     Object.keys(PLAN),
   );
   for (const f of jonas) assert.equal(f.zeitS, PLAN[f.id], f.id);
   const s = summe(jonas);
-  assert.ok(s >= 700 && s <= 790, `Summe ${s}`);
+  assert.ok(s >= 600 && s <= 690, `Summe ${s}`);
+  const rahmen = summe(F.filter((f) => f.teil === 'rahmen'));
+  assert.ok(s + rahmen <= 750, `mit G0/G9 ${s + rahmen} s`);
 });
 
 test('Kurzfassung: nur Jonas-Folien, Summe 420–470 s', () => {
@@ -182,11 +186,11 @@ test('Rahmenfolien G0 und G9 sind als Entwurf markiert', () => {
   assert.equal(F.at(-1).teil === 'reserve' || F.at(-1).id === 'G9', true);
 });
 
-test('Reservefolien R1–R10 (Design Abschnitt 5 plus Abdeckung aus der fachlichen Prüfung 1)', () => {
+test('Reservefolien R1–R11 (Design Abschnitt 5, Abdeckung, J14 als R11)', () => {
   const r = F.filter((f) => f.teil === 'reserve');
   assert.deepEqual(
     r.map((f) => f.id),
-    ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10'],
+    ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10', 'R11'],
   );
   const text = r.map((f) => f.titel).join(' | ');
   for (const wort of [
@@ -200,6 +204,7 @@ test('Reservefolien R1–R10 (Design Abschnitt 5 plus Abdeckung aus der fachlich
     'Autorisierung',
     'Konsistenz',
     'ADR-0035',
+    'Betrieb',
   ])
     assert.ok(text.includes(wort), wort);
 });
@@ -367,7 +372,7 @@ test('K1: Der Fallback trägt einen allgemeinen Hinweis; nirgends „ohne Hinwei
   assert.match(j13.quelle, /qaSummaryExtractive\.ts/);
 });
 
-test('K2: Messstand 1.4.0 benannt, Stand vor dem Gate mit 19 von 20 full-context', () => {
+test('K2: Messstand nach v1.4.0 benannt, Stand vor dem Gate mit 19 von 20 full-context', () => {
   for (const id of ['J1', 'J13', 'G9']) {
     assert.match(sichtbar(nach(id).inhalt), /1\.4\.0/, `${id}: Version 1.4.0 fehlt`);
   }
@@ -464,10 +469,8 @@ test('W12: J15 nennt je Entscheidung Kosten, Risiko oder Betriebsfolge', () => {
   for (const re of [/Kosten/, /Risiko/, /Betrieb/]) assert.match(s, re);
 });
 
-test('W14: Die Notiz zu J13 ist bedingt formuliert (Clip oder kein Clip)', () => {
-  const n = nach('J13').notiz;
-  assert.match(n, /Falls (der )?Clip/);
-  assert.match(n, /[Ss]onst/);
+test('W14/I-06: Ohne freigegebenen Clip zeigt J13 den Nachbau; die Notiz nennt ihn so', () => {
+  assert.match(nach('J13').notiz, /Nachbau/);
 });
 
 test('Abdeckung: R8–R10 nennen Berechtigung, Konsistenzfälle und Rollen mit Belegen', () => {
@@ -478,4 +481,89 @@ test('Abdeckung: R8–R10 nennen Berechtigung, Konsistenzfälle und Rollen mit B
   for (const w of ['Encoder', 'Adapter', 'llama-server', '768', '256'])
     assert.match(r10, new RegExp(w));
   for (const f of jonasUndReserve) assert.ok(f.quelle, f.id);
+});
+
+// ---------------------------------------------------------------- Fachliche Prüfung 2
+
+const sichtbarAlle = () => F.map((f) => `${f.id}: ${alles(f)}`).join('\n');
+
+test('I-01: Netz in ms zuerst; Prozentanteil nur mit Hinweis auf die langsame CPU', () => {
+  assert.match(nach('J9').notiz, /langsame/);
+  const j9svg = nach('J9').inhalt;
+  assert.match(j9svg, /langsame CPU/);
+  assert.match(alles(nach('R11')), /langsame/);
+  assert.ok(!/Transport ist damit rund/.test(nach('J9').notiz));
+});
+
+test('I-02: Start ohne Wrapper mit dem richtigen Grund (Override)', () => {
+  const j2 = alles(nach('J2'));
+  assert.match(j2, /Override/);
+  assert.ok(!/weil Runbook §6 ihn bricht|nach dem Runbook nicht läuft/.test(j2));
+  assert.ok(!/Laptop nicht mehr hat/.test(j2), 'B-01');
+});
+
+test('I-03: Gate-Befund mit Geltungsbereich (38 beobachtete Antworten, ein Modell, eine Fixture)', () => {
+  assert.ok(
+    !/verwirft (das Gate )?jede (Modell)?[Aa]ntwort/.test(sichtbarAlle()),
+    'unbegrenzt „jede Antwort“',
+  );
+  const j13 = nach('J13');
+  assert.match(j13.titel, new RegExp(`${daten.abgeleitet.gateBeobachtet}`));
+  assert.match(sichtbar(j13.inhalt), /ein Modell/);
+  assert.match(sichtbar(j13.inhalt), /eine Fixture/);
+  assert.match(j13.notiz, /failed|ohne Aussagen/);
+  assert.match(sichtbar(nach('G9').inhalt), /beobachtet/);
+});
+
+test('I-04: KI-Anteil und Methode nennen die Ausnahmen der Vorabfestlegung', () => {
+  for (const id of ['J4', 'R6']) {
+    const s = sichtbar(nach(id).inhalt);
+    assert.ok(!/vor jeder Messung|bevor gemessen wurde|vor jedem Lauf/.test(s), id);
+    assert.match(s, /M7b/, id);
+    assert.match(s, /ohne vorherige Freigabe/, id);
+    assert.match(s, /1B-Leitfrage/, id);
+  }
+});
+
+test('I-05: Nachprüfung mit Preis unter Voting (1C-017), ohne „kein neues Risiko“', () => {
+  const j12 = alles(nach('J12'));
+  assert.ok(!/kostet fast nichts/.test(nach('J12').titel));
+  for (const t of [j12, alles(nach('J15'))]) {
+    assert.match(t, /Voting/);
+    assert.match(t, /0,97/);
+  }
+  assert.ok(!/kein neues Risiko/.test(sichtbarAlle()));
+});
+
+test('I-06: J13 zeigt den Nachbau der Lehrenden-Sicht mit echtem Inhalt und Hinweistext aus dem App-Code', () => {
+  const j13 = nach('J13').inhalt;
+  assert.ok(!/Platz für den Clip/.test(j13));
+  assert.match(j13, /data-nachbau/);
+  assert.match(j13, /Nachbau/);
+  for (const frage of daten.nachbau.fragen) assert.ok(decode(j13).includes(frage), frage);
+  const quelle = readFileSync(
+    resolve(ROOT, '../../apps/backend/src/lib/qaSummaryExtractive.ts'),
+    'utf8',
+  );
+  assert.ok(quelle.includes(daten.nachbau.hinweis), 'Hinweis wörtlich aus dem App-Code');
+  assert.ok(decode(j13).includes(daten.nachbau.hinweis));
+  assert.match(nach('J13').notiz, /Nachbau/);
+});
+
+test('I-10: Messstand mit git describe; kein „Fork-main, Version 1.4.0 (8e9d1317)“', () => {
+  const t = sichtbarAlle();
+  assert.ok(!/Fork-main, Version 1\.4\.0/.test(t));
+  assert.match(sichtbar(nach('J2').inhalt), /a19ca70f/);
+  assert.match(sichtbar(nach('J2').inhalt), /v1\.4\.0-184/);
+  assert.match(sichtbar(nach('J1').inhalt), /v1\.4\.0-14/);
+});
+
+test('Minor: OOM-Vergleich, Speicherursache, Kaltaussage, Blitzlicht-Typen', () => {
+  const j11 = sichtbar(nach('J11').inhalt);
+  assert.match(j11, /10 GiB/);
+  assert.match(j11, /Laptop und PC/);
+  assert.match(nach('J11').notiz, /vermutlich|nicht getrennt gemessen/);
+  assert.ok(!/Alle drei Hypothesen sind erfüllt, auch kalt/.test(nach('J9').notiz));
+  assert.match(sichtbar(nach('J12').inhalt), /geprüft: YESNO/);
+  assert.match(sichtbar(nach('J7').inhalt), /keinem Lauf/);
 });

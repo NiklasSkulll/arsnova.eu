@@ -57,6 +57,10 @@ export function zahlen1B(lauf, kaltLaeufe, c0, b0) {
     transportAnteil: median(
       lauf.zerlegung.auftraege.map((a) => (a.netzMs + a.serverOhneInferenzMs) / a.jobMs),
     ),
+    // Server ohne Inferenz (HTTP, Template, Tokenisierung), Median je Auftrag (ADR 1B-011: 17,4 ms).
+    serverOhneMedianMs: median(lauf.zerlegung.auftraege.map((a) => a.serverOhneInferenzMs)),
+    // T_host: Rückkehr von qa.requestSummary im Treiber, Median über alle Aufträge (ADR 1B-011).
+    hostMedianMs: median(lauf.treiber.auftraege.map((a) => a.hostReturnMs)),
     // Höchster Speicher des Runtime-Containers im Lauf (Proben alle 15 s), in GB (10^9 Byte).
     speicherMaxGb: lauf.speicher.maxBytes / 1e9,
     c0DiffMs: c0.kennzahlen.differenzMs,
@@ -204,6 +208,38 @@ export const ZAHLEN_1C = {
     beleg: 'In allen **18** Messläufen mit Completion-Aufruf 0 Abweichungen',
     rechner: 'Laptop (ThinkPad P50)',
     commit: NACHLAUF_STAND,
+  },
+  gateAntwortenGesamt: {
+    wert: 28,
+    text: 'Aufgezeichnete Modellantworten im Nachlauf, alle gegen das Gate geprüft',
+    quelle: NACHLAUF,
+    beleg: 'Alle 28 aufgezeichneten Modellantworten',
+    rechner: 'Laptop (ThinkPad P50)',
+    commit: NACHLAUF_STAND,
+  },
+  bytesJeToken: {
+    wert: 3.15,
+    text: 'Bytes je echtem Prompt-Token im Mittel (N2)',
+    quelle: NACHLAUF,
+    beleg: '3,15 Byte je Token',
+    rechner: 'Laptop (ThinkPad P50)',
+    commit: NACHLAUF_STAND,
+  },
+  m7VorhersageLaptop: {
+    wert: 0.99,
+    text: 'Mittlere vorhergesagte Verwerfungswahrscheinlichkeit unter Voting (M7-Modell, Laborfenster)',
+    quelle: 'adr/1C-017-m7-empfehlung-zurueckgehalten.md',
+    beleg: 'mittlere Vorhersage mit dem gemessenen Fenster 0,99 (Laptop) und 0,97 (PC)',
+    rechner: 'Laptop (ThinkPad P50)',
+    commit: '9f230abc',
+  },
+  m7VorhersagePc: {
+    wert: 0.97,
+    text: 'Mittlere vorhergesagte Verwerfungswahrscheinlichkeit unter Voting (M7-Modell, Laborfenster)',
+    quelle: 'adr/1C-017-m7-empfehlung-zurueckgehalten.md',
+    beleg: 'mittlere Vorhersage mit dem gemessenen Fenster 0,99 (Laptop) und 0,97 (PC)',
+    rechner: 'PC (i7-8700)',
+    commit: '9f230abc',
   },
   gateAntworten: {
     wert: '0 von 28',

@@ -125,8 +125,8 @@ export function zeitzerlegungSvg(b1, { kalt = true } = {}) {
   ];
   if (kalt) {
     zeilen.push({
-      name: 'Kalt, Median',
-      gruppe: `n = ${b1.nKaltLaeufe}, Nachtrag`,
+      name: 'T_job kalt',
+      gruppe: `Median, n = ${b1.nKaltLaeufe}`,
       ms: b1.kaltMedianS * 1000,
       wert: `${fmt(b1.kaltMedianS, 1)} s`,
       kalt: true,
@@ -243,7 +243,7 @@ export function zeitzerlegungSvg(b1, { kalt = true } = {}) {
     text(
       0,
       542,
-      'Log-Achse: jeder Strich zehnmal mehr. Schwellen vor dem Lauf festgelegt (ADR 1B-008).',
+      'Log-Achse, je Strich ×10. Schwellen vorab (ADR 1B-008). Der Anteil gilt für diese langsame CPU.',
       { groesse: 24, farbe: FARBEN.text2 },
     ),
   );
@@ -500,7 +500,7 @@ export function wegSvg({ aktiv = null, b1, c1, auftrag }) {
         groesse: 22,
         farbe: FARBEN.text2,
       }) +
-      text(lx, inf.y + 54, `Anteil ${fmt(b1.inferAnteil * 100, 2)} % (alle ${b1.anzahl})`, {
+      text(lx, inf.y + 54, `Anteil ${fmt(b1.inferAnteil * 100, 2)} %, langsame CPU`, {
         mono: true,
         groesse: 22,
         farbe: FARBEN.text2,

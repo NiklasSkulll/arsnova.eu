@@ -184,14 +184,15 @@ function jonasFolie(f, nr, gesamt, clipUri) {
   if (clipUri) {
     const vorher = inhalt;
     inhalt = inhalt.replace(
-      /(<figure data-clip="[^"]*"[^>]*>)<div[^>]*>Platz für den Clip:[\s\S]*?<\/div>/,
+      // Der Clip ersetzt den gezeichneten Nachbau (data-nachbau … <!--/nachbau-->).
+      /(<figure data-clip="[^"]*"[^>]*>)<div data-nachbau[\s\S]*?<!--\/nachbau-->/,
       (_, figure) =>
         `${figure}<video class="clip" src="${clipUri}" muted playsinline preload="auto" ` +
         `aria-label="Clip: Lehrenden-Sicht, Klick, Warten, Ersatzzusammenfassung" ` +
         `style="display:block;width:100%;height:300px;object-fit:contain;background:var(--tinte);border-radius:8px"></video>`,
     );
     if (inhalt === vorher && f.inhalt.includes('data-clip')) {
-      throw new Error(`${f.id}: Platzhalter für den Clip nicht gefunden`);
+      throw new Error(`${f.id}: Nachbau für den Clip nicht gefunden`);
     }
   }
   const eigenerWeg = inhalt.includes('class="auftrag"');

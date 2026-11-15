@@ -56,7 +56,7 @@ Beleg: [ADR 1B-001](../../adr/1B-001-baseline-fork-main-a19ca70f.md), [ADR 1C-00
 
 ### F8. Wo weicht Ihr Labor vom Release ab?
 
-_(neu)_ Gewählt ist nur eine Abweichung: der kalibrierte Timeout von 300 s statt 90 s. Erzwungen sind die übrigen, nämlich 4 statt 8 CPUs per Override, selbst gebaute Images per lokalem Digest, der Start ohne Wrapper nach dessen Prüfungen und die eingeschalteten Summary-Schalter. Alle stehen mit Grund im ADR und im Aufbauprotokoll, samt Rückweg zur Baseline.
+_(neu)_ Gewählt ist nur eine Abweichung: der kalibrierte Timeout von 300 s statt 90 s. Erzwungen sind die übrigen, nämlich 4 statt 8 CPUs per Override, selbst gebaute Images per lokalem Digest, der Start ohne Wrapper, weil er das CPU-Override nicht durchreicht (seine Prüfungen liefen vorher im Trockenlauf), und die eingeschalteten Summary-Schalter. Alle stehen mit Grund im ADR und im Aufbauprotokoll, samt Rückweg zur Baseline.
 Beleg: [ADR 1B-005](../../adr/1B-005-abweichungen-vom-release.md), [Aufbauprotokoll, Abweichungen](../../evidenz/1B/2026-11-12-aufbau.md#abweichungen-vom-release), [Laufprotokoll, Umgebung](../../evidenz/1B/2026-11-13-lauf.md#umgebung)
 
 ## Zahlen und Gültigkeit
@@ -78,7 +78,7 @@ Beleg: [Laufprotokoll, Kennzahlen](../../evidenz/1B/2026-11-13-lauf.md#kennzahle
 
 ### F12. Warum ist 99,92 % Inferenzanteil nicht Ihr Hauptargument?
 
-_(neu)_ Weil der Anteil auf langsamer Hardware von selbst hoch ausfällt: Je länger die Inferenz, desto kleiner wirkt das Netz. Deshalb nenne ich den Prozentwert nur mit diesem Hinweis und stelle die Netzzeit in Millisekunden nach vorn. Auf schnellerer Hardware wäre die Inferenz kürzer und der Anteil kleiner.
+_(neu)_ Weil der Anteil auf langsamer Hardware von selbst hoch ausfällt: Je länger die Inferenz, desto kleiner wirkt das Netz. Deshalb stehen vorn Netz 0,43 ms und Transport 17,8 ms je Auftrag (Median, ThinkPad P50, `8e9d1317`), und den Prozentwert nenne ich auf Folie, Notiz und Handout nur mit diesem Hinweis. Auf schnellerer Hardware wäre die Inferenz kürzer und der Anteil kleiner.
 Beleg: [ADR 1B-008](../../adr/1B-008-kernaussagen-und-schwellen.md#entscheidung), [Laufprotokoll, Kennzahlen](../../evidenz/1B/2026-11-13-lauf.md#kennzahlen-und-bewertung)
 
 ### F13. Was würde sich auf echter Server-Hardware ändern?
@@ -155,7 +155,7 @@ Beleg: [ADR 1C-014](../../adr/1C-014-byte-schaetzung-kontextbudget-pruefen.md)
 
 ### F27. Warum stirbt die Runtime am Prompt-Cache, und trifft das die App?
 
-_(neu)_ Bei wechselnden Prompts wächst der Speicher der Runtime am Laptop um 0,419 GB je Auftrag im Median; am Laborlimit (5 GiB + 5 GiB Swap) beendet der Kernel sie im 19. Auftrag (`def56700`), mit Produktionslimits (8 GiB + 2 GiB Swap) am PC im 21. (`9f230abc`), und mit abgeschaltetem Cache war das Wachstum dort 0,000 GB (U1). Getroffen wurde nur der Runtime-Container, die App beantwortete jeden Auftrag mit dem Fallback. Im 1B-Lauf blieb der Speicher ab dem zweiten Auftrag bei höchstens 4,04 GB (ThinkPad P50, `8e9d1317`); plausibel ist, dass derselbe Prompt jedes Mal aus dem Cache kam (`cache_n` 2344), getrennt gemessen habe ich das nicht.
+_(neu)_ Bei wechselnden Prompts wächst der Speicher der Runtime am Laptop um 0,419 GB je Auftrag im Median; beide Grenzen sind 10 GiB (Labor 5 + 5, Produktion 8 + 2 GiB Swap). Auf `9f230abc` beendete der Kernel die Runtime im 21. Auftrag, am Laptop und am PC; auf `def56700` schon im 19., weil jeder Auftrag mehr Tokens hat. Mit abgeschaltetem Cache war das Wachstum am PC 0,000 GB (U1). Getroffen wurde nur der Runtime-Container, die App beantwortete jeden Auftrag mit dem Fallback. Im 1B-Lauf blieb der Speicher ab dem zweiten Auftrag bei höchstens 4,04 GB (ThinkPad P50, `8e9d1317`); plausibel ist, dass derselbe Prompt jedes Mal aus dem Cache kam (`cache_n` 2344), getrennt gemessen habe ich das nicht.
 Beleg: [ADR 1C-024](../../adr/1C-024-prompt-cache-ram-begrenzen.md), [Nachlauf N6](../../evidenz/1C/2026-11-09-labor-nachlauf.md#n6-speicher), [Laufprotokoll 1B, Beobachtungen](../../evidenz/1B/2026-11-13-lauf.md#beobachtungen), [Speicherverlauf 1B](../../evidenz/1B/messung/2026-11-13-speicher.csv)
 
 ## Sicherheit und Datenschutz

@@ -95,6 +95,7 @@ export function baueHandout(daten, personen, { basis } = {}) {
   const nachlauf = c.requestMs.commit; // "def56700 (Branch f746ffba)"
   const teil2 = c.validierungMs.commit;
   const ersteAussage = a.ausgabe.split('\n')[0];
+  const gateBeob = daten.abgeleitet.gateBeobachtet;
 
   // ------------------------------------------------------------ Seite 1
   const personZeile = (g, i) =>
@@ -109,16 +110,15 @@ export function baueHandout(daten, personen, { basis } = {}) {
 
   const seite1 =
     `<h1>Ein Klick. ${z.auS} Sekunden. Keine Modellantwort.</h1>` +
-    `<p class="unter">${TITEL} im KI-Pfad von arsnova.eu: Architektur nach Release 1.3, gemessen auf Version 1.4.0</p>` +
+    `<p class="unter">${TITEL} im KI-Pfad von arsnova.eu: Architektur nach Release 1.3, gemessen auf Code nach v1.4.0</p>` +
     `<p class="meta" data-frei>Cloud Computing, Referat Thema 1 · Handout · Stand 15.11.2026</p>` +
     `<table class="personen"><tr><th>Gruppe</th><th>Teil im Referat</th><th>Name und Matrikelnummer</th></tr>` +
     GRUPPE.map(personZeile).join('') +
     `</table>` +
-    `<p class="quelle">Verfasser aller Abschnitte: Jonas (ad personam).</p>` +
     `<div class="kasten"><p><b>Kurzantwort.</b> Auftrag ${au.nr} des 1B-Laufs (synthetische Daten) wartet vom Klick bis zum Ergebnis ${w(`${z.auWarte} s`)}, Jobdauer am Server (T_job) ${w(`${z.auJob} s`)}. ` +
     `${etikett('1C')} Der Kontextpfad hält seine Zusagen, mit Ausnahmen. ` +
-    `${etikett('1B')} Die zweite Serverrolle kostet keine relevante Zeit: Transportanteil ${w(`${z.transportAnteil} %`)}, Inferenz ${w(`${z.anteil} %`)} (Mediane). ` +
-    `Auf Version 1.4.0 kommt trotzdem keine Modellzusammenfassung an, das Quality-Gate verwirft jede Antwort; vor dem Gate (${code('9f230abc')}) waren es ${w(c.fullContextVorGate.wert)}.</p></div>` +
+    `${etikett('1B')} Die zweite Serverrolle kostet keine relevante Zeit: Netz ${w(`${z.netz} ms`)}, Transport ${w(`${z.transport} ms`)} je Auftrag (Median); die Inferenz macht ${w(`${z.anteil} %`)} aus, auf schnellerer Hardware wäre der Anteil kleiner. ` +
+    `Auf Code nach v1.4.0 bestand keine der ${w(`${gateBeob}`)} beobachteten Modellantworten das Quality-Gate (ein Modell, eine Fixture); vor dem Gate (${code('9f230abc')}) waren es ${w(c.fullContextVorGate.wert)}.</p></div>` +
     `<h2>1 Leitfragen und Weg eines Auftrags (Jonas)</h2>` +
     `<p class="zitat">${etikett('1C')} „Wie zuverlässig hält der implementierte 1.3-Kontextpfad seine Vertrags-, Konsistenz- und Entkopplungszusagen vom App-Zustand bis zur privaten Inferenz ein?“ (Prüfungsdokument [1])</p>` +
     `<p class="zitat">${etikett('1B')} „Wie schlüsselt sich die Zeit eines echten Kompass-Auftrags […] auf, und wie groß ist der Transportanteil im Vergleich zur Inferenz?“ (ADR 1B-011 [10])</p>` +
@@ -140,7 +140,7 @@ export function baueHandout(daten, personen, { basis } = {}) {
     ) +
     zeile(
       '2 Realer Auftrag',
-      `Vorschau = Nutzlast in allen ${w(c.n1LaeufeMitAufruf.wert)} Läufen mit Aufruf (zwei ohne, nach OOM-Kill); Host-Aufruf ${w(`${z.request} ms`)}, Inferenz ${w(`${z.infer1C} s`)} (Mediane)`,
+      `Schichten getrennt (E2), Vertrag nur in Negativprobe verändert (E4); Vorschau = Nutzlast in allen ${w(c.n1LaeufeMitAufruf.wert)} Läufen mit Aufruf, K_L1 formal verfehlt (zwei ohne Aufruf nach OOM-Kill); Host-Aufruf ${w(`${z.request} ms`)}, Inferenz ${w(`${z.infer1C} s`)}`,
       'hält, bleibt (1C-012, 1C-013)',
     ) +
     zeile(
@@ -156,7 +156,7 @@ export function baueHandout(daten, personen, { basis } = {}) {
     ) +
     zeile(
       'Kosten',
-      `Validierung ${w(`${z.valMs} ms`)} = ${w(`${z.valP} %`)} eines warmen Aufbaus (Test-Runtime, älterer Stand); q = ${w(z.q)}: zwei Drittel des geschätzten Budgets ungenutzt, ein BPE-Token umfasst mehrere Bytes [12]`,
+      `Validierung ${w(`${z.valMs} ms`)} = ${w(`${z.valP} %`)} eines warmen Aufbaus (Test-Runtime, älterer Stand); q = ${w(z.q)} bei ${w(`${fmt(c.bytesJeToken.wert, 2)}`)} Byte je Token im Mittel: zwei Drittel des geschätzten Budgets ungenutzt; jedes Token hat mindestens ein Byte, die Zählung ist eine Obergrenze`,
       'bleibt (1C-011); Zählung prüfen (1C-014)',
     ) +
     zeile(
@@ -167,28 +167,24 @@ export function baueHandout(daten, personen, { basis } = {}) {
     ) +
     `</table>` +
     `<p class="quelle"><b>Tab. 1:</b> Aufgabenabdeckung 1C, Details im Ergebnisbericht [10]. Quelle: Nachlauf [8], ${P50}, ${nachlauf}; Tests, Teil 2 [9], ${P50}, ${teil2}.</p>` +
-    `<figure><pre class="nutzlast" data-frei>${['{…', ...nl.zeilen, `"limitations":[${nl.budgetZeile}]`, '…}'].map(esc).join('\n')}</pre>` +
-    `<figcaption><b>Abb. 2:</b> Echte Nutzlast, Ausschnitt; Hash wie Vorschau ${code(nl.hashVorschau.slice(0, 8))}. ` +
-    `Quelle: ${code(nl.datei)}, ${code(`labor.quiet.runs[${nl.lauf}]`)} [8], ${rechnerKurz(nl.cpu)}, ${nl.commit} (${code('def56700')}).</figcaption></figure>` +
     grenzen('1C', [
       `ein Rechner, Runtime über Loopback, kein zweiter Host; Image lokal gebaut, Messproxy; eine synthetische Fixture`,
       `Laborlimits ${w(`${fw.laborCpus1C} CPUs`)}, ${w(`${fw.laborSpeicher1CGiB} GiB`)} statt ${w(`${fw.releaseCpus} CPUs`)}, ${w(`${fw.prodSpeicherGiB} GiB`)}; Timeout ${w(`${fw.laborTimeoutS} s`)} statt ${w(`${fw.releaseTimeoutS} s`)} (Kalibrierung am Laptop ${w(`${fw.kalibrierungLaptopS} s`)}); Nachlauf mit Nebenlast`,
-      'Stand Version 1.4.0, nicht v1.3.0 (ADR 1C-001); „hält“ heißt vertragsgültig, kein Urteil über Prompts',
+      `Stand ${code('def56700')} (v1.4.0-14), nicht v1.3.0 (ADR 1C-001); „hält“ heißt vertragsgültig, kein Urteil über Prompts`,
     ]);
 
   // ------------------------------------------------------------ Seite 3: 1B
   const hyp = (h, groesse, schwelle, wert) =>
-    `<tr><td><b>${h}</b></td><td>${groesse}</td><td>${schwelle}</td><td>${wert}</td><td class="ja">erfüllt</td></tr>`;
+    `<tr><td><b>${h}</b></td><td>${groesse}</td><td>${schwelle}</td><td class="ja">${wert}</td></tr>`;
   const seite3 =
     `<h2>3 Auftrag 1B, Schritte 1–2: Wo steckt die Zeit? (Jonas)</h2>` +
-    `<p><b>Aufbau (Schritt 1).</b> Nach ADR-0035 [2] und Runbook [3] zwei KVM-VMs auf einem Laptop: app-host mit App samt App-Adapter, PostgreSQL, Redis (Encoder ab Werk aus); llm-host mit dem LLM-Server ${code('llama-server')}, Qwen3-4B Q4_K_M; Firewall und Token. ` +
+    `<p><b>Aufbau (Schritt 1).</b> Nach ADR-0035 [2] und Runbook [3] zwei KVM-VMs auf einem Laptop: app-host mit App samt App-Adapter, PostgreSQL, Redis (Encoder ab Werk aus); llm-host mit dem LLM-Server ${code('llama-server')}, Qwen3-4B Q4_K_M; Firewall und Token; Manifest mit Commit, lokal gebauten Image-Digests, GGUF-SHA-256 und Startflags [7]. ` +
     `Abgleich mit ADR-0035 [7]: Lücke bei ${code('--n-predict')} („Richtung ${fw.nPredictAdr}“, Release ${fw.nPredictRelease}); ${fw.nPredictAdr} hätte die Antworten (${fw.antwortTokensMin}–${fw.antwortTokensMax} Tokens) abgeschnitten.</p>` +
-    `<p><b>Messung (Schritt 2).</b> ${n} echte Aufträge über die App; Mitschnitt auf beiden Hosts (t<sub>0</sub>–t<sub>3</sub>), Inferenz aus ${code('timings')} [4]: ` +
-    `Netz = (t<sub>3</sub> − t<sub>0</sub>) − (t<sub>2</sub> − t<sub>1</sub>), ohne Änderung am Produktionscode (ADR 1B-006, Begriffe [6]). Kalt und warm getrennt (ADR 1B-011).</p>` +
+    `<p><b>Messung (Schritt 2).</b> ${n} echte Aufträge über die App; Mitschnitt auf beiden Hosts (t<sub>0</sub>–t<sub>3</sub>), Inferenz aus ${code('timings')} [4], ohne Änderung am Produktionscode (ADR 1B-006, Begriffe [6]). Kalt und warm getrennt (ADR 1B-011).</p>` +
     `<figure>${zeitzerlegungSvg(b)}` +
-    `<figcaption><b>Abb. 3:</b> Zeitzerlegung, Schwellen vorab (Log-Achse). Netz, Transport, Adapter, Anteil: Median, alle ${n}; Inferenz warm: n = ${nWarm}; kalt: Median, ${b.nKaltLaeufe} Läufe. Eigene Darstellung. ` +
+    `<figcaption><b>Abb. 2:</b> Zeitzerlegung, Schwellen vorab (Log-Achse), Gruppen an den Balken. Eigene Darstellung. ` +
     `Quelle: Lauf [7], ${P50}, ${haupt}; Kaltläufe: Nachtrag [7], ${P50}, ${nachtrag}.</figcaption></figure>` +
-    `<table><tr><th style="width:14%">Hypothese</th><th style="width:28%">Messgröße</th><th style="width:20%">Schwelle, vorab</th><th>Messwert</th><th style="width:9%">Urteil</th></tr>` +
+    `<table><tr><th style="width:14%">Hypothese</th><th style="width:28%">Messgröße</th><th style="width:20%">Schwelle, vorab</th><th>Messwert (alle erfüllt)</th></tr>` +
     hyp(
       'H_B1',
       'Netz je Auftrag',
@@ -215,12 +211,12 @@ export function baueHandout(daten, personen, { basis } = {}) {
     ) +
     `</table>` +
     `<p class="quelle"><b>Tab. 2:</b> Schwellen vorab (ADR 1B-008 [10]). Quelle: H_B1–H_B3 Lauf [7], n = ${n}, ${P50}, ${haupt}; M4 Nachtrag [7], ${P50}, ${nachtrag}.</p>` +
-    `<p>T_job: kalt ${w(`${z.jobKalt} s`)} (Kaltläufe ${w(`${z.kaltMedian} s`)}), Median warm ${w(`${z.jobWarm} s`)} (warm, n = ${nWarm}).</p>` +
+    `<p>T_job: Auftrag 1 kalt (n = 1) ${w(`${z.jobKalt} s`)} (Kaltläufe ${w(`${z.kaltMedian} s`)}), Median warm ${w(`${z.jobWarm} s`)} (warm, n = ${nWarm}).</p>` +
     grenzen('1B', [
       `${w(`${fw.laborCpus} statt ${fw.releaseCpus} CPUs`)}; Timeout ${w(`${fw.laborTimeout1BS} s`)} statt ${w(`${fw.releaseTimeoutS} s`)} nach Kalibrierung (I = ${w(`${fw.kalibrierung1BS} s`)}), der Release-Timeout ist nicht gemessen`,
-      'Images selbst gebaut, Start ohne Wrapper (Runbook §6 bricht ihn), Summary-Schalter an; Hintergrunddienste vor dem gewerteten Lauf von Hand abgeschaltet',
+      'Images selbst gebaut; Start ohne Wrapper, weil er das CPU-Override nicht durchreicht (Trockenlauf vorher); Summary-Schalter an; Hintergrunddienste vor dem gewerteten Lauf von Hand abgeschaltet',
       `ein Laptop, virtuelles Netz, keine parallele Last; Netzauflösung ≈ ${w(`${fw.netzAufloesungMs} ms`)}; Token im Klartext über HTTP`,
-      `warm heißt: identischer Snapshot aus dem KV-Cache, bei geändertem Zustand gilt eher der Kaltwert; Stand Version 1.4.0 (${code(haupt)})`,
+      `warm heißt: identischer Snapshot aus dem KV-Cache, bei geändertem Zustand gilt eher der Kaltwert; Produktionscode ${code('a19ca70f')} (Fork-main, v1.4.0-184), Lauf-Commit ${code(haupt)} nur mit Laborskripten`,
     ]);
 
   // ------------------------------------------------------------ Seite 4: Befunde und Entscheidung
@@ -228,22 +224,22 @@ export function baueHandout(daten, personen, { basis } = {}) {
     `<tr><td class="${klasse}">${art}</td><td>${inhalt}</td><td>${folge}</td><td>${beleg}</td></tr>`;
   const seite4 =
     `<h2>4 Befunde und Entscheidung zu 1C und 1B (Jonas)</h2>` +
-    `<h3>Auf Version 1.4.0 verwirft das Gate jede Modellantwort ${etikett('1C')} ${etikett('1B')}</h3>` +
-    `<p>Im 1B-Lauf verwirft das Quality-Gate ${w(`${b.verworfen} von ${n}`)} Antworten, im 1C-Nachlauf bestehen ${w(c.gateAntworten.wert)} [7, 8]. Es verlangt mindestens zwei Aussagen „Stichwort: Text“ mit verschiedenen Stichwörtern, ganze Sätze, keine Metamuster; Sprache und Thema prüft es nicht. ` +
+    `<h3>Keine beobachtete Modellantwort besteht das Gate ${etikett('1C')} ${etikett('1B')}</h3>` +
+    `<p>Im 1B-Lauf verwirft das Quality-Gate ${w(`${b.verworfen} von ${n}`)} Antworten, im 1C-Nachlauf bestehen ${w(c.gateAntworten.wert)} [7, 8]: ${gateBeob} beobachtete Antworten, ein Modell, eine Fixture. Ausgaben mit Status failed und unsichere ohne Aussagen lässt es durch; sonst verlangt es mindestens zwei Aussagen „Stichwort: Text“ mit verschiedenen Stichwörtern, ganze Sätze, keine Metamuster; Sprache und Thema prüft es nicht. ` +
     `Auftrag ${a.auftrag} scheitert an der Form (${w(`${a.mitTrenner} von ${a.aussagen}`)} Aussagen) und verfehlt auch den Inhalt (englisch, Moderationsstatus):</p>` +
     `<p class="zitat antwort" lang="en">${esc(ersteAussage)}</p>` +
     `<p class="quelle">Ausschnitt ohne Header und Token [7], Lauf ${haupt}, ${P50}.</p>` +
     `<p>Die Lehrperson sieht eine extraktive Ersatzzusammenfassung mit dem allgemeinen Hinweis „Eine ausführliche Zusammenfassung war diesmal nicht möglich …“, den Grund nicht. ` +
-    `Das Gate kam mit Version 1.4.0 (${code('12f1d8e4')}, nicht in v1.3.0); davor, auf ${code('9f230abc')} mit älterer Instruktion, endeten ${w(c.fullContextVorGate.wert)} Aufträgen mit Modellzusammenfassung (ADR 1C-019 [10]).</p>` +
+    `Das Gate kam mit Version 1.4.0 (${code('12f1d8e4')}, nicht in v1.3.0); zum Stand davor siehe Kurzantwort (ADR 1C-019 [10]).</p>` +
     `<h3>Betrieb: Timeout und Speicher ${etikett('1C')}</h3>` +
     `<p>Ab Werk bricht die App nach ${w(`${fw.releaseTimeoutS} s`)} ab; die Inferenz dauerte bei der Kalibrierung am PC (${code(c.kalibrierungPcS.commit)}) ${w(`${z.kalPc} s`)}, am Laptop im Median ${w(`${z.infer1C} s`)} (${code('def56700')}, Nebenlast). ` +
-    `Bei wechselnden Prompts wächst der Speicher der Runtime je Auftrag um ${w(`${z.delta} GB`)} (Median, Laptop); der KV-Cache belegt Speicher je Token [11]. OOM-Kill am Laborlimit (${w(`${fw.laborSpeicher1CGiB} GiB`)} + ${w(`${fw.laborSpeicher1CGiB} GiB`)} Swap) im ${w(`${c.oomAuftrag.wert}.`)} Auftrag, mit Produktionslimits (${w(`${fw.prodSpeicherGiB} GiB`)} + ${w(`${fw.prodSwapGiB} GiB`)} Swap, PC, ${code(c.oomAuftrag9f230abc.commit)}) im ${w(`${c.oomAuftrag9f230abc.wert}.`)} [8, 10]. ` +
+    `Bei wechselnden Prompts wächst der Speicher der Runtime je Auftrag um ${w(`${z.delta} GB`)} (Median, Laptop); der KV-Cache belegt Speicher je Token [11]. Beide Grenzen ${w(`${fw.grenzeGesamtGiB} GiB`)} (Labor ${w(`${fw.laborSpeicher1CGiB} GiB`)} + ${w(`${fw.laborSpeicher1CGiB} GiB`)}, Produktion ${w(`${fw.prodSpeicherGiB} GiB`)} + ${w(`${fw.prodSwapGiB} GiB`)} Swap): OOM-Kill auf ${code(c.oomAuftrag9f230abc.commit)} im ${w(`${c.oomAuftrag9f230abc.wert}.`)} Auftrag (Laptop und PC), auf ${code('def56700')} im ${w(`${c.oomAuftrag.wert}.`)} (mehr Tokens) [8, 10]. ` +
     `Im 1B-Lauf mit gleichem Prompt blieb er bei höchstens ${w(`${z.speicher1B} GB`)} [7].</p>` +
     `<table><tr><th style="width:15%">Entscheidung</th><th style="width:27%">Inhalt</th><th>Kosten, Risiko, Betrieb</th><th style="width:15%">ADR, Issue</th></tr>` +
     ent(
       'beibehalten (1C)',
       'Nachprüfung, Validierung, Entkopplung, Vorschau = Nutzlast',
-      'Kosten unverändert; kein neues Risiko',
+      `wenig Zeit; unter Voting verwirft sie die meisten Antworten (Vorhersage ${fmt(c.m7VorhersagePc.wert, 2)}–${fmt(c.m7VorhersageLaptop.wert, 2)}, M7 verfehlt, 1C-017)`,
       `${adr('1C-010')} bis ${adr('1C-013')}`,
       'ja',
     ) +
@@ -285,7 +281,7 @@ export function baueHandout(daten, personen, { basis } = {}) {
     ent(
       'Konfiguration (1B)',
       'Topologie bleibt; Hebel am Inferenz-Host',
-      'keine; nützt erst mit passendem Gate',
+      'keine zusätzlichen; Aufwand der Rolle: Niklas, Schritt 4',
       '1B-Ergebnis; #13',
       'ja',
     ) +
@@ -312,7 +308,6 @@ export function baueHandout(daten, personen, { basis } = {}) {
     `Eigene Messung (2026): 1C, Teil 2 mit Test-Runtime, ${code('evidenz/1C/2026-10-24-teil2.md')}.`,
     `Eigene Arbeit (2026): ADRs 1C-001 bis 1C-026 und 1B-001 bis 1B-012 (${code('adr/')}); Berichte ${code('1C-ergebnis.md')}, ${code('1B-ergebnis.md')}; Eigenanteil ${code('1C-eigenanteil.md')}, ${code('1B-eigenanteil.md')}.`,
     `Kwon, W. et al. (2023): Efficient Memory Management for Large Language Model Serving with PagedAttention. In: Proc. 29th Symposium on Operating Systems Principles (SOSP ’23), ACM, S. 611–626. <a href="https://doi.org/10.1145/3600006.3613165">doi.org/10.1145/3600006.3613165</a>.`,
-    `Sennrich, R.; Haddow, B.; Birch, A. (2016): Neural Machine Translation of Rare Words with Subword Units. In: Proc. 54th Annual Meeting of the ACL, S. 1715–1725. <a href="https://doi.org/10.18653/v1/P16-1162">doi.org/10.18653/v1/P16-1162</a>.`,
   ];
   const seite5 =
     `<h2>5 Quellen, Evidenz und KI-Offenlegung (Jonas)</h2>` +
@@ -320,14 +315,12 @@ export function baueHandout(daten, personen, { basis } = {}) {
     `<ol class="literatur">${lit.map((t, i) => `<li id="q${i + 1}">${t}</li>`).join('')}</ol>` +
     `<p class="quelle">[1]–[3] im Fork, Stand ${code('a19ca70f')}; Pfade [5]–[10] relativ zu ${code('docs/referat-thema-1/')}; Issues #13–#20 im Fork <a href="https://github.com/NiklasSkulll/arsnova.eu/issues">github.com/NiklasSkulll/arsnova.eu/issues</a>.</p>` +
     `<h3>Evidenzort und Rechner</h3>` +
-    `<p>Alle eigenen Belege liegen im Fork <a href="https://github.com/NiklasSkulll/arsnova.eu">github.com/NiklasSkulll/arsnova.eu</a> unter ${code('docs/referat-thema-1/')}: 1C in ${code('main')} (PR #12), 1B im Zweig ${code('feature-1B-two-host')}, Stand ${code('bbc394c9')} (PR #23). ` +
-    `Die Zahlen setzt ein geprüftes Skript aus den Rohdaten ein (${code('abgabe/jonas/zahlen.mjs')}).</p>` +
+    `<p>Alle eigenen Belege liegen im Fork <a href="https://github.com/NiklasSkulll/arsnova.eu">github.com/NiklasSkulll/arsnova.eu</a> unter ${code('docs/referat-thema-1/')}: 1C in ${code('main')} (PR #12); 1B und dieses Material im Zweig ${code('feature-praesentation-jonas')}, Antwortausschnitt seit Commit ${code(daten.antwortCommit)}.</p>` +
     `<p class="klein" data-frei><b>Rechner.</b> ThinkPad P50: ${esc(H.hauptlauf.rechner.replace(/Intel\(R\) Core\(TM\) | CPU @ [\d.]+GHz/g, ''))}. PC: i7-8700.</p>` +
     `<h3>KI-Offenlegung</h3>` +
-    `<p>Werkzeug: Claude Code (Anthropic) mit Serena und codebase-memory-mcp, laut Protokollen Modell Claude Opus 5.5 (nicht unabhängig geprüft). ` +
+    `<p>Werkzeug: Claude Code mit Serena und codebase-memory-mcp; Modell laut Protokollen Claude Opus 5.5, nicht unabhängig geprüft. ` +
     `Die KI entwarf Skripte, Tests, Auswertungen, Texte und dieses Handout. ` +
-    `Leitfragen, Hypothesen und Schwellen habe ich vor jeder Messung freigegeben, Läufe und Abweichungen entschieden, Ergebnisse geprüft. ` +
-    `Zentrale Aufträge sinngemäß: Pfad mit Code-Belegen verfolgen, 1C testen und messen, Labor nachbauen; Wortlaut nur in meiner Sitzungshistorie, einer in [5]. ` +
+    `Hypothesen und Schwellen habe ich vor den gewerteten Läufen freigegeben; Ausnahmen: M7b/M7c liefen ohne vorherige Freigabe, T3.1 war exploratorisch, die 1B-Leitfrage habe ich nach dem Lauf bestätigt (ADR 1B-011). Läufe und Abweichungen habe ich entschieden, Ergebnisse geprüft; Wortlaut der Aufträge nur in meiner Sitzungshistorie. ` +
     `Reviews waren KI-Sitzungen, keine menschlichen Gutachten. Details: Eigenanteil-Dateien [10].</p>`;
 
   // ADR-Kennungen nicht am Bindestrich umbrechen (nur im HTML-Text, nie in den SVG-Grafiken).

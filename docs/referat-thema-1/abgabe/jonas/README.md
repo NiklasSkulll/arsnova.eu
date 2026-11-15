@@ -46,7 +46,7 @@ Datei, bricht das Skript mit einer Fehlermeldung ab.
 | ---------------------- | ------------------------------------------------------------------------------------ |
 | `jonas-deck.html`      | Gemeinsames Deck zum Vortragen, selbstständig (Schriften und Bilder eingebettet)     |
 | `gemeinsames-deck.pdf` | Druck des gemeinsamen Decks, eine Seite je Folie                                     |
-| `jonas-folien.pdf`     | Nur Jonas' Folien J1–J15 und Reserve, einzeln zuordenbar für die Abgabe              |
+| `jonas-folien.pdf`     | Nur Jonas' Folien (J1–J13, J15) und Reserve, einzeln zuordenbar für die Abgabe       |
 | `jonas-handout.pdf`    | Handout (höchstens 5 Seiten, 350–1.800 Wörter), im Repo mit Platzhalter für Matrikel |
 | `sprechnotizen.md`     | Notizen je Folie mit Sekunden, kumulierter Zeit und Kürzung auf die Kurzfassung      |
 | `manifest.json`        | SHA-256 aller Ein- und Ausgaben, Seitenzahlen, Wortzahl                              |

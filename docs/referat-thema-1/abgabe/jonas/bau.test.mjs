@@ -126,7 +126,8 @@ test('Manifest: SHA-256 aller Eingaben und Ausgaben, Seitenzahlen und Wortzahl',
   }
   for (const e of m.eingaben) {
     assert.match(e.sha256, /^[0-9a-f]{64}$/);
-    const abs = resolve(ROOT, e.pfad.replace(/^docs\/referat-thema-1\//, ''));
+    // Pfade sind relativ zum Repo (auch der gelesene App-Code für den Nachbau auf J13).
+    const abs = resolve(ROOT, '../..', e.pfad);
     assert.equal(sha(abs), e.sha256, e.pfad);
   }
   assert.deepEqual(m.ausgaben.map((a) => a.datei).sort(), [...AUSGABEN].sort());

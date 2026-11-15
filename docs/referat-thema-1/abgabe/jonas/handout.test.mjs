@@ -199,10 +199,11 @@ test('K1/W2: Hinweis statt „ohne Hinweis“; Gate prüft mehr als die Form', (
   assert.match(t, /Sprache und Thema prüft es nicht/);
 });
 
-test('K2: Untertitel und Kurzantwort nennen den Messstand 1.4.0 und den Stand vor dem Gate', () => {
+test('K2/I-10: Untertitel und Kurzantwort nennen den Messstand nach v1.4.0 und den Stand vor dem Gate', () => {
   const unter = r.ohne.html.match(/<p class="unter">([\s\S]*?)<\/p>/)[1];
   assert.match(unter, /Release 1\.3/);
-  assert.match(unter, /1\.4\.0/);
+  assert.match(unter, /nach v1\.4\.0/);
+  assert.ok(!/gemessen auf Version 1\.4\.0/.test(unter));
   const kurz = r.ohne.html
     .match(/<div class="kasten">([\s\S]*?)<\/div>/)[1]
     .replace(/<[^>]+>/g, '');
@@ -278,6 +279,7 @@ test('Personenangaben werden escaped', () => {
 
 /** Kennungen, die Ziffern enthalten, aber keine Messwerte sind (wie in folien.test.mjs). */
 const KENNUNGEN = [
+  /\bv1\.[34]\.0-\d+\b/g, // git describe
   /\b1[BC]-\d{3}\b/g,
   /\bADR-\d{4}\b/g,
   /#\d+/g,
@@ -333,6 +335,7 @@ function whitelist() {
   blaetter({ a: daten.antwort.auftrag, b: daten.antwort.aussagen, c: daten.antwort.mitTrenner });
   ziffern(daten.antwort.grund);
   blaetter(Object.values(daten.auftrag).filter((v) => typeof v === 'number'));
+  blaetter(daten.abgeleitet);
   w.add(fmt(Math.round(daten.auftrag.jobMs / 1000)));
   for (const f of Object.values(FESTWERTE)) zahl(f.wert);
   return w;
@@ -379,4 +382,40 @@ test('Grafiken stehen unverändert im Handout (keine Nachbearbeitung im SVG)', (
     'Abb. 1',
   );
   assert.ok(r.ohne.html.includes(zeitzerlegungSvg(b1)), 'Zeitzerlegung');
+});
+
+// ------------------------------------------------------------------ Fachliche Prüfung 2
+
+test('I-01: Kurzantwort nennt Netz und Transport in ms vor dem Anteil, mit Hardware-Hinweis', () => {
+  const kurz = r.ohne.html
+    .match(/<div class="kasten">([\s\S]*?)<\/div>/)[1]
+    .replace(/<[^>]+>/g, '');
+  const ms = kurz.indexOf(`${fmt(daten.b1.netzMs, 2)} ms`);
+  const prozent = kurz.indexOf(`${fmt(daten.b1.inferAnteil * 100, 2)} %`);
+  assert.ok(ms >= 0 && prozent > ms, kurz);
+  assert.match(kurz, /schnellerer Hardware/);
+  assert.match(kurz, new RegExp(`${fmt(daten.b1.transportMs, 1)} ms`));
+});
+
+test('I-02 bis I-10 im Handout', () => {
+  const t = textOhneSvg();
+  assert.match(t, /Override/); // I-02
+  assert.ok(!/Runbook §6 bricht ihn\)/.test(t));
+  assert.ok(!/verwirft (das Gate )?jede (Modell)?[Aa]ntwort/.test(t)); // I-03
+  assert.match(t, new RegExp(`${daten.abgeleitet.gateBeobachtet} beobachtete`));
+  assert.ok(!/vor jeder Messung/.test(t)); // I-04
+  assert.match(t, /M7b/);
+  assert.match(t, /ohne vorherige Freigabe/);
+  assert.match(t, /1B-Leitfrage/);
+  assert.match(t, /Voting/); // I-05
+  assert.match(t, /0,97/);
+  assert.ok(!/kein neues Risiko/.test(t));
+  assert.ok(!/Sennrich/.test(r.ohne.html)); // I-08
+  assert.ok(!/mehrere Bytes/.test(t));
+  assert.match(t, /3,15 Byte je Token/);
+  assert.match(t, /feature-praesentation-jonas/); // I-09
+  assert.match(t, new RegExp(daten.antwortCommit));
+  assert.match(t, /a19ca70f/); // I-10
+  assert.match(t, /v1\.4\.0-184/);
+  assert.ok(!/Stand Version 1\.4\.0/.test(t));
 });

@@ -5,6 +5,7 @@
 //
 // Fläche: inhalt füllt die Diagrammfläche der Folie (1380 × 560 px, .folie-flaeche in stil.css).
 // Titel, Fußzeile mit Seitenzahl und quelle sowie der wandernde Marker (station) setzt der Bau.
+import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { gunzipSync } from 'node:zlib';
@@ -129,6 +130,12 @@ export const FESTWERTE = {
     quelle: 'adr/1C-021-zusatzlauf-produktionslimits-zweiter-rechner.md',
     beleg: '(8 CPUs, 8 GiB, 10 GiB mit Swap, 8 Threads)',
   },
+  grenzeGesamtGiB: {
+    wert: 10,
+    text: 'Speicher plus Swap der Runtime, Produktion (8 + 2) und Labor (5 + 5), GiB',
+    quelle: 'adr/1C-021-zusatzlauf-produktionslimits-zweiter-rechner.md',
+    beleg: '(8 CPUs, 8 GiB, 10 GiB mit Swap, 8 Threads)',
+  },
   prodSwapGiB: {
     wert: 2,
     text: 'Swap über dem Produktionslimit, GiB',
@@ -172,6 +179,7 @@ const ANTWORT = 'evidenz/1B/messung/2026-11-15-abgelehnte-antwort.json';
 const LAUF_1B = 'evidenz/1B/messung/2026-11-13-lauf.json';
 const NACHLAUF_1C = 'evidenz/1C/messung/2026-11-09-labor-nachlauf.json.gz';
 const AUFBAU_VON_NULL = 'evidenz/1B/messung/2026-11-13-aufbau-von-null.txt';
+const EXTRAKTIV = '../../apps/backend/src/lib/qaSummaryExtractive.ts';
 
 const json = (pfad) => JSON.parse(readFileSync(pfad, 'utf8'));
 
@@ -191,6 +199,17 @@ function ladeNutzlast(root) {
     .filter((s) => s.kind === 'qa-question' && s.content?.state === 'included')
     .sort((a, b) => a.content.text.length - b.content.text.length)[0];
   const budget = ctx.limitations.find((l) => l.code === 'budget-truncated');
+  // Ersatzzusammenfassung wie createExtractiveQaSummaryOutput: enthaltene Q&A-Fragen nach Quellen-ID, höchstens 4.
+  const ersatz = ctx.sources
+    .filter((s) => s.kind === 'qa-question' && s.content?.state === 'included')
+    .sort((x, y) => x.id.localeCompare(y.id))
+    .slice(0, 4)
+    .map((s) => s.content.text);
+  if (ersatz.length !== r.stored.statements) {
+    throw new Error(
+      'Nachlauf: Ersatzzusammenfassung passt nicht zur gespeicherten Anzahl Aussagen',
+    );
+  }
   return {
     datei: NACHLAUF_1C,
     lauf,
@@ -200,6 +219,7 @@ function ladeNutzlast(root) {
       `"content":${JSON.stringify(frage.content)}`,
     ],
     budgetZeile: JSON.stringify(budget),
+    ersatz,
     hashVorschau: r.preview.snapshotHash,
     hashGesendet: r.sent.snapshotHash,
     zahlen: { bodyBytes: ex.requestBodyBytes, userBytes: ex.wire.userMessageBytes },
@@ -233,6 +253,7 @@ export function ladeFolienDaten(root) {
     clientWaitMs: t.clientWaitMs,
     hostReturnMs: t.hostReturnMs,
     netzMs: zer.netzMs,
+    serverOhneInferenzMs: zer.serverOhneInferenzMs,
     inferMs: zer.inferMs,
     jobMs: zer.jobMs,
   };
@@ -242,7 +263,27 @@ export function ladeFolienDaten(root) {
   );
   if (!repo) throw new Error(`${AUFBAU_VON_NULL}: Zeile „Repo:“ fehlt`);
   const aufbau = { datei: AUFBAU_VON_NULL, commit: repo[1].slice(0, 8) };
-  return { ...z, antwort, auftrag, aufbau, nutzlast: ladeNutzlast(root) };
+  const nutzlast = ladeNutzlast(root);
+  // Hinweistext des extraktiven Fallbacks (de) wörtlich aus dem App-Code.
+  const extraktiv = readFileSync(resolve(root, EXTRAKTIV), 'utf8');
+  const hinweis = extraktiv.match(/\bde: \{[\s\S]*?limitation:\s*'([^']+)'/)?.[1];
+  if (!hinweis) throw new Error(`${EXTRAKTIV}: Hinweistext (de) nicht gefunden`);
+  const nachbau = {
+    fragen: nutzlast.ersatz,
+    hinweis,
+    quelle: EXTRAKTIV.replace(/^\.\.\/\.\.\//, ''),
+  };
+  // Commit, mit dem der Antwortausschnitt ins Repo kam (Evidenzort im Handout).
+  const antwortCommit = execFileSync(
+    'git',
+    ['log', '--diff-filter=A', '--format=%H', '-1', '--', ANTWORT],
+    { cwd: root, encoding: 'utf8' },
+  )
+    .trim()
+    .slice(0, 8);
+  if (!/^[0-9a-f]{8}$/.test(antwortCommit)) throw new Error(`${ANTWORT}: Commit nicht gefunden`);
+  const abgeleitet = { gateBeobachtet: z.b1.verworfen + z.c1.gateAntwortenGesamt.wert };
+  return { ...z, antwort, auftrag, aufbau, nutzlast, nachbau, antwortCommit, abgeleitet };
 }
 
 // ---------------------------------------------------------------- Bausteine
@@ -312,7 +353,7 @@ function rechnerKurz(rechner) {
 
 // ---------------------------------------------------------------- Folien
 
-/** Alle Folien in Vortragsreihenfolge: G0, J1–J15, G9, dann Reserve R1–R7. */
+/** Alle Folien in Vortragsreihenfolge: G0, J1–J13, J15, G9, dann Reserve R1–R11 (J14 ist R11). */
 export function folien(daten) {
   const { b1: b, c1: c, antwort: a, auftrag: au, nutzlast: nl } = daten;
   const H = b.herkunft;
@@ -370,7 +411,9 @@ export function folien(daten) {
   const qNutzlast = `${nl.datei}, runs[${nl.lauf}] · Laptop (${rechnerKurz(nl.cpu)}) · ${nl.commit} (def56700)`;
   const qAntwort = `${ANTWORT} (Auftrag ${a.auftrag})`;
   // Messstand: Architektur nach Release 1.3 (ADR-0035), gemessen auf Fork-main mit Version 1.4.0.
-  const STAND = `Fork-main, Version 1.4.0 (${H.hauptlauf.commit.slice(0, 8)})`;
+  // Produktionscode des 1B-Laufs = Fork-main a19ca70f (git describe v1.4.0-184); Lauf-Commits auf dem
+  // 1B-Zweig ändern nur Laborskripte (ADR 1B-001). 1C: def56700 = v1.4.0-14; vor dem Gate 9f230abc = v1.3.0-322.
+  const STAND = `Produktionscode ${mono('a19ca70f')} (Fork-main, v1.4.0-184), Lauf-Commit ${mono(H.hauptlauf.commit.slice(0, 8))} nur mit Laborskripten`;
   const kasten = (titel, punkte, linie) =>
     `<div style="border:var(--linie-min) solid ${linie};border-radius:10px;padding:10px 18px 4px">` +
     `<p style="margin:0 0 4px;font-weight:700;font-size:24px">${titel}</p>` +
@@ -426,10 +469,10 @@ export function folien(daten) {
         `<div style="border-left:6px solid var(--bernstein);padding-left:24px">${etikett('1B')} <span style="font-size:var(--s-min);color:var(--gedaempft)">Schritte 1–2</span><p style="margin:14px 0 0">Wo steckt die Zeit, wenn die Inferenz auf einem zweiten Host läuft?</p></div>` +
         `</div>` +
         `<p class="mono" style="position:absolute;left:0;bottom:84px;margin:0;font-size:var(--s-min);color:var(--gedaempft)">Auftrag Nr. ${au.nr}: Klick bis Ergebnis ${z.auWarte} s, Jobdauer T_job ${z.auJob} s · Median warm, n = ${nWarm}: ${z.jobWarm} s</p>` +
-        `<p style="position:absolute;left:0;bottom:44px;margin:0;font-size:var(--s-min);color:var(--gedaempft)">Architektur nach Release 1.3 (ADR-0035, zweiter Host); gemessen auf ${STAND} und in 1C auf ${mono('def56700')}</p>` +
+        `<p style="position:absolute;left:0;bottom:44px;margin:0;font-size:var(--s-min);color:var(--gedaempft)">Architektur nach Release 1.3 (ADR-0035); gemessen auf Code nach v1.4.0: 1B ${mono('a19ca70f')} (v1.4.0-184), 1C ${mono('def56700')} (v1.4.0-14)</p>` +
         `<p style="position:absolute;left:0;bottom:0;margin:0;font-size:26px;font-weight:600">Jonas Weirauch</p>`,
     ),
-    notiz: `Ein Klick der Lehrperson, ${z.auS} Sekunden Warten, und am Ende steht keine Modellantwort auf dem Bildschirm. Dieser Auftrag ist echt, die Nummer ${au.nr} aus meinem gewerteten Lauf. Davon rechnet der Server ${z.auJob} Sekunden am Job, der Rest ist der Host-Aufruf und das Nachfragen. Zum Vergleich: Warme Aufträge brauchen im Median ${z.jobWarm} Sekunden. Die Architektur folgt Release 1.3, gemessen habe ich aber den aktuellen Stand, Version 1.4.0. Das wird beim Gate wichtig. Zwei Fragen: Für 1C, hält der Kontextpfad seine Zusagen? Für 1B, Schritte 1 und 2, wo steckt die Zeit auf einem zweiten Host? Petrol ist 1C, Bernstein ist 1B.`,
+    notiz: `Ein Klick der Lehrperson, ${z.auS} Sekunden Warten, und am Ende steht keine Modellantwort auf dem Bildschirm. Dieser Auftrag ist echt, die Nummer ${au.nr} aus meinem gewerteten Lauf. Davon rechnet der Server ${z.auJob} Sekunden am Job, der Rest ist der Host-Aufruf und das Nachfragen. Zum Vergleich: Warme Aufträge brauchen im Median ${z.jobWarm} Sekunden. Die Architektur folgt Release 1.3, gemessen habe ich aber Code nach Version 1.4.0. Das wird beim Gate wichtig. Zwei Fragen: Für 1C, hält der Kontextpfad seine Zusagen? Für 1B, Schritte 1 und 2, wo steckt die Zeit auf einem zweiten Host? Petrol ist 1C, Bernstein ist 1B.`,
     zeitS: 40,
     kurzfassung: true,
     quelle: `${q1B} (Auftrag ${au.nr}: treiber.auftraege clientWaitMs, zerlegung.auftraege jobMs); Version: package.json und git describe (v1.4.0-255); Leitfragen: Prüfungsdokument 4.3, ADR 1B-011`,
@@ -445,7 +488,7 @@ export function folien(daten) {
     id: 'J2',
     teil: 'jonas',
     auftrag: '1B',
-    titel: 'Zwei Hosts nach Release 1.3, gemessen auf 1.4.0',
+    titel: 'Zwei Hosts nach Release 1.3, Code nach v1.4.0',
     inhalt: flaeche(
       frage('Lässt sich das Zwei-Host-Release nachbauen, ohne Produktionscode zu ändern?', '1B') +
         zweiSpalten(
@@ -459,11 +502,11 @@ export function folien(daten) {
             kasten(
               'Abweichungen und Grenzen',
               [
-                `${fw.laborCpus} statt ${fw.releaseCpus} CPUs und Threads; zwei VMs teilen sich einen Laptop`,
+                `${fw.laborCpus} statt ${fw.releaseCpus} CPUs und Threads: zwei VMs teilen sich den Laptop`,
                 `Timeout ${fw.laborTimeout1BS} s statt ${fw.releaseTimeoutS} s nach Kalibrierung (I = ${fw.kalibrierung1BS} s)`,
-                'Images selbst gebaut (Release-Images nicht öffentlich); Start ohne Wrapper, weil Runbook §6 ihn bricht',
+                'Images selbst gebaut (Release-Images nicht öffentlich); Start per docker compose mit CPU-Override, ohne Wrapper: Er reicht das Override nicht durch, seine Prüfungen liefen vorher im Trockenlauf',
                 'Summary-Schalter eingeschaltet (ab Werk aus); Hintergrunddienste vor dem gewerteten Lauf von Hand abgeschaltet',
-                `Code: ${STAND}`,
+                STAND,
               ],
               'var(--bernstein)',
             ),
@@ -481,8 +524,8 @@ export function folien(daten) {
           800,
         ),
     ),
-    notiz: `Bevor man misst, muss das System stehen. Schritt 1 von 1B verlangt, das Zwei-Host-Deployment nachzubauen, so wie Release 1.3 es mit ADR-0035 beschreibt. Ich habe zwei virtuelle Maschinen auf meinem Laptop aufgebaut. Auf dem app-host laufen die App mit dem Adapter, Datenbank und Redis; der Encoder für die Wortwolke bleibt aus, wie ab Werk. Auf dem llm-host läuft der LLM-Server mit dem gepinnten Modell. Die Firewall lässt die Runtime nur vom app-host zu, dazu kommt ein Token. Gemessen habe ich den aktuellen Code, Version 1.4.0. Die Abweichungen stehen offen im Kasten: 4 statt 8 CPUs, weil der Laptop nicht mehr hat. Der Timeout liegt bei ${fw.laborTimeout1BS} statt ${fw.releaseTimeoutS} Sekunden, weil schon die Kalibrierung ${fw.kalibrierung1BS} Sekunden dauerte; mit dem Release-Wert wäre jeder Auftrag abgebrochen. Die Images habe ich selbst gebaut, gestartet ohne den Wrapper, weil der nach dem Runbook nicht läuft. Und vor dem gewerteten Lauf habe ich Hintergrunddienste von Hand abgeschaltet.`,
-    zeitS: 70,
+    notiz: `Bevor man misst, muss das System stehen. Schritt 1 von 1B verlangt, das Zwei-Host-Deployment nachzubauen, so wie Release 1.3 es mit ADR-0035 beschreibt. Ich habe zwei virtuelle Maschinen auf meinem Laptop aufgebaut. Auf dem app-host laufen die App mit dem Adapter, Datenbank und Redis; der Encoder bleibt aus, wie ab Werk. Auf dem llm-host läuft der LLM-Server mit dem gepinnten Modell, erreichbar nur vom app-host und mit Token. Gemessen habe ich den Produktionscode von Fork-main nach Version 1.4.0. Die Abweichungen stehen im Kasten: 4 statt 8 CPUs, weil sich zwei VMs den Laptop teilen. Der Timeout liegt bei ${fw.laborTimeout1BS} statt ${fw.releaseTimeoutS} Sekunden, weil schon die Kalibrierung ${fw.kalibrierung1BS} Sekunden dauerte. Die Runtime startet direkt mit dem CPU-Override, weil der Wrapper es nicht durchreicht; seine Prüfungen liefen vorher. Und vor dem gewerteten Lauf habe ich Hintergrunddienste von Hand abgeschaltet.`,
+    zeitS: 60,
     kurzfassung: false,
     quelle: `${daten.aufbau.datei} · ${rechnerKurz(H.hauptlauf.rechner)} · ${daten.aufbau.commit}; Abweichungen: evidenz/1B/2026-11-12-aufbau.md (Komponenten, Befund 2, Abweichungen), evidenz/1B/2026-11-13-lauf.md (Kalibrierung, Versuch 3), ADR 1B-001, 1B-002, 1B-005, 1B-010`,
     station: null,
@@ -519,7 +562,7 @@ export function folien(daten) {
         schritt(
           'A',
           'Vorab festgelegt',
-          'Hypothesen, Schwellen und Regeln vor jedem Lauf, vom Autor freigegeben. Offengelegte Ausnahmen: T3.1 exploratorisch, M7b/c nach Sichtung, Timeout-Empfehlung (nicht umgesetzt) erst nach dem Lauf.',
+          'Hypothesen und Schwellen vor den gewerteten Läufen freigegeben. Ausnahmen: T3.1 exploratorisch, M7b/c ohne vorherige Freigabe, 1B-Leitfrage nach dem Lauf bestätigt.',
           'var(--blau)',
         ) +
         schritt(
@@ -557,8 +600,8 @@ export function folien(daten) {
         `</table></div>` +
         beleg('ADR 1C-002, 1C-003, 1C-020, 1C-021, 1B-008; Nachlauf, Umgebung und Abweichungen'),
     ),
-    notiz: `Wie komme ich zu belastbaren Aussagen? Mit einer festen Reihenfolge. Erstens standen Hypothesen und Schwellen fest, bevor gemessen wurde. Für 1B: Das Netz darf im Median höchstens ${fw.schwelleNetzMs} Millisekunden kosten, der Adapter höchstens ${fw.schwelleAdapterS} Sekunden, und die Inferenz muss mindestens ${fw.schwelleInferenzProzent} Prozent ausmachen. Ausnahmen davon nenne ich offen, etwa den Blitzlicht-Befund, den ich explorativ gefunden habe. Zweitens habe ich in 1C zuerst ohne Modell getestet, mit Negativproben: Ein absichtlicher Fehler muss den Test rot machen. Drittens das Labor. Für 1C heißt das: ein Rechner, die Runtime über Loopback, kleinere Limits als im Release und ein Timeout von ${fw.laborTimeoutS} Sekunden. Einen zweiten Host hatte 1C nicht; den liefert erst 1B.`,
-    zeitS: 60,
+    notiz: `Wie komme ich zu belastbaren Aussagen? Mit einer festen Reihenfolge. Erstens standen Hypothesen und Schwellen vor den gewerteten Läufen fest. Für 1B: Das Netz darf im Median höchstens ${fw.schwelleNetzMs} Millisekunden kosten, der Adapter höchstens ${fw.schwelleAdapterS} Sekunden, und die Inferenz muss mindestens ${fw.schwelleInferenzProzent} Prozent ausmachen. Die Ausnahmen nenne ich offen: Den Blitzlicht-Befund habe ich explorativ gefunden, zwei Messungen liefen ohne meine vorherige Freigabe, und die Leitfrage zu 1B habe ich erst nach dem Lauf bestätigt. Zweitens habe ich in 1C zuerst ohne Modell getestet, mit Negativproben: Ein absichtlicher Fehler muss den Test rot machen. Drittens das Labor. Für 1C heißt das: ein Rechner, die Runtime über Loopback, kleinere Limits als im Release und ein Timeout von ${fw.laborTimeoutS} Sekunden. Einen zweiten Host hatte 1C nicht; den liefert erst 1B.`,
+    zeitS: 50,
     kurzfassung: false,
     quelle: `adr/1B-008-kernaussagen-und-schwellen.md; adr/1C-003-teststrategie-modellfrei.md; ${q1B}; Nachlauf 1C (Umgebung, Abweichungen): Laptop (ThinkPad P50) · def56700; ADR 1C-021 (Produktionslimits)`,
     station: null,
@@ -594,12 +637,13 @@ export function folien(daten) {
             }),
           760,
         ) +
-        beleg('ADR 1C-012, Test E5, Nachlauf N3'),
+        `<p style="margin:0;font-size:24px;color:var(--text-2)">${etikett('1B')} zwei Hosts: Host-Aufruf im Median ${fmt(b.hostMedianMs, 1)} ms (alle ${n})</p>` +
+        beleg('ADR 1C-012, Test E5, Nachlauf N3; 1B: ADR 1B-011'),
     ),
     notiz: `Erste Station, der Klick. Die Frage aus 1C lautet: Blockiert ein langsames Modell die Lehrperson? Der Mechanismus ist eine Queue. Der Host-Aufruf baut den Kontext, legt den Auftrag ab und kehrt sofort mit dem Status pending zurück. Gerechnet wird danach im Hintergrund, mit einem Slot. Gemessen am Laptop dauert der Host-Aufruf im Median ${z.request} Millisekunden, die Inferenz dagegen ${z.infer1C} Sekunden. Der Host ist also vom Modell entkoppelt. Eine Grenze bleibt: Auf den Kontextaufbau wartet er doch, denn der passiert im Aufruf selbst. Belegt ist das mit dem Test E5 und dem Laborfall N3.`,
-    zeitS: 45,
+    zeitS: 40,
     kurzfassung: true,
-    quelle: q1C('requestMs', 'inferenzS'),
+    quelle: `${q1C('requestMs', 'inferenzS')}; 1B: ${q1B}`,
     station: 'klick',
   });
 
@@ -639,7 +683,7 @@ export function folien(daten) {
         beleg('ADR 1C-013 (Nachlauf N1), ADR 1C-011 (Validierung), 1C-diagrams (#456-Bereiche)'),
     ),
     notiz: `Zweite Station, der Kontext. Die Frage: Bekommt die Runtime genau das, was die Lehrperson in der Vorschau sieht? Der Kontext entsteht aus dem App-Zustand, wird gegen versionierte Schemas geprüft und dann gepackt. Vorschau und Auftrag gibt es nur mit gültigem Host-Token, und jeder Kontextaufbau prüft die Rechte erneut, acht Prüfungen je Aufbau. Unten steht ein echter Ausschnitt der Nutzlast aus dem Nachlauf, mit synthetischen Daten: die Vertragsversion, ein abgeschalteter Bereich mit seinem Grund und eine Frage aus der Fixture. Vorschau und Nutzlast tragen denselben Hash, die Nachricht an die Runtime ist byte-gleich mit der Vorschau. Was kostet die strikte Validierung? ${z.valMs} Millisekunden, ${z.valP} Prozent eines warmen Kontextaufbaus, gemessen mit der Test-Runtime auf einem älteren Stand. Deshalb bleibt sie. Welcher Bereich woher kommt, zeigt die Reserve.`,
-    zeitS: 65,
+    zeitS: 60,
     kurzfassung: true,
     quelle: `${qNutzlast}; ${q1C('validierungMs')}; Berechtigung: routers/qa.ts, 1C-diagrams.md · def56700`,
     station: 'kontext',
@@ -656,7 +700,7 @@ export function folien(daten) {
       frage('Wie viel vom Kontextfenster nutzt der Kontext wirklich?', '1C') +
         liste(
           [
-            'Das Budget zählt jedes UTF-8-Byte als ein Token. Das Fenster läuft so nie über.',
+            'Das Budget zählt jedes UTF-8-Byte als ein Token. In keinem Lauf lief das Fenster über; der Template-Anteil ist nicht budgetiert.',
             'Echte Tokens laut Runtime sind nur ein Bruchteil davon: Rund zwei Drittel des geschätzten Budgets bleiben ungenutzt.',
           ],
           26,
@@ -674,8 +718,8 @@ export function folien(daten) {
           'ADR 1C-014 (empfohlen: genauere Zählung prüfen, nicht umgesetzt), Nachlauf N2, Issue #17',
         ),
     ),
-    notiz: `Zur Frage nach den Kosten der Kontextbereitstellung. Das Budget schätzt Tokens über Bytes: Jedes Byte zählt als ein Token. Das ist sicher, denn ein Token umfasst mindestens ein Byte, und so läuft das Fenster nie über. Aber es ist teuer. Die echten Tokens sind im Median nur das ${z.q}-fache der Schätzung. Rund zwei Drittel des geschätzten Budgets bleiben also ungenutzt. Und derselbe Kontext meldet gleichzeitig, dass eine Frage aus Budgetgründen weggelassen wurde. Ich empfehle, eine genauere Zählung zu prüfen. Umgesetzt ist das nicht.`,
-    zeitS: 45,
+    notiz: `Zur Frage nach den Kosten der Kontextbereitstellung. Das Budget schätzt Tokens über Bytes: Jedes Byte zählt als ein Token. Das ist eine Obergrenze, denn ein Token umfasst mindestens ein Byte; in keinem Lauf lief das Fenster über. Aber es ist teuer. Die echten Tokens sind im Median nur das ${z.q}-fache der Schätzung. Rund zwei Drittel des geschätzten Budgets bleiben also ungenutzt. Und derselbe Kontext meldet gleichzeitig, dass eine Frage aus Budgetgründen weggelassen wurde. Ich empfehle, eine genauere Zählung zu prüfen. Umgesetzt ist das nicht.`,
+    zeitS: 40,
     kurzfassung: false,
     quelle: `${q1C('q')}; Meldung: ${qNutzlast}`,
     station: 'kontext',
@@ -716,20 +760,21 @@ export function folien(daten) {
       frage('Wie trennt man Netz und Inferenz, ohne Produktionscode zu ändern?', '1B') +
         `<div style="display:grid;grid-template-columns:640px 1fr;column-gap:60px">` +
         `<div>${draht}</div><div>` +
-        `<p style="margin:0 0 10px;font-size:24px">Mitschnitt auf beiden Hosts, dazu die ${mono('timings')} der Runtime. Jede Differenz kommt von einer Uhr, ein Uhrenabgleich ist nicht nötig.</p>` +
+        `<p style="margin:0 0 10px;font-size:24px">Mitschnitt auf beiden Hosts, dazu die ${mono('timings')} der Runtime. Jede Dauer kommt von einer Uhr: kein Offset-Abgleich nötig, Restfehler aus Uhrendrift ≈ ±${fw.netzAufloesungMs} ms.</p>` +
         `<p class="mono" style="margin:0 0 12px;font-size:28px;font-weight:600">Netz = (${t(3)} − ${t(0)}) − (${t(2)} − ${t(1)})</p>` +
         `<div style="border-left:6px solid var(--bernstein);padding-left:20px;font-size:24px;line-height:1.45">` +
         `<div style="font-weight:700">Unser Auftrag (Nr. ${au.nr})</div>` +
         `<div class="mono">Klick&nbsp;&nbsp;&nbsp;${uhr(au.requestedAt)} UTC</div>` +
         `<div class="mono">Fertig&nbsp;&nbsp;${uhr(au.finishedAt)} UTC</div>` +
-        `<div class="mono">Netz ${z.auNetz} ms · Inferenz ${z.auInfer} s</div>` +
+        `<div class="mono">Netz &lt; ${fw.netzAufloesungMs} ms · Inferenz ${z.auInfer} s</div>` +
+        `<div style="font-size:22px;line-height:1.3;margin-top:4px">Server ohne Inferenz ${fmt(au.serverOhneInferenzMs)} ms: Ausreißer wie Auftrag 3, Ursache offen (Median ${fmt(b.serverOhneMedianMs, 1)} ms)</div>` +
         `<div style="font-size:22px;line-height:1.3;margin-top:4px">Wartezeit am Client ${z.auWarte} s, T_job ${z.auJob} s: dazu Host-Aufruf und Nachfragen im Sekundentakt</div></div>` +
-        `<p class="mono" style="margin:8px 0 0;font-size:var(--s-min);color:var(--gedaempft)">Alle ${n}, Median: Netz ${z.netz} ms, Transport ${z.transport} ms; Auflösung ≈ ${fw.netzAufloesungMs} ms</p>` +
+        `<p class="mono" style="margin:8px 0 0;font-size:var(--s-min);color:var(--gedaempft)">Alle ${n}, Median: Netz ${z.netz} ms, Transport ${z.transport} ms</p>` +
         `</div></div>` +
         beleg('ADR 1B-006 (Methode), ADR 1B-011 (Zeitbegriffe), Laufprotokoll 1B'),
     ),
-    notiz: `Jetzt geht der Auftrag über die Grenze zum zweiten Host. Die Frage aus 1B: Wie trenne ich Netz und Inferenz, ohne den Produktionscode anzufassen? Ich schneide auf beiden Hosts den Verkehr mit. Am app-host sehe ich t null, die Anfrage geht raus, und t drei, die Antwort ist zurück. Am llm-host sehe ich t eins und t zwei. Jede Differenz stammt von einer einzigen Uhr, deshalb muss ich die Uhren nicht abgleichen. Netz ist die Zeit am app-host minus die Zeit am llm-host. Für unseren Auftrag Nummer ${au.nr}, geklickt um ${uhr(au.requestedAt)} Weltzeit, sind das ${z.auNetz} Millisekunden, also unter der Messauflösung von etwa einer Millisekunde. Über alle ${n} Aufträge liegt der Median bei ${z.netz} Millisekunden. Die Lehrperson wartet ${z.auWarte} Sekunden, der Server rechnet ${z.auJob}: Dazwischen liegen der Host-Aufruf und das Nachfragen im Sekundentakt.`,
-    zeitS: 50,
+    notiz: `Jetzt geht der Auftrag über die Grenze zum zweiten Host. Wie trenne ich Netz und Inferenz, ohne den Produktionscode anzufassen? Ich schneide auf beiden Hosts den Verkehr mit: am app-host t null und t drei, am llm-host t eins und t zwei. Jede Dauer misst eine einzige Uhr; die Drift der beiden Uhren lässt etwa eine Millisekunde Unschärfe. Netz ist die Zeit am app-host minus die Zeit am llm-host. Für unseren Auftrag liegt das unter einer Millisekunde, über alle ${n} Aufträge im Median bei ${z.netz}. Auffällig ist der Server ohne Inferenz: ${fmt(au.serverOhneInferenzMs)} Millisekunden, wie bei Auftrag 3, die Ursache ist offen. Die Lehrperson wartet ${z.auWarte} Sekunden, der Server rechnet ${z.auJob}.`,
+    zeitS: 45,
     kurzfassung: false,
     quelle: `${q1B} (Auftrag ${au.nr}: treiber.auftraege, zerlegung.auftraege)`,
     station: 'netz',
@@ -742,8 +787,8 @@ export function folien(daten) {
     auftrag: '1B',
     titel: 'Die Zeit steckt in der Inferenz',
     inhalt: zeitzerlegungSvg(b) + etikettOben('1B'),
-    notiz: `So sieht die ganze Zerlegung aus. Die Achse ist logarithmisch, jeder Strich ist zehnmal mehr. Das Netz kostet im Median ${z.netz} Millisekunden, die Schwelle lag bei ${fw.schwelleNetzMs}. Der Transport mit dem Serveranteil kostet ${z.transport} Millisekunden, der Adapter in der App ${z.adapter} Millisekunden, bei einer Schwelle von ${fw.schwelleAdapterS} Sekunden. Und dann die Inferenz: ${z.inferWarm} Sekunden im warmen Median über ${nWarm} Aufträge, ein Anteil von ${z.anteil} Prozent. Der Transport ist damit rund ${z.transportAnteil} Prozent der Auftragszeit. Warm heißt hier: ein identischer Snapshot, der Prompt kam fast ganz aus dem Cache. Ändert sich der Zustand, gilt eher der Kaltwert, im Median ${z.kaltMedian} Sekunden. Alle drei Hypothesen sind erfüllt, auch kalt. Die zweite Serverrolle kostet keine relevante Zeit.`,
-    zeitS: 50,
+    notiz: `So sieht die ganze Zerlegung aus, auf logarithmischer Achse. Der Hauptwert steht in Millisekunden: Das Netz kostet im Median ${z.netz}, die Schwelle lag bei ${fw.schwelleNetzMs}. Der Transport mit Serveranteil kostet ${z.transport} Millisekunden, der Adapter ${z.adapter}, bei einer Schwelle von ${fw.schwelleAdapterS} Sekunden. Die Inferenz dauert warm im Median ${z.inferWarm} Sekunden. Ihr Anteil von ${z.anteil} Prozent gilt nur für diese langsame CPU; auf schnellerer Hardware wäre er kleiner. Warm heißt: ein identischer Snapshot, der Prompt kam aus dem Cache. Ändert sich der Zustand, gilt eher der Kaltwert, im Median ${z.kaltMedian} Sekunden. Die drei Hypothesen sind erfüllt, kalt gilt der Inferenzanteil in allen fünf Läufen. Die zweite Serverrolle kostet keine relevante Zeit.`,
+    zeitS: 45,
     kurzfassung: true,
     quelle: `${q1B}; Kalt: ${q1BN}`,
     station: 'inferenz',
@@ -793,20 +838,20 @@ export function folien(daten) {
         zahl({
           wert: `+${z.delta}`,
           einheit: 'GB',
-          was: 'Prompt-Cache je Auftrag bei wechselnden Prompts, Median',
-          gruppe: 'Laptop · def56700',
+          was: 'Speicher der Runtime je Auftrag bei wechselnden Prompts, Median',
+          gruppe: 'Laptop · def56700; Ursache Prompt-Cache (U1, PC)',
           linie: 'var(--petrol)',
           gross: 64,
         }) +
-        `<p style="margin:0 0 10px;font-size:24px;line-height:1.3">OOM-Kill im <b class="messwert">${c.oomAuftrag.wert}.</b> Auftrag am Laborlimit ${fw.laborSpeicher1CGiB} GiB + ${fw.laborSpeicher1CGiB} GiB Swap (Laptop · def56700).</p>` +
-        `<p style="margin:0;font-size:24px;line-height:1.3">Mit Produktionslimits ${fw.prodSpeicherGiB} GiB + ${fw.prodSwapGiB} GiB Swap: Kill im ${c.oomAuftrag9f230abc.wert}. Auftrag (PC · 9f230abc).</p>` +
+        `<p style="margin:0 0 10px;font-size:24px;line-height:1.3">Beide Grenzen ${fw.grenzeGesamtGiB} GiB: Labor ${fw.laborSpeicher1CGiB} GiB + ${fw.laborSpeicher1CGiB} GiB Swap, Produktion ${fw.prodSpeicherGiB} GiB + ${fw.prodSwapGiB} GiB Swap.</p>` +
+        `<p style="margin:0;font-size:24px;line-height:1.3">OOM-Kill auf 9f230abc im ${c.oomAuftrag9f230abc.wert}. Auftrag (Laptop und PC), auf def56700 schon im <b class="messwert">${c.oomAuftrag.wert}.</b> (mehr Tokens je Auftrag).</p>` +
         `</div></div>` +
         beleg(
           'ADR 1C-021, 1C-023 und 1C-024: empfohlen (Timeout am Inferenz-Host kalibrieren, Cache begrenzen), nicht umgesetzt; Issues #16, #14',
         ),
     ),
-    notiz: `Zurück zu 1C, zum Betrieb. Zwei Befunde, mit denen das Release so nicht rechnet. Erstens der Timeout: Ab Werk bricht die App nach ${fw.releaseTimeoutS} Sekunden ab. Am PC dauerte schon die Kalibrierungsanfrage ${z.kalPc} Sekunden, am Laptop braucht die Inferenz im Median ${z.infer1C} Sekunden, mit Nebenlast und auf einem anderen Stand. Mit dem Release-Timeout wäre der Modellpfad auf beiden nicht nutzbar. Zweitens der Speicher: Bei wechselnden Prompts wächst der Prompt-Cache je Auftrag um ${z.delta} Gigabyte im Median. Am Laborlimit endet die Runtime im ${c.oomAuftrag.wert}. Auftrag, mit Produktionslimits am PC im ${c.oomAuftrag9f230abc.wert}. Im 1B-Lauf blieb der Speicher dagegen bei ${z.speicher1B} Gigabyte, weil der Prompt jedes Mal gleich war. Ich empfehle, den Timeout am Inferenz-Host zu kalibrieren und den Cache zu begrenzen. Umgesetzt ist beides nicht.`,
-    zeitS: 55,
+    notiz: `Zurück zu 1C, zum Betrieb. Zwei Befunde. Erstens der Timeout: Ab Werk bricht die App nach ${fw.releaseTimeoutS} Sekunden ab. Am PC ergab die Kalibrierung eine Inferenzzeit von ${z.kalPc} Sekunden, am Laptop dauert die Inferenz im Median ${z.infer1C}, mit Nebenlast und auf einem anderen Stand. Mit dem Release-Timeout wäre der Modellpfad auf beiden nicht nutzbar. Zweitens der Speicher: Bei wechselnden Prompts wächst die Runtime je Auftrag um ${z.delta} Gigabyte; die Ursache ist der Prompt-Cache, gezeigt am PC. Beide Laborgrenzen liegen bei ${fw.grenzeGesamtGiB} Gibibyte. Auf dem älteren Stand starb die Runtime im ${c.oomAuftrag9f230abc.wert}. Auftrag, auf dem neuen schon im ${c.oomAuftrag.wert}., weil jeder Auftrag mehr Tokens hat. Im 1B-Lauf blieb der Speicher bei ${z.speicher1B} Gigabyte, vermutlich weil der Prompt gleich war; getrennt gemessen ist das nicht. Ich empfehle, Timeout und Cache anzupassen; umgesetzt ist das nicht.`,
+    zeitS: 50,
     kurzfassung: true,
     quelle: `ADR 1C-020, 1C-024 · PC (i7-8700) · 9f230abc; Nachlauf N3, N6 · Laptop (ThinkPad P50) · def56700; 1B-Speicher: ${q1B}`,
     station: 'inferenz',
@@ -817,114 +862,86 @@ export function folien(daten) {
     id: 'J12',
     teil: 'jonas',
     auftrag: '1C',
-    titel: 'Die Nachprüfung kostet fast nichts',
+    titel: 'Die Nachprüfung: wenig Zeit, unter Voting teuer',
     inhalt: flaeche(
       frage('Was, wenn sich die Daten ändern, während das Modell rechnet?', '1C') +
         zweiSpalten(
           liste(
             [
               `Nach der Inferenz wird der Kontext noch einmal gebaut und sein Hash verglichen. Stimme oder gelöschte Quelle: Antwort verworfen, ${mono('source_changed')} (E7, E8)`,
-              `<b>Befund:</b> Läuft eine Blitzlicht-Runde eines anderen Typs als ${mono('TEMPO')}, hängt der Hash von der Uhrzeit ab. Im Labor endete ${mono('YESNO')} ${c.yesno.wert} als ${mono('source_changed')} ohne Datenänderung, ${mono('TEMPO')} nicht.`,
+              `<b>Preis:</b> Unter laufendem Voting verwirft dieselbe Grenze die meisten Antworten; Vorhersage ${fmt(c.m7VorhersagePc.wert, 2)}–${fmt(c.m7VorhersageLaptop.wert, 2)}, Modell M7 verfehlt, Empfehlung zurückgehalten (1C-017)`,
+              `<b>Befund:</b> Bei laufender Blitzlicht-Runde außer ${mono('TEMPO')} hängt der Hash von der Uhrzeit ab: ${mono('YESNO')} ${c.yesno.wert} ${mono('source_changed')} ohne Datenänderung (geprüft: YESNO; andere Typen laut Code)`,
             ],
-            24,
+            22,
           ),
           zahl({
             wert: z.nachpr,
             einheit: '%',
-            was: 'Anteil der Nachprüfung am Auftrag',
+            was: 'Zeitanteil der Nachprüfung am Auftrag',
             gruppe: 'Laptop · def56700',
             linie: 'var(--petrol)',
+            gross: 64,
           }) +
-            `<p style="margin:0;font-size:24px;color:var(--text-2);line-height:1.3">Regel vorab: unter ${fw.schwelleNachpruefungProzent} % bleibt sie. Hauptgrund ist aber das Risiko ohne sie: Veraltete Ergebnisse gälten als gültig (V1, E8).</p>`,
-          760,
+            `<p style="margin:0;font-size:22px;color:var(--text-2);line-height:1.3">Regel vorab: unter ${fw.schwelleNachpruefungProzent} % bleibt sie. Hauptgrund: Ohne sie gälten veraltete Ergebnisse als gültig (V1, E8).</p>`,
+          800,
         ) +
         beleg(
-          'ADR 1C-010 (Nachprüfung bleibt), ADR 1C-016 (Blitzlicht: empfohlen, nicht umgesetzt; Issue #18), Nachlauf N3, N5; Teil 2 E7, E8',
+          'ADR 1C-010 (bleibt), ADR 1C-017 (Voting), ADR 1C-016 (Blitzlicht: empfohlen, nicht umgesetzt; Issue #18), Nachlauf N3, N5; Teil 2 E7, E8',
         ),
     ),
-    notiz: `Nächste Station, nach der Inferenz. Die Frage: Was passiert, wenn sich die Daten ändern, während das Modell rechnet? Der Kontext wird nach der Inferenz noch einmal gebaut und sein Hash mit dem vom Anfang verglichen. Ändert sich eine Stimme oder wird eine Quelle gelöscht, wird die Antwort als source_changed verworfen; das zeigen die Tests E7 und E8. Das kostet am Laptop ${z.nachpr} Prozent eines Auftrags. Entscheidend ist aber das Risiko ohne Nachprüfung: Dann gälten veraltete Ergebnisse als gültig. Deshalb bleibt sie. Dazu ein Befund: Läuft gerade eine Blitzlicht-Runde eines anderen Typs als TEMPO, hängt der Hash von der Uhrzeit ab, und jede Modellantwort dieser Runde wird verworfen. Im Labor endete YESNO ${c.yesno.wert} als source_changed, ohne Datenänderung; bei TEMPO nicht. Ich empfehle, das zu beheben. Umgesetzt ist es nicht.`,
-    zeitS: 55,
+    notiz: `Nächste Station, nach der Inferenz. Was passiert, wenn sich die Daten ändern, während das Modell rechnet? Der Kontext wird danach noch einmal gebaut und sein Hash verglichen. Ändert sich eine Stimme oder wird eine Quelle gelöscht, wird die Antwort verworfen; das zeigen E7 und E8. Zeitlich kostet das ${z.nachpr} Prozent eines Auftrags. Der eigentliche Preis liegt woanders: Unter laufendem Voting verwirft dieselbe Grenze die meisten Antworten, die Vorhersage liegt bei ${fmt(c.m7VorhersagePc.wert, 2)} bis ${fmt(c.m7VorhersageLaptop.wert, 2)}. Mein Modell dafür hat die Messung verfehlt, deshalb halte ich die Empfehlung zurück. Die Nachprüfung bleibt trotzdem, weil sonst veraltete Ergebnisse als gültig gälten. Dazu ein Befund: Bei laufender Blitzlicht-Runde außer TEMPO hängt der Hash von der Uhrzeit ab; geprüft habe ich YESNO. Empfohlen, nicht umgesetzt.`,
+    zeitS: 50,
     kurzfassung: false,
-    quelle: `${q1C('nachpruefungAnteilProzent', 'yesno')}; E7, E8: evidenz/1C/2026-10-24-teil2.md · Laptop · 248029dc (Test-Runtime)`,
+    quelle: `Nachlauf N3, N5 · Laptop (ThinkPad P50) · def56700; ADR 1C-017 · Laptop und PC · 9f230abc; E7, E8: evidenz/1C/2026-10-24-teil2.md · Laptop · 248029dc (Test-Runtime)`,
     station: 'nachpruefung',
   });
 
   // ------------------------------------------------------------ J13
   const aussagen = a.ausgabe.split('\n');
   const gekuerzt = [...aussagen.slice(0, 2), '[…]'];
+  const nb = daten.nachbau;
+  const nachbau =
+    `<div data-nachbau="j13" style="flex:none;border:var(--linie-min) solid var(--linie);border-radius:10px;background:var(--grund);padding:12px 16px;font-size:22px;line-height:1.28">` +
+    `<p style="margin:0 0 6px;font-size:var(--s-min);color:var(--rot);font-weight:700">Nachbau, keine Bildschirmaufnahme</p>` +
+    `<p style="margin:0 0 6px;font-weight:700">Q&amp;A-Zusammenfassung</p>` +
+    `<ul style="margin:0 0 8px;padding-left:24px">${nb.fragen.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>` +
+    `<p style="margin:0 0 2px;font-weight:700">Hinweise</p>` +
+    `<p style="margin:0;color:var(--text-2)">${esc(nb.hinweis)}</p>` +
+    `</div><!--/nachbau-->`;
   F.push({
     id: 'J13',
     teil: 'jonas',
     auftrag: 'beide',
-    titel: 'Auf 1.4.0 verwirft das Gate jede Modellantwort',
+    titel: `Gate verwarf alle ${daten.abgeleitet.gateBeobachtet} beobachteten Antworten`,
     inhalt: flaeche(
-      `<div style="display:grid;grid-template-columns:820px 1fr;column-gap:50px">` +
+      `<div style="display:grid;grid-template-columns:780px 1fr;column-gap:44px">` +
         `<div>` +
         `<p style="margin:0 0 8px;font-size:var(--s-min);color:var(--gedaempft)">Echte Antwort des Modells auf Auftrag ${a.auftrag}, gekürzt, im Original</p>` +
-        `<blockquote data-artefakt="antwort" lang="en" style="margin:0 0 14px;padding:12px 20px;border-left:6px solid var(--bernstein);background:var(--bernstein-hell);font-size:24px;line-height:1.3">` +
-        gekuerzt.map((s) => `<p style="margin:0 0 6px">${esc(s)}</p>`).join('') +
+        `<blockquote data-artefakt="antwort" lang="en" style="margin:0 0 12px;padding:10px 20px;border-left:6px solid var(--bernstein);background:var(--bernstein-hell);font-size:22px;line-height:1.3">` +
+        gekuerzt.map((s) => `<p style="margin:0 0 4px">${esc(s)}</p>`).join('') +
         `</blockquote>` +
-        `<div style="border:var(--linie-min) solid var(--rot);border-radius:8px;padding:10px 18px;margin-bottom:14px">` +
-        `<span class="ablehnung" style="font-weight:800;font-size:28px">Verworfen.</span> ` +
-        `<span style="font-size:24px">${esc(a.grund)}</span></div>` +
-        `<div style="display:grid;grid-template-columns:1fr 1fr;column-gap:30px;font-size:22px;line-height:1.3">` +
-        `<div>${etikett('1B')} <span class="messwert" style="font-size:34px">${b.verworfen} von ${n}</span><br>verworfen (Version 1.4.0)</div>` +
-        `<div>${etikett('1C')} <span class="messwert" style="font-size:34px">${c.gateAntworten.wert}</span><br>bestehen (${mono('def56700')}, Version 1.4.0)</div>` +
+        `<div style="border:var(--linie-min) solid var(--rot);border-radius:8px;padding:8px 18px;margin-bottom:12px">` +
+        `<span class="ablehnung" style="font-weight:800;font-size:26px">Verworfen.</span> ` +
+        `<span style="font-size:22px">${esc(a.grund)}</span></div>` +
+        `<div style="display:grid;grid-template-columns:1fr 1fr;column-gap:24px;font-size:22px;line-height:1.3">` +
+        `<div>${etikett('1B')} <span class="messwert" style="font-size:32px">${b.verworfen} von ${n}</span><br>verworfen (${mono('a19ca70f')})</div>` +
+        `<div>${etikett('1C')} <span class="messwert" style="font-size:32px">${c.gateAntworten.wert}</span><br>bestehen (${mono('def56700')})</div>` +
         `</div>` +
+        `<p style="margin:10px 0 0;font-size:22px;line-height:1.3">Geltung: ein Modell (Qwen3-4B Q4_K_M), eine Fixture, Code nach v1.4.0. <b>Vor dem Gate</b> (${mono('9f230abc')}): ${c.fullContextVorGate.wert} mit Modellzusammenfassung.</p>` +
         `</div>` +
         `<figure data-clip="jonas-gate-clip.webm" style="margin:0;display:flex;flex-direction:column">` +
-        `<div style="flex:none;height:210px;border:var(--linie-min) dashed var(--linie);border-radius:8px;background:var(--raster);display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;font-size:24px;color:var(--gedaempft)">Platz für den Clip:<br>Lehrenden-Sicht, Klick, Warten, Ersatzzusammenfassung</div>` +
-        `<figcaption style="margin-top:12px;font-size:22px;line-height:1.3">Die Lehrperson sieht eine extraktive Ersatzzusammenfassung mit dem allgemeinen Hinweis „Eine ausführliche Zusammenfassung war diesmal nicht möglich …“. Den Grund erfährt sie nicht.</figcaption>` +
-        `<p style="margin:12px 0 0;padding:8px 14px;background:var(--raster);font-size:22px;line-height:1.3"><b>Vor dem Gate</b> (${mono('9f230abc')}): ${c.fullContextVorGate.wert} Aufträge mit Modellzusammenfassung (1C).</p>` +
+        nachbau +
+        `<figcaption style="margin-top:8px;font-size:var(--s-min);line-height:1.3;color:var(--gedaempft)">Fragen nach der Regel des Fallbacks aus der echten Nutzlast (1C-Nachlauf), Hinweis wörtlich aus ${mono('qaSummaryExtractive.ts')}. Den Grund erfährt die Lehrperson nicht.</figcaption>` +
         `</figure></div>` +
         beleg(
           'ADR 1C-018 (empfohlen: Instruktion, Grammatik und Gate abstimmen, nicht umgesetzt; Issue #13), ADR 1C-019, Laufprotokoll 1B, Befund',
         ),
     ),
-    notiz: `Und jetzt das Gate. Hier scheitert unser Auftrag. Links steht die echte Antwort des Modells, gekürzt, im Original. Das Gate prüft vor allem die Form: mindestens zwei Aussagen, jede mit einem Stichwort und Doppelpunkt vorn, verschiedene Stichwörter, vollständige Sätze, keine Metasätze aus einer kurzen Liste. Sprache und Thema prüft es nicht. Diese Antwort scheitert an der Form, keine Aussage hat ein Stichwort. Inhaltlich passt sie aber auch nicht: Sie ist englisch und fasst Moderationszustände zusammen. Im 1B-Lauf wurden ${b.verworfen} von ${n} Antworten verworfen, im 1C-Nachlauf bestand keine, ${c.gateAntworten.wert}. Wichtig: Das Gate kam erst mit Version 1.4.0. Auf dem Stand vor dem Gate, mit älterer Instruktion, endeten in 1C ${c.fullContextVorGate.wert} Aufträgen mit Modellzusammenfassung. Ein Upgrade hat das Ergebnis gekippt. Falls der Clip läuft: Rechts sehen Sie Klick, Warten und die Ersatzzusammenfassung mit dem Hinweiskasten. Sonst: Die Lehrperson sieht nur den allgemeinen Hinweis, eine ausführliche Zusammenfassung sei nicht möglich gewesen, den Grund nicht. Meine Empfehlung: Instruktion, Grammatik und Gate gemeinsam abstimmen. Umgesetzt ist das nicht.`,
+    notiz: `Und jetzt das Gate. Hier scheitert unser Auftrag. Links steht die echte Antwort des Modells, gekürzt, im Original. Das Gate prüft vor allem die Form: mindestens zwei Aussagen, jede mit einem Stichwort vorn, getrennt durch Doppelpunkt oder Strich, verschiedene Stichwörter, ganze Sätze, keine Metasätze aus einer kurzen Liste. Ausgaben mit Status failed und unsichere ohne Aussagen lässt es durch, aber jede beobachtete Antwort hatte Aussagen. Sprache und Thema prüft es nicht. Diese Antwort scheitert an der Form; inhaltlich passt sie auch nicht, sie ist englisch und fasst Moderationszustände zusammen. Im 1B-Lauf wurden ${b.verworfen} von ${n} Antworten verworfen, im 1C-Nachlauf bestand keine von ${c.gateAntwortenGesamt.wert}. Das gilt für ein Modell und eine Fixture. Das Gate kam erst mit Version 1.4.0; vor dem Gate endeten in 1C ${c.fullContextVorGate.wert} Aufträgen mit Modellzusammenfassung. Ein Upgrade hat das Ergebnis gekippt. Rechts ein Nachbau der Lehrenden-Sicht: die Fragen im Wortlaut und der allgemeine Hinweis aus dem App-Code, den Grund erfährt die Lehrperson nicht. Meine Empfehlung: Instruktion, Grammatik und Gate gemeinsam abstimmen. Umgesetzt ist das nicht.`,
     zeitS: 75,
     kurzfassung: true,
-    quelle: `${qAntwort}; ${q1B}; Nachlauf · Laptop · def56700; ADR 1C-018 · Laptop · 9f230abc; Hinweis: qaSummaryExtractive.ts; Gate seit v1.4.0 (12f1d8e4)`,
+    quelle: `${qAntwort}; Lauf 1B · ThinkPad P50 · ${H.hauptlauf.commit.slice(0, 8)}; Nachlauf · Laptop · def56700; ADR 1C-018 · 9f230abc; Nachbau: Nutzlast runs[${nl.lauf}], Hinweis qaSummaryExtractive.ts`,
     station: 'gate',
-  });
-
-  // ------------------------------------------------------------ J14
-  const zeile = (was, sichtbar, ok) =>
-    `<tr style="border-top:var(--linie-min) solid var(--linie)"><td style="padding:10px 16px 10px 0">${was}</td>` +
-    `<td style="padding:10px 0;${ok ? '' : 'color:var(--rot);font-weight:600'}">${sichtbar}</td></tr>`;
-  F.push({
-    id: 'J14',
-    teil: 'jonas',
-    auftrag: '1B',
-    titel: 'Was der Betrieb nicht sieht',
-    inhalt: flaeche(
-      frage('Was davon steht im Log der App?', '1B') +
-        zweiSpalten(
-          `<table style="border-collapse:collapse;font-size:26px;width:100%">` +
-            zeile('Auftrag gesamt', `ja, ${mono('latencyMs')}`, true) +
-            zeile('Inferenz', 'nein, die App liest die Zeiten nicht aus', false) +
-            zeile('Netz und Adapter', 'nein, nur mit Mitschnitt', false) +
-            zeile('Warum das Gate ablehnt', `nein, nur grob ${mono('invalid_response')}`, false) +
-            `</table>`,
-          zahl({
-            wert: z.anteil,
-            einheit: '%',
-            was: 'der Zeit für eine Antwort, die verworfen wird',
-            gruppe: `Inferenzanteil, Median, alle ${n}`,
-            linie: 'var(--bernstein)',
-            gross: 72,
-          }),
-          820,
-        ) +
-        beleg(
-          'Laufprotokoll 1B, Befund C; empfohlen: Zeiten und Grund des Fallbacks ohne Prompttext loggen, nicht umgesetzt; Issues #19, #20',
-        ),
-    ),
-    notiz: `Was hätte der Betrieb davon bemerkt? Fast nichts. Die App schreibt nur die Gesamtzeit eines Auftrags ins Log. Inferenz, Netz und Adapter sieht man nur mit einem Mitschnitt. Und warum das Gate eine Antwort verwirft, steht nirgends, nur der grobe Grund invalid_response. Damit gehen ${z.anteil} Prozent der Zeit in ein Ergebnis, das nicht ankommt, und niemand sieht es. Ich empfehle, Zeiten und den Grund eines Fallbacks ohne Prompttext zu loggen. Das steht in #19 und #20, umgesetzt ist es nicht.`,
-    zeitS: 40,
-    kurzfassung: false,
-    quelle: `evidenz/1B/2026-11-13-lauf.md, Befund C; ${q1B}`,
-    station: null,
   });
 
   // ------------------------------------------------------------ J15
@@ -939,7 +956,10 @@ export function folien(daten) {
       `<div style="display:grid;grid-template-columns:880px 1fr;column-gap:36px;font-size:22px;line-height:1.28">` +
         `<div style="border-left:6px solid var(--petrol);padding-left:16px">${etikett('1C')} <span style="color:var(--gedaempft)">Kosten, Risiko, Betrieb; Änderungen empfohlen, nicht umgesetzt</span>` +
         `<ul style="margin:6px 0 0;padding-left:22px">` +
-        folge('Bleibt (1C-010 bis 1C-013):', 'Kosten unverändert, kein neues Risiko') +
+        folge(
+          'Bleibt (1C-010 bis 1C-013):',
+          `wenig Zeit; unter Voting verwirft die Nachprüfung die meisten Antworten (${fmt(c.m7VorhersagePc.wert, 2)}–${fmt(c.m7VorhersageLaptop.wert, 2)}, 1C-017)`,
+        ) +
         folge(
           'Gate (1C-018):',
           'Abnahmemessung nötig; Risiko: lockere Schwelle zeigt Metaaussagen',
@@ -951,20 +971,20 @@ export function folien(daten) {
         `</ul></div>` +
         `<div style="border-left:6px solid var(--bernstein);padding-left:16px">${etikett('1B')}` +
         `<ul style="margin:6px 0 0;padding-left:22px">` +
-        folge('Topologie bleibt:', 'Hebel am Inferenz-Host') +
+        folge('Topologie bleibt:', 'Hebel am Inferenz-Host; Aufwand der zweiten Rolle: Niklas') +
         folge('Logs (#19, #20):', 'Kosten: Logzeilen; empfohlen, nicht umgesetzt') +
         folge('Vorher:', 'Gate passend zum Modell (#13)') +
         `</ul></div>` +
         `</div>` +
         `<p style="margin:16px 0 4px;font-weight:700;font-size:24px;color:var(--blau)">Zur Diskussion</p>` +
         `<ol style="margin:0;padding-left:34px;font-size:24px;line-height:1.3">` +
-        `<li>Seit 1.4.0 keine Modellantwort mehr, vorher ${c.fullContextVorGate.wert}. Das Gate prüft die Form, inhaltlich sind die Antworten auch verfehlt: Prüft es das Richtige?</li>` +
+        `<li>Nach v1.4.0 bestand keine der ${daten.abgeleitet.gateBeobachtet} beobachteten Antworten, vorher ${c.fullContextVorGate.wert}. Das Gate prüft die Form, inhaltlich sind die Antworten auch verfehlt: Prüft es das Richtige?</li>` +
         `<li>Wer legt den Timeout fest: das Release oder der Betreiber am Inferenz-Host?</li>` +
         `<li>Reicht ein privates Netz mit Token über HTTP als Schutz für die zweite Rolle?</li>` +
         `</ol>` +
         `<p style="position:absolute;left:0;right:0;bottom:0;margin:0;font-size:26px;font-weight:700">Und wenn der zweite Host langsam ist oder ausfällt? <span style="color:var(--blau)">→ Niklas</span></p>`,
     ),
-    notiz: `Meine Entscheidung. Für 1C bleiben Nachprüfung, strikte Validierung, Entkopplung und die Gleichheit von Vorschau und Nutzlast; die Kosten bleiben, ein neues Risiko entsteht nicht. Zu ändern empfehle ich Gate, Timeout, Prompt-Cache, Byte-Schätzung, Themen-Snapshot und Blitzlicht-Hash. Jede Empfehlung hat ihren Preis: Das Gate braucht eine Abnahmemessung, ein längerer Timeout belegt den Slot länger. Umgesetzt ist nichts. Für 1B: Die Topologie kostet keine relevante Zeit, der Hebel liegt am Inferenz-Host. Vorher muss aber das Gate zum Modell passen. Drei Fragen würde ich gern diskutieren, die erste zum Upgrade auf 1.4.0. Und damit an Niklas: Was passiert, wenn der zweite Host ausfällt?`,
+    notiz: `Meine Entscheidung. Für 1C bleiben Nachprüfung, strikte Validierung, Entkopplung und die Gleichheit von Vorschau und Nutzlast. Das kostet wenig Zeit, aber unter laufendem Voting verwirft die Nachprüfung die meisten Antworten; dafür habe ich noch keine belastbare Empfehlung. Zu ändern empfehle ich Gate, Timeout, Prompt-Cache, Byte-Schätzung, Themen-Snapshot und Blitzlicht-Hash, jeweils mit dem Preis, der auf der Folie steht. Umgesetzt ist nichts. Für 1B: Die Topologie kostet keine relevante Zeit, der Hebel liegt am Inferenz-Host; den Aufwand der zweiten Rolle zeigt Niklas. Drei Fragen würde ich gern diskutieren, die erste zum Upgrade. Und damit an Niklas: Was passiert, wenn der zweite Host ausfällt?`,
     zeitS: 50,
     kurzfassung: true,
     quelle: `1C-ergebnis.md, Abschnitt 5, ADRs 1C-010 bis 1C-024, Abschnitt Folgen (Laptop und PC · 9f230abc; Laptop · def56700); 1B-ergebnis.md, Entscheidung (${rechnerKurz(H.hauptlauf.rechner)} · ${H.hauptlauf.commit.slice(0, 8)})`,
@@ -982,7 +1002,7 @@ export function folien(daten) {
         `<div style="display:grid;grid-template-columns:repeat(3,1fr);column-gap:40px;font-size:26px;line-height:1.4;padding-top:60px">` +
         `<div style="border-top:6px solid var(--blau);padding-top:14px"><b>1A App-Host</b><p style="margin:8px 0 0;color:var(--gedaempft)">[Niklas]</p></div>` +
         `<div style="border-top:6px solid var(--bernstein);padding-top:14px"><b>1B Zweiter Host</b><p style="margin:8px 0 0">Die Trennung kostet keine relevante Zeit; die Zeit steckt in der Inferenz.</p><p style="margin:8px 0 0;color:var(--gedaempft)">[Niklas: Störung und Aufwand]</p></div>` +
-        `<div style="border-top:6px solid var(--petrol);padding-top:14px"><b>1C Kontextpfad</b><p style="margin:8px 0 0">Vertrag, Konsistenz und Entkopplung halten. Auf 1.4.0 verwirft das Gate jede Modellantwort; davor (${mono('9f230abc')}) ${c.fullContextVorGate.wert} mit Modellzusammenfassung.</p></div>` +
+        `<div style="border-top:6px solid var(--petrol);padding-top:14px"><b>1C Kontextpfad</b><p style="margin:8px 0 0">Vertrag, Konsistenz und Entkopplung halten. Nach v1.4.0 bestand keine der ${daten.abgeleitet.gateBeobachtet} beobachteten Modellantworten das Gate (ein Modell, eine Fixture); davor (${mono('9f230abc')}) ${c.fullContextVorGate.wert}.</p></div>` +
         `</div>` +
         `<p style="position:absolute;left:0;right:0;bottom:0;margin:0;font-size:28px;font-weight:600">Gemeinsam: [Satz zur Leitfrage von Thema 1, mit Niklas]</p>`,
     ),
@@ -1155,7 +1175,7 @@ export function folien(daten) {
     `<div style="display:grid;grid-template-columns:1fr 1fr;column-gap:50px">` +
       `<div><p style="margin:0 0 12px;font-weight:700;font-size:28px">Entschieden und geprüft vom Autor</p>${liste(
         [
-          'Leitfragen, Hypothesen und Schwellen freigegeben, bevor gemessen wurde',
+          'Hypothesen und Schwellen vor den gewerteten Läufen freigegeben; Ausnahmen: M7b/M7c ohne vorherige Freigabe, T3.1 exploratorisch, 1B-Leitfrage nach dem Lauf bestätigt (ADR 1B-011)',
           'Läufe angestoßen, Wiederholung nach Störung entschieden',
           'Ergebnisse und Protokolle geprüft, Kernzahlen stichprobenartig nachgerechnet',
         ],
@@ -1163,15 +1183,15 @@ export function folien(daten) {
       )}</div>` +
       `<div><p style="margin:0 0 12px;font-weight:700;font-size:28px">Entworfen von der KI</p>${liste(
         [
-          'Claude Code mit Claude Opus 5.5: Skripte, Tests, Auswertung, Protokolle, Diagramme',
+          'Claude Code, laut Protokollen Claude Opus 5.5 (nicht unabhängig geprüft): Skripte, Tests, Auswertung, Protokolle, Diagramme',
           'Vorschläge für Schwellen und Messmethode, im Design als KI-Vorschlag markiert',
           'Reviews waren KI-Sitzungen, keine menschlichen Gutachten',
         ],
         26,
       )}</div></div>` +
       beleg('1C-eigenanteil.md, 1B-eigenanteil.md'),
-    'Zur KI-Nutzung: Die KI hat Skripte, Tests, Auswertungen und Texte entworfen. Fragen, Hypothesen und Schwellen habe ich vor jeder Messung freigegeben, die Läufe gesteuert und die Ergebnisse geprüft. Wer was gemacht hat, steht je Artefakt in den Eigenanteil-Dateien.',
-    '1C-eigenanteil.md; 1B-eigenanteil.md (Stand 2026-11-14) · Arbeit an Laptop (ThinkPad P50) und PC (i7-8700) · Baselines 9f230abc, def56700, a19ca70f',
+    'Zur KI-Nutzung: Die KI hat Skripte, Tests, Auswertungen und Texte entworfen. Hypothesen und Schwellen habe ich vor den gewerteten Läufen freigegeben, mit offengelegten Ausnahmen: Zwei 1C-Messungen liefen ohne meine vorherige Freigabe, und die 1B-Leitfrage habe ich nach dem Lauf bestätigt. Die Läufe habe ich gesteuert und die Ergebnisse geprüft. Wer was gemacht hat, steht je Artefakt in den Eigenanteil-Dateien.',
+    '1C-eigenanteil.md (Autorenprüfung); adr/1B-011-zeitbegriffe-und-leitfrage.md; 1B-eigenanteil.md (Stand 2026-11-14) · Arbeit an Laptop (ThinkPad P50) und PC (i7-8700) · Baselines 9f230abc, def56700, a19ca70f',
   );
 
   const adrs = (ids) =>
@@ -1288,7 +1308,7 @@ export function folien(daten) {
       rolle(
         'App-Adapter',
         'app-host',
-        `${mono('openWeightLlmClient.ts')}: Prompt bauen, Runtime aufrufen, Antwort prüfen, sonst extraktiv; Bearer-Token`,
+        `${mono('openWeightLlmClient.ts')} ruft die Runtime (Bearer-Token); Gate und Fallback in ${mono('qaSummaryRuntimeAdapter.ts')}`,
       ) +
       rolle(
         'Encoder',
@@ -1313,6 +1333,38 @@ export function folien(daten) {
       ),
     'Falls nach Schritt 1 von 1B gefragt wird: Der Auftrag verlangt, App-Adapter, Encoder und LLM-Server zu unterscheiden. Der Adapter läuft in der App auf dem app-host, der Encoder ist ab Werk aus, der LLM-Server läuft allein auf dem llm-host. Den Aufbau habe ich Punkt für Punkt gegen ADR-0035 und das Runbook abgeglichen. Die auffälligste Lücke: ADR-0035 nennt eine kürzere Ausgabegrenze, als das Release setzt; mit ihr wären die Antworten abgeschnitten.',
     `evidenz/1B/2026-11-12-aufbau.md (Komponenten, Abgleich) · ThinkPad P50 · a19ca70f; Lücke: evidenz/1B/2026-11-13-lauf.md, Manifest · ${H.hauptlauf.commit.slice(0, 8)}`,
+  );
+
+  const logZeile = (was, sichtbar, ok) =>
+    `<tr style="border-top:var(--linie-min) solid var(--linie)"><td style="padding:10px 16px 10px 0">${was}</td>` +
+    `<td style="padding:10px 0;${ok ? '' : 'color:var(--rot);font-weight:600'}">${sichtbar}</td></tr>`;
+  reserve(
+    'R11',
+    '1B',
+    'Reserve: Was der Betrieb nicht sieht',
+    frage('Was davon steht im Log der App?', '1B') +
+      zweiSpalten(
+        `<table style="border-collapse:collapse;font-size:26px;width:100%">` +
+          logZeile('Auftrag gesamt', `ja, ${mono('latencyMs')}`, true) +
+          logZeile('Inferenz', 'nein, die App liest die Zeiten nicht aus', false) +
+          logZeile('Netz und Adapter', 'nein, nur mit Mitschnitt', false) +
+          logZeile('Warum das Gate ablehnt', `nein, nur grob ${mono('invalid_response')}`, false) +
+          `</table>`,
+        zahl({
+          wert: z.transport,
+          einheit: 'ms',
+          was: 'Transport je Auftrag, Median, alle 10',
+          gruppe: `Inferenzanteil ${z.anteil} %, nur auf dieser langsamen CPU so hoch`,
+          linie: 'var(--bernstein)',
+          gross: 72,
+        }),
+        820,
+      ) +
+      beleg(
+        'Laufprotokoll 1B, Befund C; empfohlen: Zeiten und Grund des Fallbacks ohne Prompttext loggen, nicht umgesetzt; Issues #19, #20',
+      ),
+    `Falls nach dem Betrieb gefragt wird: Die App schreibt nur die Gesamtzeit eines Auftrags ins Log. Inferenz, Netz und Adapter sieht man nur mit einem Mitschnitt, und warum das Gate verwirft, steht nirgends, nur der grobe Grund invalid_response. Ich empfehle, Zeiten und den Grund eines Fallbacks ohne Prompttext zu loggen, Issues 19 und 20; umgesetzt ist das nicht.`,
+    `evidenz/1B/2026-11-13-lauf.md, Befund C; ${q1B}`,
   );
 
   return F;
