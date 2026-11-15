@@ -236,6 +236,7 @@ function jonasFolie(f, nr, gesamt, clipDaten) {
     f.station ? `data-station="${esc(f.station)}"` : '',
     eigenerWeg ? 'data-eigener-weg' : '',
     f.id === 'J10' ? `data-zoom-stufen="${esc(JSON.stringify(ZOOM_STUFEN))}"` : '',
+    f.aufbau ? `data-aufbau="${Number(f.aufbau)}"` : '',
     `aria-label="${esc(`${fussNr.replace(' / ', ' von ')}: ${ohneTags(f.titel)}`)}"`,
   ]
     .filter(Boolean)

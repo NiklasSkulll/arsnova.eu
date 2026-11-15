@@ -126,6 +126,29 @@
   }
   const endStufe = (folie) => zoomStufe(folie, stufenVon(folie).length - 1);
 
+  // ---------------------------------------------------------------- Aufbau in Stufen
+  // Folien mit data-aufbau="n" bauen sich auf Tastendruck in n Stufen auf. Ein Element mit
+  // data-ab="k" (und optional data-bis="m") ist in den Stufen k bis m sichtbar; die Übergänge macht
+  // CSS (stil.css), mit reduzierter Bewegung ohne Übergang. Nie zeitgesteuert.
+  const aufbauMax = (folie) => Number(folie.dataset.aufbau);
+  function aufbauStufe(folie, stufe) {
+    folie.dataset.aufbauStufe = String(stufe);
+    for (const el of folie.querySelectorAll('[data-ab]')) {
+      const ab = Number(el.dataset.ab);
+      const bis = el.dataset.bis === undefined ? Infinity : Number(el.dataset.bis);
+      if (stufe >= ab && stufe <= bis) el.setAttribute('data-an', '');
+      else el.removeAttribute('data-an');
+    }
+  }
+  /** Ein Aufbauschritt innerhalb der Folie; false, wenn die Folie keinen weiteren hat. */
+  function aufbauSchritt(richtung) {
+    if (!aktuell || !aktuell.dataset.aufbau) return false;
+    const ziel = Number(aktuell.dataset.aufbauStufe) + richtung;
+    if (ziel < 0 || ziel > aufbauMax(aktuell)) return false;
+    aufbauStufe(aktuell, ziel);
+    return true;
+  }
+
   // ---------------------------------------------------------------- wandernder Marker
   function setzeMarker(folie) {
     const name = folie.dataset.station || '';
@@ -165,6 +188,7 @@
     if (folie.dataset.zoomStufen) {
       zoomStufe(folie, richtung < 0 ? stufenVon(folie).length - 1 : 0);
     }
+    if (folie.dataset.aufbau) aufbauStufe(folie, richtung < 0 ? aufbauMax(folie) : 0);
     // Clips starten nie von selbst: der nächste Tastendruck (vor) spielt sie ab.
     for (const v of folie.querySelectorAll('video')) {
       v.pause();
@@ -201,11 +225,11 @@
     return false;
   }
   function vor() {
-    if (clipSchritt() || zoomSchritt(+1)) return;
+    if (clipSchritt() || zoomSchritt(+1) || aufbauSchritt(+1)) return;
     if (index < liste.length - 1) gehe(index + 1, +1);
   }
   function zurueck() {
-    if (!zoomSchritt(-1) && index > 0) gehe(index - 1, -1);
+    if (!zoomSchritt(-1) && !aufbauSchritt(-1) && index > 0) gehe(index - 1, -1);
   }
   function zeigeReserve(i) {
     liste = reserve;
@@ -300,16 +324,24 @@
   // ---------------------------------------------------------------- Druck
   // Im Druck steht J10 im Endzustand (0,3 mm); danach geht es auf der gezeigten Stufe weiter.
   const zoomFolien = alle.filter((s) => s.dataset.zoomStufen);
+  // Aufbaufolien stehen im Druck im Endbild; danach geht es auf der gezeigten Stufe weiter.
+  const aufbauFolien = alle.filter((s) => s.dataset.aufbau);
   let vorDruck = null;
+  let aufbauVorDruck = null;
   function druckBeginn() {
     if (vorDruck) return;
     vorDruck = zoomFolien.map((s) => [s, s.dataset.zoomStufe]);
+    aufbauVorDruck = aufbauFolien.map((s) => [s, s.dataset.aufbauStufe]);
+    for (const s of aufbauFolien) aufbauStufe(s, aufbauMax(s));
     for (const s of zoomFolien) endStufe(s);
   }
   function druckEnde() {
     if (!vorDruck) return;
     for (const [s, stufe] of vorDruck) if (stufe !== undefined) zoomStufe(s, Number(stufe));
+    for (const [s, stufe] of aufbauVorDruck)
+      aufbauStufe(s, stufe === undefined ? 0 : Number(stufe));
     vorDruck = null;
+    aufbauVorDruck = null;
   }
   window.addEventListener('beforeprint', druckBeginn);
   window.addEventListener('afterprint', druckEnde);
