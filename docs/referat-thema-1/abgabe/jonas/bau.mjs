@@ -15,14 +15,16 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  realpathSync,
   readdirSync,
   readFileSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from 'node:fs';
 import { createRequire } from 'node:module';
 import { homedir, tmpdir } from 'node:os';
-import { dirname, join, relative, resolve, sep } from 'node:path';
+import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import process from 'node:process';
 import { parseArgs } from 'node:util';
@@ -61,9 +63,48 @@ const sha256 = (daten) => createHash('sha256').update(daten).digest('hex');
 const mmss = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 const naechsteRelativ = (pfad) => relative(REPO, pfad).split(sep).join('/');
 
+class BauFehler extends Error {}
+
+/** Bedienfehler: wird oben gemeldet (Exit 2); finally-Blöcke laufen vorher durch. */
 function fehler(text) {
-  console.error(`bau.mjs: ${text}`);
-  process.exit(2);
+  throw new BauFehler(text);
+}
+
+function pruefePdf(pfad, flag) {
+  if (!existsSync(pfad) || !statSync(pfad).isFile()) fehler(`${flag}: ${pfad} nicht gefunden.`);
+  if (readFileSync(pfad).subarray(0, 5).toString('latin1') !== '%PDF-') {
+    fehler(`${flag}: ${pfad} ist kein PDF.`);
+  }
+}
+
+/** realpath des nächsten existierenden Vorfahren plus der noch nicht vorhandene Rest. */
+function echterPfad(pfad) {
+  let rest = '';
+  let aktuell = resolve(pfad);
+  while (!existsSync(aktuell)) {
+    rest = join(basename(aktuell), rest);
+    aktuell = dirname(aktuell);
+  }
+  return join(realpathSync(aktuell), rest);
+}
+
+/** Liegt der Pfad nach Auflösung aller Symlinks im Repo? */
+function imRepo(pfad) {
+  const repo = realpathSync(REPO);
+  const echt = echterPfad(pfad);
+  return echt === repo || echt.startsWith(repo + sep);
+}
+
+/** Lädt eine Repo-Abhängigkeit mit klarer Fehlermeldung statt rohem Stacktrace. */
+function ladeAbhaengigkeit(name) {
+  try {
+    return requireRepo(name);
+  } catch (e) {
+    fehler(
+      `Abhängigkeit „${name}“ nicht ladbar (${e.code ?? e.message}). ` +
+        'Im Repo „npm ci“ ausführen, für Playwright außerdem „npx playwright install chromium“.',
+    );
+  }
 }
 
 /** Liest und prüft personen.json; Fehler vor jedem Bau, damit nichts halb geschrieben wird. */
@@ -94,9 +135,11 @@ function lesePersonen() {
   if (!gueltig) {
     fehler(`${pfad} muss genau zwei Einträge { "name", "matrikel" } enthalten (Jonas, Niklas).`);
   }
-  const ziel = resolve(ZIEL_ABGABE());
-  if (ziel === REPO || ziel.startsWith(REPO + sep)) {
-    fehler(`Zielordner ${ziel} liegt im Repo; die Matrikel darf nie ins Repo.`);
+  const ziel = ZIEL_ABGABE();
+  if (imRepo(ziel)) {
+    fehler(
+      `Zielordner ${ziel} liegt (auch über Symlinks) im Repo; die Matrikel darf nie ins Repo.`,
+    );
   }
   return personen;
 }
@@ -153,7 +196,7 @@ async function drucke(browser, url, pdfPfad) {
 }
 
 async function pdfInfo(pfad) {
-  const { PDFParse } = requireRepo('pdf-parse');
+  const { PDFParse } = ladeAbhaengigkeit('pdf-parse');
   const p = new PDFParse({ data: new Uint8Array(readFileSync(pfad)) });
   try {
     const seiten = (await p.getInfo()).total;
@@ -184,29 +227,55 @@ async function main() {
   });
   const personen = o.abgabe ? lesePersonen() : undefined;
   const ausgabe = resolve(o.ausgabe ?? STANDARD_AUSGABE);
-  mkdirSync(ausgabe, { recursive: true });
-  const arbeit = mkdtempSync(join(tmpdir(), 'jonas-bau-'));
+  const { chromium } = ladeAbhaengigkeit('playwright');
+  ladeAbhaengigkeit('pdf-parse');
+  const { format, resolveConfig } = ladeAbhaengigkeit('prettier');
+  const formatierung = (await resolveConfig(join(REPO, 'package.json'))) ?? {};
 
+  // Niklas' Teile: 1A standardmäßig aus der gemergten PDF, sonst Platzhalter; 1B 3–4 nur auf Angabe.
+  // Ausdrücklich angegebene PDFs müssen existieren und eingebettet werden können.
+  const niklasQuellen = { teil1: null, teil2: null };
+  if (o.niklas1) pruefePdf(o.niklas1, '--niklas1');
+  if (o.niklas2) pruefePdf(o.niklas2, '--niklas2');
+  const eins = o.niklas1 ?? (existsSync(NIKLAS_1A_STANDARD) ? NIKLAS_1A_STANDARD : undefined);
+  if (eins) niklasQuellen.teil1 = { pfad: eins, stand: o['niklas1-stand'] };
+  if (o.niklas2) niklasQuellen.teil2 = { pfad: o.niklas2, stand: o['niklas2-stand'] };
+
+  const clip = join(HIER, 'medien/clip.webm');
+  const festeEingaben = [
+    ...DATEN.map((p) => join(ROOT, p)),
+    ...[...new Set(Object.values(FESTWERTE).map((f) => f.quelle))]
+      .map((p) => join(ROOT, p))
+      .filter((p) => existsSync(p)),
+    ...readdirSync(HIER)
+      .filter((n) => /\.(mjs|js|css|html)$/.test(n) && !n.endsWith('.test.mjs'))
+      .map((n) => join(HIER, n)),
+    ...alleDateien(join(HIER, 'schriften')),
+    ...(existsSync(clip) ? [clip] : []),
+  ];
+  const fehlend = festeEingaben.filter((p) => !existsSync(p));
+  if (fehlend.length) {
+    fehler(`Eingaben fehlen: ${fehlend.map((p) => naechsteRelativ(p)).join(', ')}`);
+  }
+
+  const arbeit = mkdtempSync(join(tmpdir(), 'jonas-bau-'));
   try {
     const daten = ladeFolienDaten(ROOT);
     const alle = folien(daten);
-
-    // Niklas' Teile: Standard für 1A ist die gemergte PDF, sonst Platzhalter; 1B 3–4 nur auf Angabe.
-    const niklasQuellen = { teil1: null, teil2: null };
-    const eins = o.niklas1 ?? (existsSync(NIKLAS_1A_STANDARD) ? NIKLAS_1A_STANDARD : undefined);
-    if (eins) niklasQuellen.teil1 = { pfad: eins, stand: o['niklas1-stand'] };
-    if (o.niklas2) niklasQuellen.teil2 = { pfad: o.niklas2, stand: o['niklas2-stand'] };
-    const niklas = {
-      teil1: niklasQuellen.teil1
-        ? await niklasSeiten(niklasQuellen.teil1.pfad, join(arbeit, 'n1'))
-        : [],
-      teil2: niklasQuellen.teil2
-        ? await niklasSeiten(niklasQuellen.teil2.pfad, join(arbeit, 'n2'))
-        : [],
-    };
-    const clip = join(HIER, 'medien/clip.webm');
-    const { format, resolveConfig } = requireRepo('prettier');
-    const formatierung = (await resolveConfig(join(REPO, 'package.json'))) ?? {};
+    const niklas = { teil1: [], teil2: [] };
+    for (const [teil, flag, ziel] of [
+      ['teil1', '--niklas1', 'n1'],
+      ['teil2', '--niklas2', 'n2'],
+    ]) {
+      if (!niklasQuellen[teil]) continue;
+      niklas[teil] = await niklasSeiten(niklasQuellen[teil].pfad, join(arbeit, ziel));
+      if (niklas[teil].length === 0) {
+        if (flag === '--niklas1' && !o.niklas1)
+          niklasQuellen[teil] = null; // Standard-PDF nicht rasterbar
+        else
+          fehler(`${flag}: Seiten von ${niklasQuellen[teil].pfad} nicht einbettbar (pdftoppm?).`);
+      }
+    }
     const rohHtml = baueDeck(alle, {
       niklas,
       clip: existsSync(clip) ? clip : undefined,
@@ -214,10 +283,12 @@ async function main() {
     });
     // Wie der Pre-commit-Hook formatieren, bevor gehasht wird, damit das Manifest stimmen bleibt.
     const html = await format(rohHtml, { ...formatierung, parser: 'html' });
+    // Ab hier wird geschrieben: ein altes Manifest darf nie zu neuen Ausgaben stehen.
+    mkdirSync(ausgabe, { recursive: true });
+    rmSync(join(ausgabe, 'manifest.json'), { force: true });
     const deckPfad = join(ausgabe, 'jonas-deck.html');
     writeFileSync(deckPfad, html);
 
-    const { chromium } = requireRepo('playwright');
     const browser = await chromium.launch();
     try {
       await drucke(browser, pathToFileURL(deckPfad).href, join(ausgabe, 'gemeinsames-deck.pdf'));
@@ -240,15 +311,7 @@ async function main() {
 
     // Manifest: Eingaben (Daten, Vorlagen, Module, Schriften, Niklas-PDFs) und Ausgaben mit SHA-256.
     const eingaben = [
-      ...DATEN.map((p) => join(ROOT, p)),
-      ...[...new Set(Object.values(FESTWERTE).map((f) => f.quelle))]
-        .map((p) => join(ROOT, p))
-        .filter((p) => existsSync(p)),
-      ...readdirSync(HIER)
-        .filter((n) => /\.(mjs|js|css|html)$/.test(n) && !n.endsWith('.test.mjs'))
-        .map((n) => join(HIER, n)),
-      ...alleDateien(join(HIER, 'schriften')),
-      ...(existsSync(clip) ? [clip] : []),
+      ...festeEingaben,
       ...Object.values(niklasQuellen)
         .filter(Boolean)
         .map((q) => q.pfad),
@@ -260,7 +323,6 @@ async function main() {
         sha256: sha256(readFileSync(p)),
       };
     };
-    const seitenVon = {};
     let handoutWoerter = 0;
     const ausgaben = [];
     for (const datei of [
@@ -276,7 +338,6 @@ async function main() {
       if (datei.endsWith('.pdf')) {
         const info = await pdfInfo(p);
         e.seiten = info.seiten;
-        seitenVon[datei] = info.seiten;
         if (datei === 'jonas-handout.pdf') {
           handoutWoerter = info.text.trim().split(/\s+/).filter(Boolean).length;
         }
@@ -334,5 +395,11 @@ async function main() {
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  await main();
+  try {
+    await main();
+  } catch (e) {
+    if (!(e instanceof BauFehler)) throw e;
+    console.error(`bau.mjs: ${e.message}`);
+    process.exit(2);
+  }
 }

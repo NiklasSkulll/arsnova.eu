@@ -6,7 +6,7 @@
 // CLI: node handout.mjs <ausgabeordner> [personen.json]
 //   personen.json = [{ "name": "…", "matrikel": "…" }, { … }] in der Reihenfolge Jonas, Niklas.
 /* global console, document, process -- Node-Skript, page.evaluate läuft im Browser */
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -345,8 +345,10 @@ export async function rendereHandout(html, pdfPfad) {
         '<meta charset="utf-8" />',
         (m) => `${m}<base href="${pathToFileURL(`${HIER}/`).href}" />`,
       );
-  const tmp = join(tmpdir(), `handout-${process.pid}-${Date.now()}.html`);
-  writeFileSync(tmp, mitBasis);
+  // Das HTML kann Matrikelnummern enthalten: eigener Ordner (0700), Datei 0600, am Ende entfernt.
+  const tmpOrdner = mkdtempSync(join(tmpdir(), 'handout-'));
+  const tmp = join(tmpOrdner, 'handout.html');
+  writeFileSync(tmp, mitBasis, { mode: 0o600 });
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage();
@@ -376,7 +378,7 @@ export async function rendereHandout(html, pdfPfad) {
     return layout;
   } finally {
     await browser.close();
-    rmSync(tmp, { force: true });
+    rmSync(tmpOrdner, { recursive: true, force: true });
   }
 }
 

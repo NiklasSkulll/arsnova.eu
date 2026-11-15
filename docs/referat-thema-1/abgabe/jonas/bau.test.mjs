@@ -10,22 +10,33 @@ import {
   readFileSync,
   rmSync,
   statSync,
+  symlinkSync,
   writeFileSync,
 } from 'node:fs';
-import { createRequire } from 'node:module';
+import fs from 'node:fs';
+import { createRequire, syncBuiltinESMExports } from 'node:module';
 import process from 'node:process';
 import { tmpdir } from 'node:os';
+import { clearInterval, setInterval } from 'node:timers';
 import { dirname, join, resolve } from 'node:path';
 import { after, before, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { baueDeck } from './deck.mjs';
 import { folien, ladeFolienDaten } from './folien.mjs';
+import { baueHandout, rendereHandout } from './handout.mjs';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HIER, '../..');
+const REPO = resolve(ROOT, '../..');
 const requireRepo = createRequire(resolve(ROOT, '../../package.json'));
 
-const F = folien(ladeFolienDaten(ROOT));
+const daten0 = ladeFolienDaten(ROOT);
+const F = folien(daten0);
+const PERSONEN_LISTE = [
+  { name: 'Testname Jonas', matrikel: 'TEST-MATRIKEL-1' },
+  { name: 'Testname Niklas', matrikel: 'TEST-MATRIKEL-2' },
+];
 const JONAS_UND_RESERVE = F.filter((f) => f.teil === 'jonas' || f.teil === 'reserve');
 const AUSGABEN = [
   'jonas-deck.html',
@@ -192,7 +203,9 @@ test('--abgabe: personalisierte PDFs nur unter ~/referat-abgabe, Matrikel nirgen
       for (const m of MATRIKEL) assert.ok(!inhalt.includes(m), `${m} in ${datei}`);
     }
   }
-  for (const datei of dateien(abgabe).filter((d) => d.endsWith('.pdf'))) {
+  for (const datei of [...dateien(abgabe), ...dateien(join(HIER, '..'))].filter((d) =>
+    d.endsWith('.pdf'),
+  )) {
     const { text: t } = await pdfInfo(datei);
     for (const m of MATRIKEL) assert.ok(!t.includes(m), `${m} im Text von ${datei}`);
   }
@@ -226,5 +239,158 @@ test('generierte Textausgaben sind Prettier-formatiert (Pre-commit würde sie so
       await check(text, { ...konfig, filepath: join(HIER, name) }),
       `${name} nicht formatiert`,
     );
+  }
+});
+
+const PERSONEN_JSON = JSON.stringify([
+  { name: 'Testname Jonas', matrikel: MATRIKEL[0] },
+  { name: 'Testname Niklas', matrikel: MATRIKEL[1] },
+]);
+
+function homeMit(basis) {
+  const h = join(basis, 'home');
+  mkdirSync(join(h, '.config/referat-thema-1'), { recursive: true });
+  writeFileSync(join(h, '.config/referat-thema-1/personen.json'), PERSONEN_JSON);
+  return h;
+}
+
+test('Repo-Schutz: ~/referat-abgabe als Symlink ins Repo wird abgelehnt', () => {
+  const imRepo = mkdtempSync(join(REPO, '.bau-test-'));
+  try {
+    const h = homeMit(join(wurzel, 'symlink'));
+    symlinkSync(imRepo, join(h, 'referat-abgabe'));
+    const r = bau(['--abgabe', '--ausgabe', join(wurzel, 'sym-aus')], { HOME: h });
+    assert.notEqual(r.status, 0);
+    assert.match(r.stderr, /Repo/);
+    assert.deepEqual(readdirSync(imRepo), []);
+  } finally {
+    rmSync(imRepo, { recursive: true, force: true });
+  }
+});
+
+test('Repo-Schutz: HOME im Repo und HOME als Symlink ins Repo werden abgelehnt', () => {
+  const imRepo = mkdtempSync(join(REPO, '.bau-test-'));
+  try {
+    // HOME selbst liegt im Repo
+    const homeImRepo = homeMit(imRepo);
+    const a = bau(['--abgabe', '--ausgabe', join(wurzel, 'repo-aus')], { HOME: homeImRepo });
+    assert.notEqual(a.status, 0);
+    assert.ok(!existsSync(join(homeImRepo, 'referat-abgabe')));
+    // HOME ist ein Symlink ins Repo, personen.json liegt dort
+    const link = join(wurzel, 'home-link');
+    symlinkSync(homeImRepo, link);
+    const b = bau(['--abgabe', '--ausgabe', join(wurzel, 'repo-aus2')], { HOME: link });
+    assert.notEqual(b.status, 0);
+    assert.match(b.stderr, /Repo/);
+    assert.ok(!existsSync(join(homeImRepo, 'referat-abgabe')));
+  } finally {
+    rmSync(imRepo, { recursive: true, force: true });
+  }
+});
+
+test('personalisiertes Handout-HTML: Temp-Ordner 0700, Datei 0600, danach entfernt', async () => {
+  const tmp = mkdtempSync(join(wurzel, 'tmp-'));
+  const alt = process.env.TMPDIR;
+  process.env.TMPDIR = tmp;
+  const beobachtet = [];
+  const takt = setInterval(() => {
+    for (const n of readdirSync(tmp).filter((x) => x.startsWith('handout-'))) {
+      try {
+        const d = join(tmp, n);
+        const modus = statSync(d).mode & 0o777;
+        const dateien_ = statSync(d).isDirectory() ? readdirSync(d) : [];
+        beobachtet.push({
+          ordner: statSync(d).isDirectory() ? modus : null,
+          datei: dateien_.length ? statSync(join(d, dateien_[0])).mode & 0o777 : null,
+          roh: statSync(d).isDirectory() ? null : modus,
+        });
+      } catch {
+        // Eintrag verschwand zwischen readdir und stat
+      }
+    }
+  }, 5);
+  try {
+    await rendereHandout(baueHandout(daten0, PERSONEN_LISTE), join(tmp, 'aus.pdf'));
+  } finally {
+    clearInterval(takt);
+    if (alt === undefined) delete process.env.TMPDIR;
+    else process.env.TMPDIR = alt;
+  }
+  assert.ok(beobachtet.length > 0, 'temporäre HTML-Datei nicht beobachtet');
+  assert.ok(
+    beobachtet.every((b) => b.roh === null),
+    'HTML liegt lose im Temp-Ordner',
+  );
+  assert.ok(
+    beobachtet.every((b) => b.ordner === 0o700),
+    JSON.stringify(beobachtet),
+  );
+  assert.ok(beobachtet.filter((b) => b.datei !== null).every((b) => b.datei === 0o600));
+  assert.deepEqual(
+    readdirSync(tmp).filter((x) => x.startsWith('handout-')),
+    [],
+  );
+});
+
+test('fehlgeschlagener Bau hinterlässt kein altes Manifest', () => {
+  const aus = join(wurzel, 'stale');
+  mkdirSync(join(aus, 'jonas-handout.pdf'), { recursive: true }); // Schreiben schlägt fehl
+  writeFileSync(join(aus, 'manifest.json'), '{"alt":true}');
+  const r = bau(['--ausgabe', aus], { HOME: home });
+  assert.notEqual(r.status, 0);
+  assert.ok(!existsSync(join(aus, 'manifest.json')), 'altes Manifest blieb liegen');
+});
+
+test('ungültige Niklas-PDFs: klarer Fehler vor dem Bau, nichts geschrieben', () => {
+  const aus = join(wurzel, 'niklas-fehler');
+  const fehlt = bau(['--niklas1', join(wurzel, 'gibt-es-nicht.pdf'), '--ausgabe', aus], {
+    HOME: home,
+  });
+  assert.notEqual(fehlt.status, 0);
+  assert.match(fehlt.stderr, /gibt-es-nicht\.pdf/);
+  const keinPdf = join(wurzel, 'kein.pdf');
+  writeFileSync(keinPdf, 'kein pdf');
+  const kaputt = bau(['--niklas2', keinPdf, '--ausgabe', aus], { HOME: home });
+  assert.notEqual(kaputt.status, 0);
+  assert.match(kaputt.stderr, /kein\.pdf/);
+  assert.ok(!existsSync(join(aus, 'manifest.json')));
+  assert.ok(!existsSync(join(aus, 'jonas-deck.html')));
+});
+
+test('Manifest führt jede Datei auf, die die Module beim Bau lesen', () => {
+  const m = JSON.parse(readFileSync(join(platzhalter, 'manifest.json'), 'utf8'));
+  const aufgefuehrt = new Set(m.eingaben.map((e) => resolve(REPO, e.pfad)));
+  const gelesen = new Set();
+  const original = fs.readFileSync;
+  fs.readFileSync = function (pfad, ...rest) {
+    if (typeof pfad === 'string') gelesen.add(resolve(pfad));
+    return original.call(this, pfad, ...rest);
+  };
+  syncBuiltinESMExports();
+  try {
+    const d = ladeFolienDaten(ROOT);
+    const alle = folien(d);
+    baueDeck(alle, { niklas: { teil1: [], teil2: [] }, eingebettet: true });
+    baueHandout(d);
+  } finally {
+    fs.readFileSync = original;
+    syncBuiltinESMExports();
+  }
+  const fehlend = [...gelesen].filter(
+    (p) => p.startsWith(REPO + '/') && !p.includes('node_modules') && !aufgefuehrt.has(p),
+  );
+  assert.ok(gelesen.size > 20, `nur ${gelesen.size} Lesezugriffe beobachtet`);
+  assert.deepEqual(fehlend, []);
+});
+
+test('eingechecktes ausgabe/manifest.json passt zu den eingecheckten Ausgaben und Eingaben', () => {
+  const ausgabe = join(HIER, 'ausgabe');
+  const m = JSON.parse(readFileSync(join(ausgabe, 'manifest.json'), 'utf8'));
+  const sha = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
+  for (const a of m.ausgaben) {
+    assert.equal(sha(join(ausgabe, a.datei)), a.sha256, `Ausgabe ${a.datei} veraltet`);
+  }
+  for (const e of m.eingaben.filter((x) => !x.pfad.startsWith('extern/'))) {
+    assert.equal(sha(resolve(REPO, e.pfad)), e.sha256, `Eingabe ${e.pfad} geändert, neu bauen`);
   }
 });
