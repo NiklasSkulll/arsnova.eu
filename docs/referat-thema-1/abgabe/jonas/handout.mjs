@@ -43,15 +43,10 @@ function rechnerKurz(rechner) {
 }
 
 /**
- * Handout als HTML-Dokument.
- * @param daten   Ergebnis von ladeFolienDaten(root)
- * @param personen optional [{ name, matrikel }, { name, matrikel }] für Jonas und Niklas
- * @param optionen { basis }: URL des Ordners mit stil.css und schriften/ (für <base>)
+ * Alle Zahlen und Herkunftsangaben des Handouts, formatiert (deutsches Komma).
+ * Gemeinsam für das HTML-Handout und das LaTeX-Handout (handout-latex.mjs).
  */
-export function baueHandout(daten, personen, { basis } = {}) {
-  if (personen !== undefined && (!Array.isArray(personen) || personen.length !== GRUPPE.length)) {
-    throw new Error(`personen braucht genau ${GRUPPE.length} Einträge (Jonas, Niklas)`);
-  }
+export function handoutWerte(daten) {
   const { b1: b, c1: c, antwort: a, nutzlast: nl, auftrag: au } = daten;
   const H = b.herkunft;
   const fw = Object.fromEntries(Object.entries(FESTWERTE).map(([k, v]) => [k, fmt(v.wert)]));
@@ -96,6 +91,55 @@ export function baueHandout(daten, personen, { basis } = {}) {
   const teil2 = c.validierungMs.commit;
   const ersteAussage = a.ausgabe.split('\n')[0];
   const gateBeob = daten.abgeleitet.gateBeobachtet;
+  return {
+    b,
+    c,
+    a,
+    nl,
+    au,
+    H,
+    fw,
+    z,
+    n,
+    nWarm,
+    P50,
+    haupt,
+    nachtrag,
+    nachlauf,
+    teil2,
+    ersteAussage,
+    gateBeob,
+  };
+}
+
+/**
+ * Handout als HTML-Dokument.
+ * @param daten   Ergebnis von ladeFolienDaten(root)
+ * @param personen optional [{ name, matrikel }, { name, matrikel }] für Jonas und Niklas
+ * @param optionen { basis }: URL des Ordners mit stil.css und schriften/ (für <base>)
+ */
+export function baueHandout(daten, personen, { basis } = {}) {
+  if (personen !== undefined && (!Array.isArray(personen) || personen.length !== GRUPPE.length)) {
+    throw new Error(`personen braucht genau ${GRUPPE.length} Einträge (Jonas, Niklas)`);
+  }
+  const {
+    b,
+    c,
+    a,
+    au,
+    H,
+    fw,
+    z,
+    n,
+    nWarm,
+    P50,
+    haupt,
+    nachtrag,
+    nachlauf,
+    teil2,
+    ersteAussage,
+    gateBeob,
+  } = handoutWerte(daten);
 
   // ------------------------------------------------------------ Seite 1
   const personZeile = (g, i) =>
