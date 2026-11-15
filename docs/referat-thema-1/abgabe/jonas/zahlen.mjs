@@ -28,6 +28,15 @@ function median(werte) {
 /** 1B-Kennzahlen, ungerundet. Warm = Aufträge 2-10 (n = 9), Kalt = Auftrag 1 bzw. fünf frische Läufe (ADR 1B-011). */
 export function zahlen1B(lauf, kaltLaeufe, c0, b0) {
   const k = lauf.zerlegung.kennzahlen;
+  // Nachtrag M2-M4 (Kalt, C0, B0) lief auf einem anderen Commit als der Hauptlauf.
+  // Rechner: Kalt- und B0-JSON nennen ihn; das C0-JSON nennt keinen, das Protokoll
+  // (evidenz/1B/2026-11-13-lauf.md, Nachtrag) sagt "Rechner wie oben" (gleiche Maschine).
+  const nachtragLaeufe = [...kaltLaeufe, c0, b0];
+  const nachtragCommit = new Set(nachtragLaeufe.map((l) => l.commit));
+  const nachtragRechner = new Set([...kaltLaeufe, b0].map((l) => l.rechner));
+  if (nachtragCommit.size !== 1 || nachtragRechner.size !== 1) {
+    throw new Error('Nachtrag-Laeufe haben uneinheitlichen Commit oder Rechner');
+  }
   const kaltS = kaltLaeufe.map((l) => l.zerlegung.kennzahlen.kalt.jobMsMedian / 1000);
   return {
     netzMs: k.netz.medianMs,
@@ -45,6 +54,10 @@ export function zahlen1B(lauf, kaltLaeufe, c0, b0) {
     anzahl: lauf.n,
     commit: lauf.commit,
     rechner: lauf.rechner,
+    herkunft: {
+      hauptlauf: { commit: lauf.commit, rechner: lauf.rechner, anzahl: lauf.n },
+      nachtrag: { commit: [...nachtragCommit][0], rechner: [...nachtragRechner][0] },
+    },
   };
 }
 

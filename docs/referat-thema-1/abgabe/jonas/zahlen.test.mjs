@@ -29,6 +29,28 @@ test('1B-Zahlen aus den committeten Ergebnis-JSONs', () => {
   assert.match(quellen.lauf, /^[0-9a-f]{64}$/);
 });
 
+test('Herkunft je Wertegruppe: Hauptlauf 8e9d1317, Nachtrag 9e111d35', () => {
+  const { b1 } = ladeZahlen(ROOT);
+  assert.ok(b1.herkunft.hauptlauf.commit.startsWith('8e9d1317'));
+  assert.equal(b1.herkunft.hauptlauf.anzahl, 10);
+  assert.match(b1.herkunft.hauptlauf.rechner, /i7-6820HQ/);
+  assert.ok(b1.herkunft.nachtrag.commit.startsWith('9e111d35'));
+  assert.match(b1.herkunft.nachtrag.rechner, /i7-6820HQ/);
+  assert.equal(b1.commit, b1.herkunft.hauptlauf.commit);
+});
+
+test('inferAnteil ist der Median ueber alle 10, nicht der warme', () => {
+  const lauf = JSON.parse(
+    readFileSync(resolve(ROOT, 'evidenz/1B/messung/2026-11-13-lauf.json'), 'utf8'),
+  );
+  const k = lauf.zerlegung.kennzahlen;
+  const { b1 } = ladeZahlen(ROOT);
+  assert.equal(b1.inferAnteil, k.inferAnteilMedian);
+  assert.notEqual(b1.inferAnteil, k.warm.inferAnteilMedian);
+  assert.equal(fmt(b1.inferAnteil * 100, 4), '99,9190');
+  assert.equal(fmt(k.warm.inferAnteilMedian * 100, 4), '99,9178');
+});
+
 test('zahlen1B ist eine reine Funktion der Eingaben', () => {
   assert.throws(() => zahlen1B(null, [], null, null));
 });
