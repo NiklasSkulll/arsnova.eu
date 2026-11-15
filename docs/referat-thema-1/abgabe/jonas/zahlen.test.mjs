@@ -77,3 +77,11 @@ test('jede 1C-Zahl hat Felder und ihren Beleg wörtlich in der Quelle', () => {
     );
   }
 });
+
+test('Gruppengrößen und verworfene Antworten für Beschriftungen', () => {
+  const { b1 } = ladeZahlen(ROOT);
+  assert.equal(b1.nWarm, 9);
+  assert.equal(b1.nKaltLaeufe, 5);
+  assert.equal(b1.verworfen, 10);
+  assert.equal(b1.nB0, 10);
+});

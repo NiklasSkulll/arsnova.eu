@@ -52,6 +52,13 @@ export function zahlen1B(lauf, kaltLaeufe, c0, b0) {
     c0DiffMs: c0.kennzahlen.differenzMs,
     b0JobMs: b0.b0.kennzahlen.medianJobMs,
     anzahl: lauf.n,
+    nWarm: k.warm.n,
+    nKaltLaeufe: kaltLaeufe.length,
+    // Aufträge, deren Modellantwort das Tor verworfen hat (Ersatz extraktiv, invalid_response).
+    verworfen: lauf.zerlegung.auftraege.filter(
+      (a) => a.effectiveMode === 'extractive' && a.fallbackReason === 'invalid_response',
+    ).length,
+    nB0: b0.b0.kennzahlen.n,
     commit: lauf.commit,
     rechner: lauf.rechner,
     herkunft: {
