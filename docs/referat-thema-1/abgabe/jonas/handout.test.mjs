@@ -77,12 +77,16 @@ test('Schriften geladen, keine stille Ersatzschrift', () => {
   for (const s of ['Inter 400', 'Inter 700', 'IBM Plex Mono 400']) assert.ok(g.includes(s), s);
 });
 
-test('350–1.800 Wörter (Prüfungsdokument), Wachstumsschutz höchstens 1.750', () => {
+test('350–1.800 Wörter (Prüfungsdokument), Wachstumsschutz höchstens 1.790, Namen ändern wenig', () => {
   for (const name of ['ohne', 'mit']) {
     const n = woerter(r[name].text);
     assert.ok(n >= 350 && n <= 1800, `${name}: ${n} Wörter`);
-    assert.ok(n <= 1750, `${name}: ${n} Wörter, Puffer für echte Namen aufgebraucht`);
+    assert.ok(n <= 1790, `${name}: ${n} Wörter, Puffer für echte Namen aufgebraucht`);
   }
+  // Platzhalter gegen zweiteilige Namen: höchstens wenige Wörter Unterschied, mindestens 8 Wörter Luft bis 1.800
+  const diff = woerter(r.mit.text) - woerter(r.ohne.text);
+  assert.ok(Math.abs(diff) <= 4, `Unterschied ${diff}`);
+  assert.ok(woerter(r.mit.text) <= 1792, `mit Namen ${woerter(r.mit.text)}`);
 });
 
 test('Titel = Titel von Folie J1 (Wartezeit am Client, gerundet), getrennt vom warmen Median', () => {
@@ -429,4 +433,16 @@ test('Runde 3: v1.3.0-Werte und Grund, Instruktion und Gate zugleich, Template-G
   assert.match(t, /budgetierten Teil/);
   assert.ok(!/Release-Timeout|Release ab Werk/.test(t));
   assert.ok(!/Vor dem Gate|vor dem Gate \(/.test(t));
+});
+
+test('Runde 4: Gegenprüfung und Gegenalternative je Auftrag, OOM ohne Kausalaussage, Gate-Regel genau', () => {
+  const t = textOhneSvg();
+  assert.match(t, /V1/);
+  assert.match(t, /10 von 10 Änderungsläufen/);
+  assert.match(t, /C0/);
+  assert.match(t, /B0/);
+  assert.match(t, /Gegenalternative/);
+  assert.ok(!/\(mehr Tokens\)|weil[^.]*mehr Tokens/.test(t));
+  assert.match(t, /jede in der Form/);
+  assert.match(t, /Swap des Hosts unbekannt/);
 });

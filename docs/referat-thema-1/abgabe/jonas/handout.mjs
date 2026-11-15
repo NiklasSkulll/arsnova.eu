@@ -118,7 +118,7 @@ export function baueHandout(daten, personen, { basis } = {}) {
     `<div class="kasten"><p><b>Kurzantwort.</b> Auftrag ${au.nr} des 1B-Laufs (synthetische Daten) wartet vom Klick bis zum Ergebnis ${w(`${z.auWarte} s`)}, Jobdauer am Server (T_job) ${w(`${z.auJob} s`)}. ` +
     `${etikett('1C')} Der Kontextpfad hält seine Zusagen, mit Ausnahmen. ` +
     `${etikett('1B')} Die zweite Serverrolle kostet keine relevante Zeit: Netz ${w(`${z.netz} ms`)}, Transport ${w(`${z.transport} ms`)} je Auftrag (Median); die Inferenz macht ${w(`${z.anteil} %`)} aus, auf schnellerer Hardware wäre der Anteil kleiner. ` +
-    `Nach v1.4.0 besteht keine der ${w(`${gateBeob}`)} geprüften Modellantworten das Quality-Gate (ein Modell, eine Fixture); auf ${code('9f230abc')} (Instruktion v2, ohne Gate) endeten ${w(c.fullContextVorGate.wert)} mit Modellzusammenfassung. Instruktion und Gate änderten sich zugleich, nicht getrennt gemessen.</p></div>` +
+    `Nach v1.4.0 besteht keine der ${w(`${gateBeob}`)} geprüften Modellantworten das Quality-Gate; auf ${code('9f230abc')} (Instruktion v2, ohne Gate) endeten ${w(c.fullContextVorGate.wert)} mit Modellzusammenfassung. Instruktion und Gate änderten sich zugleich, nicht getrennt gemessen.</p></div>` +
     `<h2>1 Leitfragen und Weg eines Auftrags (Jonas)</h2>` +
     `<p class="zitat">${etikett('1C')} „Wie zuverlässig hält der implementierte 1.3-Kontextpfad seine Vertrags-, Konsistenz- und Entkopplungszusagen vom App-Zustand bis zur privaten Inferenz ein?“ (Prüfungsdokument [1])</p>` +
     `<p class="zitat">${etikett('1B')} „Wie schlüsselt sich die Zeit eines echten Kompass-Auftrags […] auf, und wie groß ist der Transportanteil im Vergleich zur Inferenz?“ (ADR 1B-011 [10])</p>` +
@@ -163,6 +163,11 @@ export function baueHandout(daten, personen, { basis } = {}) {
       `${w(c.fullContextN4.wert)} mit Modellzusammenfassung, ${w(c.gateAntworten.wert)} Antworten bestehen das Gate`,
       'Gate abstimmen (1C-018)',
       'empf',
+    ) +
+    zeile(
+      'Gegenprüfung',
+      'V1 ohne Nachprüfung: Queue-Zustand veraltet in 10 von 10 Änderungsläufen',
+      'Nachprüfung bleibt (1C-010)',
     ) +
     `</table>` +
     `<p class="quelle"><b>Tab. 1:</b> Aufgabenabdeckung 1C, Details im Ergebnisbericht [10]. Quelle: Nachlauf [8], ${P50}, ${nachlauf}; Tests, Teil 2 [9], ${P50}, ${teil2}.</p>` +
@@ -211,11 +216,12 @@ export function baueHandout(daten, personen, { basis } = {}) {
     `</table>` +
     `<p class="quelle"><b>Tab. 2:</b> Schwellen vorab (ADR 1B-008 [10]). Quelle: H_B1–H_B3 Lauf [7], n = ${n}, ${P50}, ${haupt}; M4 Nachtrag [7], ${P50}, ${nachtrag}.</p>` +
     `<p>T_job: Auftrag 1 kalt (n = 1) ${w(`${z.jobKalt} s`)} (Kaltläufe ${w(`${z.kaltMedian} s`)}), Median warm ${w(`${z.jobWarm} s`)} (warm, n = ${nWarm}).</p>` +
+    `<p><b>Gegenprüfung.</b> C0 Strecke gegen lokal ${w(`${z.c0} ms`)}, kein messbarer Unterschied; B0 ohne Runtime ${w(`${z.b0} ms`)}, ${w(`${b.nB0} von ${b.nB0}`)} extraktiv [7]. Gegenalternative vorab: Netz und Adapter über ${w('5 %')} oder ${w(`${fw.schwelleAdapterS} s`)} (ADR 1B-008).</p>` +
     grenzen('1B', [
-      `${w(`${fw.laborCpus} statt ${fw.releaseCpus} CPUs`)} und Timeout ${w(`${fw.laborTimeout1BS} s`)} statt ${w(`${fw.releaseTimeoutS} s`)} ab Werk v1.4.0, nach Kalibrierung (I = ${w(`${fw.kalibrierung1BS} s`)}); Release 1.3 (v1.3.0) hatte ${fw.v13Cpus} CPUs, ${fw.v13SpeicherGiB} GiB, ${fw.v13TimeoutS} s; gemessen ist auf Wunsch des Prüfers der aktuelle Stand (ADR 1B-001)`,
+      `${w(`${fw.laborCpus} statt ${fw.releaseCpus} CPUs`)} und Timeout ${w(`${fw.laborTimeout1BS} s`)} statt ${w(`${fw.releaseTimeoutS} s`)} ab Werk v1.4.0, nach Kalibrierung (I = ${w(`${fw.kalibrierung1BS} s`)}); v1.3.0 hatte ${fw.v13Cpus} CPUs, ${fw.v13SpeicherGiB} GiB, ${fw.v13TimeoutS} s; gemessen ist auf Wunsch des Prüfers der aktuelle Stand`,
       'Images selbst gebaut; Start ohne Wrapper, weil er das CPU-Override nicht durchreicht (Trockenlauf vorher); Summary-Schalter an; Hintergrunddienste vor dem gewerteten Lauf von Hand abgeschaltet',
       `ein Laptop, virtuelles Netz, keine parallele Last; Netzauflösung ≈ ${w(`${fw.netzAufloesungMs} ms`)}; Token im Klartext über HTTP`,
-      `warm heißt: identischer Snapshot aus dem KV-Cache, bei geändertem Zustand gilt eher der Kaltwert; Produktionscode ${code('a19ca70f')} (Fork-main, v1.4.0-184), Lauf-Commit ${code(haupt)} nur mit Laborskripten`,
+      `warm heißt: identischer Snapshot aus dem KV-Cache, bei geändertem Zustand gilt eher der Kaltwert; Code ${code('a19ca70f')} (v1.4.0-184), Lauf-Commit ${code(haupt)} nur Laborskripte`,
     ]);
 
   // ------------------------------------------------------------ Seite 4: Befunde und Entscheidung
@@ -224,15 +230,15 @@ export function baueHandout(daten, personen, { basis } = {}) {
   const seite4 =
     `<h2>4 Befunde und Entscheidung zu 1C und 1B (Jonas)</h2>` +
     `<h3>Keine geprüfte Modellantwort besteht das Gate ${etikett('1C')} ${etikett('1B')}</h3>` +
-    `<p>Im 1B-Lauf verwirft das Quality-Gate ${w(`${b.verworfen} von ${n}`)} Antworten, im 1C-Nachlauf bestehen ${w(c.gateAntworten.wert)} [7, 8]: ${gateBeob} geprüfte Antworten, ein Modell, eine Fixture. Ausgaben mit Status failed und unsichere ohne Aussagen lässt es durch; sonst verlangt es mindestens zwei Aussagen „Stichwort: Text“ mit verschiedenen Stichwörtern, ganze Sätze, keine Metamuster; Sprache und Thema prüft es nicht. ` +
+    `<p>Im 1B-Lauf verwirft das Quality-Gate ${w(`${b.verworfen} von ${n}`)} Antworten, im 1C-Nachlauf bestehen ${w(c.gateAntworten.wert)} [7, 8]: ${gateBeob} geprüfte Antworten, ein Modell, eine Fixture. Ausgaben mit Status failed und unsichere ohne Aussagen lässt es durch; sonst verlangt es mindestens zwei Aussagen, jede in der Form „Stichwort: Text“, mit verschiedenen, nicht generischen Stichwörtern, ganze Sätze, keine Metamuster; Sprache und Thema prüft es nicht. ` +
     `Auftrag ${a.auftrag} scheitert an der Form (${w(`${a.mitTrenner} von ${a.aussagen}`)} Aussagen) und verfehlt auch den Inhalt (englisch, Moderationsstatus):</p>` +
     `<p class="zitat antwort" lang="en">${esc(ersteAussage)}</p>` +
     `<p class="quelle">Ausschnitt ohne Header und Token [7], Lauf ${haupt}, ${P50}.</p>` +
     `<p>Die Lehrperson sieht eine extraktive Ersatzzusammenfassung mit dem allgemeinen Hinweis „Eine ausführliche Zusammenfassung war diesmal nicht möglich …“, den Grund nicht. ` +
-    `Das Gate kam mit ${code('12f1d8e4')}, nach v1.3.0 (ADR 1C-019 [10]).</p>` +
+    `</p>` +
     `<h3>Betrieb: Timeout und Speicher ${etikett('1C')}</h3>` +
     `<p>Ab Werk v1.4.0 bricht die App nach ${w(`${fw.releaseTimeoutS} s`)} ab; die Inferenz dauerte bei der Kalibrierung am PC (${code(c.kalibrierungPcS.commit)}) ${w(`${z.kalPc} s`)}, am Laptop im Median ${w(`${z.infer1C} s`)} (${code('def56700')}, Nebenlast). ` +
-    `Bei wechselnden Prompts wächst der Speicher der Runtime je Auftrag um ${w(`${z.delta} GB`)} (Median, Laptop); der KV-Cache belegt Speicher je Token [11]. Beide Grenzen ${w(`${fw.grenzeGesamtGiB} GiB`)} (Labor ${w(`${fw.laborSpeicher1CGiB} GiB`)} + ${w(`${fw.laborSpeicher1CGiB} GiB`)}, Produktion ${w(`${fw.prodSpeicherGiB} GiB`)} + ${w(`${fw.prodSwapGiB} GiB`)} Swap): OOM-Kill auf ${code(c.oomAuftrag9f230abc.commit)} im ${w(`${c.oomAuftrag9f230abc.wert}.`)} Auftrag (Laptop und PC), auf ${code('def56700')} im ${w(`${c.oomAuftrag.wert}.`)} (mehr Tokens) [8, 10]. ` +
+    `Bei wechselnden Prompts wächst der Speicher der Runtime je Auftrag um ${w(`${z.delta} GB`)} (Median, Laptop); der KV-Cache belegt Speicher je Token [11]. Beide Grenzen ${w(`${fw.grenzeGesamtGiB} GiB`)} (Labor ${w(`${fw.laborSpeicher1CGiB} GiB`)} + ${w(`${fw.laborSpeicher1CGiB} GiB`)}, Produktion ${w(`${fw.prodSpeicherGiB} GiB`)} + bis zu ${w(`${fw.prodSwapGiB} GiB`)} Swap, Swap des Hosts unbekannt): OOM-Kill auf ${code(c.oomAuftrag9f230abc.commit)} im ${w(`${c.oomAuftrag9f230abc.wert}.`)} Auftrag (Laptop und PC), auf ${code('def56700')} im ${w(`${c.oomAuftrag.wert}.`)} (Ursache nicht getrennt gemessen) [8, 10]. ` +
     `Im 1B-Lauf mit gleichem Prompt blieb er bei höchstens ${w(`${z.speicher1B} GB`)} [7].</p>` +
     `<table><tr><th style="width:15%">Entscheidung</th><th style="width:27%">Inhalt</th><th>Kosten, Risiko, Betrieb</th><th style="width:15%">ADR, Issue</th></tr>` +
     ent(
@@ -244,7 +250,7 @@ export function baueHandout(daten, personen, { basis } = {}) {
     ) +
     ent(
       'empfohlen (1C)',
-      'mit Instruktion und Grammatik abstimmen',
+      'Gate mit Instruktion und Grammatik abstimmen',
       'Abnahmemessung; lockere Schwelle zeigt Metaaussagen',
       `${adr('1C-018')}, #13`,
       'empf',

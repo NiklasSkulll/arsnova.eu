@@ -623,3 +623,21 @@ test('R3-Minor: geprüfte Antworten, App-Überschrift im Nachbau, Ausnahmen in G
   assert.ok((sichtbar(nach('J15').inhalt).match(/Risiko/g) ?? []).length >= 4);
   assert.match(nach('J10').notiz, /langsame/);
 });
+
+// ---------------------------------------------------------------- Fachliche Prüfung 4
+
+test('R4-I1: Früherer OOM ohne Kausalaussage „weil mehr Tokens“ (ADR 1C-024: nicht getrennt gemessen)', () => {
+  const kausal = /weil[^.]*mehr Tokens|\(mehr Tokens/;
+  for (const f of F) assert.ok(!kausal.test(alles(f)), f.id);
+  const katalog = readFileSync(resolve(ROOT, 'abgabe/jonas/fragenkatalog.md'), 'utf8');
+  assert.ok(!kausal.test(katalog), 'Fragenkatalog');
+  assert.match(sichtbar(nach('J11').inhalt), /nicht getrennt gemessen/);
+});
+
+test('R4-Minor: J4-Notiz ohne „Release“, Swap des Hosts unbekannt, Netz über beide Anfragen', () => {
+  assert.ok(!/als im Release/.test(nach('J4').notiz));
+  assert.match(sichtbar(nach('J11').inhalt), /Swap des Hosts unbekannt/);
+  assert.match(sichtbar(nach('J8').inhalt), /GET \/slots und POST/);
+  assert.ok(!/Uhrendrift/.test(alles(nach('J8'))));
+  assert.match(nach('R2').notiz, /Streuung/);
+});

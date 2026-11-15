@@ -626,7 +626,7 @@ export function folien(daten) {
         `</table></div>` +
         beleg('ADR 1C-002, 1C-003, 1C-020, 1C-021, 1B-008; Nachlauf, Umgebung und Abweichungen'),
     ),
-    notiz: `Wie komme ich zu belastbaren Aussagen? Mit einer festen Reihenfolge. Erstens standen Hypothesen und Schwellen vor den gewerteten Läufen fest. Für 1B: Das Netz darf im Median höchstens ${fw.schwelleNetzMs} Millisekunden kosten, der Adapter höchstens ${fw.schwelleAdapterS} Sekunden, und die Inferenz muss mindestens ${fw.schwelleInferenzProzent} Prozent ausmachen. Die Ausnahmen nenne ich offen: Den Blitzlicht-Befund habe ich explorativ gefunden, zwei Messungen liefen ohne meine vorherige Freigabe, und die Leitfrage zu 1B habe ich erst nach dem Lauf bestätigt. Zweitens habe ich in 1C zuerst ohne Modell getestet, mit Negativproben: Ein absichtlicher Fehler muss den Test rot machen. Drittens das Labor. Für 1C heißt das: ein Rechner, die Runtime über Loopback, kleinere Limits als im Release und ein Timeout von ${fw.laborTimeoutS} Sekunden. Einen zweiten Host hatte 1C nicht; den liefert erst 1B.`,
+    notiz: `Wie komme ich zu belastbaren Aussagen? Mit einer festen Reihenfolge. Erstens standen Hypothesen und Schwellen vor den gewerteten Läufen fest. Für 1B: Das Netz darf im Median höchstens ${fw.schwelleNetzMs} Millisekunden kosten, der Adapter höchstens ${fw.schwelleAdapterS} Sekunden, und die Inferenz muss mindestens ${fw.schwelleInferenzProzent} Prozent ausmachen. Die Ausnahmen nenne ich offen: Den Blitzlicht-Befund habe ich explorativ gefunden, zwei Messungen liefen ohne meine vorherige Freigabe, und die Leitfrage zu 1B habe ich erst nach dem Lauf bestätigt. Zweitens habe ich in 1C zuerst ohne Modell getestet, mit Negativproben: Ein absichtlicher Fehler muss den Test rot machen. Drittens das Labor. Für 1C heißt das: ein Rechner, die Runtime über Loopback, kleinere Limits als ab Werk in Version 1.4.0 und ein Timeout von ${fw.laborTimeoutS} Sekunden. Einen zweiten Host hatte 1C nicht; den liefert erst 1B.`,
     zeitS: 50,
     kurzfassung: false,
     quelle: `adr/1B-008-kernaussagen-und-schwellen.md; adr/1C-003-teststrategie-modellfrei.md; ${q1B}; Nachlauf 1C (Umgebung, Abweichungen): Laptop (ThinkPad P50) · def56700; ADR 1C-021 (Produktionslimits)`,
@@ -786,20 +786,20 @@ export function folien(daten) {
       frage('Wie trennt man Netz und Inferenz, ohne Produktionscode zu ändern?', '1B') +
         `<div style="display:grid;grid-template-columns:640px 1fr;column-gap:60px">` +
         `<div>${draht}</div><div>` +
-        `<p style="margin:0 0 10px;font-size:24px">Mitschnitt auf beiden Hosts, dazu die ${mono('timings')} der Runtime. Jede Dauer kommt von einer Uhr: kein Offset-Abgleich nötig, Restfehler aus Uhrendrift ≈ ±${fw.netzAufloesungMs} ms.</p>` +
+        `<p style="margin:0 0 10px;font-size:24px">Mitschnitt auf beiden Hosts plus ${mono('timings')}; jede Dauer von einer Uhr, Restunschärfe zweier VM-Uhren ≈ ±${fw.netzAufloesungMs} ms. Netz summiert über GET /slots und POST.</p>` +
         `<p class="mono" style="margin:0 0 12px;font-size:28px;font-weight:600">Netz = (${t(3)} − ${t(0)}) − (${t(2)} − ${t(1)})</p>` +
         `<div style="border-left:6px solid var(--bernstein);padding-left:20px;font-size:24px;line-height:1.45">` +
         `<div style="font-weight:700">Unser Auftrag (Nr. ${au.nr})</div>` +
         `<div class="mono">Klick&nbsp;&nbsp;&nbsp;${uhr(au.requestedAt)} UTC</div>` +
         `<div class="mono">Fertig&nbsp;&nbsp;${uhr(au.finishedAt)} UTC</div>` +
         `<div class="mono">Netz &lt; ${fw.netzAufloesungMs} ms · Inferenz ${z.auInfer} s</div>` +
-        `<div style="font-size:22px;line-height:1.3;margin-top:4px">Server ohne Inferenz ${fmt(au.serverOhneInferenzMs)} ms: Ausreißer wie Auftrag 3, Ursache offen (Median ${fmt(b.serverOhneMedianMs, 1)} ms)</div>` +
+        `<div style="font-size:22px;line-height:1.3;margin-top:4px">Server ohne Inferenz ${fmt(au.serverOhneInferenzMs)} ms (Ausreißer wie Auftrag 3, Median ${fmt(b.serverOhneMedianMs, 1)} ms)</div>` +
         `<div style="font-size:22px;line-height:1.3;margin-top:4px">Wartezeit am Client ${z.auWarte} s, T_job ${z.auJob} s: dazu Host-Aufruf und Nachfragen im Sekundentakt</div></div>` +
         `<p class="mono" style="margin:8px 0 0;font-size:var(--s-min);color:var(--gedaempft)">Alle ${n}, Median: Netz ${z.netz} ms, Transport ${z.transport} ms</p>` +
         `</div></div>` +
         beleg('ADR 1B-006 (Methode), ADR 1B-011 (Zeitbegriffe), Laufprotokoll 1B'),
     ),
-    notiz: `Jetzt geht der Auftrag über die Grenze zum zweiten Host. Wie trenne ich Netz und Inferenz, ohne den Produktionscode anzufassen? Ich schneide auf beiden Hosts den Verkehr mit: am app-host t null und t drei, am llm-host t eins und t zwei. Jede Dauer misst eine einzige Uhr; die Drift der beiden Uhren lässt etwa eine Millisekunde Unschärfe. Netz ist die Zeit am app-host minus die Zeit am llm-host. Für unseren Auftrag liegt das unter einer Millisekunde, über alle ${n} Aufträge im Median bei ${z.netz}. Auffällig ist der Server ohne Inferenz: ${fmt(au.serverOhneInferenzMs)} Millisekunden, wie bei Auftrag 3, die Ursache ist offen. Die Lehrperson wartet ${z.auWarte} Sekunden, der Server rechnet ${z.auJob}.`,
+    notiz: `Jetzt geht der Auftrag über die Grenze zum zweiten Host. Wie trenne ich Netz und Inferenz, ohne den Produktionscode anzufassen? Ich schneide auf beiden Hosts den Verkehr mit: am app-host t null und t drei, am llm-host t eins und t zwei. Jede Dauer misst eine einzige Uhr; zwei VM-Uhren lassen etwa eine Millisekunde Unschärfe. Netz ist die Zeit am app-host minus die Zeit am llm-host. Für unseren Auftrag liegt das unter einer Millisekunde, über alle ${n} Aufträge im Median bei ${z.netz}. Auffällig ist der Server ohne Inferenz: ${fmt(au.serverOhneInferenzMs)} Millisekunden, wie bei Auftrag 3, die Ursache ist offen. Die Lehrperson wartet ${z.auWarte} Sekunden, der Server rechnet ${z.auJob}.`,
     zeitS: 45,
     kurzfassung: false,
     quelle: `${q1B} (Auftrag ${au.nr}: treiber.auftraege, zerlegung.auftraege)`,
@@ -864,19 +864,19 @@ export function folien(daten) {
         zahl({
           wert: `+${z.delta}`,
           einheit: 'GB',
-          was: 'Speicher der Runtime je Auftrag bei wechselnden Prompts, Median',
-          gruppe: 'Laptop · def56700; Ursache Prompt-Cache (U1, PC)',
+          was: 'Runtime-Speicher je Auftrag, bei wechselnden Prompts, Median',
+          gruppe: 'Laptop · def56700; Ursache Cache (U1, PC)',
           linie: 'var(--petrol)',
-          gross: 64,
+          gross: 52,
         }) +
-        `<p style="margin:0 0 10px;font-size:24px;line-height:1.3">Beide Grenzen ${fw.grenzeGesamtGiB} GiB: Labor ${fw.laborSpeicher1CGiB} GiB + ${fw.laborSpeicher1CGiB} GiB Swap, Produktion ${fw.prodSpeicherGiB} GiB + ${fw.prodSwapGiB} GiB Swap.</p>` +
-        `<p style="margin:0;font-size:24px;line-height:1.3">OOM-Kill auf 9f230abc im ${c.oomAuftrag9f230abc.wert}. Auftrag (Laptop und PC), auf def56700 schon im <b class="messwert">${c.oomAuftrag.wert}.</b> (mehr Tokens je Auftrag).</p>` +
+        `<p style="margin:0 0 10px;font-size:24px;line-height:1.3">Beide Grenzen ${fw.grenzeGesamtGiB} GiB: Labor ${fw.laborSpeicher1CGiB} GiB + ${fw.laborSpeicher1CGiB} GiB Swap, Produktion ${fw.prodSpeicherGiB} GiB + bis zu ${fw.prodSwapGiB} GiB (Swap des Hosts unbekannt).</p>` +
+        `<p style="margin:0;font-size:24px;line-height:1.3">OOM-Kill: 9f230abc im ${c.oomAuftrag9f230abc.wert}. Auftrag (Laptop und PC), def56700 schon im <b class="messwert">${c.oomAuftrag.wert}.</b>; Ursache nicht getrennt gemessen.</p>` +
         `</div></div>` +
         beleg(
           'ADR 1C-021, 1C-023 und 1C-024: empfohlen (Timeout am Inferenz-Host kalibrieren, Cache begrenzen), nicht umgesetzt; Issues #16, #14',
         ),
     ),
-    notiz: `Zurück zu 1C, zum Betrieb. Erstens der Timeout: Ab Werk bricht die App in Version 1.4.0 nach ${fw.releaseTimeoutS} Sekunden ab. Am PC ergab die Kalibrierung eine Inferenzzeit von ${z.kalPc} Sekunden, am Laptop dauert die Inferenz im Median ${z.infer1C}, auf einem anderen Stand. Mit dem Timeout ab Werk von Version 1.4.0 wäre der Modellpfad auf beiden nicht nutzbar. Zweitens der Speicher: Bei wechselnden Prompts wächst die Runtime je Auftrag um ${z.delta} Gigabyte; die Ursache ist der Prompt-Cache, gezeigt am PC. Beide Laborgrenzen liegen bei ${fw.grenzeGesamtGiB} Gibibyte. Auf dem älteren Stand starb die Runtime im ${c.oomAuftrag9f230abc.wert}. Auftrag, auf dem neuen schon im ${c.oomAuftrag.wert}., weil jeder Auftrag mehr Tokens hat. Im 1B-Lauf blieb der Speicher bei ${z.speicher1B} Gigabyte, vermutlich weil der Prompt gleich war; getrennt gemessen ist das nicht. Ich empfehle, Timeout und Cache anzupassen; umgesetzt ist das nicht.`,
+    notiz: `Zurück zu 1C, zum Betrieb. Erstens der Timeout: Ab Werk bricht die App in Version 1.4.0 nach ${fw.releaseTimeoutS} Sekunden ab. Am PC ergab die Kalibrierung eine Inferenzzeit von ${z.kalPc} Sekunden, am Laptop dauert die Inferenz im Median ${z.infer1C}, auf einem anderen Stand. Mit dem Timeout ab Werk von Version 1.4.0 wäre der Modellpfad auf beiden nicht nutzbar. Zweitens der Speicher: Bei wechselnden Prompts wächst die Runtime je Auftrag um ${z.delta} Gigabyte; die Ursache ist der Prompt-Cache, gezeigt am PC. Beide Laborgrenzen liegen bei ${fw.grenzeGesamtGiB} Gibibyte. Auf dem älteren Stand starb die Runtime im ${c.oomAuftrag9f230abc.wert}. Auftrag, auf dem neuen schon im ${c.oomAuftrag.wert}.; die Ursache habe ich nicht getrennt gemessen. Im 1B-Lauf mit gleichem Prompt blieb er bei ${z.speicher1B} Gigabyte, Ursache nicht getrennt gemessen. Ich empfehle, Timeout und Cache anzupassen; umgesetzt ist das nicht.`,
     zeitS: 50,
     kurzfassung: true,
     quelle: `ADR 1C-020, 1C-024 · PC (i7-8700) · 9f230abc; Nachlauf N3, N6 · Laptop (ThinkPad P50) · def56700; 1B-Speicher: ${q1B}`,
@@ -1112,7 +1112,7 @@ export function folien(daten) {
         760,
       ) +
       beleg('Laufprotokoll 1B, Nachtrag M2; ADR 1B-011 (zwei Kontrollen namens C0)'),
-    `Die Kontrolle C0 vergleicht dieselbe kurze Anfrage über die Strecke und lokal. Die Differenz der Mediane ist ${z.c0} Millisekunden, also im Rauschen. Die Strecke zwischen den Hosts kostet praktisch nichts.`,
+    `Die Kontrolle C0 vergleicht dieselbe kurze Anfrage über die Strecke und lokal. Die Differenz der Mediane ist ${z.c0} Millisekunden: kein messbarer Unterschied, denn die Streuung je Seite ist größer als ${fw.schwelleC0Ms} Millisekunden. Die eigentliche Zahl ist die Drahtmessung, ${z.netz} Millisekunden im Median.`,
     q1BN,
   );
 

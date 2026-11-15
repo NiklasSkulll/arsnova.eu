@@ -2057,9 +2057,9 @@
               </div>
               <div>
                 <p style="margin: 0 0 10px; font-size: 24px">
-                  Mitschnitt auf beiden Hosts, dazu die <span class="mono">timings</span> der
-                  Runtime. Jede Dauer kommt von einer Uhr: kein Offset-Abgleich nötig, Restfehler
-                  aus Uhrendrift ≈ ±1 ms.
+                  Mitschnitt auf beiden Hosts plus <span class="mono">timings</span>; jede Dauer von
+                  einer Uhr, Restunschärfe zweier VM-Uhren ≈ ±1 ms. Netz summiert über GET /slots
+                  und POST.
                 </p>
                 <p class="mono" style="margin: 0 0 12px; font-size: 28px; font-weight: 600">
                   Netz = (t<sub>3</sub> − t<sub>0</sub>) − (t<sub>2</sub> − t<sub>1</sub>)
@@ -2077,8 +2077,7 @@
                   <div class="mono">Fertig&nbsp;&nbsp;08:23:07,383 UTC</div>
                   <div class="mono">Netz &lt; 1 ms · Inferenz 150,8 s</div>
                   <div style="font-size: 22px; line-height: 1.3; margin-top: 4px">
-                    Server ohne Inferenz 368 ms: Ausreißer wie Auftrag 3, Ursache offen (Median 17,4
-                    ms)
+                    Server ohne Inferenz 368 ms (Ausreißer wie Auftrag 3, Median 17,4 ms)
                   </div>
                   <div style="font-size: 22px; line-height: 1.3; margin-top: 4px">
                     Wartezeit am Client 151,8 s, T_job 151,2 s: dazu Host-Aufruf und Nachfragen im
@@ -3185,23 +3184,24 @@
                 >
                   <div
                     class="messwert"
-                    style="font-size: 64px; line-height: 1.05; color: var(--tinte)"
+                    style="font-size: 52px; line-height: 1.05; color: var(--tinte)"
                   >
-                    +0,419<span style="font-size: 32px"> GB</span>
+                    +0,419<span style="font-size: 26px"> GB</span>
                   </div>
                   <div style="font-size: 26px; margin-top: 8px">
-                    Speicher der Runtime je Auftrag bei wechselnden Prompts, Median
+                    Runtime-Speicher je Auftrag, bei wechselnden Prompts, Median
                   </div>
                   <div class="mono" style="font-size: var(--s-min); color: var(--gedaempft)">
-                    Laptop · def56700; Ursache Prompt-Cache (U1, PC)
+                    Laptop · def56700; Ursache Cache (U1, PC)
                   </div>
                 </div>
                 <p style="margin: 0 0 10px; font-size: 24px; line-height: 1.3">
-                  Beide Grenzen 10 GiB: Labor 5 GiB + 5 GiB Swap, Produktion 8 GiB + 2 GiB Swap.
+                  Beide Grenzen 10 GiB: Labor 5 GiB + 5 GiB Swap, Produktion 8 GiB + bis zu 2 GiB
+                  (Swap des Hosts unbekannt).
                 </p>
                 <p style="margin: 0; font-size: 24px; line-height: 1.3">
-                  OOM-Kill auf 9f230abc im 21. Auftrag (Laptop und PC), auf def56700 schon im
-                  <b class="messwert">19.</b> (mehr Tokens je Auftrag).
+                  OOM-Kill: 9f230abc im 21. Auftrag (Laptop und PC), def56700 schon im
+                  <b class="messwert">19.</b>; Ursache nicht getrennt gemessen.
                 </p>
               </div>
             </div>

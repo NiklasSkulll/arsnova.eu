@@ -24,7 +24,7 @@ Hier ist die Karte für den Rest des Vortrags. Oben der app-host, unten der llm-
 
 ## J4 Erst die Hypothese, dann die Messung (50 s, kumuliert 3:40)
 
-Wie komme ich zu belastbaren Aussagen? Mit einer festen Reihenfolge. Erstens standen Hypothesen und Schwellen vor den gewerteten Läufen fest. Für 1B: Das Netz darf im Median höchstens 50 Millisekunden kosten, der Adapter höchstens 2 Sekunden, und die Inferenz muss mindestens 95 Prozent ausmachen. Die Ausnahmen nenne ich offen: Den Blitzlicht-Befund habe ich explorativ gefunden, zwei Messungen liefen ohne meine vorherige Freigabe, und die Leitfrage zu 1B habe ich erst nach dem Lauf bestätigt. Zweitens habe ich in 1C zuerst ohne Modell getestet, mit Negativproben: Ein absichtlicher Fehler muss den Test rot machen. Drittens das Labor. Für 1C heißt das: ein Rechner, die Runtime über Loopback, kleinere Limits als im Release und ein Timeout von 300 Sekunden. Einen zweiten Host hatte 1C nicht; den liefert erst 1B.
+Wie komme ich zu belastbaren Aussagen? Mit einer festen Reihenfolge. Erstens standen Hypothesen und Schwellen vor den gewerteten Läufen fest. Für 1B: Das Netz darf im Median höchstens 50 Millisekunden kosten, der Adapter höchstens 2 Sekunden, und die Inferenz muss mindestens 95 Prozent ausmachen. Die Ausnahmen nenne ich offen: Den Blitzlicht-Befund habe ich explorativ gefunden, zwei Messungen liefen ohne meine vorherige Freigabe, und die Leitfrage zu 1B habe ich erst nach dem Lauf bestätigt. Zweitens habe ich in 1C zuerst ohne Modell getestet, mit Negativproben: Ein absichtlicher Fehler muss den Test rot machen. Drittens das Labor. Für 1C heißt das: ein Rechner, die Runtime über Loopback, kleinere Limits als ab Werk in Version 1.4.0 und ein Timeout von 300 Sekunden. Einen zweiten Host hatte 1C nicht; den liefert erst 1B.
 
 ## J5 Der Host wartet nicht auf das Modell (40 s, kumuliert 4:20, **Kurzfassung** 2:00)
 
@@ -40,7 +40,7 @@ Zur Frage nach den Kosten der Kontextbereitstellung. Das Budget schätzt Tokens 
 
 ## J8 Gemessen am Draht, auf beiden Hosts (45 s, kumuliert 6:45)
 
-Jetzt geht der Auftrag über die Grenze zum zweiten Host. Wie trenne ich Netz und Inferenz, ohne den Produktionscode anzufassen? Ich schneide auf beiden Hosts den Verkehr mit: am app-host t null und t drei, am llm-host t eins und t zwei. Jede Dauer misst eine einzige Uhr; die Drift der beiden Uhren lässt etwa eine Millisekunde Unschärfe. Netz ist die Zeit am app-host minus die Zeit am llm-host. Für unseren Auftrag liegt das unter einer Millisekunde, über alle 10 Aufträge im Median bei 0,43. Auffällig ist der Server ohne Inferenz: 368 Millisekunden, wie bei Auftrag 3, die Ursache ist offen. Die Lehrperson wartet 151,8 Sekunden, der Server rechnet 151,2.
+Jetzt geht der Auftrag über die Grenze zum zweiten Host. Wie trenne ich Netz und Inferenz, ohne den Produktionscode anzufassen? Ich schneide auf beiden Hosts den Verkehr mit: am app-host t null und t drei, am llm-host t eins und t zwei. Jede Dauer misst eine einzige Uhr; zwei VM-Uhren lassen etwa eine Millisekunde Unschärfe. Netz ist die Zeit am app-host minus die Zeit am llm-host. Für unseren Auftrag liegt das unter einer Millisekunde, über alle 10 Aufträge im Median bei 0,43. Auffällig ist der Server ohne Inferenz: 368 Millisekunden, wie bei Auftrag 3, die Ursache ist offen. Die Lehrperson wartet 151,8 Sekunden, der Server rechnet 151,2.
 
 ## J9 Die Zeit steckt in der Inferenz (45 s, kumuliert 7:30, **Kurzfassung** 3:45)
 
@@ -52,7 +52,7 @@ Wäre der Median eines warmen Auftrags so lang wie ein Fußballfeld, dann nähme
 
 ## J11 Betrieb: Timeout zu kurz, Speicher läuft voll (50 s, kumuliert 8:45, **Kurzfassung** 5:00)
 
-Zurück zu 1C, zum Betrieb. Erstens der Timeout: Ab Werk bricht die App in Version 1.4.0 nach 90 Sekunden ab. Am PC ergab die Kalibrierung eine Inferenzzeit von 98,7 Sekunden, am Laptop dauert die Inferenz im Median 223,7, auf einem anderen Stand. Mit dem Timeout ab Werk von Version 1.4.0 wäre der Modellpfad auf beiden nicht nutzbar. Zweitens der Speicher: Bei wechselnden Prompts wächst die Runtime je Auftrag um 0,419 Gigabyte; die Ursache ist der Prompt-Cache, gezeigt am PC. Beide Laborgrenzen liegen bei 10 Gibibyte. Auf dem älteren Stand starb die Runtime im 21. Auftrag, auf dem neuen schon im 19., weil jeder Auftrag mehr Tokens hat. Im 1B-Lauf blieb der Speicher bei 4,04 Gigabyte, vermutlich weil der Prompt gleich war; getrennt gemessen ist das nicht. Ich empfehle, Timeout und Cache anzupassen; umgesetzt ist das nicht.
+Zurück zu 1C, zum Betrieb. Erstens der Timeout: Ab Werk bricht die App in Version 1.4.0 nach 90 Sekunden ab. Am PC ergab die Kalibrierung eine Inferenzzeit von 98,7 Sekunden, am Laptop dauert die Inferenz im Median 223,7, auf einem anderen Stand. Mit dem Timeout ab Werk von Version 1.4.0 wäre der Modellpfad auf beiden nicht nutzbar. Zweitens der Speicher: Bei wechselnden Prompts wächst die Runtime je Auftrag um 0,419 Gigabyte; die Ursache ist der Prompt-Cache, gezeigt am PC. Beide Laborgrenzen liegen bei 10 Gibibyte. Auf dem älteren Stand starb die Runtime im 21. Auftrag, auf dem neuen schon im 19.; die Ursache habe ich nicht getrennt gemessen. Im 1B-Lauf mit gleichem Prompt blieb er bei 4,04 Gigabyte, Ursache nicht getrennt gemessen. Ich empfehle, Timeout und Cache anzupassen; umgesetzt ist das nicht.
 
 ## J12 Die Nachprüfung: wenig Zeit, unter Voting ein Risiko (50 s, kumuliert 9:35)
 
@@ -80,7 +80,7 @@ Falls gefragt wird, warum ich nicht mit 90 Sekunden gemessen habe: Am Laptop dau
 
 ## R2 Reserve: Kontrolle C0, Strecke gegen lokal
 
-Die Kontrolle C0 vergleicht dieselbe kurze Anfrage über die Strecke und lokal. Die Differenz der Mediane ist −2,0 Millisekunden, also im Rauschen. Die Strecke zwischen den Hosts kostet praktisch nichts.
+Die Kontrolle C0 vergleicht dieselbe kurze Anfrage über die Strecke und lokal. Die Differenz der Mediane ist −2,0 Millisekunden: kein messbarer Unterschied, denn die Streuung je Seite ist größer als 5 Millisekunden. Die eigentliche Zahl ist die Drahtmessung, 0,43 Millisekunden im Median.
 
 ## R3 Reserve: Ausfall B0
 

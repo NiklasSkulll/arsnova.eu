@@ -68,7 +68,7 @@ Beleg: [ADR 1B-002](../../adr/1B-002-topologie-zwei-vms-ein-rechner.md#folgen), 
 
 ### F10. Bremst die geteilte CPU nicht die Inferenz und verfälscht so die Zerlegung?
 
-_(neu)_ Die Inferenz kann dadurch langsamer sein; getrennt gemessen habe ich das nicht, einen Same-Host-Vergleich S1 habe ich begründet weggelassen. Für die Zerlegung ist das nach dem Design unkritisch, weil die App während der Inferenz wartet. Die Kontrolle C0 nach M2 zeigt außerdem, dass dieselbe Anfrage über die Strecke nicht langsamer ist als lokal: −2,0 ms (ThinkPad P50, `9e111d35`).
+_(neu)_ Die Inferenz kann dadurch langsamer sein; getrennt gemessen habe ich das nicht, einen Same-Host-Vergleich S1 habe ich begründet weggelassen. Für die Zerlegung ist das nach dem Design unkritisch, weil die App während der Inferenz wartet. Die Kontrolle C0 nach M2 zeigt keinen messbaren Unterschied zwischen Strecke und lokal (−2,0 ms, ThinkPad P50, `9e111d35`); die Streuung je Seite ist größer als 5 ms, die eigentliche Zahl ist die Drahtmessung (0,43 ms).
 Beleg: [1B-Design 8](../../specs/2026-11-12-1b-zwei-host-design.md#8-gültigkeitsgrenzen), [1B-Ergebnis, Nachtrag M1–M4](../../1B-ergebnis.md#nachtrag-m1m4-kontrolle-ausfall-und-netzbelege)
 
 ### F11. n = 10 in einer Reihe, ohne Signifikanztest. Wie belastbar ist das?
@@ -83,7 +83,7 @@ Beleg: [ADR 1B-008](../../adr/1B-008-kernaussagen-und-schwellen.md#entscheidung)
 
 ### F13. Was würde sich auf echter Server-Hardware ändern?
 
-_(neu)_ Die Inferenz wäre kürzer: Schon der PC (i7-8700, Produktionslimits) brauchte im Median 98,8 s statt 163,4 s am Laptop (`9f230abc`), und upstream meldet 56,9 s am Produktionshost, gemessen mit Instruktion v2 und von mir nicht nachgeprüft. Der Inferenzanteil sänke, und ein physisches Netz wäre langsamer als das virtuelle; gemessen habe ich das nicht, aber der Abstand zur Schwelle ist groß (0,43 ms gegen 50 ms, ThinkPad P50, `8e9d1317`). Die Rückwirkung auf den App-Host lässt sich erst auf getrennter Hardware messen; das ist Niklas' Schritt 3.
+_(neu)_ Die Inferenz wäre kürzer: Schon der PC (i7-8700, Produktionslimits) brauchte im Median 98,8 s statt 163,4 s am Laptop (`9f230abc`), bei 8 statt 4 CPUs, also kein reiner Hardwarevergleich, und upstream meldet 56,9 s am Produktionshost, gemessen mit Instruktion v2 und von mir nicht nachgeprüft. Der Inferenzanteil sänke, und ein physisches Netz wäre langsamer als das virtuelle; gemessen habe ich das nicht, aber der Abstand zur Schwelle ist groß (0,43 ms gegen 50 ms, ThinkPad P50, `8e9d1317`). Die Rückwirkung auf den App-Host lässt sich erst auf getrennter Hardware messen; das ist Niklas' Schritt 3.
 Beleg: [ADR 1C-023](../../adr/1C-023-release-timeout-90-s-zu-kurz.md#alternativen), [1B-Design 8](../../specs/2026-11-12-1b-zwei-host-design.md#8-gültigkeitsgrenzen)
 
 ### F14. Warum steht im Titel 152 Sekunden, und wie realistisch sind die warmen Zeiten?
@@ -155,7 +155,7 @@ Beleg: [ADR 1C-014](../../adr/1C-014-byte-schaetzung-kontextbudget-pruefen.md)
 
 ### F27. Warum stirbt die Runtime am Prompt-Cache, und trifft das die App?
 
-_(neu)_ Bei wechselnden Prompts wächst der Speicher der Runtime am Laptop um 0,419 GB je Auftrag im Median; beide Grenzen sind 10 GiB (Labor 5 + 5, Produktion 8 + 2 GiB Swap). Auf `9f230abc` beendete der Kernel die Runtime im 21. Auftrag, am Laptop und am PC; auf `def56700` schon im 19., weil jeder Auftrag mehr Tokens hat. Mit abgeschaltetem Cache war das Wachstum am PC 0,000 GB (U1). Getroffen wurde nur der Runtime-Container, die App beantwortete jeden Auftrag mit dem Fallback. Im 1B-Lauf blieb der Speicher ab dem zweiten Auftrag bei höchstens 4,04 GB (ThinkPad P50, `8e9d1317`); plausibel ist, dass derselbe Prompt jedes Mal aus dem Cache kam (`cache_n` 2344), getrennt gemessen habe ich das nicht.
+_(neu)_ Bei wechselnden Prompts wächst der Speicher der Runtime am Laptop um 0,419 GB je Auftrag im Median; beide Grenzen sind 10 GiB (Labor 5 + 5, Produktion 8 + bis zu 2 GiB Swap; den Swap des Produktionshosts kennt niemand, ohne Swap gelten 8 GiB). Auf `9f230abc` beendete der Kernel die Runtime im 21. Auftrag, am Laptop und am PC; auf `def56700` schon im 19. Dort hat jeder Auftrag mehr Tokens; ob das die Ursache ist, habe ich nicht getrennt gemessen, denn der Zuwachs je Auftrag war auf beiden Ständen ähnlich (0,419 gegen 0,41–0,43 GB, ADR 1C-024). Mit abgeschaltetem Cache war das Wachstum am PC 0,000 GB (U1). Getroffen wurde nur der Runtime-Container, die App beantwortete jeden Auftrag mit dem Fallback. Im 1B-Lauf blieb der Speicher ab dem zweiten Auftrag bei höchstens 4,04 GB (ThinkPad P50, `8e9d1317`); plausibel ist, dass derselbe Prompt jedes Mal aus dem Cache kam (`cache_n` 2344), getrennt gemessen habe ich das nicht.
 Beleg: [ADR 1C-024](../../adr/1C-024-prompt-cache-ram-begrenzen.md), [Nachlauf N6](../../evidenz/1C/2026-11-09-labor-nachlauf.md#n6-speicher), [Laufprotokoll 1B, Beobachtungen](../../evidenz/1B/2026-11-13-lauf.md#beobachtungen), [Speicherverlauf 1B](../../evidenz/1B/messung/2026-11-13-speicher.csv)
 
 ## Sicherheit und Datenschutz
