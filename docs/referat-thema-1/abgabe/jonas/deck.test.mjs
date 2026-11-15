@@ -408,6 +408,12 @@ test('Druck: jede Folie eine Seite 1600 × 900, J10 im Endzustand, Marker an der
   const { page, context } = await oeffne(deckOhneNiklas);
   await geheZu(page, 'J10'); // Zoom steht auf Stufe 0
   await page.emulateMedia({ media: 'print' });
+  // Das change-Ereignis von matchMedia('print') kommt asynchron: auf den Endzustand warten.
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll('.folie[data-zoom-stufen]')].every(
+      (s) => s.dataset.zoomFertig === String(JSON.parse(s.dataset.zoomStufen).length - 1),
+    ),
+  );
   const statisch = await page.evaluate(() =>
     [...document.querySelectorAll('.folie')]
       .filter((s) => s.dataset.station && !s.querySelector('.folie-flaeche .auftrag'))

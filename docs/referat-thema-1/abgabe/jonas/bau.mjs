@@ -165,7 +165,16 @@ async function drucke(browser, url, pdfPfad) {
     await page.goto(url); // frisch geladen, damit J10 beim Druck im Endzustand startet
     await page.evaluate(() => document.fonts.ready);
     await page.emulateMedia({ media: 'print' });
-    await page.waitForTimeout(300); // deck.js setzt J10 beim Wechsel in den Druckmodus auf Zoom 1
+    // deck.js setzt J10 beim Wechsel in den Druckmodus auf die letzte Zoomstufe; das change-Ereignis
+    // kommt asynchron, daher auf den Endzustand warten statt auf eine feste Zeit.
+    await page.waitForFunction(
+      () =>
+        [...document.querySelectorAll('.folie[data-zoom-stufen]')].every(
+          (s) => s.dataset.zoomFertig === String(JSON.parse(s.dataset.zoomStufen).length - 1),
+        ),
+      undefined,
+      { timeout: 10_000 },
+    );
     await page.pdf({ path: pdfPfad, preferCSSPageSize: true, printBackground: true });
   } finally {
     await page.close();
