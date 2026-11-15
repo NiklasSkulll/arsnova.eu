@@ -114,3 +114,75 @@ test('Fußzeilen der Niklas-Folien höchstens zweizeilig und nicht abgeschnitten
   await context.close();
   assert.deepEqual(befunde, []);
 });
+
+/** Öffnet das Entwurfsdeck auf N5 und zählt die eingeblendeten Trefferzellen je Tastendruck. */
+async function n5Ablauf(reducedMotion) {
+  const context = await browser.newContext({
+    viewport: { width: 1600, height: 900 },
+    reducedMotion,
+  });
+  const page = await context.newPage();
+  await page.goto(`${pathToFileURL(deck).href}#N4`);
+  const an = () =>
+    page.evaluate(() => {
+      const f = document.querySelector('.folie[data-aktuell]');
+      return {
+        id: f.dataset.id,
+        stufe: f.dataset.aufbauStufe,
+        zellen: f.querySelectorAll('.aufbau-zelle[data-an]').length,
+        texte: f.querySelectorAll('.aufbau-text[data-an]').length,
+      };
+    });
+  const verlauf = [];
+  await page.keyboard.press('ArrowRight'); // N4 → N5
+  verlauf.push(await an());
+  for (let i = 0; i < 4; i++) {
+    await page.keyboard.press('ArrowRight');
+    verlauf.push(await an());
+  }
+  await page.keyboard.press('ArrowLeft'); // N6 → N5, im Endbild
+  verlauf.push(await an());
+  const uebergang = await page.evaluate(
+    () =>
+      getComputedStyle(document.querySelector('.folie[data-id="N5"] .aufbau-zelle'))
+        .transitionDuration,
+  );
+  await context.close();
+  return { verlauf, uebergang };
+}
+
+test('N5 baut auf Tastendruck in drei Stufen auf: 4, 7, 11 Treffer; vorwärts weiter, rückwärts ins Endbild', async () => {
+  const { verlauf, uebergang } = await n5Ablauf('no-preference');
+  assert.deepEqual(
+    verlauf.map((v) => `${v.id}:${v.stufe ?? '-'}:${v.zellen}:${v.texte}`),
+    ['N5:0:0:1', 'N5:1:4:1', 'N5:2:7:1', 'N5:3:11:1', 'N6:-:0:0', 'N5:3:11:1'],
+  );
+  assert.notEqual(uebergang.split(',')[0].trim(), '0s');
+});
+
+test('N5 mit reduzierter Bewegung: gleiche Stufen, ohne Übergang', async () => {
+  const { verlauf, uebergang } = await n5Ablauf('reduce');
+  assert.deepEqual(
+    verlauf.map((v) => v.zellen),
+    [0, 4, 7, 11, 0, 11],
+  );
+  assert.equal(uebergang, '0s');
+});
+
+test('Druck: N5 steht im Endbild mit allen 11 Treffern', async () => {
+  const context = await browser.newContext({ viewport: { width: 1600, height: 900 } });
+  const page = await context.newPage();
+  await page.goto(pathToFileURL(deck).href);
+  await page.emulateMedia({ media: 'print' });
+  await page.waitForFunction(
+    () => document.querySelector('.folie[data-id="N5"]').dataset.aufbauStufe === '3',
+  );
+  const n = await page.evaluate(
+    () =>
+      [...document.querySelectorAll('.folie[data-id="N5"] .aufbau-zelle')].filter(
+        (el) => el.hasAttribute('data-an') && getComputedStyle(el).opacity === '1',
+      ).length,
+  );
+  await context.close();
+  assert.equal(n, 11);
+});

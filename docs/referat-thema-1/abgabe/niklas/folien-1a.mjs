@@ -52,7 +52,6 @@ export function folien1A(d) {
   const fehlAlle = d.vergleiche.filter((x) => !x.bestanden);
   const kontrolle = fehlAlle.filter((x) => x.variante === 'V1');
   const klein = fehlAlle.filter((x) => !(x.variante === 'V3' && x.block === 5));
-  const kleinMax = Math.max(...klein.map((x) => x.deltaMs));
   const F = [];
   const neu = (id, titel, inhalt, notiz, zeitS, fuss) =>
     F.push({
@@ -197,7 +196,8 @@ export function folien1A(d) {
         '1A',
       ) + grafikBox(vergleichsMatrixSvg(d)),
     ),
-    `Hier sind alle ${d.vergleiche.length} gepaarten Vergleiche. Grau hält, Bernstein verfehlt nur die Zehn-Prozent-Regel, Rot auch die fünfzig Millisekunden. Mit spaCy verfehlen ${d.h1.fehl + d.h2.fehl} von ${d.h1.gesamt + d.h2.gesamt} Vergleichen die Regel, also sind H1 und H2 nicht bestätigt. Deutlich ist nur V3 in Block 5, mit bis zu ${fmt(d.v3Block5MaxDeltaMs)} Millisekunden mehr. Die übrigen ${klein.length} Verletzungen liegen unter ${fmt(Math.ceil(kleinMax))} Millisekunden, und ${kontrolle.length} davon stehen in der Kontrollzeile ganz ohne spaCy. Bei p95-Werten um zwanzig Millisekunden reißt die relative Regel also schon durch kleine Schwankungen. Ich lasse die Regel trotzdem so stehen, weil sie vorher festgelegt war.`,
+    `Das sind alle ${d.vergleiche.length} gepaarten Vergleiche, jede Aktion in jedem Block gegen ihre Basis. [Weiter] Zuerst die Kontrolle ganz ohne spaCy: Schon sie verfehlt die Zehn-Prozent-Regel ${kontrolle.length}-mal, um höchstens ${fmt(Math.ceil(Math.max(...kontrolle.map((x) => x.deltaMs))))} Millisekunden. Bei p95-Werten um zwanzig Millisekunden reicht dafür eine kleine Schwankung. [Weiter] Mit spaCy im Normalbetrieb und hinter dem Timeout kommen ${klein.length - kontrolle.length} ebenso kleine Treffer dazu. Formal reicht das schon: H1 und H2 sind nicht bestätigt, ${d.h1.fehl + d.h2.fehl} von ${d.h1.gesamt + d.h2.gesamt}. [Weiter] Und hier der eine deutliche Effekt: spaCy gedrosselt, Block 5, bis zu ${fmt(d.v3Block5MaxDeltaMs)} Millisekunden mehr, auch über der absoluten Grenze. Ich lasse die Regel trotzdem so stehen, weil sie vorher festgelegt war.`,
+
     60,
     `${d.vergleiche.length} gepaarte Vergleiche · ${umgebung}`,
   );
@@ -275,6 +275,9 @@ export function folien1A(d) {
     50,
     `Versuchsvertrag V2, Gegenalternative · ${umgebung}`,
   );
+
+  // N5 baut sich in drei Stufen auf (grafik-1a.mjs, AUFBAU_STUFE): Kontrolle, kleine Treffer, V3.
+  F.find((f) => f.id === 'N5').aufbau = 3;
 
   // Kurzbelege in die Fußzeile (wie Jonas' Folien)
   for (const f of F) {

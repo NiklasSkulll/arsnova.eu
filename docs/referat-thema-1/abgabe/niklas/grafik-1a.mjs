@@ -5,6 +5,9 @@ import { FARBEN, esc, svgHuelle, text } from '../jonas/grafik.mjs';
 import { fmt } from '../jonas/zahlen.mjs';
 import { AKTIONEN } from './daten-1a.mjs';
 
+/** Aufbaustufe je Zeile (N5 baut auf Tastendruck auf): Kontrolle, dann kleine Treffer, dann V3. */
+export const AUFBAU_STUFE = { V1: 1, V2: 2, V4: 2, V3: 3 };
+
 const ZEILEN = [
   ['V1', 'gg. V0', 'Kontrolle'],
   ['V2', 'gg. V1', 'H1'],
@@ -24,6 +27,7 @@ export function vergleichsMatrixSvg(daten) {
   const zeileH = 80;
   const blockB = 4 * zelle.b + 3 * zelle.luecke;
   const teile = [];
+  const proStufe = {}; // Staffelung: Zellen einer Stufe erscheinen kurz nacheinander
 
   for (let b = 1; b <= 5; b++) {
     const bx = x0 + (b - 1) * (blockB + zelle.block);
@@ -48,26 +52,25 @@ export function vergleichsMatrixSvg(daten) {
         );
         if (!c) throw new Error(`grafik-1a: Vergleich ${v}/${b}/${aktion} fehlt`);
         const x = bx + ai * (zelle.b + zelle.luecke);
-        const fuellung = c.bestanden
-          ? FARBEN.raster
-          : c.absolutBestanden
-            ? FARBEN.bernsteinHell
-            : FARBEN.rot;
-        const rand = c.bestanden ? 'none' : c.absolutBestanden ? FARBEN.bernstein : FARBEN.rot;
+        // Grundzelle immer grau; eine verfehlte Zelle färbt sich erst auf ihrer Aufbaustufe.
         teile.push(
-          `<rect x="${x}" y="${y}" width="${zelle.b}" height="${zelle.h}" rx="5" fill="${fuellung}"` +
-            (rand === 'none' ? '' : ` stroke="${rand}" stroke-width="2"`) +
-            '/>',
+          `<rect x="${x}" y="${y}" width="${zelle.b}" height="${zelle.h}" rx="5" fill="${FARBEN.raster}"/>`,
         );
         if (!c.bestanden) {
+          const absolut = !c.absolutBestanden;
+          const nr = (proStufe[AUFBAU_STUFE[v]] = (proStufe[AUFBAU_STUFE[v]] ?? -1) + 1);
           teile.push(
-            text(x + zelle.b / 2, y + zelle.h / 2 + 8, `${Math.round(c.deltaMs)}`, {
-              groesse: 22,
-              gewicht: 600,
-              mono: true,
-              anker: 'middle',
-              farbe: c.absolutBestanden ? FARBEN.bernsteinText : FARBEN.weiss,
-            }),
+            `<g data-ab="${AUFBAU_STUFE[v]}" class="aufbau-zelle${absolut ? ' aufbau-gross' : ''}" style="transition-delay:${nr * 90}ms">` +
+              `<rect x="${x}" y="${y}" width="${zelle.b}" height="${zelle.h}" rx="5" ` +
+              `fill="${absolut ? FARBEN.rot : FARBEN.bernsteinHell}" stroke="${absolut ? FARBEN.rot : FARBEN.bernstein}" stroke-width="2"/>` +
+              text(x + zelle.b / 2, y + zelle.h / 2 + 8, `${Math.round(c.deltaMs)}`, {
+                groesse: 22,
+                gewicht: 600,
+                mono: true,
+                anker: 'middle',
+                farbe: absolut ? FARBEN.weiss : FARBEN.bernsteinText,
+              }) +
+              '</g>',
           );
         }
       });
@@ -106,6 +109,33 @@ export function vergleichsMatrixSvg(daten) {
     teile.push(text(lx + 44, ly + 47, esc(t), { groesse: 22, farbe: FARBEN.text2 }));
     lx += 44 + t.length * 12 + 48;
   }
+
+  // Eine Zeile Erklärung je Aufbaustufe, an derselben Stelle (die vorige blendet aus).
+  const fehlVon = (vs) =>
+    daten.vergleiche.filter(
+      (x) => vs.includes(x.variante) && !x.bestanden && !(x.variante === 'V3' && x.block === 5),
+    );
+  const spanne = (l) =>
+    `+${fmt(Math.min(...l.map((x) => x.deltaMs)))} bis +${fmt(Math.max(...l.map((x) => x.deltaMs)))} ms`;
+  const kontrolle = fehlVon(['V1']);
+  const kleine = fehlVon(['V2', 'V3', 'V4']);
+  const stufenText = [
+    `${daten.vergleiche.length} gepaarte Vergleiche: jede Aktion, jeder Block, gegen die eigene Basis`,
+    `Schon ohne spaCy verfehlt die Kontrolle die Regel ${kontrolle.length}-mal: ${spanne(kontrolle)}`,
+    `Mit spaCy (V2, V4) ${kleine.length}-mal, ebenso klein: ${spanne(kleine)}`,
+    `spaCy gedrosselt (V3), Block 5: bis +${fmt(daten.v3Block5MaxDeltaMs)} ms, auch über der ${fmt(daten.schwellen.absolutMs)}-ms-Grenze`,
+  ];
+  stufenText.forEach((t, k) => {
+    teile.push(
+      `<g data-ab="${k}"${k < stufenText.length - 1 ? ` data-bis="${k}"` : ''} class="aufbau-text">` +
+        text(x0, ly + 100, esc(t), {
+          groesse: 26,
+          gewicht: 700,
+          farbe: k === 3 ? FARBEN.rot : FARBEN.tinte,
+        }) +
+        '</g>',
+    );
+  });
 
   const fehl = daten.vergleiche.filter((x) => !x.bestanden).length;
   return svgHuelle(

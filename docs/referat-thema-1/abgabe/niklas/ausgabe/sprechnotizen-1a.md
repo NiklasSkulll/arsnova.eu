@@ -28,7 +28,7 @@ _Quelle:_ evidenz/1A/reihe-main-a19ca70f-20261115-122547/auswertung/auswertung.j
 
 ## N5 Deutlich verletzt nur V3 in Block 5 (60 s, kumuliert 4:00)
 
-Hier sind alle 80 gepaarten Vergleiche. Grau hält, Bernstein verfehlt nur die Zehn-Prozent-Regel, Rot auch die fünfzig Millisekunden. Mit spaCy verfehlen 7 von 60 Vergleichen die Regel, also sind H1 und H2 nicht bestätigt. Deutlich ist nur V3 in Block 5, mit bis zu 214 Millisekunden mehr. Die übrigen 7 Verletzungen liegen unter 16 Millisekunden, und 4 davon stehen in der Kontrollzeile ganz ohne spaCy. Bei p95-Werten um zwanzig Millisekunden reißt die relative Regel also schon durch kleine Schwankungen. Ich lasse die Regel trotzdem so stehen, weil sie vorher festgelegt war.
+Das sind alle 80 gepaarten Vergleiche, jede Aktion in jedem Block gegen ihre Basis. [Weiter] Zuerst die Kontrolle ganz ohne spaCy: Schon sie verfehlt die Zehn-Prozent-Regel 4-mal, um höchstens 16 Millisekunden. Bei p95-Werten um zwanzig Millisekunden reicht dafür eine kleine Schwankung. [Weiter] Mit spaCy im Normalbetrieb und hinter dem Timeout kommen 3 ebenso kleine Treffer dazu. Formal reicht das schon: H1 und H2 sind nicht bestätigt, 7 von 60. [Weiter] Und hier der eine deutliche Effekt: spaCy gedrosselt, Block 5, bis zu 214 Millisekunden mehr, auch über der absoluten Grenze. Ich lasse die Regel trotzdem so stehen, weil sie vorher festgelegt war.
 
 _Quelle:_ evidenz/1A/reihe-main-a19ca70f-20261115-122547/auswertung/auswertung.json
 
