@@ -641,3 +641,19 @@ test('R4-Minor: J4-Notiz ohne „Release“, Swap des Hosts unbekannt, Netz übe
   assert.ok(!/Uhrendrift/.test(alles(nach('J8'))));
   assert.match(nach('R2').notiz, /Streuung/);
 });
+
+// ---------------------------------------------------------------- Fachliche Prüfung 5
+
+test('R5: Gate-Wechsel mit a998ada0, Validierung am Stand 248029dc, Nutzlastpfad, Aufteilung der 38, J11 ohne 1B-Station', () => {
+  const j13 = nach('J13');
+  assert.match(sichtbar(j13.inhalt), /a998ada0/);
+  assert.match(sichtbar(j13.inhalt), /uncertain/);
+  assert.match(j13.notiz, /[Zz]wei Upstream-Commits|a998ada0/);
+  assert.match(nach('J6').notiz, /nur auf dem älteren Stand/);
+  for (const id of ['J6', 'J7', 'J13']) assert.match(nach(id).quelle, /labor\.quiet\.runs\[/, id);
+  assert.match(
+    sichtbar(nach('G9').inhalt),
+    new RegExp(`1B ${daten.b1.verworfen}, 1C ${daten.c1.gateAntwortenGesamt.wert}`),
+  );
+  assert.equal(nach('J11').station, null);
+});

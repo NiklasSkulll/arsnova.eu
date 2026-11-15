@@ -1727,9 +1727,9 @@
           </div>
         </div>
         <div class="folie-fuss">
-          16 / 26 · evidenz/1C/messung/2026-11-09-labor-nachlauf.json.gz, runs[1] · Laptop (ThinkPad
-          P50) · f746ffba (def56700); evidenz/1C/2026-10-24-teil2.md · Laptop (ThinkPad P50) ·
-          248029dc; Berechtigung: routers/qa.ts, 1C-diagrams.md · def56700
+          16 / 26 · evidenz/1C/messung/2026-11-09-labor-nachlauf.json.gz, labor.quiet.runs[1] ·
+          Laptop (ThinkPad P50) · f746ffba (def56700); evidenz/1C/2026-10-24-teil2.md · Laptop
+          (ThinkPad P50) · 248029dc; Berechtigung: routers/qa.ts, 1C-diagrams.md · def56700
         </div>
       </section>
       <section
@@ -1878,8 +1878,8 @@
         </div>
         <div class="folie-fuss">
           17 / 26 · evidenz/1C/2026-11-09-labor-nachlauf.md · Laptop (ThinkPad P50) · def56700
-          (Branch f746ffba); Meldung: evidenz/1C/messung/2026-11-09-labor-nachlauf.json.gz, runs[1]
-          · Laptop (ThinkPad P50) · f746ffba (def56700)
+          (Branch f746ffba); Meldung: evidenz/1C/messung/2026-11-09-labor-nachlauf.json.gz,
+          labor.quiet.runs[1] · Laptop (ThinkPad P50) · f746ffba (def56700)
         </div>
       </section>
       <section
@@ -3053,56 +3053,8 @@
         class="folie"
         data-id="J11"
         data-teil="jonas"
-        data-station="inferenz"
         aria-label="21 von 26: Betrieb: Timeout zu kurz, Speicher läuft voll"
       >
-        <div
-          class="weg-mini weg-mini-statisch"
-          data-aktiv="inferenz"
-          role="img"
-          aria-label="Station des Auftrags: Inferenz (1B)"
-        >
-          <svg
-            class="weg-mini-karte"
-            viewBox="0 0 450 52"
-            width="450"
-            height="52"
-            aria-hidden="true"
-            focusable="false"
-          >
-            <path
-              d="M20 15L138.8 15C167.6 15 167.6 40 196.4 40L254 40C282.8 40 282.8 15 311.6 15L426.8 15"
-              fill="none"
-              stroke="var(--blau)"
-              stroke-width="3"
-              stroke-linecap="round"
-            />
-            <circle cx="20" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
-            <circle cx="99.3" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
-            <circle
-              cx="167.6"
-              cy="27.5"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--bernstein)"
-              stroke-width="3"
-            />
-            <circle cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
-            <circle
-              cx="343.86"
-              cy="15"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--petrol)"
-              stroke-width="3"
-            />
-            <circle cx="426.8" cy="15" r="6.5" fill="#fff" stroke="var(--rot)" stroke-width="3" />
-          </svg>
-          <div class="weg-punkt" style="left: 225.2px; top: 40px"></div>
-          <p class="weg-beschriftung" aria-hidden="true">
-            <span class="weg-name">Inferenz</span><span class="etikett etikett-1b">1B</span>
-          </p>
-        </div>
         <h1 class="folie-titel">Betrieb: Timeout zu kurz, Speicher läuft voll</h1>
         <div class="folie-flaeche">
           <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
@@ -3477,7 +3429,9 @@
                     class="mono"
                     >9f230abc</span
                   >, Instruktion v2, ohne Gate): 19 von 20 mit Modellzusammenfassung;
-                  <span class="mono">12f1d8e4</span> änderte beides zugleich.
+                  <span class="mono">12f1d8e4</span> und <span class="mono">a998ada0</span> änderten
+                  beides; erst <span class="mono">a998ada0</span> prüft auch
+                  <span class="mono">uncertain</span>.
                 </p>
               </div>
               <figure
@@ -3552,7 +3506,7 @@
         <div class="folie-fuss">
           23 / 26 · evidenz/1B/messung/2026-11-15-abgelehnte-antwort.json (Auftrag 2); Lauf 1B ·
           ThinkPad P50 · 8e9d1317; Nachlauf · Laptop · def56700; ADR 1C-018 · 9f230abc; Nachbau:
-          Nutzlast runs[1], Hinweis qaSummaryExtractive.ts
+          Nutzlast labor.quiet.runs[1], Hinweis qaSummaryExtractive.ts
         </div>
       </section>
       <section
@@ -3742,9 +3696,9 @@
                 <b>1C Kontextpfad</b>
                 <p style="margin: 8px 0 0">
                   Vertrag, Konsistenz und Entkopplung halten, mit benannten Ausnahmen (T2.3, T3.1).
-                  Nach v1.4.0 besteht keine der 38 geprüften Modellantworten das Gate (ein Modell,
-                  eine Fixture); davor (<span class="mono">9f230abc</span>, Instruktion v2, ohne
-                  Gate) 19 von 20.
+                  Nach v1.4.0 besteht keine der 38 geprüften Modellantworten das Gate (1B 10, 1C 28;
+                  ein Modell, eine Fixture); davor (<span class="mono">9f230abc</span>, Instruktion
+                  v2, ohne Gate) 19 von 20.
                 </p>
               </div>
             </div>

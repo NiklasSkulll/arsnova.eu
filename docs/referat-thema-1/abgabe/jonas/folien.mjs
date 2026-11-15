@@ -435,7 +435,7 @@ export function folien(daten) {
     }
     return [...gruppen.keys()].join('; ');
   };
-  const qNutzlast = `${nl.datei}, runs[${nl.lauf}] · Laptop (${rechnerKurz(nl.cpu)}) · ${nl.commit} (def56700)`;
+  const qNutzlast = `${nl.datei}, labor.quiet.runs[${nl.lauf}] · Laptop (${rechnerKurz(nl.cpu)}) · ${nl.commit} (def56700)`;
   const qAntwort = `${ANTWORT} (Auftrag ${a.auftrag})`;
   // Messstand: Architektur nach Release 1.3 (ADR-0035), gemessen auf Fork-main mit Version 1.4.0.
   // Produktionscode des 1B-Laufs = Fork-main a19ca70f (git describe v1.4.0-184); Lauf-Commits auf dem
@@ -708,7 +708,7 @@ export function folien(daten) {
         `</div>` +
         beleg('ADR 1C-013 (Nachlauf N1), ADR 1C-011 (Validierung), 1C-diagrams (#456-Bereiche)'),
     ),
-    notiz: `Zweite Station, der Kontext. Die Frage: Bekommt die Runtime genau das, was die Lehrperson in der Vorschau sieht? Der Kontext entsteht aus dem App-Zustand, wird gegen versionierte Schemas geprüft und dann gepackt. Vorschau und Auftrag gibt es nur mit gültigem Host-Token, und jeder Kontextaufbau prüft die Rechte erneut, acht Prüfungen je Aufbau. Unten steht ein echter Ausschnitt der Nutzlast aus dem Nachlauf, mit synthetischen Daten: die Vertragsversion, ein abgeschalteter Bereich mit seinem Grund und eine Frage aus der Fixture. Vorschau und Nutzlast tragen denselben Hash, die Nachricht an die Runtime ist byte-gleich mit der Vorschau. Was kostet die strikte Validierung? ${z.valMs} Millisekunden, ${z.valP} Prozent eines warmen Kontextaufbaus, gemessen mit der Test-Runtime auf einem älteren Stand. Deshalb bleibt sie. Welcher Bereich woher kommt, zeigt die Reserve.`,
+    notiz: `Zweite Station, der Kontext. Die Frage: Bekommt die Runtime genau das, was die Lehrperson in der Vorschau sieht? Der Kontext entsteht aus dem App-Zustand, wird gegen versionierte Schemas geprüft und dann gepackt. Vorschau und Auftrag gibt es nur mit gültigem Host-Token, und jeder Kontextaufbau prüft die Rechte erneut, acht Prüfungen je Aufbau. Unten steht ein echter Ausschnitt der Nutzlast aus dem Nachlauf, mit synthetischen Daten: die Vertragsversion, ein abgeschalteter Bereich mit seinem Grund und eine Frage aus der Fixture. Vorschau und Nutzlast tragen denselben Hash, die Nachricht an die Runtime ist byte-gleich mit der Vorschau. Was kostet die strikte Validierung? ${z.valMs} Millisekunden, ${z.valP} Prozent eines warmen Kontextaufbaus; gemessen nur auf dem älteren Stand, mit der Test-Runtime. Deshalb bleibt sie. Welcher Bereich woher kommt, zeigt die Reserve.`,
     zeitS: 60,
     kurzfassung: true,
     quelle: `${qNutzlast}; ${q1C('validierungMs')}; Berechtigung: routers/qa.ts, 1C-diagrams.md · def56700`,
@@ -880,7 +880,7 @@ export function folien(daten) {
     zeitS: 50,
     kurzfassung: true,
     quelle: `ADR 1C-020, 1C-024 · PC (i7-8700) · 9f230abc; Nachlauf N3, N6 · Laptop (ThinkPad P50) · def56700; 1B-Speicher: ${q1B}`,
-    station: 'inferenz',
+    station: null,
   });
 
   // ------------------------------------------------------------ J12
@@ -953,7 +953,7 @@ export function folien(daten) {
         `<div>${etikett('1B')} <span class="messwert" style="font-size:32px">${b.verworfen} von ${n}</span><br>verworfen (${mono('a19ca70f')})</div>` +
         `<div>${etikett('1C')} <span class="messwert" style="font-size:32px">${c.gateAntworten.wert}</span><br>bestehen (${mono('def56700')})</div>` +
         `</div>` +
-        `<p style="margin:10px 0 0;font-size:22px;line-height:1.3">Geltung: ein Modell, eine Fixture, Code nach v1.4.0. <b>Vor v1.4.0</b> (${mono('9f230abc')}, Instruktion v2, ohne Gate): ${c.fullContextVorGate.wert} mit Modellzusammenfassung; ${mono('12f1d8e4')} änderte beides zugleich.</p>` +
+        `<p style="margin:10px 0 0;font-size:22px;line-height:1.3">Geltung: ein Modell, eine Fixture, Code nach v1.4.0. <b>Vor v1.4.0</b> (${mono('9f230abc')}, Instruktion v2, ohne Gate): ${c.fullContextVorGate.wert} mit Modellzusammenfassung; ${mono('12f1d8e4')} und ${mono('a998ada0')} änderten beides; erst ${mono('a998ada0')} prüft auch ${mono('uncertain')}.</p>` +
         `</div>` +
         `<figure data-clip="jonas-gate-clip.webm" style="margin:0;display:flex;flex-direction:column">` +
         nachbau +
@@ -963,10 +963,10 @@ export function folien(daten) {
           'ADR 1C-018 (empfohlen: Instruktion, Grammatik und Gate abstimmen, nicht umgesetzt; Issue #13), ADR 1C-019, Laufprotokoll 1B, Befund',
         ),
     ),
-    notiz: `Und jetzt das Gate. Hier scheitert unser Auftrag. Links steht die echte Antwort des Modells, gekürzt, im Original. Das Gate prüft vor allem die Form: mindestens zwei Aussagen, jede mit einem Stichwort vorn, getrennt durch Doppelpunkt oder Strich, verschiedene Stichwörter, ganze Sätze, keine Metasätze aus einer kurzen Liste. Ausgaben mit Status failed und unsichere ohne Aussagen lässt es durch, aber jede geprüfte Antwort hatte Aussagen. Sprache und Thema prüft es nicht. Diese Antwort scheitert an der Form; inhaltlich passt sie auch nicht, sie ist englisch und fasst Moderationszustände zusammen. Im 1B-Lauf wurden ${b.verworfen} von ${n} Antworten verworfen, im 1C-Nachlauf bestand keine von ${c.gateAntwortenGesamt.wert}. Das gilt für ein Modell und eine Fixture. Vor Version 1.4.0, mit älterer Instruktion und ohne Gate, endeten in 1C ${c.fullContextVorGate.wert} Aufträgen mit Modellzusammenfassung. Derselbe Upstream-Commit hat beides zugleich geändert, Instruktion und Gate; welcher Teil wie viel bewirkt, ist nicht getrennt gemessen. Rechts ein Nachbau der Lehrenden-Sicht: die Fragen im Wortlaut und der allgemeine Hinweis aus dem App-Code, den Grund erfährt die Lehrperson nicht. Meine Empfehlung: Instruktion, Grammatik und Gate gemeinsam abstimmen. Umgesetzt ist das nicht.`,
+    notiz: `Und jetzt das Gate. Hier scheitert unser Auftrag. Links steht die echte Antwort des Modells, gekürzt, im Original. Das Gate prüft vor allem die Form: mindestens zwei Aussagen, jede mit einem Stichwort vorn, getrennt durch Doppelpunkt oder Strich, verschiedene Stichwörter, ganze Sätze, keine Metasätze aus einer kurzen Liste. Ausgaben mit Status failed und unsichere ohne Aussagen lässt es durch, aber jede geprüfte Antwort hatte Aussagen. Sprache und Thema prüft es nicht. Diese Antwort scheitert an der Form; inhaltlich passt sie auch nicht, sie ist englisch und fasst Moderationszustände zusammen. Im 1B-Lauf wurden ${b.verworfen} von ${n} Antworten verworfen, im 1C-Nachlauf bestand keine von ${c.gateAntwortenGesamt.wert}. Das gilt für ein Modell und eine Fixture. Vor Version 1.4.0, mit älterer Instruktion und ohne Gate, endeten in 1C ${c.fullContextVorGate.wert} Aufträgen mit Modellzusammenfassung. Zwei Upstream-Commits haben Instruktion und Gate zugleich geändert; erst der zweite prüft auch unsichere Antworten, und die meisten geprüften Antworten waren unsicher. Welcher Teil wie viel bewirkt, ist nicht getrennt gemessen. Rechts ein Nachbau der Lehrenden-Sicht: die Fragen im Wortlaut und der allgemeine Hinweis aus dem App-Code, den Grund erfährt die Lehrperson nicht. Meine Empfehlung: Instruktion, Grammatik und Gate gemeinsam abstimmen. Umgesetzt ist das nicht.`,
     zeitS: 75,
     kurzfassung: true,
-    quelle: `${qAntwort}; Lauf 1B · ThinkPad P50 · ${H.hauptlauf.commit.slice(0, 8)}; Nachlauf · Laptop · def56700; ADR 1C-018 · 9f230abc; Nachbau: Nutzlast runs[${nl.lauf}], Hinweis qaSummaryExtractive.ts`,
+    quelle: `${qAntwort}; Lauf 1B · ThinkPad P50 · ${H.hauptlauf.commit.slice(0, 8)}; Nachlauf · Laptop · def56700; ADR 1C-018 · 9f230abc; Nachbau: Nutzlast labor.quiet.runs[${nl.lauf}], Hinweis qaSummaryExtractive.ts`,
     station: 'gate',
   });
 
@@ -1034,7 +1034,7 @@ export function folien(daten) {
         `<div style="display:grid;grid-template-columns:repeat(3,1fr);column-gap:40px;font-size:26px;line-height:1.4;padding-top:60px">` +
         `<div style="border-top:6px solid var(--blau);padding-top:14px"><b>1A App-Host</b><p style="margin:8px 0 0;color:var(--gedaempft)">[Niklas]</p></div>` +
         `<div style="border-top:6px solid var(--bernstein);padding-top:14px"><b>1B Zweiter Host</b><p style="margin:8px 0 0">Die Trennung kostet keine relevante Zeit; die Zeit steckt in der Inferenz.</p><p style="margin:8px 0 0;color:var(--gedaempft)">[Niklas: Störung und Aufwand]</p></div>` +
-        `<div style="border-top:6px solid var(--petrol);padding-top:14px"><b>1C Kontextpfad</b><p style="margin:8px 0 0">Vertrag, Konsistenz und Entkopplung halten, mit benannten Ausnahmen (T2.3, T3.1). Nach v1.4.0 besteht keine der ${daten.abgeleitet.gateBeobachtet} geprüften Modellantworten das Gate (ein Modell, eine Fixture); davor (${mono('9f230abc')}, Instruktion v2, ohne Gate) ${c.fullContextVorGate.wert}.</p></div>` +
+        `<div style="border-top:6px solid var(--petrol);padding-top:14px"><b>1C Kontextpfad</b><p style="margin:8px 0 0">Vertrag, Konsistenz und Entkopplung halten, mit benannten Ausnahmen (T2.3, T3.1). Nach v1.4.0 besteht keine der ${daten.abgeleitet.gateBeobachtet} geprüften Modellantworten das Gate (1B ${b.verworfen}, 1C ${c.gateAntwortenGesamt.wert}; ein Modell, eine Fixture); davor (${mono('9f230abc')}, Instruktion v2, ohne Gate) ${c.fullContextVorGate.wert}.</p></div>` +
         `</div>` +
         `<p style="position:absolute;left:0;right:0;bottom:0;margin:0;font-size:28px;font-weight:600">Gemeinsam: [Satz zur Leitfrage von Thema 1, mit Niklas]</p>`,
     ),

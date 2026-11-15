@@ -10,7 +10,7 @@
     "teil2": { "quelle": "Platzhalter (Teil noch nicht geliefert)", "stand": null, "sha256": null }
   },
   "folien": { "gemeinsamesDeck": 16, "jonasUndReserve": 25 },
-  "handoutWoerter": 1787,
+  "handoutWoerter": 1786,
   "eingaben": [
     {
       "pfad": "docs/referat-thema-1/evidenz/1B/messung/2026-11-13-lauf.json",
@@ -122,7 +122,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/folien.mjs",
-      "sha256": "b521c3c32d10b32df5240f379953ded8c8c45ee5ee8db2e625d59923a76b9f8e"
+      "sha256": "21c671528cab3a4bf1ec991054548c766634913cf061720597843f300f2e8440"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/grafik.mjs",
@@ -134,7 +134,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/handout.mjs",
-      "sha256": "4987235fd20c6c9036e660c8f39c7a05c92a52d1830c1b29106968d6654e7089"
+      "sha256": "c6549fd1d9740d831b313cadaa22d25d68d6b829243ce5749ab74018cee1be67"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/niklas-seiten.mjs",
@@ -188,31 +188,31 @@
   "ausgaben": [
     {
       "datei": "jonas-deck.html",
-      "bytes": 1887024,
-      "sha256": "0892afc9b993e9251b373034ee68b9f3c882f86b473fe59484f03d4ceed8de86"
+      "bytes": 1885504,
+      "sha256": "0c308ea25ebb4d70837875a251de8f4560edc1140e8ce1aa0626721436ca9838"
     },
     {
       "datei": "gemeinsames-deck.pdf",
-      "bytes": 1506792,
-      "sha256": "e11ab89719aa6ecfd2fcb2d86fca2bb6b68e836debdefbefdd20cec2ae30b002",
+      "bytes": 1501192,
+      "sha256": "d6ccdaddf5cf5e4d2f573b722c7c5cdb8bc07726ff7c7ce1c60c4ac48bc6ff05",
       "seiten": 37
     },
     {
       "datei": "jonas-folien.pdf",
-      "bytes": 493481,
-      "sha256": "4ababcb0fa08b29ed19b2bd0e032ae418e59d78cf75d94e32a19f373c1844d87",
+      "bytes": 487852,
+      "sha256": "881b847ab045abb40cc72acfac7343c5515caabc5aa2ce5b5ee2af9338d7efb4",
       "seiten": 25
     },
     {
       "datei": "jonas-handout.pdf",
-      "bytes": 278111,
-      "sha256": "3c7b7da665819c6824391b828ad145f681207c7621b380d47da6fc0154dbc3db",
+      "bytes": 278108,
+      "sha256": "ad0bca202fabce01edd17aa9fe74a712c95d348e9b7181428fcb27effc303309",
       "seiten": 5
     },
     {
       "datei": "sprechnotizen.md",
-      "bytes": 16834,
-      "sha256": "1047aa8da9b3b186a69dc6730f11d5df5b98691536a08fe4f681446f5f8817e0"
+      "bytes": 16930,
+      "sha256": "8cecbaaf14c9b447b0673db4fef8a9bc86fb8d2c9f09b81c736de6651a8b1199"
     }
   ]
 }

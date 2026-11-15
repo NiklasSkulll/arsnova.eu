@@ -446,3 +446,7 @@ test('Runde 4: Gegenprüfung und Gegenalternative je Auftrag, OOM ohne Kausalaus
   assert.match(t, /jede in der Form/);
   assert.match(t, /Swap des Hosts unbekannt/);
 });
+
+test('Runde 5: Validierung am Stand 248029dc benannt', () => {
+  assert.match(textOhneSvg(), /Test-Runtime, 248029dc/);
+});

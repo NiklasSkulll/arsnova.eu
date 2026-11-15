@@ -155,7 +155,7 @@ export function baueHandout(daten, personen, { basis } = {}) {
     ) +
     zeile(
       'Kosten',
-      `Validierung ${w(`${z.valMs} ms`)} = ${w(`${z.valP} %`)} eines warmen Aufbaus (Test-Runtime, älterer Stand); q = ${w(z.q)} bei ${w(`${fmt(c.bytesJeToken.wert, 2)}`)} Byte je Token im Mittel: zwei Drittel des geschätzten Budgets ungenutzt; jedes Token hat mindestens ein Byte: Obergrenze für den budgetierten Teil, Template nicht budgetiert`,
+      `Validierung ${w(`${z.valMs} ms`)} = ${w(`${z.valP} %`)} eines warmen Aufbaus (Test-Runtime, 248029dc); q = ${w(z.q)} bei ${w(`${fmt(c.bytesJeToken.wert, 2)}`)} Byte je Token im Mittel: zwei Drittel des geschätzten Budgets ungenutzt; jedes Token hat mindestens ein Byte: Obergrenze für den budgetierten Teil, Template nicht budgetiert`,
       'bleibt (1C-011); Zählung prüfen (1C-014)',
     ) +
     zeile(
