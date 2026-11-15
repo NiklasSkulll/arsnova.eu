@@ -4,6 +4,7 @@
 - **Autor:** Jonas Weirauch (Rolle Y)
 - **Grundlage:** [1C-Gerüst](../1C-praesentation-geruest.md), [1B-Gerüst](../1B-praesentation-geruest.md), [1C-Ergebnis](../1C-ergebnis.md), [1B-Ergebnis](../1B-ergebnis.md)
 - **Stilproben:** Artefakt „Folien-Mischung 1C/1B“ (Richtung M: Rahmen A, Messwerkzeuge B, Fußballfeld C); nicht im Repo
+- _Aktualisiert 2026-11-15:_ Das Handout entsteht in PaperLab (Typ `referat`, IU-Gestaltungs- und Zitierleitfaden), nicht mehr als HTML in `bau.mjs`; `--abgabe` entfällt. Folien tragen Kurzbelege nach ZL in der Fußzeile, J16 zeigt das Literaturverzeichnis. Der Clip auf J13 stammt aus dem Laborlauf vom 2026-11-15 ([Protokoll](../evidenz/1B/2026-11-15-clip.md)). Anlass: Hinweise des Autors vom selben Tag.
 
 ## 1. Absicht
 
