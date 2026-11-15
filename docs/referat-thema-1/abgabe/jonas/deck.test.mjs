@@ -231,8 +231,30 @@ test('J13: der Clip startet erst auf Tastendruck, der nächste Druck geht weiter
   await page.keyboard.press('ArrowRight');
   assert.equal(await aktuelleId(page), 'J13', 'erster Druck startet den Clip');
   await page.waitForFunction(() => !document.querySelector('.folie[data-id="J13"] video').paused);
+  // Druck während des Clips: ans Ende springen (Ergebnisbild), auf der Folie bleiben
+  await page.keyboard.press('ArrowRight');
+  assert.equal(await aktuelleId(page), 'J13', 'Druck während des Clips bleibt auf J13');
+  const amEnde = await page.evaluate(() => {
+    const v = document.querySelector('.folie[data-id="J13"] video');
+    return v.paused && v.currentTime >= v.duration - 0.05;
+  });
+  assert.equal(amEnde, true, 'Clip steht auf dem letzten Bild');
   await page.keyboard.press('ArrowRight');
   assert.equal(await aktuelleId(page), 'J15');
+  // Zurück: Clip wieder am Anfang, wartet auf den Tastendruck
+  await page.keyboard.press('ArrowLeft');
+  assert.equal(await aktuelleId(page), 'J13');
+  const neu = await page.evaluate(() => {
+    const v = document.querySelector('.folie[data-id="J13"] video');
+    return { paused: v.paused, t: v.currentTime };
+  });
+  assert.deepEqual(neu, { paused: true, t: 0 });
+  await page.keyboard.press('ArrowRight');
+  assert.equal(
+    await aktuelleId(page),
+    'J13',
+    'nach dem Zurückgehen startet ein Druck den Clip neu',
+  );
   await context.close();
 });
 

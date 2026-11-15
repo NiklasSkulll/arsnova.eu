@@ -181,13 +181,24 @@
     if (liste === haupt) hauptIndex = index;
     zeige(liste[index], richtung);
   }
-  /** Startet den Clip der aktuellen Folie, falls er noch nicht lief; true, wenn gestartet. */
+  /**
+   * Clip der aktuellen Folie in Schritten: erster Druck startet ihn, ein Druck während er läuft
+   * springt ans letzte Bild (Ergebnis), erst danach geht es zur nächsten Folie. true = Schritt verbraucht.
+   */
   function clipSchritt() {
     const v = aktuell && aktuell.querySelector('video');
-    if (!v || v.dataset.gestartet !== undefined) return false;
-    v.dataset.gestartet = '';
-    v.play().catch(() => {});
-    return true;
+    if (!v) return false;
+    if (v.dataset.gestartet === undefined) {
+      v.dataset.gestartet = '';
+      v.play().catch(() => {});
+      return true;
+    }
+    if (!v.paused && !v.ended) {
+      v.pause();
+      if (Number.isFinite(v.duration)) v.currentTime = v.duration;
+      return true;
+    }
+    return false;
   }
   function vor() {
     if (clipSchritt() || zoomSchritt(+1)) return;
