@@ -1,0 +1,194 @@
+{
+  "schemaVersion": 1,
+  "bauskript": "docs/referat-thema-1/abgabe/jonas/bau.mjs",
+  "niklas": {
+    "teil1": {
+      "quelle": "Datei 1A-folien.pdf",
+      "stand": "Niklas' Zweig origin/feature-1A-resource-isolation, Commit e3b27b32 (noch nicht gemergt)",
+      "sha256": "5cff03e569de4351758f3e9adaf06883ae15543e2b0329bc559c685acf2d01ff"
+    },
+    "teil2": { "quelle": "Platzhalter (Teil noch nicht geliefert)", "stand": null, "sha256": null }
+  },
+  "folien": { "gemeinsamesDeck": 17, "jonasUndReserve": 22 },
+  "handoutWoerter": 1669,
+  "eingaben": [
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1B/messung/2026-11-13-lauf.json",
+      "sha256": "d5e40ba5c1489769b924e3943193c7c362e98234aa75dbf6ecde2e718452e7a5"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1B/messung/2026-11-13-lauf-kalt.json",
+      "sha256": "0fe51166dcab2fa16dc31b3abd865ce96e412983c1720fe260a4f548fadeb477"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1B/messung/2026-11-13-lauf-kalt-2.json",
+      "sha256": "ebd3386596a343dc37dac685ec8a4993eac4f1aa9d65295f83f943a513bfa505"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1B/messung/2026-11-13-lauf-kalt-3.json",
+      "sha256": "c409ec199cd5bb69a26e23d6b977bbdd43f23f9f11bf934ad8328642ef3f19a9"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1B/messung/2026-11-13-lauf-kalt-4.json",
+      "sha256": "75801b55e5b89a5a64e95d9e7594691e1a1648d568c21e5ad81307e4f1e337a0"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1B/messung/2026-11-13-lauf-kalt-5.json",
+      "sha256": "12a5ada85a9881e56cb2b01d1703bb6fdc5b56e0dfb5f57aa4dd107131d6578b"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1B/messung/2026-11-13-kontrolle-c0.json",
+      "sha256": "e0c569fb1d96f29c50dedad7dff3b651621ee6f11019bd980d159ab9cd030671"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1B/messung/2026-11-13-lauf-b0.json",
+      "sha256": "f8ee65e03994784f43398083f6bfec5fd8b4f36bf53eb89556a0dbee0e1b4e92"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1B/messung/2026-11-15-abgelehnte-antwort.json",
+      "sha256": "e41165a5e2c6954cdeb358940dc0c21e755a8b4dd10135efeb17af49b57f4f1e"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1B/messung/2026-11-13-aufbau-von-null.txt",
+      "sha256": "004c4597ea8a6d3f0752a87980a0351caa052e32858c638b1497aa285836d94b"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1C/messung/2026-11-09-labor-nachlauf.json.gz",
+      "sha256": "3eaa4349d78e3b9c7fb969bd31ffde8992c6138ba8647ee590d15ab263e2071b"
+    },
+    {
+      "pfad": "docs/referat-thema-1/adr/1C-023-release-timeout-90-s-zu-kurz.md",
+      "sha256": "1406516249307ce9ff55922c1eff03773397b11162dec3bd94f3b80365f0bda8"
+    },
+    {
+      "pfad": "docs/referat-thema-1/adr/1C-020-timeout-300-s-und-kalibrierungsregel.md",
+      "sha256": "11cec951e5c67d89b3f04f291b48e4ba08932abb6029b36437695765db399050"
+    },
+    {
+      "pfad": "docs/referat-thema-1/adr/1B-008-kernaussagen-und-schwellen.md",
+      "sha256": "0c7aa835478bbb66a736ba3213100116cb5930150425cea23db0633842215e9a"
+    },
+    {
+      "pfad": "docs/referat-thema-1/adr/1C-010-nachpruefung-nach-inferenz-beibehalten.md",
+      "sha256": "e1cb1346becfd1f1a240906bf4c69a2b2d77c4a4c9b7da4c527d50ab3c3a80a8"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1B/2026-11-13-lauf.md",
+      "sha256": "f5eb85ce3044eddff5c6197684f8601e92bb5c1b43bb45e7b1977c01f5c8ff69"
+    },
+    {
+      "pfad": "docs/referat-thema-1/adr/1B-005-abweichungen-vom-release.md",
+      "sha256": "f35d4b02746839c9be2eac45a91b2fb697b507f3419e8c6116c7e3468ca06315"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/jonas/bau.mjs",
+      "sha256": "15b691fcb001707a08acff81a6eb2bc4b64f66b82d8be37d67c715e48fb9525c"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/jonas/deck-vorlage.html",
+      "sha256": "787a73ff49c0101bf60b18f4a73d9ba33b1385e3190b8fee492efff203304967"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/jonas/deck.js",
+      "sha256": "664b3fbd47bf45147df231a096e9d437da43838b22baf329bc287f6bc76c8a6b"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/jonas/deck.mjs",
+      "sha256": "9efa6b1889ef7231e87b69cffe9f18826319d68dd56cb3251fcbdb121bccb33a"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/jonas/folien.mjs",
+      "sha256": "f9038260fb91e36e0f3b0d9b75558dc0aab9107a99a6268727d653ff615a3a58"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/jonas/grafik.mjs",
+      "sha256": "847297cb3472bd170e4a8508cea80e6dcd1ce938704c297871d5ace1ed54b414"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/jonas/handout-vorlage.html",
+      "sha256": "60b6c2a272c59bf9e7be4cef7e4a95fb9dc7cd843e285ba8927c8b4af99d39c9"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/jonas/handout.mjs",
+      "sha256": "62a84e0afc1979f70058f90f6dbfee2921db351fd23b2648df2f5f6a390ee754"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/jonas/niklas-seiten.mjs",
+      "sha256": "5f729a5a510688921d68f1551da30ca9d2bd88ea85eb0a7188c8e86ff168e3be"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/jonas/stil.css",
+      "sha256": "35a7df07b4b78947eedf2bc4eb09e8d720874c062dbe92878c8847804a31c8d7"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/jonas/zahlen.mjs",
+      "sha256": "ee6c08ebe81e4d5c7af40c46dd7fa55c746fb94809766147610accb7f90ca376"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/jonas/schriften/OFL-IBMPlexMono.txt",
+      "sha256": "7e6b2818edbd8f6a01ae80641cc8f16a51080d08fb4e532be3a0b6f74adb07da"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/jonas/schriften/OFL-Inter.txt",
+      "sha256": "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/jonas/schriften/ibm-plex-mono-latin-400-normal.woff2",
+      "sha256": "3c5a451f9ec27a354b0c2bcca636c6ec17a651281aabf29f8427e210a1d31e85"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/jonas/schriften/ibm-plex-mono-latin-600-normal.woff2",
+      "sha256": "c4d3deb734a27e6d0dc7a6b464779f70ba1c272e26287860a14e35e85acb5b76"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/jonas/schriften/inter-latin-400-normal.woff2",
+      "sha256": "dd05e326cf8eac3b55acecf29c842ed73e6e6dd06491cf47f7e8800680ab3e33"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/jonas/schriften/inter-latin-600-normal.woff2",
+      "sha256": "62553d159189834af73c9a6264704be5b2bee9a08da66a14768d8e5c6ffd2cdb"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/jonas/schriften/inter-latin-700-normal.woff2",
+      "sha256": "aac638f7503cebb084ec494cf00f75f7d8260d50c2f4e7820bccabba09626a3a"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/jonas/schriften/inter-latin-800-normal.woff2",
+      "sha256": "e4a6db93190ce6c09e9871496bc63a2b7a59838435e8ec23996afd9619bc3883"
+    },
+    {
+      "pfad": "extern/1A-folien.pdf",
+      "sha256": "5cff03e569de4351758f3e9adaf06883ae15543e2b0329bc559c685acf2d01ff"
+    }
+  ],
+  "ausgaben": [
+    {
+      "datei": "jonas-deck.html",
+      "bytes": 1860757,
+      "sha256": "fc734df6df01763f7acccc2bdb5cf8527eb5a0888be9469bd8610f90144b991a"
+    },
+    {
+      "datei": "gemeinsames-deck.pdf",
+      "bytes": 1449855,
+      "sha256": "1b1576af133670da1a2f2dde0a22f3b406196b6b9a5c6633dc244da7cf4d47f6",
+      "seiten": 34
+    },
+    {
+      "datei": "jonas-folien.pdf",
+      "bytes": 437229,
+      "sha256": "3af893152dc09a03f07103477bfa601213f1442275cda7204bd6b4a79ad14b13",
+      "seiten": 22
+    },
+    {
+      "datei": "jonas-handout.pdf",
+      "bytes": 258203,
+      "sha256": "c1282f6bb8f9f5129be1031b6989982239b19399dd7a4848a0694b79abe2a22f",
+      "seiten": 5
+    },
+    {
+      "datei": "sprechnotizen.md",
+      "bytes": 13132,
+      "sha256": "9971be00da4f0a4948b3cbe188acf9a7355c3f460d0d5204e879d587df90432f"
+    }
+  ]
+}
