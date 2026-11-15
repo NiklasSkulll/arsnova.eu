@@ -117,11 +117,11 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/deck.mjs",
-      "sha256": "30145c73281177d4b8a01dfc8dbe3d7a4fc4309682f1bf89e1a587fe81dc11a2"
+      "sha256": "1ee25a76224e2347c9e3eb73aaebcb8e768631471ca6c84bbf3bed3438f8b387"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/folien.mjs",
-      "sha256": "8d002df32fde74d868b4004999b756eaf2bfbe21779904ed07bc2e7dacc6c76a"
+      "sha256": "46afa297311167c5fbc93a3816336d3508f3bb7f55809dadd8c6660129d460b2"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/grafik.mjs",
@@ -141,7 +141,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/literatur.mjs",
-      "sha256": "2ce11fb60086f14b1c95653caafd80860898ee7bcfa3e709a1620a4afefcbdd3"
+      "sha256": "22f5f5f3584206b04f37b9a9301c509b23f038f39afcf92cd502afdeedc6f39a"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/niklas-seiten.mjs",
@@ -207,25 +207,25 @@
   "ausgaben": [
     {
       "datei": "jonas-deck.html",
-      "bytes": 5502258,
-      "sha256": "d2a3466040277702a68bdcb4c9ae55325ff527c9ad53833464dabd5f64900c38"
+      "bytes": 5502111,
+      "sha256": "0361f84e9dd3bb3cb051d123503dbe17aa882fa34d3295ee2a5c01d8299dad6c"
     },
     {
       "datei": "gemeinsames-deck.pdf",
-      "bytes": 1762712,
-      "sha256": "6274fcb677820ffa677b7569e2e0fcede924e8e5a4d08cdc3c45afde6bd4589e",
+      "bytes": 1762515,
+      "sha256": "7a3e73216dcd26de5dbd5049a34c5fc1dc0cafbc2b02ff92a56d4879466bcf12",
       "seiten": 39
     },
     {
       "datei": "jonas-folien.pdf",
-      "bytes": 746396,
-      "sha256": "d1a4de9e2a45508d8da46dc25c5dd576d8b321e779e93d156508d2eb9d321e03",
+      "bytes": 746202,
+      "sha256": "951d23682b545c655ec730d08ae836b42ee681699da449ad074c55c273c35576",
       "seiten": 27
     },
     {
       "datei": "sprechnotizen.md",
-      "bytes": 22580,
-      "sha256": "2f603f31a6aa2e699efbfb3fa6b5474fd92773a2d90e1cb269ef71f7f671c5ed"
+      "bytes": 22569,
+      "sha256": "a4f8afa88c764df260bfa6bd4e5129d1819aecd78f35422698d674392688f66d"
     }
   ]
 }
