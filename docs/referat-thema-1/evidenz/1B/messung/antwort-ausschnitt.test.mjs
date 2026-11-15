@@ -14,22 +14,40 @@ function antwortZeile(frame, statements, kopf = '') {
       statements: statements.map((text) => ({ text, sourceIds: ['q:1'] })),
     },
   });
-  const body = JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content } }] });
+  const body = JSON.stringify({
+    choices: [{ finish_reason: 'stop', message: { content } }],
+    usage: { kanarienvogelAntwort: 'KANARIE-ANTWORT' },
+  });
   return `${frame}\t${kopf}\t\t${hex(body)}`;
 }
 
 const tsv = [
-  `1\tPOST\tAuthorization: Bearer abc\t${hex('{"model":"x","messages":[]}')}`,
+  `1\tPOST\tAuthorization: Bearer abc\t${hex('{"model":"x","messages":[{"content":"KANARIE-ANFRAGE"}]}')}`,
   antwortZeile(2, ['Pending moderation status indicates unresolved questions.', 'Second one.']),
   antwortZeile(4, ['Klausur: Termin steht fest.', 'Skript: Kapitel fehlt.'], 'Bearer abc'),
 ].join('\n');
 
 test('ausschnitt liefert nur Modellausgabe und Torergebnis, ohne Kopfzeilen oder Token', async () => {
   const r = await ausschnitt(tsv, { auftrag: 1, maxZeichen: 40 });
-  const text = JSON.stringify(r);
-  for (const verboten of ['Bearer', 'abc', 'Authorization']) {
+  const text = JSON.stringify({ ...r, quelleSha256: undefined });
+  for (const verboten of ['Bearer', 'abc', 'Authorization', 'KANARIE', 'usage', 'messages']) {
     assert.equal(text.includes(verboten), false, `${verboten} im Ausschnitt`);
   }
+  assert.deepEqual(
+    Object.keys(r).sort(),
+    [
+      'aussagen',
+      'auftrag',
+      'ausgabe',
+      'finishReason',
+      'grund',
+      'locale',
+      'mitTrenner',
+      'quelleSha256',
+      'status',
+      'torAkzeptiert',
+    ].sort(),
+  );
   assert.equal(r.auftrag, 1);
   assert.equal(r.torAkzeptiert, false);
   assert.equal(r.aussagen, 2);
