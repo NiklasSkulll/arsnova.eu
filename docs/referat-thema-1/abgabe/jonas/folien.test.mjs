@@ -1,6 +1,7 @@
 // Tests für die Folieninhalte (Task 5): Zeiten, Pflichtfelder, echte Artefakte und die Regel
 // „keine Zahl, die nicht aus den Daten stammt“.
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { test } from 'node:test';
@@ -242,7 +243,10 @@ test('J6 zeigt einen wörtlichen Ausschnitt der echten Nutzlast aus dem committe
 
 test('Festwerte (Schwellen, Release-Timeout) stehen wörtlich in ihrer Quelle', () => {
   for (const [name, f] of Object.entries(FESTWERTE)) {
-    const text = readFileSync(resolve(ROOT, f.quelle), 'utf8');
+    // git:<tag>:<pfad> = Datei am Release-Tag (unveränderlich), sonst relativ zu docs/referat-thema-1/
+    const text = f.quelle.startsWith('git:')
+      ? execFileSync('git', ['show', f.quelle.slice(4)], { cwd: ROOT, encoding: 'utf8' })
+      : readFileSync(resolve(ROOT, f.quelle), 'utf8');
     assert.ok(text.includes(f.beleg), `${name}: Beleg fehlt in ${f.quelle}`);
     assert.ok(f.beleg.includes(fmt(f.wert)), `${name}: Wert nicht im Beleg`);
   }
@@ -314,7 +318,7 @@ test('J2 legt die CPU-Abweichung offen und behauptet keine Limits wie im Release
   const s = sichtbar(j2.inhalt);
   assert.ok(!/Limits wie im Release/.test(s), 'Limits wie im Release');
   assert.match(s, /4 statt 8 CPUs/);
-  assert.match(s, /Speicherlimits wie im Release/);
+  assert.match(s, /Speicherlimits wie ab Werk v1\.4\.0/);
   assert.match(j2.notiz, /4 statt 8/);
 });
 
@@ -379,7 +383,7 @@ test('K2: Messstand nach v1.4.0 benannt, Stand vor dem Gate mit 19 von 20 full-c
   for (const id of ['J13', 'G9']) {
     assert.match(sichtbar(nach(id).inhalt), /19 von 20/, `${id}: Stand vor dem Gate fehlt`);
   }
-  assert.match(nach('J13').notiz, /9f230abc|vor dem Gate/);
+  assert.match(nach('J13').notiz, /9f230abc|vor dem Gate|Vor Version 1\.4\.0/);
   // „Release 1.3“ nur für die Architektur, nie als Messstand
   for (const f of F) {
     assert.ok(!/Release 1\.3 nachgebaut/.test(alles(f)), `${f.id}: Release 1.3 nachgebaut`);
@@ -512,7 +516,7 @@ test('I-03: Gate-Befund mit Geltungsbereich (38 beobachtete Antworten, ein Model
   assert.match(sichtbar(j13.inhalt), /ein Modell/);
   assert.match(sichtbar(j13.inhalt), /eine Fixture/);
   assert.match(j13.notiz, /failed|ohne Aussagen/);
-  assert.match(sichtbar(nach('G9').inhalt), /beobachtet/);
+  assert.match(sichtbar(nach('G9').inhalt), /geprüft/);
 });
 
 test('I-04: KI-Anteil und Methode nennen die Ausnahmen der Vorabfestlegung', () => {
@@ -525,13 +529,16 @@ test('I-04: KI-Anteil und Methode nennen die Ausnahmen der Vorabfestlegung', () 
   }
 });
 
-test('I-05: Nachprüfung mit Preis unter Voting (1C-017), ohne „kein neues Risiko“', () => {
-  const j12 = alles(nach('J12'));
+test('I-05/R3-I4: Nachprüfung mit belegtem Preis unter Voting, ohne Vorhersage als Tatsache', () => {
   assert.ok(!/kostet fast nichts/.test(nach('J12').titel));
-  for (const t of [j12, alles(nach('J15'))]) {
-    assert.match(t, /Voting/);
-    assert.match(t, /0,97/);
+  for (const id of ['J12', 'J15']) {
+    const t = alles(nach(id));
+    assert.match(t, /Voting/, id);
+    assert.match(t, /Stimme/, id);
+    assert.ok(!/0,97|0,99/.test(t), `${id}: Vorhersage als Zahl`);
   }
+  assert.match(sichtbar(nach('J12').inhalt), /M7/);
+  assert.match(sichtbar(nach('J12').inhalt), /nicht belastbar|offen/);
   assert.ok(!/kein neues Risiko/.test(sichtbarAlle()));
 });
 
@@ -566,4 +573,53 @@ test('Minor: OOM-Vergleich, Speicherursache, Kaltaussage, Blitzlicht-Typen', () 
   assert.ok(!/Alle drei Hypothesen sind erfüllt, auch kalt/.test(nach('J9').notiz));
   assert.match(sichtbar(nach('J12').inhalt), /geprüft: YESNO/);
   assert.match(sichtbar(nach('J7').inhalt), /keinem Lauf/);
+});
+
+// ---------------------------------------------------------------- Fachliche Prüfung 3
+
+test('R3-I1: Werte ab Werk mit Version; v1.3.0 und der Grund für den Messstand genannt', () => {
+  const j2 = sichtbar(nach('J2').inhalt);
+  assert.match(j2, /v1\.3\.0/);
+  assert.match(j2, /Prüfer/);
+  assert.match(j2, /4 CPUs/);
+  assert.match(j2, /5 GiB/);
+  for (const f of F) {
+    const t = alles(f);
+    assert.ok(
+      !/Release-Timeout|\(Release:|Release ab Werk|wie im Release/.test(t),
+      `${f.id}: „Release“ ohne Version`,
+    );
+  }
+  assert.match(sichtbar(nach('J4').inhalt), /v1\.4\.0/);
+  assert.match(nach('J11').inhalt, /ab Werk v1\.4\.0/);
+});
+
+test('R3-I2: 19 von 20 mit Instruktion v2 und ohne Gate; nicht allein dem Gate zugeschrieben', () => {
+  for (const id of ['J13', 'J15', 'G9']) {
+    const t = alles(nach(id));
+    assert.match(t, /Instruktion/, id);
+    assert.ok(!/bestand[^.]*vorher/.test(t), `${id}: „bestand … vorher“`);
+    assert.ok(!/Vor dem Gate/.test(sichtbar(nach(id).inhalt)), `${id}: „Vor dem Gate“`);
+  }
+  assert.match(nach('J13').notiz, /zugleich|beides/);
+});
+
+test('R3-I5: Kurzfassung enthält J13 und J15', () => {
+  for (const id of ['J13', 'J15']) assert.equal(nach(id).kurzfassung, true, id);
+});
+
+test('R3-Minor: geprüfte Antworten, App-Überschrift im Nachbau, Ausnahmen in G9, Risiken in J15', () => {
+  assert.match(nach('J13').titel, /geprüfte/);
+  const html = readFileSync(
+    resolve(
+      ROOT,
+      '../../apps/frontend/src/app/features/session/session-host/moderation-compass-dialog.component.html',
+    ),
+    'utf8',
+  );
+  assert.ok(html.includes(daten.nachbau.titel), 'Überschrift aus dem Template');
+  assert.ok(decode(nach('J13').inhalt).includes(daten.nachbau.titel));
+  assert.match(sichtbar(nach('G9').inhalt), /Ausnahmen/);
+  assert.ok((sichtbar(nach('J15').inhalt).match(/Risiko/g) ?? []).length >= 4);
+  assert.match(nach('J10').notiz, /langsame/);
 });

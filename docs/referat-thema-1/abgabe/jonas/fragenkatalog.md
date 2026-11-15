@@ -51,7 +51,7 @@ Beleg: [ADR 1C-021](../../adr/1C-021-zusatzlauf-produktionslimits-zweiter-rechne
 
 ### F7. Warum haben Sie nicht `v1.3.0` gemessen?
 
-_(neu)_ Der Prüfer hat per E-Mail verlangt, Fork und Clone vor der Untersuchung zu aktualisieren. Deshalb misst 1B den Fork-`main` `a19ca70f` und 1C `main@9f230abc` und im Nachlauf upstream `def56700`. Die Aussagen übertragen sich auf den Tag nur, soweit die Abweichungstabelle sie nicht berührt; das ist eine Gültigkeitsgrenze.
+_(neu)_ Der Prüfer hat per E-Mail verlangt, Fork und Clone vor der Untersuchung zu aktualisieren. Deshalb misst 1B den Fork-`main` `a19ca70f` und 1C `main@9f230abc` und im Nachlauf upstream `def56700`. Die Aussagen übertragen sich auf den Tag nur, soweit die Abweichungstabelle sie nicht berührt; das ist eine Gültigkeitsgrenze. Am Tag `v1.3.0` hatte die Runtime 4 CPUs und 5 GiB, der Q&A-Timeout lag bei 8 s; 8 CPUs, 8 GiB und 90 s gelten ab v1.4.0 (`git show v1.3.0:docker-compose.llm.yml`, `qaSummaryConfig.ts`).
 Beleg: [ADR 1B-001](../../adr/1B-001-baseline-fork-main-a19ca70f.md), [ADR 1C-001](../../adr/1C-001-baseline-aktueller-main.md#folgen)
 
 ### F8. Wo weicht Ihr Labor vom Release ab?
@@ -130,7 +130,7 @@ Beleg: [ADR 1C-010](../../adr/1C-010-nachpruefung-nach-inferenz-beibehalten.md)
 
 ### F22. Ist `source_changed` bei Stimmen ein Fehler?
 
-_(1C-Gerüst)_ Nein, das ist die gewollte Hashgrenze: Jede Stimme ändert die Daten, also auch den Hash. Wie oft das unter Voting passiert, habe ich gemessen (M7), aber mein Vorhersagemodell lag daneben, deshalb halte ich eine Änderungsempfehlung zurück.
+_(1C-Gerüst)_ Nein, das ist die gewollte Hashgrenze: Jede Stimme ändert die Daten, also auch den Hash. Wie oft das unter Voting passiert, habe ich mit Test-Runtime gemessen (M7), aber mein Vorhersagemodell verfehlte sein Kriterium; die Laborwerte 0,97–0,99 sind nur Vorhersagen dieses Modells bei angenommenen 0,5 Stimmen/s. Deshalb halte ich eine Änderungsempfehlung zurück.
 Beleg: [ADR 1C-017](../../adr/1C-017-m7-empfehlung-zurueckgehalten.md), [Dossier 8.4](../../1C-kontext-und-adapterpfad.md#84-bewertung-der-grenze-material-für-schritt-4)
 
 ### F23. Was ist an T3.1 anders?
@@ -194,7 +194,7 @@ Beleg: [ADR 1C-018](../../adr/1C-018-quality-gate-verwirft-echte-antworten.md#ko
 
 ### F34. 1C-019 sagt 19 von 20 `full-context`, 1C-018 sagt 0 von 20. Was gilt?
 
-_(neu)_ Beides, aber für verschiedene Codestände: 19 von 20 gilt für `main@9f230abc` (Laptop und PC), vor dem Quality-Gate. Das Gate kam upstream mit `12f1d8e4` und `a998ada0` (PR #643), und auf `def56700` endete kein Auftrag mehr `full-context` (Laptop). Beide Gate-Commits sind nicht in `v1.3.0`, aber in `v1.4.0`, und die Pfaddateien sind zwischen `v1.4.0` und `def56700` byte-gleich; der Befund betrifft also das Release 1.4.0, nicht 1.3. Für die Diskussion: Ein Upgrade hat das Ergebnis gekippt, und upstream prüft nicht, ob das ausgelieferte Modell die verlangte Form trifft (ADR 1C-018, Kontext).
+_(neu)_ Beides, aber für verschiedene Codestände: 19 von 20 gilt für `main@9f230abc` (Laptop und PC), mit Instruktion v2 und ohne Quality-Gate. Derselbe Upstream-Commit `12f1d8e4` brachte Instruktion v5 und das Gate, `a998ada0` weitete das Gate aus (PR #643); welcher Teil wie viel bewirkt, ist nicht getrennt gemessen, und auf `def56700` endete kein Auftrag mehr `full-context` (Laptop). Beide Gate-Commits sind nicht in `v1.3.0`, aber in `v1.4.0`, und die Pfaddateien sind zwischen `v1.4.0` und `def56700` byte-gleich; der Befund betrifft also das Release 1.4.0, nicht 1.3. Für die Diskussion: Ein Upgrade hat das Ergebnis gekippt (Instruktion und Gate zugleich), und upstream prüft nicht, ob das ausgelieferte Modell die verlangte Form trifft (ADR 1C-018, Kontext).
 Beleg: [1C-Ergebnis 2](../../1C-ergebnis.md#2-kurzantwort), [ADR 1C-019](../../adr/1C-019-endstatus-echter-pfad-beibehalten.md), [ADR 1C-018](../../adr/1C-018-quality-gate-verwirft-echte-antworten.md)
 
 ### F35. Wer legt den Timeout fest: das Release oder der Betreiber?

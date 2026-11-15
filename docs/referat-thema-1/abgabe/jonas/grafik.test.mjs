@@ -16,6 +16,7 @@ import {
   zoomDeckkraft,
 } from './grafik.mjs';
 import { ladeFolienDaten } from './folien.mjs';
+import { fmt } from './zahlen.mjs';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HIER, '../..');
@@ -78,7 +79,11 @@ test('wegSvg: genau ein aktiver Marker, Stationen, Etiketten, Hosts, Messpunkte'
   assert.equal(anzahl(svg, /data-etikett="1B"/g), 2);
   assert.equal(anzahl(svg, /data-messpunkt="t[0-3]"/g), 4);
   // Fachliche Prüfung 1, W3: Werte des verfolgten Auftrags, 1C-Werte mit Herkunft, Netz unter der Auflösung.
-  assert.ok(svg.includes(`${auftrag.hostReturnMs} ms`) && svg.includes('99,92 %'));
+  assert.ok(svg.includes(`${auftrag.hostReturnMs} ms`));
+  // Runde 3, I3: am Kreis von Auftrag 2 steht sein eigener Anteil, nicht der Median aller 10
+  const eigen = `${fmt((auftrag.inferMs / auftrag.jobMs) * 100, 2)} %`;
+  assert.ok(svg.includes(`Anteil ${eigen}`), eigen);
+  assert.ok(!svg.includes(`Anteil ${fmt(b1.inferAnteil * 100, 2)} %`));
   assert.ok(svg.includes(`Auftrag ${auftrag.nr}`));
   assert.equal(anzahl(svg, /data-herkunft="1"/g), 4);
   assert.ok(svg.includes('Netz &lt; 1 ms'));
@@ -98,7 +103,15 @@ test('wegSvg: genau ein aktiver Marker, Stationen, Etiketten, Hosts, Messpunkte'
 test('fussballfeldSvg: Maßstab aus T_job warm, Gruppen in der Bildunterschrift', () => {
   const svg = fussballfeldSvg(b1, { zoom: 0 });
   pruefeSvg(svg);
-  for (const t of ['0,3 mm', '1,3 cm', '104,9 m', '148,6 s', 'alle 10', 'davon Netz']) {
+  for (const t of [
+    '0,3 mm',
+    '1,3 cm',
+    '104,9 m',
+    '148,6 s',
+    'alle 10',
+    'davon Netz',
+    'langsame CPU',
+  ]) {
     assert.ok(svg.includes(t), `fehlt: ${t}`);
   }
   assert.ok(svg.includes('warm, n = 9'));

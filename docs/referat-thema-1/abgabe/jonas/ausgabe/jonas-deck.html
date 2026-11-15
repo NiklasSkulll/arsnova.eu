@@ -630,8 +630,8 @@
         <div class="folie-flaeche">
           <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
             <p style="margin: 0 0 40px; font-size: 30px; color: var(--text-2)">
-              Ein echter Auftrag der Q&amp;A-Zusammenfassung, verfolgt vom Klick der Lehrperson bis
-              zum Ergebnis.
+              Ein echter Auftrag der Q&amp;A-Zusammenfassung mit synthetischen Daten, verfolgt vom
+              Klick der Lehrperson bis zum Ergebnis.
             </p>
             <div
               style="
@@ -661,7 +661,7 @@
               style="
                 position: absolute;
                 left: 0;
-                bottom: 84px;
+                bottom: 112px;
                 margin: 0;
                 font-size: var(--s-min);
                 color: var(--gedaempft);
@@ -680,9 +680,10 @@
                 color: var(--gedaempft);
               "
             >
-              Architektur nach Release 1.3 (ADR-0035); gemessen auf Code nach v1.4.0: 1B
-              <span class="mono">a19ca70f</span> (v1.4.0-184), 1C
-              <span class="mono">def56700</span> (v1.4.0-14)
+              Architektur nach Release 1.3 (ADR-0035); 1B auf
+              <span class="mono">a19ca70f</span> (v1.4.0-184), 1C-Nachlauf auf
+              <span class="mono">def56700</span> (v1.4.0-14), frühere 1C-Messungen auf v1.3.0-228
+              und v1.3.0-322, je Zahl angegeben
             </p>
             <p
               style="
@@ -719,14 +720,11 @@
             </p>
             <div style="display: grid; grid-template-columns: 800px 1fr; column-gap: 70px">
               <div>
-                <ul style="margin: 0; padding-left: 30px; font-size: 24px; line-height: 1.38">
+                <ul style="margin: 0; padding-left: 30px; font-size: 22px; line-height: 1.38">
                   <li style="margin: 0 0 12px">
-                    Aufbau von null mit einem Befehl: <span class="mono">labor.sh up</span>, alle
-                    automatischen Prüfungen grün
-                  </li>
-                  <li style="margin: 0 0 12px">
-                    Privates Netz, Firewall lässt die Runtime nur vom app-host zu, dazu ein Token;
-                    Speicherlimits wie im Release, Modell per SHA-256 gepinnt
+                    Aufbau von null mit <span class="mono">labor.sh up</span>, Prüfungen grün;
+                    privates Netz, Firewall, Token; Speicherlimits wie ab Werk v1.4.0, Modell per
+                    SHA-256 gepinnt
                   </li>
                 </ul>
                 <div
@@ -741,23 +739,23 @@
                   </p>
                   <ul style="margin: 0; padding-left: 26px; font-size: 22px; line-height: 1.3">
                     <li style="margin: 0 0 4px">
-                      4 statt 8 CPUs und Threads: zwei VMs teilen sich den Laptop
+                      4 statt 8 CPUs, Timeout 300 s statt 90 s ab Werk v1.4.0 (Kalibrierung I = 202
+                      s)
                     </li>
                     <li style="margin: 0 0 4px">
-                      Timeout 300 s statt 90 s nach Kalibrierung (I = 202 s)
+                      v1.3.0 hatte 4 CPUs, 5 GiB, 8 s; gemessen ist auf Wunsch des Prüfers der
+                      aktuelle Stand
                     </li>
                     <li style="margin: 0 0 4px">
-                      Images selbst gebaut (Release-Images nicht öffentlich); Start per docker
-                      compose mit CPU-Override, ohne Wrapper: Er reicht das Override nicht durch,
-                      seine Prüfungen liefen vorher im Trockenlauf
+                      Images selbst gebaut; Start ohne Wrapper, er reicht das CPU-Override nicht
+                      durch
                     </li>
                     <li style="margin: 0 0 4px">
-                      Summary-Schalter eingeschaltet (ab Werk aus); Hintergrunddienste vor dem
-                      gewerteten Lauf von Hand abgeschaltet
+                      Summary-Schalter an; Hintergrunddienste vor dem gewerteten Lauf von Hand aus
                     </li>
                     <li style="margin: 0 0 4px">
-                      Produktionscode <span class="mono">a19ca70f</span> (Fork-main, v1.4.0-184),
-                      Lauf-Commit <span class="mono">8e9d1317</span> nur mit Laborskripten
+                      Code <span class="mono">a19ca70f</span> (v1.4.0-184); Lauf-Commit
+                      <span class="mono">8e9d1317</span> nur Laborskripte
                     </li>
                   </ul>
                 </div>
@@ -1306,7 +1304,7 @@
                 font-weight="400"
                 fill="#3d4757"
               >
-                Anteil 99,92 %, langsame CPU
+                Anteil 99,69 %, langsame CPU
               </text>
             </g>
             <g class="auftrag" data-aktiv="klick" transform="translate(120 140)">
@@ -1393,7 +1391,7 @@
                     Messproxy davor
                   </li>
                   <li style="margin: 0 0 4px">
-                    Laborlimits 4 CPUs, 5 GiB (Release: 8 CPUs, 8 GiB)
+                    Laborlimits 4 CPUs, 5 GiB (ab Werk v1.4.0: 8 CPUs, 8 GiB; v1.3.0: 4 CPUs, 5 GiB)
                   </li>
                   <li style="margin: 0 0 4px">
                     Timeout 300 s statt 90 s (Kalibrierung am Laptop 196 s); Nebenlast im Nachlauf
@@ -3042,8 +3040,8 @@
               font-weight="400"
               fill="#566173"
             >
-              105 m = T_job, Median warm, n = 9 · Netz, Transport, Anteil: Median über alle 10
-              Aufträge
+              105 m = T_job, Median warm, n = 9 · Netz, Transport, Anteil: Median, alle 10 ·
+              langsame CPU
             </text></svg
           ><span class="etikett etikett-1b" style="position: absolute; left: 0; top: 0">1B</span>
         </div>
@@ -3120,7 +3118,7 @@
                   width="680"
                   height="250"
                   role="img"
-                  aria-label="Inferenzzeiten gegen den Release-Timeout"
+                  aria-label="Inferenzzeiten gegen den Timeout ab Werk v1.4.0"
                 >
                   <text x="0" y="30" style="font: 400 24px var(--f-text); fill: var(--tinte)">
                     Kalibrierung
@@ -3169,7 +3167,7 @@
                     text-anchor="middle"
                     style="font: 700 24px var(--f-text); fill: var(--rot)"
                   >
-                    Release-Timeout 90 s
+                    Timeout ab Werk v1.4.0: 90 s
                   </text>
                 </svg>
                 <p style="margin: 10px 0 0; font-size: 24px">
@@ -3234,7 +3232,7 @@
         data-id="J12"
         data-teil="jonas"
         data-station="nachpruefung"
-        aria-label="22 von 26: Die Nachprüfung: wenig Zeit, unter Voting teuer"
+        aria-label="22 von 26: Die Nachprüfung: wenig Zeit, unter Voting ein Risiko"
       >
         <div
           class="weg-mini weg-mini-statisch"
@@ -3283,7 +3281,7 @@
             <span class="weg-name">Nachprüfung</span><span class="etikett etikett-1c">1C</span>
           </p>
         </div>
-        <h1 class="folie-titel">Die Nachprüfung: wenig Zeit, unter Voting teuer</h1>
+        <h1 class="folie-titel">Die Nachprüfung: wenig Zeit, unter Voting ein Risiko</h1>
         <div class="folie-flaeche">
           <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
             <p style="margin: 0 0 26px; font-size: 30px; font-weight: 600; color: var(--text-2)">
@@ -3299,9 +3297,9 @@
                     <span class="mono">source_changed</span> (E7, E8)
                   </li>
                   <li style="margin: 0 0 12px">
-                    <b>Preis:</b> Unter laufendem Voting verwirft dieselbe Grenze die meisten
-                    Antworten; Vorhersage 0,97–0,99, Modell M7 verfehlt, Empfehlung zurückgehalten
-                    (1C-017)
+                    <b>Preis unter Voting:</b> Jede Stimme zwischen Aufbau und Nachprüfung verwirft
+                    die Antwort (belegt). Wie oft das passiert, ist nicht belastbar gemessen: Modell
+                    M7 verfehlt sein Kriterium, Empfehlung zurückgehalten (1C-017)
                   </li>
                   <li style="margin: 0 0 12px">
                     <b>Befund:</b> Bei laufender Blitzlicht-Runde außer
@@ -3365,7 +3363,7 @@
         data-id="J13"
         data-teil="jonas"
         data-station="gate"
-        aria-label="23 von 26: Gate verwarf alle 38 beobachteten Antworten"
+        aria-label="23 von 26: 38 geprüfte Antworten, keine besteht das Gate"
       >
         <div
           class="weg-mini weg-mini-statisch"
@@ -3414,7 +3412,7 @@
             <span class="weg-name">Gate</span><span class="etikett etikett-1c">1C</span>
           </p>
         </div>
-        <h1 class="folie-titel">Gate verwarf alle 38 beobachteten Antworten</h1>
+        <h1 class="folie-titel">38 geprüfte Antworten, keine besteht das Gate</h1>
         <div class="folie-flaeche">
           <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
             <div style="display: grid; grid-template-columns: 780px 1fr; column-gap: 44px">
@@ -3436,10 +3434,6 @@
                 >
                   <p style="margin: 0 0 4px">
                     Pending moderation status indicates unresolved questions awaiting host review.
-                  </p>
-                  <p style="margin: 0 0 4px">
-                    Host-pinned questions require active attention to maintain visibility and
-                    relevance.
                   </p>
                   <p style="margin: 0 0 4px">[…]</p>
                 </blockquote>
@@ -3479,9 +3473,11 @@
                   </div>
                 </div>
                 <p style="margin: 10px 0 0; font-size: 22px; line-height: 1.3">
-                  Geltung: ein Modell (Qwen3-4B Q4_K_M), eine Fixture, Code nach v1.4.0.
-                  <b>Vor dem Gate</b> (<span class="mono">9f230abc</span>): 19 von 20 mit
-                  Modellzusammenfassung.
+                  Geltung: ein Modell, eine Fixture, Code nach v1.4.0. <b>Vor v1.4.0</b> (<span
+                    class="mono"
+                    >9f230abc</span
+                  >, Instruktion v2, ohne Gate): 19 von 20 mit Modellzusammenfassung;
+                  <span class="mono">12f1d8e4</span> änderte beides zugleich.
                 </p>
               </div>
               <figure
@@ -3510,7 +3506,7 @@
                   >
                     Nachbau, keine Bildschirmaufnahme
                   </p>
-                  <p style="margin: 0 0 6px; font-weight: 700">Q&amp;A-Zusammenfassung</p>
+                  <p style="margin: 0 0 6px; font-weight: 700">Wichtige offene Fragen</p>
                   <ul style="margin: 0 0 8px; padding-left: 24px">
                     <li>Können wir mehr Beispiele zur linearen Regression bearbeiten?</li>
                     <li>Ist Kapitel 4 klausurrelevant?</li>
@@ -3531,9 +3527,9 @@
                     color: var(--gedaempft);
                   "
                 >
-                  Fragen nach der Regel des Fallbacks aus der echten Nutzlast (1C-Nachlauf), Hinweis
-                  wörtlich aus <span class="mono">qaSummaryExtractive.ts</span>. Den Grund erfährt
-                  die Lehrperson nicht.
+                  Fragen nach der Regel des Fallbacks aus der echten Nutzlast (1C-Nachlauf);
+                  Überschrift und Hinweis wörtlich aus der App. Den Grund erfährt die Lehrperson
+                  nicht.
                 </figcaption>
               </figure>
             </div>
@@ -3586,8 +3582,8 @@
                   <li style="margin: 0 0 4px">
                     <b>Bleibt (1C-010 bis 1C-013):</b>
                     <span style="color: var(--text-2)"
-                      >wenig Zeit; unter Voting verwirft die Nachprüfung die meisten Antworten
-                      (0,97–0,99, 1C-017)</span
+                      >wenig Zeit; Risiko: unter Voting verwirft jede Stimme während der Inferenz
+                      die Antwort, Häufigkeit offen (1C-017)</span
                     >
                   </li>
                   <li style="margin: 0 0 4px">
@@ -3605,7 +3601,8 @@
                   <li style="margin: 0 0 4px">
                     <b>Cache (1C-024):</b>
                     <span style="color: var(--text-2)"
-                      >eine Zeile im Entry-Point; sonst Betrieb mit OOM-Neustarts</span
+                      >eine Zeile im Entry-Point; Risiko: nur ein Slot und ein Auftragstyp
+                      gemessen</span
                     >
                   </li>
                   <li style="margin: 0 0 4px">
@@ -3616,7 +3613,9 @@
                   </li>
                   <li style="margin: 0 0 4px">
                     <b>Snapshot, Blitzlicht (1C-015, 1C-016):</b>
-                    <span style="color: var(--text-2)">kleine Änderung; Rückweg Revert</span>
+                    <span style="color: var(--text-2)"
+                      >klein; Risiko: Fenster beschreibt die Rundenlaufzeit nicht mehr</span
+                    >
                   </li>
                 </ul>
               </div>
@@ -3647,8 +3646,9 @@
             </p>
             <ol style="margin: 0; padding-left: 34px; font-size: 24px; line-height: 1.3">
               <li>
-                Nach v1.4.0 bestand keine der 38 beobachteten Antworten, vorher 19 von 20. Das Gate
-                prüft die Form, inhaltlich sind die Antworten auch verfehlt: Prüft es das Richtige?
+                Nach v1.4.0 besteht keine der 38 geprüften Antworten das Gate; davor (andere
+                Instruktion, kein Gate) endeten 19 von 20 mit Modellzusammenfassung. Prüft das Gate
+                das Richtige, wenn die Antworten auch inhaltlich verfehlt sind?
               </li>
               <li>Wer legt den Timeout fest: das Release oder der Betreiber am Inferenz-Host?</li>
               <li>Reicht ein privates Netz mit Token über HTTP als Schutz für die zweite Rolle?</li>
@@ -3741,11 +3741,10 @@
               <div style="border-top: 6px solid var(--petrol); padding-top: 14px">
                 <b>1C Kontextpfad</b>
                 <p style="margin: 8px 0 0">
-                  Vertrag, Konsistenz und Entkopplung halten. Nach v1.4.0 bestand keine der 38
-                  beobachteten Modellantworten das Gate (ein Modell, eine Fixture); davor (<span
-                    class="mono"
-                    >9f230abc</span
-                  >) 19 von 20.
+                  Vertrag, Konsistenz und Entkopplung halten, mit benannten Ausnahmen (T2.3, T3.1).
+                  Nach v1.4.0 besteht keine der 38 geprüften Modellantworten das Gate (ein Modell,
+                  eine Fixture); davor (<span class="mono">9f230abc</span>, Instruktion v2, ohne
+                  Gate) 19 von 20.
                 </p>
               </div>
             </div>
@@ -3801,8 +3800,8 @@
                     1B-005 ebenfalls 300 s
                   </li>
                   <li style="margin: 0 0 12px">
-                    Release ab Werk 90 s; 300 s ist die Obergrenze des Produkts, offen als
-                    Abweichung
+                    Ab Werk v1.4.0 90 s (v1.3.0: 8 s); 300 s ist die Obergrenze des Produkts, offen
+                    als Abweichung
                   </li>
                 </ul>
               </div>

@@ -59,6 +59,7 @@ const DATEN = [
   'evidenz/1C/messung/2026-11-09-labor-nachlauf.json.gz',
   // Hinweistext des extraktiven Fallbacks für den Nachbau auf J13 (App-Code, nur gelesen)
   '../../apps/backend/src/lib/qaSummaryExtractive.ts',
+  '../../apps/frontend/src/app/features/session/session-host/moderation-compass-dialog.component.html',
 ];
 
 const sha256 = (daten) => createHash('sha256').update(daten).digest('hex');
@@ -146,6 +147,32 @@ function lesePersonen() {
   return personen;
 }
 
+/**
+ * Sprungplan für einen Abbruch nach etwa 9 min (Kursvorschlag 9 + 6): J13 (Gate) und J15 (Entscheidung)
+ * müssen gesprochen sein. Zeiten ab J1 gezählt; spätester Sprung = 9:00 minus J13 und J15.
+ */
+function sprungplan(haupt) {
+  const jonas = haupt.filter((f) => f.teil === 'jonas');
+  const ziel = jonas.filter((f) => f.id === 'J13' || f.id === 'J15');
+  if (ziel.length !== 2) throw new Error('Sprungplan: J13 und J15 fehlen');
+  const zielS = ziel.reduce((s, f) => s + f.zeitS, 0);
+  const startJ13 = jonas
+    .slice(
+      0,
+      jonas.findIndex((f) => f.id === 'J13'),
+    )
+    .reduce((s, f) => s + f.zeitS, 0);
+  const spaetestens = 9 * 60 - zielS;
+  return [
+    '## Sprungplan',
+    '',
+    `Ab J1 gezählt beginnt J13 in der Langfassung bei ${mmss(startJ13)} min. J13 und J15 brauchen zusammen ${mmss(zielS)} min. ` +
+      `Damit beide bis 9:00 min gesprochen sind: Wer bei ${mmss(spaetestens)} min noch vor J13 steht, blättert mit Pfeil rechts ` +
+      'ohne Kommentar bis J13, spricht J13 und danach J15. Bei Zeitdruck von Anfang an nur die Folien mit der Marke „Kurzfassung“; sie enthält J13 und J15.',
+    '',
+  ];
+}
+
 /** Sprechnotizen aus folien: je Folie Kennung, Titel, Sekunden, kumulierte Zeit, Kurzfassung-Marke, Notiz. */
 export function baueSprechnotizen(alle) {
   const ohneTags = (s) =>
@@ -163,6 +190,7 @@ export function baueSprechnotizen(alle) {
     `Gesamt ${mmss(gesamt)} min, Kurzfassung ${mmss(kurz)} min (Folien mit der Marke „Kurzfassung“). ` +
       'Erzeugt aus `folien.mjs` (`notiz`, `zeitS`, `kurzfassung`); nicht von Hand ändern.',
     '',
+    ...sprungplan(haupt),
   ];
   let kumuliert = 0;
   let kumuliertKurz = 0;

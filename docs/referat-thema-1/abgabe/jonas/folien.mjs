@@ -65,7 +65,7 @@ export const FESTWERTE = {
   },
   releaseCpus: {
     wert: 8,
-    text: 'CPUs und Threads der Runtime im Release',
+    text: 'CPUs und Threads der Runtime ab Werk (v1.4.0, gleich im gemessenen Stand a19ca70f)',
     quelle: 'adr/1B-005-abweichungen-vom-release.md',
     beleg: 'Runtime mit 4 statt 8 CPUs und Threads per Override',
   },
@@ -74,6 +74,25 @@ export const FESTWERTE = {
     text: 'CPUs und Threads der Runtime im Labor',
     quelle: 'adr/1B-005-abweichungen-vom-release.md',
     beleg: 'Runtime mit 4 statt 8 CPUs und Threads per Override',
+  },
+  // Release 1.3 selbst (Tag v1.3.0), gelesen mit git show; gemessen wurde ein späterer Stand (ADR 1C-001, 1B-001)
+  v13Cpus: {
+    wert: 4,
+    text: 'CPUs der Runtime am Tag v1.3.0',
+    quelle: 'git:v1.3.0:docker-compose.llm.yml',
+    beleg: "cpus: '4.0'",
+  },
+  v13SpeicherGiB: {
+    wert: 5,
+    text: 'Speicherlimit der Runtime am Tag v1.3.0, GiB (ohne memswap_limit)',
+    quelle: 'git:v1.3.0:docker-compose.llm.yml',
+    beleg: 'mem_limit: 5g',
+  },
+  v13TimeoutS: {
+    wert: 8,
+    text: 'Default QA_SUMMARY_TIMEOUT_MS am Tag v1.3.0, s',
+    quelle: 'git:v1.3.0:apps/backend/src/lib/qaSummaryConfig.ts',
+    beleg: 'QA_SUMMARY_TIMEOUT_DEFAULT_MS = 8_000',
   },
   // Ergänzt nach der fachlichen Prüfung 1 (Offenlegung, Kalibrierung, Abdeckung)
   schwelleNetzMaxMs: {
@@ -180,6 +199,8 @@ const LAUF_1B = 'evidenz/1B/messung/2026-11-13-lauf.json';
 const NACHLAUF_1C = 'evidenz/1C/messung/2026-11-09-labor-nachlauf.json.gz';
 const AUFBAU_VON_NULL = 'evidenz/1B/messung/2026-11-13-aufbau-von-null.txt';
 const EXTRAKTIV = '../../apps/backend/src/lib/qaSummaryExtractive.ts';
+const KOMPASS_HTML =
+  '../../apps/frontend/src/app/features/session/session-host/moderation-compass-dialog.component.html';
 
 const json = (pfad) => JSON.parse(readFileSync(pfad, 'utf8'));
 
@@ -268,9 +289,15 @@ export function ladeFolienDaten(root) {
   const extraktiv = readFileSync(resolve(root, EXTRAKTIV), 'utf8');
   const hinweis = extraktiv.match(/\bde: \{[\s\S]*?limitation:\s*'([^']+)'/)?.[1];
   if (!hinweis) throw new Error(`${EXTRAKTIV}: Hinweistext (de) nicht gefunden`);
+  // Überschrift der Karte wörtlich aus dem Template der App (deutsche Quellsprache).
+  const titel = readFileSync(resolve(root, KOMPASS_HTML), 'utf8').match(
+    /i18n="@@sessionHost\.moderationSummaryTitle"\s*>\s*([^<]+?)\s*</,
+  )?.[1];
+  if (!titel) throw new Error(`${KOMPASS_HTML}: Überschrift der Zusammenfassung nicht gefunden`);
   const nachbau = {
     fragen: nutzlast.ersatz,
     hinweis,
+    titel,
     quelle: EXTRAKTIV.replace(/^\.\.\/\.\.\//, ''),
   };
   // Commit, mit dem der Antwortausschnitt ins Repo kam (Evidenzort im Handout).
@@ -413,7 +440,7 @@ export function folien(daten) {
   // Messstand: Architektur nach Release 1.3 (ADR-0035), gemessen auf Fork-main mit Version 1.4.0.
   // Produktionscode des 1B-Laufs = Fork-main a19ca70f (git describe v1.4.0-184); Lauf-Commits auf dem
   // 1B-Zweig ändern nur Laborskripte (ADR 1B-001). 1C: def56700 = v1.4.0-14; vor dem Gate 9f230abc = v1.3.0-322.
-  const STAND = `Produktionscode ${mono('a19ca70f')} (Fork-main, v1.4.0-184), Lauf-Commit ${mono(H.hauptlauf.commit.slice(0, 8))} nur mit Laborskripten`;
+  const STAND = `Code ${mono('a19ca70f')} (v1.4.0-184); Lauf-Commit ${mono(H.hauptlauf.commit.slice(0, 8))} nur Laborskripte`;
   const kasten = (titel, punkte, linie) =>
     `<div style="border:var(--linie-min) solid ${linie};border-radius:10px;padding:10px 18px 4px">` +
     `<p style="margin:0 0 4px;font-weight:700;font-size:24px">${titel}</p>` +
@@ -463,13 +490,13 @@ export function folien(daten) {
     auftrag: 'beide',
     titel: `Ein Klick. ${z.auS} Sekunden. Keine Modellantwort.`,
     inhalt: flaeche(
-      `<p style="margin:0 0 40px;font-size:30px;color:var(--text-2)">Ein echter Auftrag der Q&amp;A-Zusammenfassung, verfolgt vom Klick der Lehrperson bis zum Ergebnis.</p>` +
+      `<p style="margin:0 0 40px;font-size:30px;color:var(--text-2)">Ein echter Auftrag der Q&amp;A-Zusammenfassung mit synthetischen Daten, verfolgt vom Klick der Lehrperson bis zum Ergebnis.</p>` +
         `<div style="display:grid;grid-template-columns:1fr 1fr;column-gap:60px;font-size:32px;line-height:1.35">` +
         `<div style="border-left:6px solid var(--petrol);padding-left:24px">${etikett('1C')}<p style="margin:14px 0 0">Hält der Kontextpfad seine Zusagen zu Vertrag, Konsistenz und Entkopplung ein?</p></div>` +
         `<div style="border-left:6px solid var(--bernstein);padding-left:24px">${etikett('1B')} <span style="font-size:var(--s-min);color:var(--gedaempft)">Schritte 1–2</span><p style="margin:14px 0 0">Wo steckt die Zeit, wenn die Inferenz auf einem zweiten Host läuft?</p></div>` +
         `</div>` +
-        `<p class="mono" style="position:absolute;left:0;bottom:84px;margin:0;font-size:var(--s-min);color:var(--gedaempft)">Auftrag Nr. ${au.nr}: Klick bis Ergebnis ${z.auWarte} s, Jobdauer T_job ${z.auJob} s · Median warm, n = ${nWarm}: ${z.jobWarm} s</p>` +
-        `<p style="position:absolute;left:0;bottom:44px;margin:0;font-size:var(--s-min);color:var(--gedaempft)">Architektur nach Release 1.3 (ADR-0035); gemessen auf Code nach v1.4.0: 1B ${mono('a19ca70f')} (v1.4.0-184), 1C ${mono('def56700')} (v1.4.0-14)</p>` +
+        `<p class="mono" style="position:absolute;left:0;bottom:112px;margin:0;font-size:var(--s-min);color:var(--gedaempft)">Auftrag Nr. ${au.nr}: Klick bis Ergebnis ${z.auWarte} s, Jobdauer T_job ${z.auJob} s · Median warm, n = ${nWarm}: ${z.jobWarm} s</p>` +
+        `<p style="position:absolute;left:0;bottom:44px;margin:0;font-size:var(--s-min);color:var(--gedaempft)">Architektur nach Release 1.3 (ADR-0035); 1B auf ${mono('a19ca70f')} (v1.4.0-184), 1C-Nachlauf auf ${mono('def56700')} (v1.4.0-14), frühere 1C-Messungen auf v1.3.0-228 und v1.3.0-322, je Zahl angegeben</p>` +
         `<p style="position:absolute;left:0;bottom:0;margin:0;font-size:26px;font-weight:600">Jonas Weirauch</p>`,
     ),
     notiz: `Ein Klick der Lehrperson, ${z.auS} Sekunden Warten, und am Ende steht keine Modellantwort auf dem Bildschirm. Dieser Auftrag ist echt, die Nummer ${au.nr} aus meinem gewerteten Lauf. Davon rechnet der Server ${z.auJob} Sekunden am Job, der Rest ist der Host-Aufruf und das Nachfragen. Zum Vergleich: Warme Aufträge brauchen im Median ${z.jobWarm} Sekunden. Die Architektur folgt Release 1.3, gemessen habe ich aber Code nach Version 1.4.0. Das wird beim Gate wichtig. Zwei Fragen: Für 1C, hält der Kontextpfad seine Zusagen? Für 1B, Schritte 1 und 2, wo steckt die Zeit auf einem zweiten Host? Petrol ist 1C, Bernstein ist 1B.`,
@@ -494,18 +521,17 @@ export function folien(daten) {
         zweiSpalten(
           liste(
             [
-              `Aufbau von null mit einem Befehl: ${mono('labor.sh up')}, alle automatischen Prüfungen grün`,
-              'Privates Netz, Firewall lässt die Runtime nur vom app-host zu, dazu ein Token; Speicherlimits wie im Release, Modell per SHA-256 gepinnt',
+              `Aufbau von null mit ${mono('labor.sh up')}, Prüfungen grün; privates Netz, Firewall, Token; Speicherlimits wie ab Werk v1.4.0, Modell per SHA-256 gepinnt`,
             ],
-            24,
+            22,
           ) +
             kasten(
               'Abweichungen und Grenzen',
               [
-                `${fw.laborCpus} statt ${fw.releaseCpus} CPUs und Threads: zwei VMs teilen sich den Laptop`,
-                `Timeout ${fw.laborTimeout1BS} s statt ${fw.releaseTimeoutS} s nach Kalibrierung (I = ${fw.kalibrierung1BS} s)`,
-                'Images selbst gebaut (Release-Images nicht öffentlich); Start per docker compose mit CPU-Override, ohne Wrapper: Er reicht das Override nicht durch, seine Prüfungen liefen vorher im Trockenlauf',
-                'Summary-Schalter eingeschaltet (ab Werk aus); Hintergrunddienste vor dem gewerteten Lauf von Hand abgeschaltet',
+                `${fw.laborCpus} statt ${fw.releaseCpus} CPUs, Timeout ${fw.laborTimeout1BS} s statt ${fw.releaseTimeoutS} s ab Werk v1.4.0 (Kalibrierung I = ${fw.kalibrierung1BS} s)`,
+                `v1.3.0 hatte ${fw.v13Cpus} CPUs, ${fw.v13SpeicherGiB} GiB, ${fw.v13TimeoutS} s; gemessen ist auf Wunsch des Prüfers der aktuelle Stand`,
+                'Images selbst gebaut; Start ohne Wrapper, er reicht das CPU-Override nicht durch',
+                'Summary-Schalter an; Hintergrunddienste vor dem gewerteten Lauf von Hand aus',
                 STAND,
               ],
               'var(--bernstein)',
@@ -524,7 +550,7 @@ export function folien(daten) {
           800,
         ),
     ),
-    notiz: `Bevor man misst, muss das System stehen. Schritt 1 von 1B verlangt, das Zwei-Host-Deployment nachzubauen, so wie Release 1.3 es mit ADR-0035 beschreibt. Ich habe zwei virtuelle Maschinen auf meinem Laptop aufgebaut. Auf dem app-host laufen die App mit dem Adapter, Datenbank und Redis; der Encoder bleibt aus, wie ab Werk. Auf dem llm-host läuft der LLM-Server mit dem gepinnten Modell, erreichbar nur vom app-host und mit Token. Gemessen habe ich den Produktionscode von Fork-main nach Version 1.4.0. Die Abweichungen stehen im Kasten: 4 statt 8 CPUs, weil sich zwei VMs den Laptop teilen. Der Timeout liegt bei ${fw.laborTimeout1BS} statt ${fw.releaseTimeoutS} Sekunden, weil schon die Kalibrierung ${fw.kalibrierung1BS} Sekunden dauerte. Die Runtime startet direkt mit dem CPU-Override, weil der Wrapper es nicht durchreicht; seine Prüfungen liefen vorher. Und vor dem gewerteten Lauf habe ich Hintergrunddienste von Hand abgeschaltet.`,
+    notiz: `Bevor man misst, muss das System stehen. Schritt 1 von 1B verlangt, das Zwei-Host-Deployment nachzubauen, so wie Release 1.3 es mit ADR-0035 beschreibt. Gemessen habe ich auf Wunsch des Prüfers den aktuellen Stand, nicht den Tag 1.3; der hatte noch 4 CPUs und 5 GiB. Ich habe zwei virtuelle Maschinen auf meinem Laptop aufgebaut. Auf dem app-host laufen die App mit dem Adapter, Datenbank und Redis; der Encoder bleibt aus, wie ab Werk. Auf dem llm-host läuft der LLM-Server mit dem gepinnten Modell, erreichbar nur vom app-host und mit Token. Die Abweichungen zum gemessenen Stand stehen im Kasten: 4 statt 8 CPUs, weil sich zwei VMs den Laptop teilen. Der Timeout liegt bei ${fw.laborTimeout1BS} statt ${fw.releaseTimeoutS} Sekunden, weil schon die Kalibrierung ${fw.kalibrierung1BS} Sekunden dauerte. Die Runtime startet direkt mit dem CPU-Override, weil der Wrapper es nicht durchreicht; seine Prüfungen liefen vorher. Und vor dem gewerteten Lauf habe ich Hintergrunddienste von Hand abgeschaltet.`,
     zeitS: 60,
     kurzfassung: false,
     quelle: `${daten.aufbau.datei} · ${rechnerKurz(H.hauptlauf.rechner)} · ${daten.aufbau.commit}; Abweichungen: evidenz/1B/2026-11-12-aufbau.md (Komponenten, Befund 2, Abweichungen), evidenz/1B/2026-11-13-lauf.md (Kalibrierung, Versuch 3), ADR 1B-001, 1B-002, 1B-005, 1B-010`,
@@ -583,7 +609,7 @@ export function folien(daten) {
           `${etikett('1C')} Abweichungen und Grenzen im Labor`,
           [
             'ein Rechner, Runtime über Loopback, kein zweiter Host; Image lokal gebaut, Messproxy davor',
-            `Laborlimits ${fw.laborCpus1C} CPUs, ${fw.laborSpeicher1CGiB} GiB (Release: ${fw.releaseCpus} CPUs, ${fw.prodSpeicherGiB} GiB)`,
+            `Laborlimits ${fw.laborCpus1C} CPUs, ${fw.laborSpeicher1CGiB} GiB (ab Werk v1.4.0: ${fw.releaseCpus} CPUs, ${fw.prodSpeicherGiB} GiB; v1.3.0: ${fw.v13Cpus} CPUs, ${fw.v13SpeicherGiB} GiB)`,
             `Timeout ${fw.laborTimeoutS} s statt ${fw.releaseTimeoutS} s (Kalibrierung am Laptop ${fw.kalibrierungLaptopS} s); Nebenlast im Nachlauf`,
           ],
           'var(--petrol)',
@@ -802,7 +828,7 @@ export function folien(daten) {
     titel: 'Wäre der Auftrag ein Fußballfeld …',
     inhalt: fussballfeldSvg(b, { zoom: 1 }) + etikettOben('1B'),
     notiz:
-      'Damit man sich das vorstellen kann: Wäre der Median eines warmen Auftrags so lang wie ein Fußballfeld, dann nähme die Inferenz praktisch das ganze Feld ein. Der Transport wäre gut ein Zentimeter, und darin steckt das Netz mit einem Drittel Millimeter, dünner als die Kreidelinie am Tor. Der Adapter in der App käme mit gut sieben Zentimetern dazu. Am Netz zu optimieren lohnt sich also nicht.',
+      'Wäre der Median eines warmen Auftrags so lang wie ein Fußballfeld, dann nähme die Inferenz praktisch das ganze Feld ein. Der Transport wäre gut ein Zentimeter, und darin steckt das Netz mit einem Drittel Millimeter, dünner als die Kreidelinie am Tor. Der Adapter in der App käme mit gut sieben Zentimetern dazu. Am Netz zu optimieren lohnt sich nicht, jedenfalls auf dieser langsamen CPU.',
     zeitS: 25,
     kurzfassung: true,
     quelle: `${q1B}; Maßstab: T_job warm (n = ${nWarm}), Netz und Transport Median über alle ${n}`,
@@ -819,11 +845,11 @@ export function folien(daten) {
     `<text x="${xS(s) + 12}" y="${y + 31}" style="font:600 26px var(--f-mono);fill:var(--tinte)">${fmt(s, 1)} s</text>` +
     `<line x1="${xT}" y1="${y - 6}" x2="${xT}" y2="${y + 50}" style="stroke:var(--rot);stroke-width:4"/>`;
   const timeoutSvg =
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 250" width="680" height="250" role="img" aria-label="Inferenzzeiten gegen den Release-Timeout">` +
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 250" width="680" height="250" role="img" aria-label="Inferenzzeiten gegen den Timeout ab Werk v1.4.0">` +
     balken(44, c.kalibrierungPcS.wert, 'Kalibrierung', 'PC · 9f230abc') +
     balken(154, c.inferenzS.wert, 'Inferenz, Median', 'Laptop · def56700, Nebenlast') +
     `<line x1="${xT}" y1="204" x2="${xT}" y2="222" style="stroke:var(--rot);stroke-width:4"/>` +
-    `<text x="${xT}" y="246" text-anchor="middle" style="font:700 24px var(--f-text);fill:var(--rot)">Release-Timeout ${fw.releaseTimeoutS} s</text>` +
+    `<text x="${xT}" y="246" text-anchor="middle" style="font:700 24px var(--f-text);fill:var(--rot)">Timeout ab Werk v1.4.0: ${fw.releaseTimeoutS} s</text>` +
     `</svg>`;
   F.push({
     id: 'J11',
@@ -850,7 +876,7 @@ export function folien(daten) {
           'ADR 1C-021, 1C-023 und 1C-024: empfohlen (Timeout am Inferenz-Host kalibrieren, Cache begrenzen), nicht umgesetzt; Issues #16, #14',
         ),
     ),
-    notiz: `Zurück zu 1C, zum Betrieb. Zwei Befunde. Erstens der Timeout: Ab Werk bricht die App nach ${fw.releaseTimeoutS} Sekunden ab. Am PC ergab die Kalibrierung eine Inferenzzeit von ${z.kalPc} Sekunden, am Laptop dauert die Inferenz im Median ${z.infer1C}, mit Nebenlast und auf einem anderen Stand. Mit dem Release-Timeout wäre der Modellpfad auf beiden nicht nutzbar. Zweitens der Speicher: Bei wechselnden Prompts wächst die Runtime je Auftrag um ${z.delta} Gigabyte; die Ursache ist der Prompt-Cache, gezeigt am PC. Beide Laborgrenzen liegen bei ${fw.grenzeGesamtGiB} Gibibyte. Auf dem älteren Stand starb die Runtime im ${c.oomAuftrag9f230abc.wert}. Auftrag, auf dem neuen schon im ${c.oomAuftrag.wert}., weil jeder Auftrag mehr Tokens hat. Im 1B-Lauf blieb der Speicher bei ${z.speicher1B} Gigabyte, vermutlich weil der Prompt gleich war; getrennt gemessen ist das nicht. Ich empfehle, Timeout und Cache anzupassen; umgesetzt ist das nicht.`,
+    notiz: `Zurück zu 1C, zum Betrieb. Erstens der Timeout: Ab Werk bricht die App in Version 1.4.0 nach ${fw.releaseTimeoutS} Sekunden ab. Am PC ergab die Kalibrierung eine Inferenzzeit von ${z.kalPc} Sekunden, am Laptop dauert die Inferenz im Median ${z.infer1C}, auf einem anderen Stand. Mit dem Timeout ab Werk von Version 1.4.0 wäre der Modellpfad auf beiden nicht nutzbar. Zweitens der Speicher: Bei wechselnden Prompts wächst die Runtime je Auftrag um ${z.delta} Gigabyte; die Ursache ist der Prompt-Cache, gezeigt am PC. Beide Laborgrenzen liegen bei ${fw.grenzeGesamtGiB} Gibibyte. Auf dem älteren Stand starb die Runtime im ${c.oomAuftrag9f230abc.wert}. Auftrag, auf dem neuen schon im ${c.oomAuftrag.wert}., weil jeder Auftrag mehr Tokens hat. Im 1B-Lauf blieb der Speicher bei ${z.speicher1B} Gigabyte, vermutlich weil der Prompt gleich war; getrennt gemessen ist das nicht. Ich empfehle, Timeout und Cache anzupassen; umgesetzt ist das nicht.`,
     zeitS: 50,
     kurzfassung: true,
     quelle: `ADR 1C-020, 1C-024 · PC (i7-8700) · 9f230abc; Nachlauf N3, N6 · Laptop (ThinkPad P50) · def56700; 1B-Speicher: ${q1B}`,
@@ -862,14 +888,14 @@ export function folien(daten) {
     id: 'J12',
     teil: 'jonas',
     auftrag: '1C',
-    titel: 'Die Nachprüfung: wenig Zeit, unter Voting teuer',
+    titel: 'Die Nachprüfung: wenig Zeit, unter Voting ein Risiko',
     inhalt: flaeche(
       frage('Was, wenn sich die Daten ändern, während das Modell rechnet?', '1C') +
         zweiSpalten(
           liste(
             [
               `Nach der Inferenz wird der Kontext noch einmal gebaut und sein Hash verglichen. Stimme oder gelöschte Quelle: Antwort verworfen, ${mono('source_changed')} (E7, E8)`,
-              `<b>Preis:</b> Unter laufendem Voting verwirft dieselbe Grenze die meisten Antworten; Vorhersage ${fmt(c.m7VorhersagePc.wert, 2)}–${fmt(c.m7VorhersageLaptop.wert, 2)}, Modell M7 verfehlt, Empfehlung zurückgehalten (1C-017)`,
+              `<b>Preis unter Voting:</b> Jede Stimme zwischen Aufbau und Nachprüfung verwirft die Antwort (belegt). Wie oft das passiert, ist nicht belastbar gemessen: Modell M7 verfehlt sein Kriterium, Empfehlung zurückgehalten (1C-017)`,
               `<b>Befund:</b> Bei laufender Blitzlicht-Runde außer ${mono('TEMPO')} hängt der Hash von der Uhrzeit ab: ${mono('YESNO')} ${c.yesno.wert} ${mono('source_changed')} ohne Datenänderung (geprüft: YESNO; andere Typen laut Code)`,
             ],
             22,
@@ -889,7 +915,7 @@ export function folien(daten) {
           'ADR 1C-010 (bleibt), ADR 1C-017 (Voting), ADR 1C-016 (Blitzlicht: empfohlen, nicht umgesetzt; Issue #18), Nachlauf N3, N5; Teil 2 E7, E8',
         ),
     ),
-    notiz: `Nächste Station, nach der Inferenz. Was passiert, wenn sich die Daten ändern, während das Modell rechnet? Der Kontext wird danach noch einmal gebaut und sein Hash verglichen. Ändert sich eine Stimme oder wird eine Quelle gelöscht, wird die Antwort verworfen; das zeigen E7 und E8. Zeitlich kostet das ${z.nachpr} Prozent eines Auftrags. Der eigentliche Preis liegt woanders: Unter laufendem Voting verwirft dieselbe Grenze die meisten Antworten, die Vorhersage liegt bei ${fmt(c.m7VorhersagePc.wert, 2)} bis ${fmt(c.m7VorhersageLaptop.wert, 2)}. Mein Modell dafür hat die Messung verfehlt, deshalb halte ich die Empfehlung zurück. Die Nachprüfung bleibt trotzdem, weil sonst veraltete Ergebnisse als gültig gälten. Dazu ein Befund: Bei laufender Blitzlicht-Runde außer TEMPO hängt der Hash von der Uhrzeit ab; geprüft habe ich YESNO. Empfohlen, nicht umgesetzt.`,
+    notiz: `Nächste Station, nach der Inferenz. Was passiert, wenn sich die Daten ändern, während das Modell rechnet? Der Kontext wird danach noch einmal gebaut und sein Hash verglichen. Ändert sich eine Stimme oder wird eine Quelle gelöscht, wird die Antwort verworfen; das zeigen E7 und E8. Zeitlich kostet das ${z.nachpr} Prozent eines Auftrags. Der eigentliche Preis liegt woanders: Unter laufendem Voting verwirft jede Stimme während der Inferenz die Antwort. Wie oft das in einer Vorlesung passiert, weiß ich nicht belastbar; mein Modell dafür hat sein Kriterium verfehlt, deshalb halte ich die Empfehlung zurück. Die Nachprüfung bleibt trotzdem, weil sonst veraltete Ergebnisse als gültig gälten. Dazu ein Befund: Bei laufender Blitzlicht-Runde außer TEMPO hängt der Hash von der Uhrzeit ab; geprüft habe ich YESNO. Empfohlen, nicht umgesetzt.`,
     zeitS: 50,
     kurzfassung: false,
     quelle: `Nachlauf N3, N5 · Laptop (ThinkPad P50) · def56700; ADR 1C-017 · Laptop und PC · 9f230abc; E7, E8: evidenz/1C/2026-10-24-teil2.md · Laptop · 248029dc (Test-Runtime)`,
@@ -898,12 +924,12 @@ export function folien(daten) {
 
   // ------------------------------------------------------------ J13
   const aussagen = a.ausgabe.split('\n');
-  const gekuerzt = [...aussagen.slice(0, 2), '[…]'];
+  const gekuerzt = [aussagen[0], '[…]'];
   const nb = daten.nachbau;
   const nachbau =
     `<div data-nachbau="j13" style="flex:none;border:var(--linie-min) solid var(--linie);border-radius:10px;background:var(--grund);padding:12px 16px;font-size:22px;line-height:1.28">` +
     `<p style="margin:0 0 6px;font-size:var(--s-min);color:var(--rot);font-weight:700">Nachbau, keine Bildschirmaufnahme</p>` +
-    `<p style="margin:0 0 6px;font-weight:700">Q&amp;A-Zusammenfassung</p>` +
+    `<p style="margin:0 0 6px;font-weight:700">${esc(nb.titel)}</p>` +
     `<ul style="margin:0 0 8px;padding-left:24px">${nb.fragen.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>` +
     `<p style="margin:0 0 2px;font-weight:700">Hinweise</p>` +
     `<p style="margin:0;color:var(--text-2)">${esc(nb.hinweis)}</p>` +
@@ -912,7 +938,7 @@ export function folien(daten) {
     id: 'J13',
     teil: 'jonas',
     auftrag: 'beide',
-    titel: `Gate verwarf alle ${daten.abgeleitet.gateBeobachtet} beobachteten Antworten`,
+    titel: `${daten.abgeleitet.gateBeobachtet} geprüfte Antworten, keine besteht das Gate`,
     inhalt: flaeche(
       `<div style="display:grid;grid-template-columns:780px 1fr;column-gap:44px">` +
         `<div>` +
@@ -927,17 +953,17 @@ export function folien(daten) {
         `<div>${etikett('1B')} <span class="messwert" style="font-size:32px">${b.verworfen} von ${n}</span><br>verworfen (${mono('a19ca70f')})</div>` +
         `<div>${etikett('1C')} <span class="messwert" style="font-size:32px">${c.gateAntworten.wert}</span><br>bestehen (${mono('def56700')})</div>` +
         `</div>` +
-        `<p style="margin:10px 0 0;font-size:22px;line-height:1.3">Geltung: ein Modell (Qwen3-4B Q4_K_M), eine Fixture, Code nach v1.4.0. <b>Vor dem Gate</b> (${mono('9f230abc')}): ${c.fullContextVorGate.wert} mit Modellzusammenfassung.</p>` +
+        `<p style="margin:10px 0 0;font-size:22px;line-height:1.3">Geltung: ein Modell, eine Fixture, Code nach v1.4.0. <b>Vor v1.4.0</b> (${mono('9f230abc')}, Instruktion v2, ohne Gate): ${c.fullContextVorGate.wert} mit Modellzusammenfassung; ${mono('12f1d8e4')} änderte beides zugleich.</p>` +
         `</div>` +
         `<figure data-clip="jonas-gate-clip.webm" style="margin:0;display:flex;flex-direction:column">` +
         nachbau +
-        `<figcaption style="margin-top:8px;font-size:var(--s-min);line-height:1.3;color:var(--gedaempft)">Fragen nach der Regel des Fallbacks aus der echten Nutzlast (1C-Nachlauf), Hinweis wörtlich aus ${mono('qaSummaryExtractive.ts')}. Den Grund erfährt die Lehrperson nicht.</figcaption>` +
+        `<figcaption style="margin-top:8px;font-size:var(--s-min);line-height:1.3;color:var(--gedaempft)">Fragen nach der Regel des Fallbacks aus der echten Nutzlast (1C-Nachlauf); Überschrift und Hinweis wörtlich aus der App. Den Grund erfährt die Lehrperson nicht.</figcaption>` +
         `</figure></div>` +
         beleg(
           'ADR 1C-018 (empfohlen: Instruktion, Grammatik und Gate abstimmen, nicht umgesetzt; Issue #13), ADR 1C-019, Laufprotokoll 1B, Befund',
         ),
     ),
-    notiz: `Und jetzt das Gate. Hier scheitert unser Auftrag. Links steht die echte Antwort des Modells, gekürzt, im Original. Das Gate prüft vor allem die Form: mindestens zwei Aussagen, jede mit einem Stichwort vorn, getrennt durch Doppelpunkt oder Strich, verschiedene Stichwörter, ganze Sätze, keine Metasätze aus einer kurzen Liste. Ausgaben mit Status failed und unsichere ohne Aussagen lässt es durch, aber jede beobachtete Antwort hatte Aussagen. Sprache und Thema prüft es nicht. Diese Antwort scheitert an der Form; inhaltlich passt sie auch nicht, sie ist englisch und fasst Moderationszustände zusammen. Im 1B-Lauf wurden ${b.verworfen} von ${n} Antworten verworfen, im 1C-Nachlauf bestand keine von ${c.gateAntwortenGesamt.wert}. Das gilt für ein Modell und eine Fixture. Das Gate kam erst mit Version 1.4.0; vor dem Gate endeten in 1C ${c.fullContextVorGate.wert} Aufträgen mit Modellzusammenfassung. Ein Upgrade hat das Ergebnis gekippt. Rechts ein Nachbau der Lehrenden-Sicht: die Fragen im Wortlaut und der allgemeine Hinweis aus dem App-Code, den Grund erfährt die Lehrperson nicht. Meine Empfehlung: Instruktion, Grammatik und Gate gemeinsam abstimmen. Umgesetzt ist das nicht.`,
+    notiz: `Und jetzt das Gate. Hier scheitert unser Auftrag. Links steht die echte Antwort des Modells, gekürzt, im Original. Das Gate prüft vor allem die Form: mindestens zwei Aussagen, jede mit einem Stichwort vorn, getrennt durch Doppelpunkt oder Strich, verschiedene Stichwörter, ganze Sätze, keine Metasätze aus einer kurzen Liste. Ausgaben mit Status failed und unsichere ohne Aussagen lässt es durch, aber jede geprüfte Antwort hatte Aussagen. Sprache und Thema prüft es nicht. Diese Antwort scheitert an der Form; inhaltlich passt sie auch nicht, sie ist englisch und fasst Moderationszustände zusammen. Im 1B-Lauf wurden ${b.verworfen} von ${n} Antworten verworfen, im 1C-Nachlauf bestand keine von ${c.gateAntwortenGesamt.wert}. Das gilt für ein Modell und eine Fixture. Vor Version 1.4.0, mit älterer Instruktion und ohne Gate, endeten in 1C ${c.fullContextVorGate.wert} Aufträgen mit Modellzusammenfassung. Derselbe Upstream-Commit hat beides zugleich geändert, Instruktion und Gate; welcher Teil wie viel bewirkt, ist nicht getrennt gemessen. Rechts ein Nachbau der Lehrenden-Sicht: die Fragen im Wortlaut und der allgemeine Hinweis aus dem App-Code, den Grund erfährt die Lehrperson nicht. Meine Empfehlung: Instruktion, Grammatik und Gate gemeinsam abstimmen. Umgesetzt ist das nicht.`,
     zeitS: 75,
     kurzfassung: true,
     quelle: `${qAntwort}; Lauf 1B · ThinkPad P50 · ${H.hauptlauf.commit.slice(0, 8)}; Nachlauf · Laptop · def56700; ADR 1C-018 · 9f230abc; Nachbau: Nutzlast runs[${nl.lauf}], Hinweis qaSummaryExtractive.ts`,
@@ -958,16 +984,22 @@ export function folien(daten) {
         `<ul style="margin:6px 0 0;padding-left:22px">` +
         folge(
           'Bleibt (1C-010 bis 1C-013):',
-          `wenig Zeit; unter Voting verwirft die Nachprüfung die meisten Antworten (${fmt(c.m7VorhersagePc.wert, 2)}–${fmt(c.m7VorhersageLaptop.wert, 2)}, 1C-017)`,
+          'wenig Zeit; Risiko: unter Voting verwirft jede Stimme während der Inferenz die Antwort, Häufigkeit offen (1C-017)',
         ) +
         folge(
           'Gate (1C-018):',
           'Abnahmemessung nötig; Risiko: lockere Schwelle zeigt Metaaussagen',
         ) +
         folge('Timeout (1C-023):', 'eine Kalibrierung je Host; Slot länger belegt') +
-        folge('Cache (1C-024):', 'eine Zeile im Entry-Point; sonst Betrieb mit OOM-Neustarts') +
+        folge(
+          'Cache (1C-024):',
+          'eine Zeile im Entry-Point; Risiko: nur ein Slot und ein Auftragstyp gemessen',
+        ) +
         folge('Zählung (1C-014):', 'Änderung am Packer; Risiko: Fenster läuft über') +
-        folge('Snapshot, Blitzlicht (1C-015, 1C-016):', 'kleine Änderung; Rückweg Revert') +
+        folge(
+          'Snapshot, Blitzlicht (1C-015, 1C-016):',
+          'klein; Risiko: Fenster beschreibt die Rundenlaufzeit nicht mehr',
+        ) +
         `</ul></div>` +
         `<div style="border-left:6px solid var(--bernstein);padding-left:16px">${etikett('1B')}` +
         `<ul style="margin:6px 0 0;padding-left:22px">` +
@@ -978,13 +1010,13 @@ export function folien(daten) {
         `</div>` +
         `<p style="margin:16px 0 4px;font-weight:700;font-size:24px;color:var(--blau)">Zur Diskussion</p>` +
         `<ol style="margin:0;padding-left:34px;font-size:24px;line-height:1.3">` +
-        `<li>Nach v1.4.0 bestand keine der ${daten.abgeleitet.gateBeobachtet} beobachteten Antworten, vorher ${c.fullContextVorGate.wert}. Das Gate prüft die Form, inhaltlich sind die Antworten auch verfehlt: Prüft es das Richtige?</li>` +
+        `<li>Nach v1.4.0 besteht keine der ${daten.abgeleitet.gateBeobachtet} geprüften Antworten das Gate; davor (andere Instruktion, kein Gate) endeten ${c.fullContextVorGate.wert} mit Modellzusammenfassung. Prüft das Gate das Richtige, wenn die Antworten auch inhaltlich verfehlt sind?</li>` +
         `<li>Wer legt den Timeout fest: das Release oder der Betreiber am Inferenz-Host?</li>` +
         `<li>Reicht ein privates Netz mit Token über HTTP als Schutz für die zweite Rolle?</li>` +
         `</ol>` +
         `<p style="position:absolute;left:0;right:0;bottom:0;margin:0;font-size:26px;font-weight:700">Und wenn der zweite Host langsam ist oder ausfällt? <span style="color:var(--blau)">→ Niklas</span></p>`,
     ),
-    notiz: `Meine Entscheidung. Für 1C bleiben Nachprüfung, strikte Validierung, Entkopplung und die Gleichheit von Vorschau und Nutzlast. Das kostet wenig Zeit, aber unter laufendem Voting verwirft die Nachprüfung die meisten Antworten; dafür habe ich noch keine belastbare Empfehlung. Zu ändern empfehle ich Gate, Timeout, Prompt-Cache, Byte-Schätzung, Themen-Snapshot und Blitzlicht-Hash, jeweils mit dem Preis, der auf der Folie steht. Umgesetzt ist nichts. Für 1B: Die Topologie kostet keine relevante Zeit, der Hebel liegt am Inferenz-Host; den Aufwand der zweiten Rolle zeigt Niklas. Drei Fragen würde ich gern diskutieren, die erste zum Upgrade. Und damit an Niklas: Was passiert, wenn der zweite Host ausfällt?`,
+    notiz: `Meine Entscheidung. Für 1C bleiben Nachprüfung, strikte Validierung, Entkopplung und die Gleichheit von Vorschau und Nutzlast. Das kostet wenig Zeit, aber unter laufendem Voting verwirft jede Stimme während der Inferenz die Antwort; wie oft, ist offen. Zu ändern empfehle ich Gate, Timeout, Prompt-Cache, Byte-Schätzung, Themen-Snapshot und Blitzlicht-Hash, jeweils mit dem Preis, der auf der Folie steht. Umgesetzt ist nichts. Für 1B: Die Topologie kostet keine relevante Zeit, der Hebel liegt am Inferenz-Host; den Aufwand der zweiten Rolle zeigt Niklas. Drei Fragen würde ich gern diskutieren, die erste zum Upgrade. Und damit an Niklas: Was passiert, wenn der zweite Host ausfällt?`,
     zeitS: 50,
     kurzfassung: true,
     quelle: `1C-ergebnis.md, Abschnitt 5, ADRs 1C-010 bis 1C-024, Abschnitt Folgen (Laptop und PC · 9f230abc; Laptop · def56700); 1B-ergebnis.md, Entscheidung (${rechnerKurz(H.hauptlauf.rechner)} · ${H.hauptlauf.commit.slice(0, 8)})`,
@@ -1002,7 +1034,7 @@ export function folien(daten) {
         `<div style="display:grid;grid-template-columns:repeat(3,1fr);column-gap:40px;font-size:26px;line-height:1.4;padding-top:60px">` +
         `<div style="border-top:6px solid var(--blau);padding-top:14px"><b>1A App-Host</b><p style="margin:8px 0 0;color:var(--gedaempft)">[Niklas]</p></div>` +
         `<div style="border-top:6px solid var(--bernstein);padding-top:14px"><b>1B Zweiter Host</b><p style="margin:8px 0 0">Die Trennung kostet keine relevante Zeit; die Zeit steckt in der Inferenz.</p><p style="margin:8px 0 0;color:var(--gedaempft)">[Niklas: Störung und Aufwand]</p></div>` +
-        `<div style="border-top:6px solid var(--petrol);padding-top:14px"><b>1C Kontextpfad</b><p style="margin:8px 0 0">Vertrag, Konsistenz und Entkopplung halten. Nach v1.4.0 bestand keine der ${daten.abgeleitet.gateBeobachtet} beobachteten Modellantworten das Gate (ein Modell, eine Fixture); davor (${mono('9f230abc')}) ${c.fullContextVorGate.wert}.</p></div>` +
+        `<div style="border-top:6px solid var(--petrol);padding-top:14px"><b>1C Kontextpfad</b><p style="margin:8px 0 0">Vertrag, Konsistenz und Entkopplung halten, mit benannten Ausnahmen (T2.3, T3.1). Nach v1.4.0 besteht keine der ${daten.abgeleitet.gateBeobachtet} geprüften Modellantworten das Gate (ein Modell, eine Fixture); davor (${mono('9f230abc')}, Instruktion v2, ohne Gate) ${c.fullContextVorGate.wert}.</p></div>` +
         `</div>` +
         `<p style="position:absolute;left:0;right:0;bottom:0;margin:0;font-size:28px;font-weight:600">Gemeinsam: [Satz zur Leitfrage von Thema 1, mit Niklas]</p>`,
     ),
@@ -1041,7 +1073,7 @@ export function folien(daten) {
             `${etikett('1C')} Laptop: ${fw.kalibrierungLaptopS} s (Prefill ${fw.kalibrierungLaptopPrefillS} s, Ausgabe ${fw.kalibrierungLaptopAusgabeS} s), daher ${fw.laborTimeoutS} s für die Laborläufe am Laptop`,
             `${etikett('1C')} PC, zweiter Rechner: I = ${z.kalPc} s, ebenfalls über ${fw.releaseTimeoutS} s, also ${fw.laborTimeoutS} s`,
             `${etikett('1B')} I = ${fw.kalibrierung1BS} s, nach der Regel aus ADR 1B-005 ebenfalls ${fw.laborTimeout1BS} s`,
-            `Release ab Werk ${fw.releaseTimeoutS} s; ${fw.laborTimeoutS} s ist die Obergrenze des Produkts, offen als Abweichung`,
+            `Ab Werk v1.4.0 ${fw.releaseTimeoutS} s (v1.3.0: ${fw.v13TimeoutS} s); ${fw.laborTimeoutS} s ist die Obergrenze des Produkts, offen als Abweichung`,
           ],
           24,
         ),

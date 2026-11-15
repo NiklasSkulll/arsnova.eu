@@ -395,3 +395,12 @@ test('eingechecktes ausgabe/manifest.json passt zu den eingecheckten Ausgaben un
     assert.equal(sha(resolve(REPO, e.pfad)), e.sha256, `Eingabe ${e.pfad} geändert, neu bauen`);
   }
 });
+
+test('Sprechnotizen: Sprungplan zu J13 und J15 bei Abbruch (Prüfung 3, I5)', async () => {
+  const { baueSprechnotizen } = await import('./bau.mjs');
+  const md = baueSprechnotizen(F);
+  assert.match(md, /Sprungplan/);
+  assert.match(md, /J13/);
+  assert.match(md, /J15/);
+  assert.match(md, /9:00/);
+});

@@ -500,7 +500,8 @@ export function wegSvg({ aktiv = null, b1, c1, auftrag }) {
         groesse: 22,
         farbe: FARBEN.text2,
       }) +
-      text(lx, inf.y + 54, `Anteil ${fmt(b1.inferAnteil * 100, 2)} %, langsame CPU`, {
+      // Anteil dieses Auftrags (inferMs / jobMs), nicht der Median aller Aufträge
+      text(lx, inf.y + 54, `Anteil ${fmt((au.inferMs / au.jobMs) * 100, 2)} %, langsame CPU`, {
         mono: true,
         groesse: 22,
         farbe: FARBEN.text2,
@@ -757,7 +758,7 @@ export function fussballfeldSvg(b1, { zoom = 0 } = {}) {
     text(
       0,
       544,
-      `105 m = T_job, Median warm, n = ${nWarm} · Netz, Transport, Anteil: Median über alle ${b1.anzahl} Aufträge`,
+      `105 m = T_job, Median warm, n = ${nWarm} · Netz, Transport, Anteil: Median, alle ${b1.anzahl} · langsame CPU`,
       { mono: true, groesse: 22, farbe: FARBEN.gedaempft },
     ),
   );

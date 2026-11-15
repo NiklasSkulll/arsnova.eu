@@ -215,7 +215,7 @@ test('W4/W5/W9–W12: Abweichungen je Auftrag, Aufgabenabdeckung, Rollen, Kosten
   const t = textOhneSvg();
   assert.equal((r.ohne.html.match(/class="grenzen/g) ?? []).length, 2, 'zwei Blöcke');
   for (const re of [
-    /Timeout 300 s statt 90 s nach Kalibrierung/,
+    /Timeout 300 s statt 90 s ab Werk v1\.4\.0, nach Kalibrierung/,
     /4 statt 8 CPUs/,
     /ohne Wrapper/,
     /von Hand abgeschaltet/,
@@ -402,13 +402,13 @@ test('I-02 bis I-10 im Handout', () => {
   assert.match(t, /Override/); // I-02
   assert.ok(!/Runbook §6 bricht ihn\)/.test(t));
   assert.ok(!/verwirft (das Gate )?jede (Modell)?[Aa]ntwort/.test(t)); // I-03
-  assert.match(t, new RegExp(`${daten.abgeleitet.gateBeobachtet} beobachtete`));
+  assert.match(t, new RegExp(`${daten.abgeleitet.gateBeobachtet} geprüfte`));
   assert.ok(!/vor jeder Messung/.test(t)); // I-04
   assert.match(t, /M7b/);
   assert.match(t, /ohne vorherige Freigabe/);
   assert.match(t, /1B-Leitfrage/);
   assert.match(t, /Voting/); // I-05
-  assert.match(t, /0,97/);
+  assert.ok(!/0,97/.test(t)); // Runde 3, I4: keine Modellvorhersage als Befund
   assert.ok(!/kein neues Risiko/.test(t));
   assert.ok(!/Sennrich/.test(r.ohne.html)); // I-08
   assert.ok(!/mehrere Bytes/.test(t));
@@ -418,4 +418,15 @@ test('I-02 bis I-10 im Handout', () => {
   assert.match(t, /a19ca70f/); // I-10
   assert.match(t, /v1\.4\.0-184/);
   assert.ok(!/Stand Version 1\.4\.0/.test(t));
+});
+
+test('Runde 3: v1.3.0-Werte und Grund, Instruktion und Gate zugleich, Template-Grenze', () => {
+  const t = textOhneSvg();
+  assert.match(t, /v1\.3\.0/);
+  assert.match(t, /Prüfer/);
+  assert.match(t, /Instruktion/);
+  assert.match(t, /nicht getrennt gemessen/);
+  assert.match(t, /budgetierten Teil/);
+  assert.ok(!/Release-Timeout|Release ab Werk/.test(t));
+  assert.ok(!/Vor dem Gate|vor dem Gate \(/.test(t));
 });
