@@ -159,7 +159,7 @@ export function baueSprechnotizen(alle) {
   return zeilen.join('\n');
 }
 
-async function drucke(browser, url, pdfPfad) {
+export async function drucke(browser, url, pdfPfad) {
   const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
   try {
     await page.goto(url); // frisch geladen, damit J10 beim Druck im Endzustand startet

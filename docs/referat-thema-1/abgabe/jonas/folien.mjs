@@ -1563,3 +1563,6 @@ export function folien(daten) {
   }
   return F;
 }
+
+// Bausteine für den Folienentwurf 1A (abgabe/niklas/folien-1a.mjs).
+export { flaeche, frage, liste, zahl, zweiSpalten, grafikBox, mono, entwurf, etikett };

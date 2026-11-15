@@ -303,16 +303,17 @@ export function baueDeck(
     ? { uri: dataUri(clip), standbild: dataUri(standbild), info: clipInfo }
     : null;
 
+  // Niklas' Teile: gerasterte PDF-Seiten (Pfade) oder native Folien im Deck-Stil (Objekte wie
+  // folien(); Entwurf in abgabe/niklas/).
+  const teilVonNiklas = (teil, ...rest) =>
+    teil?.length && typeof teil[0] === 'object'
+      ? teil.map((f) => ({ folie: f }))
+      : niklasFolien(teil ?? [], ...rest);
   const haupt = [
     ...g0.map((f) => ({ folie: f })),
-    ...niklasFolien(niklas.teil1 ?? [], '1A', 'N1', '1A: Ressourcen auf dem App-Host'),
+    ...teilVonNiklas(niklas.teil1, '1A', 'N1', '1A: Ressourcen auf dem App-Host'),
     ...jonas.map((f) => ({ folie: f })),
-    ...niklasFolien(
-      niklas.teil2 ?? [],
-      '1B Schritte 3–4',
-      'N2',
-      '1B Schritte 3–4: Störung und Aufwand',
-    ),
+    ...teilVonNiklas(niklas.teil2, '1B Schritte 3–4', 'N2', '1B Schritte 3–4: Störung und Aufwand'),
     ...g9.map((f) => ({ folie: f })),
   ];
   const gesamt = haupt.length;

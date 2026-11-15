@@ -886,3 +886,6 @@ export function fussballfeldSvg(b1, { zoom = 0 } = {}) {
     `(Netz und Transport als Median über alle ${b1.anzahl} Aufträge).`;
   return svgHuelle(label, t.join(''));
 }
+
+// Für den Folienentwurf 1A (abgabe/niklas/grafik-1a.mjs): dieselben Bausteine, derselbe Stil.
+export { text, svgHuelle, esc };

@@ -214,6 +214,10 @@
   background: var(--petrol-hell);
   color: var(--petrol);
 }
+.etikett-1a {
+  background: #e6f0fa;
+  color: var(--blau);
+}
 .etikett-1b {
   background: var(--bernstein-hell);
   color: var(--bernstein-text);
