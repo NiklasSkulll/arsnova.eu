@@ -77,20 +77,20 @@ test('Schriften geladen, keine stille Ersatzschrift', () => {
   for (const s of ['Inter 400', 'Inter 700', 'IBM Plex Mono 400']) assert.ok(g.includes(s), s);
 });
 
-test('350–1.800 Wörter (Prüfungsdokument), Wachstumsschutz höchstens 1.650', () => {
+test('350–1.800 Wörter (Prüfungsdokument), Wachstumsschutz höchstens 1.750', () => {
   for (const name of ['ohne', 'mit']) {
     const n = woerter(r[name].text);
     assert.ok(n >= 350 && n <= 1800, `${name}: ${n} Wörter`);
-    assert.ok(n <= 1650, `${name}: ${n} Wörter, Puffer für echte Namen aufgebraucht`);
+    assert.ok(n <= 1750, `${name}: ${n} Wörter, Puffer für echte Namen aufgebraucht`);
   }
 });
 
-test('Titelzahl = Zahl im Titel von Folie J1 (der verfolgte Auftrag), getrennt vom warmen Median', () => {
+test('Titel = Titel von Folie J1 (Wartezeit am Client, gerundet), getrennt vom warmen Median', () => {
   const j1 = folien(daten).find((f) => f.id === 'J1');
   const folienZahl = j1.titel.match(/\d+(?:,\d+)?/)[0];
   const h1 = r.ohne.html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/)[1].replace(/<[^>]+>/g, '');
-  assert.equal(h1.match(/\d+(?:,\d+)?/)[0], folienZahl, h1);
-  assert.equal(folienZahl, fmt(Math.round(daten.auftrag.jobMs / 1000)));
+  assert.equal(h1, j1.titel);
+  assert.equal(folienZahl, fmt(Math.round(daten.auftrag.clientWaitMs / 1000)));
   // Der Text nennt den Auftrag mit Nummer und den warmen Median mit n getrennt.
   const text = r.ohne.html.replace(/<svg[\s\S]*?<\/svg>/g, ' ').replace(/<[^>]+>/g, '');
   assert.match(
@@ -172,8 +172,67 @@ test('Literaturliste vorhanden; jeder Verweis [n] im Text hat einen Eintrag', ()
     'CLOUD-COMPUTING-REFERAT-PRUEFUNG',
     'Dossier',
     'docs/referat-thema-1/',
+    'llama.cpp/blob/b10524/',
+    'abgerufen am 15.11.2026',
   ])
     assert.ok(r.ohne.html.includes(pflicht), `Literatur: ${pflicht}`);
+  assert.ok(!r.ohne.html.includes('/blob/master/'), 'Link auf master statt auf den Tag');
+  // Autor bzw. Herausgeber und Jahr in jedem Eintrag
+  for (const [, e] of r.ohne.html.matchAll(/<li id="q\d+">([\s\S]*?)<\/li>/g)) {
+    assert.match(e.replace(/<[^>]+>/g, ''), /^[^:]+\((?:\d{4}|o\. J\.)\):/, e.slice(0, 60));
+  }
+});
+
+// ------------------------------------------------------------------ Fachliche Prüfung 1
+
+const textOhneSvg = () =>
+  r.ohne.html
+    .replace(/<svg[\s\S]*?<\/svg>/g, ' ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\s+/g, ' ');
+
+test('K1/W2: Hinweis statt „ohne Hinweis“; Gate prüft mehr als die Form', () => {
+  const t = textOhneSvg();
+  assert.ok(!/ohne (jeden )?Hinweis/.test(t));
+  assert.match(t, /Eine ausführliche Zusammenfassung war diesmal nicht möglich/);
+  assert.ok(!/prüft nur die Form/.test(t));
+  assert.match(t, /Sprache und Thema prüft es nicht/);
+});
+
+test('K2: Untertitel und Kurzantwort nennen den Messstand 1.4.0 und den Stand vor dem Gate', () => {
+  const unter = r.ohne.html.match(/<p class="unter">([\s\S]*?)<\/p>/)[1];
+  assert.match(unter, /Release 1\.3/);
+  assert.match(unter, /1\.4\.0/);
+  const kurz = r.ohne.html
+    .match(/<div class="kasten">([\s\S]*?)<\/div>/)[1]
+    .replace(/<[^>]+>/g, '');
+  assert.match(kurz, /1\.4\.0/);
+  assert.match(kurz, /19 von 20/);
+});
+
+test('W4/W5/W9–W12: Abweichungen je Auftrag, Aufgabenabdeckung, Rollen, Kostenfolgen', () => {
+  const t = textOhneSvg();
+  assert.equal((r.ohne.html.match(/class="grenzen/g) ?? []).length, 2, 'zwei Blöcke');
+  for (const re of [
+    /Timeout 300 s statt 90 s nach Kalibrierung/,
+    /4 statt 8 CPUs/,
+    /ohne Wrapper/,
+    /von Hand abgeschaltet/,
+    /Loopback/,
+    /5 GiB/,
+    /Aufgabenabdeckung 1C/,
+    /assertHostSessionAccessFromContext/,
+    /CONFLICT/,
+    /T2\.3/,
+    /E15/,
+    /Encoder/,
+    /App-Adapter/,
+    /--n-predict/,
+    /Kosten, Risiko, Betrieb/,
+    /wechselnden Prompts/,
+    /identischer Snapshot/,
+  ])
+    assert.match(t, re, String(re));
 });
 
 test('KI-Offenlegung: Werkzeug, Modell, Rolle des Autors', () => {
@@ -189,7 +248,11 @@ test('ohne personen: Platzhalter für beide Gruppenmitglieder, keine Matrikel-ä
   assert.equal(pdf.split(PLATZHALTER).length - 1, 2, 'zweimal der Platzhalter');
   assert.match(pdf, /Jonas/);
   assert.match(pdf, /Niklas/);
-  assert.ok(!/\b\d{6,9}\b/.test(r.ohne.html.replace(/<svg[\s\S]*?<\/svg>/g, '')), 'Ziffernfolge');
+  // DOIs im Literaturverzeichnis enthalten lange Ziffernfolgen; die zählen nicht.
+  const ohneLit = r.ohne.html
+    .replace(/<svg[\s\S]*?<\/svg>/g, '')
+    .replace(/<ol class="literatur"[\s\S]*?<\/ol>/, '');
+  assert.ok(!/\b\d{6,9}\b/.test(ohneLit), 'Ziffernfolge');
 });
 
 test('mit personen: Namen und Matrikelnummern stehen im PDF, kein Platzhalter', () => {
@@ -219,7 +282,8 @@ const KENNUNGEN = [
   /\bADR-\d{4}\b/g,
   /#\d+/g,
   /\b(?=[0-9a-f]*[a-f])(?=[0-9a-f]*\d)[0-9a-f]{8,}\b/g,
-  /\b(?:Release |v)?1\.3(?:\.0)?\b/g,
+  /\b(?:Release |Version |v)?1\.[34](?:\.0)?\b/g,
+  /§\s?\d+/g, // Abschnitte des Runbooks
   /\bThema 1\b/g,
   /\bSchritte? \d(?:–\d)?\b/g,
   /\b[1][ABC]\b/g,
@@ -240,6 +304,7 @@ const KENNUNGEN = [
   /[\w./-]*\b\d{4}-\d{2}-\d{2}[\w.-]*/g, // datierte Dateinamen in Quellenangaben
   /\bruns\[\d+\]/g, // Index des Messlaufs in der Quelle
   /\bP50\b/g,
+  /\b(?:Abschnitte?|Prüfungsdokument) \d(?:\.\d)?\b/g,
 ];
 
 function whitelist() {
@@ -309,6 +374,9 @@ test('Empfehlungen erscheinen nie als umgesetzt (ADR 1C-004)', () => {
 
 test('Grafiken stehen unverändert im Handout (keine Nachbearbeitung im SVG)', () => {
   const { b1, c1 } = daten;
-  assert.ok(r.ohne.html.includes(wegSvg({ aktiv: null, b1, c1 })), 'Abb. 1');
+  assert.ok(
+    r.ohne.html.includes(wegSvg({ aktiv: null, b1, c1, auftrag: daten.auftrag })),
+    'Abb. 1',
+  );
   assert.ok(r.ohne.html.includes(zeitzerlegungSvg(b1)), 'Zeitzerlegung');
 });

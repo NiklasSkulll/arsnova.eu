@@ -435,8 +435,9 @@
               Entwurf, mit Niklas abzustimmen
             </p>
             <p style="margin: 0 0 30px; font-size: 30px; color: var(--text-2)">
-              Wie wirksam trennt Release 1.3 Anwendung, Kontextaufbau und private Inferenz, und
-              welche Betriebsgrenzen folgen daraus?
+              „Wie wirksam trennt die Architektur von Release 1.3 Anwendung, Kontextaufbau und
+              private Inferenz unter realer Last, und welche Betriebsgrenzen ergeben sich für den
+              Moderationskompass?“
             </p>
             <div
               style="
@@ -623,9 +624,9 @@
         class="folie"
         data-id="J1"
         data-teil="jonas"
-        aria-label="11 von 27: Ein Klick. 151 Sekunden. Keine Modellantwort."
+        aria-label="11 von 27: Ein Klick. 152 Sekunden. Keine Modellantwort."
       >
-        <h1 class="folie-titel">Ein Klick. 151 Sekunden. Keine Modellantwort.</h1>
+        <h1 class="folie-titel">Ein Klick. 152 Sekunden. Keine Modellantwort.</h1>
         <div class="folie-flaeche">
           <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
             <p style="margin: 0 0 40px; font-size: 30px; color: var(--text-2)">
@@ -660,13 +661,27 @@
               style="
                 position: absolute;
                 left: 0;
-                bottom: 40px;
+                bottom: 84px;
                 margin: 0;
                 font-size: var(--s-min);
                 color: var(--gedaempft);
               "
             >
-              Dieser Auftrag (Nr. 2): T_job 151,2 s · zum Vergleich Median warm, n = 9: 148,6 s
+              Auftrag Nr. 2: Klick bis Ergebnis 151,8 s, Jobdauer T_job 151,2 s · Median warm, n =
+              9: 148,6 s
+            </p>
+            <p
+              style="
+                position: absolute;
+                left: 0;
+                bottom: 44px;
+                margin: 0;
+                font-size: var(--s-min);
+                color: var(--gedaempft);
+              "
+            >
+              Architektur nach Release 1.3 (ADR-0035, zweiter Host); gemessen auf Fork-main, Version
+              1.4.0 (8e9d1317) und in 1C auf <span class="mono">def56700</span>
             </p>
             <p
               style="
@@ -683,53 +698,76 @@
           </div>
         </div>
         <div class="folie-fuss">
-          11 / 27 · evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317; Leitfragen:
-          Prüfungsdokument 4.3, ADR 1B-011
+          11 / 27 · evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317 (Auftrag 2:
+          treiber.auftraege clientWaitMs, zerlegung.auftraege jobMs); Version: package.json und git
+          describe (v1.4.0-255); Leitfragen: Prüfungsdokument 4.3, ADR 1B-011
         </div>
       </section>
       <section
         class="folie"
         data-id="J2"
         data-teil="jonas"
-        aria-label="12 von 27: Release 1.3 nachgebaut, mit einem Befehl"
+        aria-label="12 von 27: Zwei Hosts nach Release 1.3, gemessen auf 1.4.0"
       >
-        <h1 class="folie-titel">Release 1.3 nachgebaut, mit einem Befehl</h1>
+        <h1 class="folie-titel">Zwei Hosts nach Release 1.3, gemessen auf 1.4.0</h1>
         <div class="folie-flaeche">
           <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
             <p style="margin: 0 0 26px; font-size: 30px; font-weight: 600; color: var(--text-2)">
               <span class="etikett etikett-1b">1B</span> Lässt sich das Zwei-Host-Release nachbauen,
               ohne Produktionscode zu ändern?
             </p>
-            <div style="display: grid; grid-template-columns: 760px 1fr; column-gap: 70px">
+            <div style="display: grid; grid-template-columns: 800px 1fr; column-gap: 70px">
               <div>
-                <ul style="margin: 0; padding-left: 30px; font-size: 28px; line-height: 1.38">
+                <ul style="margin: 0; padding-left: 30px; font-size: 24px; line-height: 1.38">
                   <li style="margin: 0 0 12px">
-                    Aufbau von null: <span class="mono">labor.sh up</span>, danach alle
+                    Aufbau von null mit einem Befehl: <span class="mono">labor.sh up</span>, alle
                     automatischen Prüfungen grün
                   </li>
                   <li style="margin: 0 0 12px">
-                    Privates Netz, Firewall lässt die Runtime nur vom app-host zu, dazu ein Token
-                  </li>
-                  <li style="margin: 0 0 12px">
+                    Privates Netz, Firewall lässt die Runtime nur vom app-host zu, dazu ein Token;
                     Speicherlimits wie im Release, Modell per SHA-256 gepinnt
                   </li>
-                  <li style="margin: 0 0 12px">
-                    <b>Offengelegt:</b> Runtime mit 4 statt 8 CPUs und Threads; Release-Images nicht
-                    öffentlich, daher selbst gebaut; zwei VMs teilen sich einen Laptop
-                  </li>
                 </ul>
+                <div
+                  style="
+                    border: var(--linie-min) solid var(--bernstein);
+                    border-radius: 10px;
+                    padding: 10px 18px 4px;
+                  "
+                >
+                  <p style="margin: 0 0 4px; font-weight: 700; font-size: 24px">
+                    Abweichungen und Grenzen
+                  </p>
+                  <ul style="margin: 0; padding-left: 26px; font-size: 22px; line-height: 1.3">
+                    <li style="margin: 0 0 4px">
+                      4 statt 8 CPUs und Threads; zwei VMs teilen sich einen Laptop
+                    </li>
+                    <li style="margin: 0 0 4px">
+                      Timeout 300 s statt 90 s nach Kalibrierung (I = 202 s)
+                    </li>
+                    <li style="margin: 0 0 4px">
+                      Images selbst gebaut (Release-Images nicht öffentlich); Start ohne Wrapper,
+                      weil Runbook §6 ihn bricht
+                    </li>
+                    <li style="margin: 0 0 4px">
+                      Summary-Schalter eingeschaltet (ab Werk aus); Hintergrunddienste vor dem
+                      gewerteten Lauf von Hand abgeschaltet
+                    </li>
+                    <li style="margin: 0 0 4px">Code: Fork-main, Version 1.4.0 (8e9d1317)</li>
+                  </ul>
+                </div>
               </div>
               <div>
                 <div
                   style="
                     border: var(--linie-min) solid var(--bernstein);
                     border-radius: 10px;
-                    padding: 16px 20px;
+                    padding: 12px 20px;
                     background: var(--bernstein-hell);
-                    margin-bottom: 18px;
+                    margin-bottom: 12px;
                   "
                 >
-                  <div style="font-weight: 700; font-size: 28px">
+                  <div style="font-weight: 700; font-size: 26px">
                     app-host
                     <span
                       class="mono"
@@ -737,14 +775,16 @@
                       >192.168.150.10</span
                     >
                   </div>
-                  <div style="font-size: 24px; color: var(--text-2)">App, PostgreSQL, Redis</div>
+                  <div style="font-size: 22px; color: var(--text-2); line-height: 1.3">
+                    App mit App-Adapter, PostgreSQL, Redis; Encoder nicht gestartet (ab Werk aus)
+                  </div>
                 </div>
                 <div
                   style="
                     text-align: center;
-                    font-size: 24px;
+                    font-size: 22px;
                     color: var(--bernstein-text);
-                    margin: -6px 0 12px;
+                    margin: -4px 0 8px;
                   "
                 >
                   privates Netz, nur app-host → llm-host
@@ -753,12 +793,12 @@
                   style="
                     border: var(--linie-min) solid var(--bernstein);
                     border-radius: 10px;
-                    padding: 16px 20px;
+                    padding: 12px 20px;
                     background: var(--bernstein-hell);
-                    margin-bottom: 18px;
+                    margin-bottom: 12px;
                   "
                 >
-                  <div style="font-weight: 700; font-size: 28px">
+                  <div style="font-weight: 700; font-size: 26px">
                     llm-host
                     <span
                       class="mono"
@@ -766,30 +806,19 @@
                       >192.168.150.20</span
                     >
                   </div>
-                  <div style="font-size: 24px; color: var(--text-2)">
-                    llama-server, Qwen3-4B Q4_K_M
+                  <div style="font-size: 22px; color: var(--text-2); line-height: 1.3">
+                    LLM-Server llama-server, Qwen3-4B Q4_K_M, ein Slot
                   </div>
                 </div>
               </div>
             </div>
-            <p
-              style="
-                position: absolute;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                margin: 0;
-                font-size: var(--s-min);
-                color: var(--gedaempft);
-              "
-            >
-              Beleg: Aufbauprotokoll 1B; ADR 1B-002, 1B-005, 1B-010; Abgleich mit ADR-0035
-            </p>
           </div>
         </div>
         <div class="folie-fuss">
           12 / 27 · evidenz/1B/messung/2026-11-13-aufbau-von-null.txt · ThinkPad P50 · 82319946;
-          Abweichungen: evidenz/1B/2026-11-12-aufbau.md, ADR 1B-005
+          Abweichungen: evidenz/1B/2026-11-12-aufbau.md (Komponenten, Befund 2, Abweichungen),
+          evidenz/1B/2026-11-13-lauf.md (Kalibrierung, Versuch 3), ADR 1B-001, 1B-002, 1B-005,
+          1B-010
         </div>
       </section>
       <section
@@ -805,7 +834,7 @@
           <svg
             viewBox="0 0 1380 560"
             role="img"
-            aria-label="Weg eines Summary-Auftrags über app-host 192.168.150.10 und llm-host 192.168.150.20: Klick (1C), Kontext (1C), Netz 0,43 ms (1B), Inferenz 148 s (1B), Nachprüfung (1C), Gate (1C) verwirft die Antwort. Messpunkte t0 bis t3 an den Host-Grenzen. Aktuelle Station: Klick."
+            aria-label="Weg von Auftrag 2 über app-host 192.168.150.10 und llm-host 192.168.150.20: Klick 67 ms (Auftrag 2), Kontext (Validierung aus dem 1C-Test), Netz unter 1 ms, Inferenz 151 s (Auftrag 2), Nachprüfung (Anteil aus dem 1C-Labor, ein Rechner), Gate verwirft die Antwort. Messpunkte t0 bis t3 an den Host-Grenzen. Aktuelle Station: Klick."
           >
             <rect width="1380" height="560" fill="#ffffff" />
             <path
@@ -886,6 +915,20 @@
               paint-order="stroke"
             >
               llm-host · 192.168.150.20
+            </text>
+            <text
+              x="24"
+              y="532"
+              font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
+              font-size="22"
+              font-weight="400"
+              fill="#0f766e"
+              stroke="#ffffff"
+              stroke-width="6"
+              stroke-linejoin="round"
+              paint-order="stroke"
+            >
+              1C-Werte: ein Rechner, Loopback, kein llm-host
             </text>
             <path
               class="weg-pfad"
@@ -990,7 +1033,7 @@
               <circle cx="120" cy="140" r="20" fill="#ffffff" stroke="#0f766e" stroke-width="7" />
               <text
                 x="120"
-                y="204"
+                y="198"
                 font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
                 font-size="30"
                 font-weight="700"
@@ -1001,14 +1044,26 @@
               </text>
               <text
                 x="120"
-                y="240"
+                y="230"
+                font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
+                font-size="22"
+                font-weight="600"
+                fill="#16202c"
+                text-anchor="middle"
+              >
+                67 ms
+              </text>
+              <text
+                x="120"
+                y="258"
                 font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
                 font-size="22"
                 font-weight="400"
-                fill="#3d4757"
+                fill="#566173"
                 text-anchor="middle"
+                data-herkunft="1"
               >
-                29,4 ms
+                Auftrag 2
               </text>
             </g>
             <g data-station="kontext">
@@ -1029,7 +1084,7 @@
               <circle cx="340" cy="140" r="20" fill="#ffffff" stroke="#0f766e" stroke-width="7" />
               <text
                 x="340"
-                y="204"
+                y="198"
                 font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
                 font-size="30"
                 font-weight="700"
@@ -1040,14 +1095,26 @@
               </text>
               <text
                 x="340"
-                y="240"
+                y="230"
                 font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
                 font-size="22"
-                font-weight="400"
-                fill="#3d4757"
+                font-weight="600"
+                fill="#16202c"
                 text-anchor="middle"
               >
                 Validierung 1,6 %
+              </text>
+              <text
+                x="340"
+                y="258"
+                font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
+                font-size="22"
+                font-weight="400"
+                fill="#566173"
+                text-anchor="middle"
+                data-herkunft="1"
+              >
+                1C-Test · 248029dc
               </text>
             </g>
             <g data-station="nachpruefung">
@@ -1068,7 +1135,7 @@
               <circle cx="1020" cy="140" r="20" fill="#ffffff" stroke="#0f766e" stroke-width="7" />
               <text
                 x="1020"
-                y="204"
+                y="198"
                 font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
                 font-size="30"
                 font-weight="700"
@@ -1079,14 +1146,26 @@
               </text>
               <text
                 x="1020"
-                y="240"
+                y="230"
                 font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
                 font-size="22"
-                font-weight="400"
-                fill="#3d4757"
+                font-weight="600"
+                fill="#16202c"
                 text-anchor="middle"
               >
                 Anteil 0,03 %
+              </text>
+              <text
+                x="1020"
+                y="258"
+                font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
+                font-size="22"
+                font-weight="400"
+                fill="#566173"
+                text-anchor="middle"
+                data-herkunft="1"
+              >
+                1C-Labor · def56700
               </text>
             </g>
             <g data-station="gate">
@@ -1107,7 +1186,7 @@
               <circle cx="1250" cy="140" r="20" fill="#ffffff" stroke="#b42318" stroke-width="7" />
               <text
                 x="1250"
-                y="204"
+                y="198"
                 font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
                 font-size="30"
                 font-weight="700"
@@ -1118,22 +1197,34 @@
               </text>
               <text
                 x="1250"
-                y="240"
+                y="230"
                 font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
                 font-size="22"
-                font-weight="400"
+                font-weight="600"
                 fill="#b42318"
                 text-anchor="middle"
               >
                 verwirft Antwort
               </text>
+              <text
+                x="1250"
+                y="258"
+                font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
+                font-size="22"
+                font-weight="400"
+                fill="#566173"
+                text-anchor="middle"
+                data-herkunft="1"
+              >
+                1B und 1C
+              </text>
             </g>
             <g data-station="netz">
               <circle cx="532.5" cy="310" r="12" fill="#ffffff" stroke="#b45309" stroke-width="6" />
               <g data-etikett="1B">
-                <rect x="572.6" y="294" width="60" height="32" rx="6" fill="#fbefe0" />
+                <rect x="579.8" y="294" width="60" height="32" rx="6" fill="#fbefe0" />
                 <text
-                  x="602.6"
+                  x="609.8"
                   y="318"
                   font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
                   font-size="22"
@@ -1145,14 +1236,14 @@
                 </text>
               </g>
               <text
-                x="646.6"
+                x="653.8"
                 y="319"
                 font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
                 font-size="24"
                 font-weight="600"
                 fill="#16202c"
               >
-                Netz 0,43 ms
+                Netz &lt; 1 ms
               </text>
             </g>
             <g data-station="inferenz">
@@ -1166,7 +1257,7 @@
                 fill="#ffffff"
                 text-anchor="middle"
               >
-                148 s
+                151 s
               </text>
               <g data-etikett="1B">
                 <rect x="900" y="418" width="60" height="32" rx="6" fill="#fbefe0" />
@@ -1200,7 +1291,7 @@
                 font-weight="400"
                 fill="#3d4757"
               >
-                Kreis: Median warm, n = 9
+                Kreis: Auftrag 2 (warm), 1B
               </text>
               <text
                 x="900"
@@ -1228,8 +1319,9 @@
           </svg>
         </div>
         <div class="folie-fuss">
-          13 / 27 · evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317; 1C: Nachlauf
-          und Teil 2, Laptop (ThinkPad P50) · def56700, 248029dc
+          13 / 27 · evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317 (Auftrag 2:
+          hostReturnMs, inferMs); 1C-Werte: Nachlauf, Laptop (ThinkPad P50) · def56700, und Teil 2,
+          Laptop · 248029dc (Test-Runtime)
         </div>
       </section>
       <section
@@ -1245,66 +1337,91 @@
               style="
                 display: grid;
                 grid-template-columns: repeat(3, 1fr);
-                column-gap: 40px;
-                margin-bottom: 34px;
+                column-gap: 36px;
+                margin-bottom: 22px;
               "
             >
-              <div style="border-top: 6px solid var(--blau); padding-top: 14px">
-                <div class="messwert" style="font-size: 44px; color: var(--blau)">A</div>
-                <div style="font-weight: 700; font-size: 28px; margin: 4px 0 8px">
-                  Vorab festgelegt
+              <div style="border-top: 6px solid var(--blau); padding-top: 10px">
+                <div style="font-weight: 700; font-size: 26px; margin: 0 0 6px">
+                  <span class="messwert" style="color: var(--blau)">A</span> Vorab festgelegt
                 </div>
-                <div style="font-size: 24px; color: var(--text-2); line-height: 1.35">
-                  Hypothesen, Schwellen und Entscheidungsregeln stehen vor jedem Lauf fest, vom
-                  Autor freigegeben.
+                <div style="font-size: 22px; color: var(--text-2); line-height: 1.3">
+                  Hypothesen, Schwellen und Regeln vor jedem Lauf, vom Autor freigegeben.
+                  Offengelegte Ausnahmen: T3.1 exploratorisch, M7b/c nach Sichtung,
+                  Timeout-Empfehlung (nicht umgesetzt) erst nach dem Lauf.
                 </div>
               </div>
-              <div style="border-top: 6px solid var(--petrol); padding-top: 14px">
-                <div class="messwert" style="font-size: 44px; color: var(--petrol)">B</div>
-                <div style="font-weight: 700; font-size: 28px; margin: 4px 0 8px">
-                  Ohne Modell geprüft
+              <div style="border-top: 6px solid var(--petrol); padding-top: 10px">
+                <div style="font-weight: 700; font-size: 26px; margin: 0 0 6px">
+                  <span class="messwert" style="color: var(--petrol)">B</span> Ohne Modell geprüft
                 </div>
-                <div style="font-size: 24px; color: var(--text-2); line-height: 1.35">
+                <div style="font-size: 22px; color: var(--text-2); line-height: 1.3">
                   <span class="etikett etikett-1c">1C</span> Tests mit Test-Runtime und
                   Negativproben: Ein absichtlich eingebauter Fehler muss den Test rot machen.
                 </div>
               </div>
-              <div style="border-top: 6px solid var(--bernstein); padding-top: 14px">
-                <div class="messwert" style="font-size: 44px; color: var(--bernstein)">C</div>
-                <div style="font-weight: 700; font-size: 28px; margin: 4px 0 8px">
-                  Im Labor gemessen
+              <div style="border-top: 6px solid var(--bernstein); padding-top: 10px">
+                <div style="font-weight: 700; font-size: 26px; margin: 0 0 6px">
+                  <span class="messwert" style="color: var(--bernstein)">C</span> Im Labor gemessen
                 </div>
-                <div style="font-size: 24px; color: var(--text-2); line-height: 1.35">
-                  <span class="etikett etikett-1c">1C</span> Nachlauf mit echter Runtime am Laptop.
+                <div style="font-size: 22px; color: var(--text-2); line-height: 1.3">
+                  <span class="etikett etikett-1c">1C</span> Nachlauf mit echter Runtime.
                   <span class="etikett etikett-1b">1B</span> gewerteter Lauf über zwei Hosts, n =
                   10.
                 </div>
               </div>
             </div>
-            <table style="border-collapse: collapse; font-size: 26px; width: 100%">
-              <tr style="color: var(--gedaempft); font-size: var(--s-min); text-align: left">
-                <th style="padding: 6px 12px 6px 0">
-                  <span class="etikett etikett-1b">1B</span> Hypothese
-                </th>
-                <th>Messgröße</th>
-                <th>Schwelle, vor dem Lauf</th>
-              </tr>
-              <tr style="border-top: var(--linie-min) solid var(--linie)">
-                <td style="padding: 8px 12px 8px 0">H_B1</td>
-                <td>Netz je Auftrag, Median</td>
-                <td class="mono">≤ 50 ms</td>
-              </tr>
-              <tr style="border-top: var(--linie-min) solid var(--linie)">
-                <td style="padding: 8px 12px 8px 0">H_B2</td>
-                <td>Adapter je Auftrag, Median</td>
-                <td class="mono">≤ 2 s</td>
-              </tr>
-              <tr style="border-top: var(--linie-min) solid var(--linie)">
-                <td style="padding: 8px 12px 8px 0">H_B3</td>
-                <td>Inferenzanteil, Median</td>
-                <td class="mono">≥ 95 %</td>
-              </tr>
-            </table>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; column-gap: 36px">
+              <div
+                style="
+                  border: var(--linie-min) solid var(--petrol);
+                  border-radius: 10px;
+                  padding: 10px 18px 4px;
+                "
+              >
+                <p style="margin: 0 0 4px; font-weight: 700; font-size: 24px">
+                  <span class="etikett etikett-1c">1C</span> Abweichungen und Grenzen im Labor
+                </p>
+                <ul style="margin: 0; padding-left: 26px; font-size: 22px; line-height: 1.3">
+                  <li style="margin: 0 0 4px">
+                    ein Rechner, Runtime über Loopback, kein zweiter Host; Image lokal gebaut,
+                    Messproxy davor
+                  </li>
+                  <li style="margin: 0 0 4px">
+                    Laborlimits 4 CPUs, 5 GiB (Release: 8 CPUs, 8 GiB)
+                  </li>
+                  <li style="margin: 0 0 4px">
+                    Timeout 300 s statt 90 s (Kalibrierung am Laptop 196 s); Nebenlast im Nachlauf
+                  </li>
+                </ul>
+              </div>
+              <table
+                style="border-collapse: collapse; font-size: 22px; width: 100%; align-self: start"
+              >
+                <tr style="color: var(--gedaempft); text-align: left">
+                  <th style="padding: 4px 10px 4px 0">
+                    <span class="etikett etikett-1b">1B</span> Hypothese
+                  </th>
+                  <th>Messgröße</th>
+                  <th>Schwelle vorab</th>
+                </tr>
+                <tr style="border-top: var(--linie-min) solid var(--linie)">
+                  <td style="padding: 6px 10px 6px 0">H_B1</td>
+                  <td>Netz je Auftrag</td>
+                  <td class="mono">Median ≤ 50 ms, Max. ≤ 200 ms</td>
+                </tr>
+                <tr style="border-top: var(--linie-min) solid var(--linie)">
+                  <td style="padding: 6px 10px 6px 0">H_B2</td>
+                  <td>Adapter je Auftrag</td>
+                  <td class="mono">Median ≤ 2 s</td>
+                </tr>
+                <tr style="border-top: var(--linie-min) solid var(--linie)">
+                  <td style="padding: 6px 10px 6px 0">H_B3</td>
+                  <td>Inferenzanteil</td>
+                  <td class="mono">Median ≥ 95 %</td>
+                </tr>
+              </table>
+            </div>
             <p
               style="
                 position: absolute;
@@ -1316,15 +1433,15 @@
                 color: var(--gedaempft);
               "
             >
-              Beleg: ADR 1C-003 (modellfreie Tests), ADR 1B-008 (Schwellen), Designs mit
-              Vorregistrierung
+              Beleg: ADR 1C-002, 1C-003, 1C-020, 1C-021, 1B-008; Nachlauf, Umgebung und Abweichungen
             </p>
           </div>
         </div>
         <div class="folie-fuss">
           14 / 27 · adr/1B-008-kernaussagen-und-schwellen.md;
           adr/1C-003-teststrategie-modellfrei.md; evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad
-          P50 · 8e9d1317; Nachlauf 1C: Laptop (ThinkPad P50) · def56700
+          P50 · 8e9d1317; Nachlauf 1C (Umgebung, Abweichungen): Laptop (ThinkPad P50) · def56700;
+          ADR 1C-021 (Produktionslimits)
         </div>
       </section>
       <section
@@ -1526,16 +1643,16 @@
             </p>
             <div style="display: grid; grid-template-columns: 800px 1fr; column-gap: 70px">
               <div>
-                <ul style="margin: 0; padding-left: 30px; font-size: 26px; line-height: 1.38">
+                <ul style="margin: 0; padding-left: 30px; font-size: 24px; line-height: 1.38">
                   <li style="margin: 0 0 12px">
-                    Kontext aus dem App-Zustand, gegen versionierte Schemas geprüft, dann gepackt
+                    Kontext aus dem App-Zustand, gegen Schemas geprüft, gepackt
                   </li>
                   <li style="margin: 0 0 12px">
-                    Vorschau und Nutzlast: gleicher Hash <span class="mono">86d68dc8</span>,
-                    Nachricht byte-gleich
+                    Vorschau = Nutzlast: Hash <span class="mono">86d68dc8</span>, Nachricht
+                    byte-gleich
                   </li>
                   <li style="margin: 0 0 12px">
-                    Token, Sitzungskennungen und Budget bleiben auf dem Server
+                    Nur mit gültigem Host-Token; Token und Budget bleiben auf dem Server
                   </li>
                 </ul>
               </div>
@@ -1549,20 +1666,20 @@
                 >
                   <div
                     class="messwert"
-                    style="font-size: 72px; line-height: 1.05; color: var(--tinte)"
+                    style="font-size: 64px; line-height: 1.05; color: var(--tinte)"
                   >
-                    1,2<span style="font-size: 36px"> ms</span>
+                    1,2<span style="font-size: 32px"> ms</span>
                   </div>
                   <div style="font-size: 26px; margin-top: 8px">
-                    Validierung = 1,6 % eines Aufbaus
+                    Validierung = 1,6 % eines warmen Aufbaus
                   </div>
                   <div class="mono" style="font-size: var(--s-min); color: var(--gedaempft)">
-                    Laptop · 248029dc · Test-Runtime
+                    Laptop · 248029dc · Test-Runtime, älterer Stand
                   </div>
                 </div>
               </div>
             </div>
-            <div style="position: absolute; left: 0; right: 0; top: 296px">
+            <div style="position: absolute; left: 0; right: 0; top: 292px">
               <p style="margin: 0 0 6px; font-size: var(--s-min); color: var(--gedaempft)">
                 Echte Nutzlast an die Runtime, Ausschnitt (synthetische Referenzfixture, erster
                 Messlauf des Nachlaufs)
@@ -1598,14 +1715,14 @@
                 color: var(--gedaempft);
               "
             >
-              Beleg: ADR 1C-013 (Nachlauf N1), ADR 1C-011 (Validierung)
+              Beleg: ADR 1C-013 (Nachlauf N1), ADR 1C-011 (Validierung), 1C-diagrams (#456-Bereiche)
             </p>
           </div>
         </div>
         <div class="folie-fuss">
           16 / 27 · evidenz/1C/messung/2026-11-09-labor-nachlauf.json.gz, runs[1] · Laptop (ThinkPad
           P50) · f746ffba (def56700); evidenz/1C/2026-10-24-teil2.md · Laptop (ThinkPad P50) ·
-          248029dc
+          248029dc; Berechtigung: routers/qa.ts, 1C-diagrams.md · def56700
         </div>
       </section>
       <section
@@ -1674,8 +1791,8 @@
                 Das Budget zählt jedes UTF-8-Byte als ein Token. Das Fenster läuft so nie über.
               </li>
               <li style="margin: 0 0 12px">
-                Echte Tokens laut Runtime sind nur ein Bruchteil davon: rund zwei Drittel des
-                Fensters bleiben frei.
+                Echte Tokens laut Runtime sind nur ein Bruchteil davon: Rund zwei Drittel des
+                geschätzten Budgets bleiben ungenutzt.
               </li>
             </ul>
             <div style="margin: 26px 0 8px; display: flex; align-items: baseline; gap: 24px">
@@ -1931,11 +2048,11 @@
                 </svg>
               </div>
               <div>
-                <p style="margin: 0 0 14px; font-size: 26px">
+                <p style="margin: 0 0 10px; font-size: 24px">
                   Mitschnitt auf beiden Hosts, dazu die <span class="mono">timings</span> der
                   Runtime. Jede Differenz kommt von einer Uhr, ein Uhrenabgleich ist nicht nötig.
                 </p>
-                <p class="mono" style="margin: 0 0 20px; font-size: 28px; font-weight: 600">
+                <p class="mono" style="margin: 0 0 12px; font-size: 28px; font-weight: 600">
                   Netz = (t<sub>3</sub> − t<sub>0</sub>) − (t<sub>2</sub> − t<sub>1</sub>)
                 </p>
                 <div
@@ -1950,12 +2067,16 @@
                   <div class="mono">Klick&nbsp;&nbsp;&nbsp;08:20:35,594 UTC</div>
                   <div class="mono">Fertig&nbsp;&nbsp;08:23:07,383 UTC</div>
                   <div class="mono">Netz 0,45 ms · Inferenz 150,8 s</div>
+                  <div style="font-size: 22px; line-height: 1.3; margin-top: 4px">
+                    Wartezeit am Client 151,8 s, T_job 151,2 s: dazu Host-Aufruf und Nachfragen im
+                    Sekundentakt
+                  </div>
                 </div>
                 <p
                   class="mono"
-                  style="margin: 16px 0 0; font-size: var(--s-min); color: var(--gedaempft)"
+                  style="margin: 8px 0 0; font-size: var(--s-min); color: var(--gedaempft)"
                 >
-                  Alle 10 Aufträge, Median: Netz 0,43 ms, Transport 17,8 ms
+                  Alle 10, Median: Netz 0,43 ms, Transport 17,8 ms; Auflösung ≈ 1 ms
                 </p>
               </div>
             </div>
@@ -2038,7 +2159,7 @@
           <svg
             viewBox="0 0 1380 560"
             role="img"
-            aria-label="Zeitzerlegung eines Summary-Auftrags auf logarithmischer Achse: Netz 0,43 ms, Transport 17,8 ms, Adapter 101 ms (Mediane über alle 10 Aufträge), Inferenz 148,3 s (Median warm, n = 9), Auftrag kalt 200,5 s (frische Runtime). Inferenzanteil 99,92 %. Alle drei Schwellen erfüllt."
+            aria-label="Zeitzerlegung eines Summary-Auftrags auf logarithmischer Achse: Netz 0,43 ms, Transport 17,8 ms, Adapter 101 ms (Mediane über alle 10 Aufträge), Inferenz 148,3 s (Median warm, n = 9), Auftrag kalt 200,5 s (Median aus 5 Läufen mit frischer Runtime, Nachtrag). Inferenzanteil 99,92 %. Alle drei Schwellen erfüllt."
           >
             <rect width="1380" height="560" fill="#ffffff" />
             <line x1="296.44" y1="30" x2="296.44" y2="450" stroke="#e8edf3" stroke-width="2" />
@@ -2431,7 +2552,7 @@
               fill="#16202c"
               text-anchor="end"
             >
-              Auftrag kalt
+              Kalt, Median
             </text>
             <text
               x="226"
@@ -2442,7 +2563,7 @@
               fill="#566173"
               text-anchor="end"
             >
-              frische Runtime
+              n = 5, Nachtrag
             </text>
             <rect
               x="251.5"
@@ -2545,7 +2666,7 @@
           <svg
             viewBox="0 0 1380 560"
             role="img"
-            aria-label="Wäre der Auftrag ein Fußballfeld: 105 m entsprechen 148,6 s (T_job, Median warm, n = 9). Die Inferenz belegt 104,9 m, der Transport 1,3 cm, das Netz 0,3 mm (Netz und Transport als Median über alle 10 Aufträge)."
+            aria-label="Wäre der Auftrag ein Fußballfeld: 105 m entsprechen 148,6 s (T_job, Median warm, n = 9). Die Inferenz belegt 104,9 m, der Transport 1,3 cm, davon das Netz 0,3 mm (Netz und Transport als Median über alle 10 Aufträge)."
           >
             <rect width="1380" height="560" fill="#ffffff" />
             <text
@@ -2797,7 +2918,7 @@
                   stroke-linejoin="round"
                   paint-order="stroke"
                 >
-                  Netz · 0,3 mm
+                  davon Netz · 0,3 mm
                 </text>
               </g>
               <g
@@ -2894,7 +3015,7 @@
                 font-weight="400"
                 fill="#3d4757"
               >
-                Netz · 0,43 ms
+                davon Netz · 0,43 ms
               </text>
             </g>
             <text
@@ -3005,7 +3126,7 @@
                   <text x="0" y="140" style="font: 400 24px var(--f-text); fill: var(--tinte)">
                     Inferenz, Median
                     <tspan style="font: 400 22px var(--f-mono); fill: var(--gedaempft)">
-                      Laptop · def56700
+                      Laptop · def56700, Nebenlast
                     </tspan>
                   </text>
                   <rect x="0" y="154" width="520" height="44" rx="4" style="fill: var(--petrol)" />
@@ -3036,7 +3157,8 @@
                   </text>
                 </svg>
                 <p style="margin: 10px 0 0; font-size: 24px">
-                  Mit 90 s wäre der Modellpfad auf beiden Laborrechnern nicht nutzbar.
+                  Mit 90 s wäre der Modellpfad auf beiden Laborrechnern nicht nutzbar. Verschiedene
+                  Stände und Lasten: kein reiner Rechnervergleich.
                 </p>
               </div>
               <div>
@@ -3049,19 +3171,23 @@
                 >
                   <div
                     class="messwert"
-                    style="font-size: 72px; line-height: 1.05; color: var(--tinte)"
+                    style="font-size: 64px; line-height: 1.05; color: var(--tinte)"
                   >
-                    +0,419<span style="font-size: 36px"> GB</span>
+                    +0,419<span style="font-size: 32px"> GB</span>
                   </div>
                   <div style="font-size: 26px; margin-top: 8px">
-                    Prompt-Cache je Auftrag, Median
+                    Prompt-Cache je Auftrag bei wechselnden Prompts, Median
                   </div>
                   <div class="mono" style="font-size: var(--s-min); color: var(--gedaempft)">
                     Laptop · def56700
                   </div>
                 </div>
-                <p style="margin: 0; font-size: 28px">
-                  Die Runtime wird im <b class="messwert">19.</b> Auftrag per OOM-Kill beendet.
+                <p style="margin: 0 0 10px; font-size: 24px; line-height: 1.3">
+                  OOM-Kill im <b class="messwert">19.</b> Auftrag am Laborlimit 5 GiB + 5 GiB Swap
+                  (Laptop · def56700).
+                </p>
+                <p style="margin: 0; font-size: 24px; line-height: 1.3">
+                  Mit Produktionslimits 8 GiB + 2 GiB Swap: Kill im 21. Auftrag (PC · 9f230abc).
                 </p>
               </div>
             </div>
@@ -3076,15 +3202,15 @@
                 color: var(--gedaempft);
               "
             >
-              Beleg: ADR 1C-023 und 1C-024: empfohlen (Timeout am Inferenz-Host kalibrieren, Cache
-              begrenzen), nicht umgesetzt; Issues #16, #14
+              Beleg: ADR 1C-021, 1C-023 und 1C-024: empfohlen (Timeout am Inferenz-Host kalibrieren,
+              Cache begrenzen), nicht umgesetzt; Issues #16, #14
             </p>
           </div>
         </div>
         <div class="folie-fuss">
-          21 / 27 · adr/1C-020-timeout-300-s-und-kalibrierungsregel.md · PC (i7-8700) · 9f230abc;
-          evidenz/1C/2026-11-09-labor-nachlauf.md · Laptop (ThinkPad P50) · def56700 (Branch
-          f746ffba)
+          21 / 27 · ADR 1C-020, 1C-024 · PC (i7-8700) · 9f230abc; Nachlauf N3, N6 · Laptop (ThinkPad
+          P50) · def56700; 1B-Speicher: evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 ·
+          8e9d1317
         </div>
       </section>
       <section
@@ -3150,13 +3276,11 @@
             </p>
             <div style="display: grid; grid-template-columns: 760px 1fr; column-gap: 70px">
               <div>
-                <ul style="margin: 0; padding-left: 30px; font-size: 26px; line-height: 1.38">
+                <ul style="margin: 0; padding-left: 30px; font-size: 24px; line-height: 1.38">
                   <li style="margin: 0 0 12px">
-                    Nach der Inferenz wird der Kontext noch einmal gebaut und sein Hash verglichen
-                  </li>
-                  <li style="margin: 0 0 12px">
-                    Hash anders: Antwort verworfen, Endstatus
-                    <span class="mono">source_changed</span>
+                    Nach der Inferenz wird der Kontext noch einmal gebaut und sein Hash verglichen.
+                    Stimme oder gelöschte Quelle: Antwort verworfen,
+                    <span class="mono">source_changed</span> (E7, E8)
                   </li>
                   <li style="margin: 0 0 12px">
                     <b>Befund:</b> Läuft eine Blitzlicht-Runde eines anderen Typs als
@@ -3188,8 +3312,9 @@
                     Laptop · def56700
                   </div>
                 </div>
-                <p style="margin: 0; font-size: 24px; color: var(--text-2)">
-                  Regel vorab: unter 5 % bleibt sie.
+                <p style="margin: 0; font-size: 24px; color: var(--text-2); line-height: 1.3">
+                  Regel vorab: unter 5 % bleibt sie. Hauptgrund ist aber das Risiko ohne sie:
+                  Veraltete Ergebnisse gälten als gültig (V1, E8).
                 </p>
               </div>
             </div>
@@ -3205,14 +3330,15 @@
               "
             >
               Beleg: ADR 1C-010 (Nachprüfung bleibt), ADR 1C-016 (Blitzlicht: empfohlen, nicht
-              umgesetzt; Issue #18), Nachlauf N3, N5
+              umgesetzt; Issue #18), Nachlauf N3, N5; Teil 2 E7, E8
             </p>
           </div>
         </div>
         <div class="folie-fuss">
           22 / 27 · evidenz/1C/2026-11-09-labor-nachlauf.md · Laptop (ThinkPad P50) · def56700
           (Branch f746ffba); adr/1C-016-zeitabhaengiger-hash-blitzlicht.md · Laptop (ThinkPad P50) ·
-          def56700 (Branch f746ffba)
+          def56700 (Branch f746ffba); E7, E8: evidenz/1C/2026-10-24-teil2.md · Laptop · 248029dc
+          (Test-Runtime)
         </div>
       </section>
       <section
@@ -3220,7 +3346,7 @@
         data-id="J13"
         data-teil="jonas"
         data-station="gate"
-        aria-label="23 von 27: Das Gate verwirft jede Modellantwort"
+        aria-label="23 von 27: Auf 1.4.0 verwirft das Gate jede Modellantwort"
       >
         <div
           class="weg-mini weg-mini-statisch"
@@ -3269,7 +3395,7 @@
             <span class="weg-name">Gate</span><span class="etikett etikett-1c">1C</span>
           </p>
         </div>
-        <h1 class="folie-titel">Das Gate verwirft jede Modellantwort</h1>
+        <h1 class="folie-titel">Auf 1.4.0 verwirft das Gate jede Modellantwort</h1>
         <div class="folie-flaeche">
           <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
             <div style="display: grid; grid-template-columns: 820px 1fr; column-gap: 50px">
@@ -3281,35 +3407,35 @@
                   data-artefakt="antwort"
                   lang="en"
                   style="
-                    margin: 0 0 18px;
-                    padding: 14px 20px;
+                    margin: 0 0 14px;
+                    padding: 12px 20px;
                     border-left: 6px solid var(--bernstein);
                     background: var(--bernstein-hell);
                     font-size: 24px;
-                    line-height: 1.35;
+                    line-height: 1.3;
                   "
                 >
-                  <p style="margin: 0 0 8px">
+                  <p style="margin: 0 0 6px">
                     Pending moderation status indicates unresolved questions awaiting host review.
                   </p>
-                  <p style="margin: 0 0 8px">
+                  <p style="margin: 0 0 6px">
                     Host-pinned questions require active attention to maintain visibility and
                     relevance.
                   </p>
-                  <p style="margin: 0 0 8px">[…]</p>
+                  <p style="margin: 0 0 6px">[…]</p>
                 </blockquote>
                 <div
                   style="
                     border: var(--linie-min) solid var(--rot);
                     border-radius: 8px;
-                    padding: 12px 18px;
-                    margin-bottom: 18px;
+                    padding: 10px 18px;
+                    margin-bottom: 14px;
                   "
                 >
                   <span class="ablehnung" style="font-weight: 800; font-size: 28px"
                     >Verworfen.</span
                   >
-                  <span style="font-size: 26px"
+                  <span style="font-size: 24px"
                     >0 von 4 Aussagen in der Form „Stichwort: Text“ (qaSummaryQuality.ts)</span
                   >
                 </div>
@@ -3318,19 +3444,19 @@
                     display: grid;
                     grid-template-columns: 1fr 1fr;
                     column-gap: 30px;
-                    font-size: 24px;
+                    font-size: 22px;
                     line-height: 1.3;
                   "
                 >
                   <div>
                     <span class="etikett etikett-1b">1B</span>
-                    <span class="messwert" style="font-size: 36px">10 von 10</span><br />im Lauf
-                    verworfen
+                    <span class="messwert" style="font-size: 34px">10 von 10</span><br />verworfen
+                    (Version 1.4.0)
                   </div>
                   <div>
                     <span class="etikett etikett-1c">1C</span>
-                    <span class="messwert" style="font-size: 36px">0 von 28</span><br />bestehen im
-                    Nachlauf
+                    <span class="messwert" style="font-size: 34px">0 von 28</span><br />bestehen
+                    (<span class="mono">def56700</span>, Version 1.4.0)
                   </div>
                 </div>
               </div>
@@ -3341,7 +3467,7 @@
                 <div
                   style="
                     flex: none;
-                    height: 300px;
+                    height: 210px;
                     border: var(--linie-min) dashed var(--linie);
                     border-radius: 8px;
                     background: var(--raster);
@@ -3356,9 +3482,23 @@
                 >
                   Platz für den Clip:<br />Lehrenden-Sicht, Klick, Warten, Ersatzzusammenfassung
                 </div>
-                <figcaption style="margin-top: 12px; font-size: 24px">
-                  Die Lehrperson sieht eine extraktive Ersatzzusammenfassung, ohne Hinweis.
+                <figcaption style="margin-top: 12px; font-size: 22px; line-height: 1.3">
+                  Die Lehrperson sieht eine extraktive Ersatzzusammenfassung mit dem allgemeinen
+                  Hinweis „Eine ausführliche Zusammenfassung war diesmal nicht möglich …“. Den Grund
+                  erfährt sie nicht.
                 </figcaption>
+                <p
+                  style="
+                    margin: 12px 0 0;
+                    padding: 8px 14px;
+                    background: var(--raster);
+                    font-size: 22px;
+                    line-height: 1.3;
+                  "
+                >
+                  <b>Vor dem Gate</b> (<span class="mono">9f230abc</span>): 19 von 20 Aufträge mit
+                  Modellzusammenfassung (1C).
+                </p>
               </figure>
             </div>
             <p
@@ -3373,15 +3513,15 @@
               "
             >
               Beleg: ADR 1C-018 (empfohlen: Instruktion, Grammatik und Gate abstimmen, nicht
-              umgesetzt; Issue #13), Laufprotokoll 1B, Befund
+              umgesetzt; Issue #13), ADR 1C-019, Laufprotokoll 1B, Befund
             </p>
           </div>
         </div>
         <div class="folie-fuss">
           23 / 27 · evidenz/1B/messung/2026-11-15-abgelehnte-antwort.json (Auftrag 2);
-          evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317;
-          evidenz/1C/2026-11-09-labor-nachlauf.md · Laptop (ThinkPad P50) · def56700 (Branch
-          f746ffba)
+          evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317; Nachlauf · Laptop ·
+          def56700; ADR 1C-018 · Laptop · 9f230abc; Hinweis: qaSummaryExtractive.ts; Gate seit
+          v1.4.0 (12f1d8e4)
         </div>
       </section>
       <section
@@ -3479,43 +3619,80 @@
             <div
               style="
                 display: grid;
-                grid-template-columns: 1fr 1fr;
-                column-gap: 50px;
-                font-size: 24px;
-                line-height: 1.38;
+                grid-template-columns: 880px 1fr;
+                column-gap: 36px;
+                font-size: 22px;
+                line-height: 1.28;
               "
             >
-              <div style="border-left: 6px solid var(--petrol); padding-left: 20px">
+              <div style="border-left: 6px solid var(--petrol); padding-left: 16px">
                 <span class="etikett etikett-1c">1C</span>
-                <p style="margin: 10px 0 6px">
-                  <b>Bleibt:</b> Nachprüfung, strikte Validierung, Entkopplung, Vorschau = Nutzlast
-                  <span style="color: var(--gedaempft)">(1C-010 bis 1C-013)</span>
-                </p>
-                <p style="margin: 0">
-                  <b>Empfohlen, nicht umgesetzt:</b> Gate abstimmen, Timeout kalibrieren, Cache
-                  begrenzen, Zählung prüfen, Snapshot-Zustand, Blitzlicht-Hash
-                  <span style="color: var(--gedaempft)"
-                    >(1C-018, 1C-023, 1C-024, 1C-014 bis 1C-016)</span
-                  >
-                </p>
+                <span style="color: var(--gedaempft)"
+                  >Kosten, Risiko, Betrieb; Änderungen empfohlen, nicht umgesetzt</span
+                >
+                <ul style="margin: 6px 0 0; padding-left: 22px">
+                  <li style="margin: 0 0 4px">
+                    <b>Bleibt (1C-010 bis 1C-013):</b>
+                    <span style="color: var(--text-2)">Kosten unverändert, kein neues Risiko</span>
+                  </li>
+                  <li style="margin: 0 0 4px">
+                    <b>Gate (1C-018):</b>
+                    <span style="color: var(--text-2)"
+                      >Abnahmemessung nötig; Risiko: lockere Schwelle zeigt Metaaussagen</span
+                    >
+                  </li>
+                  <li style="margin: 0 0 4px">
+                    <b>Timeout (1C-023):</b>
+                    <span style="color: var(--text-2)"
+                      >eine Kalibrierung je Host; Slot länger belegt</span
+                    >
+                  </li>
+                  <li style="margin: 0 0 4px">
+                    <b>Cache (1C-024):</b>
+                    <span style="color: var(--text-2)"
+                      >eine Zeile im Entry-Point; sonst Betrieb mit OOM-Neustarts</span
+                    >
+                  </li>
+                  <li style="margin: 0 0 4px">
+                    <b>Zählung (1C-014):</b>
+                    <span style="color: var(--text-2)"
+                      >Änderung am Packer; Risiko: Fenster läuft über</span
+                    >
+                  </li>
+                  <li style="margin: 0 0 4px">
+                    <b>Snapshot, Blitzlicht (1C-015, 1C-016):</b>
+                    <span style="color: var(--text-2)">kleine Änderung; Rückweg Revert</span>
+                  </li>
+                </ul>
               </div>
-              <div style="border-left: 6px solid var(--bernstein); padding-left: 20px">
+              <div style="border-left: 6px solid var(--bernstein); padding-left: 16px">
                 <span class="etikett etikett-1b">1B</span>
-                <p style="margin: 10px 0 6px">
-                  <b>Konfiguration:</b> Die zweite Rolle kostet keine relevante Zeit. Der Hebel
-                  liegt am Inferenz-Host: Timeout, Limits, Promptgröße.
-                </p>
-                <p style="margin: 0">
-                  Vorher muss das Gate zum Modell passen, sonst nützt schnellere Inferenz nichts
-                  <span style="color: var(--gedaempft)">(#13)</span>.
-                </p>
+                <ul style="margin: 6px 0 0; padding-left: 22px">
+                  <li style="margin: 0 0 4px">
+                    <b>Topologie bleibt:</b>
+                    <span style="color: var(--text-2)">Hebel am Inferenz-Host</span>
+                  </li>
+                  <li style="margin: 0 0 4px">
+                    <b>Logs (#19, #20):</b>
+                    <span style="color: var(--text-2)"
+                      >Kosten: Logzeilen; empfohlen, nicht umgesetzt</span
+                    >
+                  </li>
+                  <li style="margin: 0 0 4px">
+                    <b>Vorher:</b>
+                    <span style="color: var(--text-2)">Gate passend zum Modell (#13)</span>
+                  </li>
+                </ul>
               </div>
             </div>
-            <p style="margin: 26px 0 8px; font-weight: 700; font-size: 26px; color: var(--blau)">
+            <p style="margin: 16px 0 4px; font-weight: 700; font-size: 24px; color: var(--blau)">
               Zur Diskussion
             </p>
-            <ol style="margin: 0; padding-left: 34px; font-size: 26px; line-height: 1.35">
-              <li>Darf ein Gate eine Antwort verwerfen, die nur an der Form scheitert?</li>
+            <ol style="margin: 0; padding-left: 34px; font-size: 24px; line-height: 1.3">
+              <li>
+                Seit 1.4.0 keine Modellantwort mehr, vorher 19 von 20. Das Gate prüft die Form,
+                inhaltlich sind die Antworten auch verfehlt: Prüft es das Richtige?
+              </li>
               <li>Wer legt den Timeout fest: das Release oder der Betreiber am Inferenz-Host?</li>
               <li>Reicht ein privates Netz mit Token über HTTP als Schutz für die zweite Rolle?</li>
             </ol>
@@ -3526,7 +3703,7 @@
                 right: 0;
                 bottom: 0;
                 margin: 0;
-                font-size: 30px;
+                font-size: 26px;
                 font-weight: 700;
               "
             >
@@ -3536,8 +3713,9 @@
           </div>
         </div>
         <div class="folie-fuss">
-          25 / 27 · 1C-ergebnis.md, Abschnitt 5, und adr/README.md (Laptop und PC · 9f230abc; Laptop
-          · def56700); 1B-ergebnis.md, Entscheidung (ThinkPad P50 · 8e9d1317)
+          25 / 27 · 1C-ergebnis.md, Abschnitt 5, ADRs 1C-010 bis 1C-024, Abschnitt Folgen (Laptop
+          und PC · 9f230abc; Laptop · def56700); 1B-ergebnis.md, Entscheidung (ThinkPad P50 ·
+          8e9d1317)
         </div>
       </section>
       <section
@@ -3606,7 +3784,9 @@
               <div style="border-top: 6px solid var(--petrol); padding-top: 14px">
                 <b>1C Kontextpfad</b>
                 <p style="margin: 8px 0 0">
-                  Vertrag, Konsistenz und Entkopplung halten. Das Gate verwirft jede Modellantwort.
+                  Vertrag, Konsistenz und Entkopplung halten. Auf 1.4.0 verwirft das Gate jede
+                  Modellantwort; davor (<span class="mono">9f230abc</span>) 19 von 20 mit
+                  Modellzusammenfassung.
                 </p>
               </div>
             </div>
@@ -3625,7 +3805,9 @@
             </p>
           </div>
         </div>
-        <div class="folie-fuss">27 / 27 · 1B-ergebnis.md, 1C-ergebnis.md; 1A von Niklas</div>
+        <div class="folie-fuss">
+          27 / 27 · 1B-ergebnis.md, 1C-ergebnis.md (Kurzantwort, Verlauf 9f230abc); 1A von Niklas
+        </div>
       </section>
       <section
         class="folie"
@@ -3637,21 +3819,31 @@
         <div class="folie-flaeche">
           <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
             <p style="margin: 0 0 26px; font-size: 30px; font-weight: 600; color: var(--text-2)">
-              <span class="etikett etikett-1c">1C</span> Wie lang darf ein Auftrag im Labor dauern?
+              <span class="etikett etikett-1c">1C</span> Warum liefen die Labore mit 300 s statt 90
+              s?
             </p>
-            <div style="display: grid; grid-template-columns: 760px 1fr; column-gap: 70px">
+            <div style="display: grid; grid-template-columns: 820px 1fr; column-gap: 70px">
               <div>
-                <ul style="margin: 0; padding-left: 30px; font-size: 28px; line-height: 1.38">
+                <ul style="margin: 0; padding-left: 30px; font-size: 24px; line-height: 1.38">
                   <li style="margin: 0 0 12px">
-                    Eine Anfrage mit echtem Body, gemessen wird I =
+                    Je Rechner eine Anfrage mit echtem Body, I =
                     <span class="mono">prompt_ms</span> + <span class="mono">predicted_ms</span>
                   </li>
                   <li style="margin: 0 0 12px">
-                    Release ab Werk: 90 s. Im Labor: 300 s, die Obergrenze, die das Produkt
-                    Betreibern erlaubt
+                    <span class="etikett etikett-1c">1C</span> Laptop: 196 s (Prefill 95 s, Ausgabe
+                    101 s), daher 300 s für die Laborläufe am Laptop
                   </li>
                   <li style="margin: 0 0 12px">
-                    Gekennzeichnete Abweichung vom Release, vor dem Lauf festgelegt
+                    <span class="etikett etikett-1c">1C</span> PC, zweiter Rechner: I = 98,7 s,
+                    ebenfalls über 90 s, also 300 s
+                  </li>
+                  <li style="margin: 0 0 12px">
+                    <span class="etikett etikett-1b">1B</span> I = 202 s, nach der Regel aus ADR
+                    1B-005 ebenfalls 300 s
+                  </li>
+                  <li style="margin: 0 0 12px">
+                    Release ab Werk 90 s; 300 s ist die Obergrenze des Produkts, offen als
+                    Abweichung
                   </li>
                 </ul>
               </div>
@@ -3667,11 +3859,11 @@
                     class="messwert"
                     style="font-size: 84px; line-height: 1.05; color: var(--tinte)"
                   >
-                    98,7<span style="font-size: 42px"> s</span>
+                    196<span style="font-size: 42px"> s</span>
                   </div>
-                  <div style="font-size: 26px; margin-top: 8px">Kalibrierung I</div>
+                  <div style="font-size: 26px; margin-top: 8px">Kalibrierung Laptop (1C)</div>
                   <div class="mono" style="font-size: var(--s-min); color: var(--gedaempft)">
-                    PC · 9f230abc
+                    Laptop · Wandzeit, vor dem ersten Laborlauf
                   </div>
                 </div>
               </div>
@@ -3687,12 +3879,14 @@
                 color: var(--gedaempft);
               "
             >
-              Beleg: ADR 1C-020, ADR 1C-023
+              Beleg: ADR 1C-020 (Laptop und PC), ADR 1C-023, ADR 1B-005; Laufprotokoll 1B,
+              Kalibrierung
             </p>
           </div>
         </div>
         <div class="folie-fuss">
-          Reserve R1 · adr/1C-020-timeout-300-s-und-kalibrierungsregel.md · PC (i7-8700) · 9f230abc
+          Reserve R1 · adr/1C-020-timeout-300-s-und-kalibrierungsregel.md (Laptop; PC · 9f230abc);
+          evidenz/1B/2026-11-13-lauf.md, Kalibrierung (ThinkPad P50 · 3b2aa5e6)
         </div>
       </section>
       <section
@@ -3902,9 +4096,10 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; column-gap: 50px">
               <div>
                 <span class="etikett etikett-1c">1C</span>
-                <ul style="margin: 0; padding-left: 30px; font-size: 26px; line-height: 1.38">
+                <ul style="margin: 0; padding-left: 30px; font-size: 22px; line-height: 1.38">
                   <li style="margin: 0 0 12px">
-                    Laborrechner mit CPU-Inferenz, ein Slot, Qwen3-4B Q4_K_M
+                    Laborrechner mit CPU-Inferenz, ein Slot, Qwen3-4B Q4_K_M; ein Rechner über
+                    Loopback
                   </li>
                   <li style="margin: 0 0 12px">Eine synthetische Fixture, Locale de</li>
                   <li style="margin: 0 0 12px">
@@ -3913,11 +4108,14 @@
                   <li style="margin: 0 0 12px">
                     Ein formal korrekter Pfad belegt keine guten Prompts
                   </li>
+                  <li style="margin: 0 0 12px">
+                    Keine parallele Last: Aufträge nacheinander, die Leitfrage nennt „reale Last“
+                  </li>
                 </ul>
               </div>
               <div>
                 <span class="etikett etikett-1b">1B</span>
-                <ul style="margin: 0; padding-left: 30px; font-size: 26px; line-height: 1.38">
+                <ul style="margin: 0; padding-left: 30px; font-size: 22px; line-height: 1.38">
                   <li style="margin: 0 0 12px">
                     Ein Laptop für beide „Hosts“, die Kerne teilen sich
                   </li>
@@ -3925,6 +4123,11 @@
                     Virtuelles statt physisches Netz, weniger CPUs als in Produktion
                   </li>
                   <li style="margin: 0 0 12px">Ein Szenario, ein Modell, eine Reihe</li>
+                  <li style="margin: 0 0 12px">
+                    Warm heißt: identische Snapshots, der Prompt kommt aus dem KV-Cache. Bei
+                    geändertem Zustand gilt eher der Kaltwert (Median 200,5 s)
+                  </li>
+                  <li style="margin: 0 0 12px">Netz unter der Messauflösung (≈ 1 ms)</li>
                   <li style="margin: 0 0 12px">
                     Privates Netz belegt weder Autorisierung noch Datenschutz; der Token läuft im
                     Klartext über HTTP
@@ -3944,13 +4147,14 @@
               "
             >
               Beleg: Labor-Design 1C, Abschnitt 7; Nachlauf, Gültigkeitsgrenzen; Laufprotokoll 1B,
-              Gültigkeitsgrenzen
+              Ergebnis je Auftrag und Beobachtungen; ADR 1B-011
             </p>
           </div>
         </div>
         <div class="folie-fuss">
           Reserve R5 · evidenz/1C/2026-11-09-labor-nachlauf.md (Laptop · def56700);
-          evidenz/1B/2026-11-13-lauf.md (ThinkPad P50 · 8e9d1317)
+          evidenz/1B/2026-11-13-lauf.md (ThinkPad P50 · 8e9d1317); Kaltwert:
+          evidenz/1B/2026-11-13-lauf.md, Nachtrag · ThinkPad P50 · 9e111d35
         </div>
       </section>
       <section
@@ -4095,6 +4299,281 @@
           (Laptop)
         </div>
       </section>
+      <section
+        class="folie"
+        data-id="R8"
+        data-teil="reserve"
+        aria-label="Reserve R8: Reserve: 1C Schritt 1, Autorisierung"
+      >
+        <h1 class="folie-titel">Reserve: 1C Schritt 1, Autorisierung</h1>
+        <div class="folie-flaeche">
+          <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
+            <table
+              style="border-collapse: collapse; font-size: 22px; line-height: 1.25; width: 100%"
+            >
+              <tr style="color: var(--gedaempft); text-align: left">
+                <th style="padding: 0 12px 6px 0">Bereich (#456)</th>
+                <th>Quelle, Funktion</th>
+                <th>Schemafassung</th>
+                <th>Rechteprüfung</th>
+              </tr>
+              <tr style="border-top: var(--linie-min) solid var(--linie)">
+                <td style="padding: 6px 12px 6px 0; font-weight: 600">Q&amp;A-Fragen, Stimmen</td>
+                <td style="padding: 6px 12px 6px 0">
+                  PostgreSQL, <span class="mono">collectQaContextCandidates</span>
+                </td>
+                <td style="padding: 6px 12px 6px 0"><span class="mono">qa-ranking-v1</span></td>
+                <td style="padding: 6px 0">
+                  <span class="mono">loadAuthorizedModerationState</span>
+                </td>
+              </tr>
+              <tr style="border-top: var(--linie-min) solid var(--linie)">
+                <td style="padding: 6px 12px 6px 0; font-weight: 600">Semantische Themen</td>
+                <td style="padding: 6px 12px 6px 0">
+                  Redis-Snapshot, <span class="mono">collectQaTopicContext</span>
+                </td>
+                <td style="padding: 6px 12px 6px 0">
+                  <span class="mono">qa-semantic-topic-snapshot-v1</span>
+                </td>
+                <td style="padding: 6px 0">im Q&amp;A-Aufbau</td>
+              </tr>
+              <tr style="border-top: var(--linie-min) solid var(--linie)">
+                <td style="padding: 6px 12px 6px 0; font-weight: 600">Quiz, Blitzlicht, Kompass</td>
+                <td style="padding: 6px 12px 6px 0">PostgreSQL, Redis; Lehrsignale</td>
+                <td style="padding: 6px 12px 6px 0">
+                  <span class="mono">effective-vote-v1</span>, <span class="mono">feedback-v1</span>
+                </td>
+                <td style="padding: 6px 0">Prüfungen der Lehrsignale</td>
+              </tr>
+              <tr style="border-top: var(--linie-min) solid var(--linie)">
+                <td style="padding: 6px 12px 6px 0; font-weight: 600">Lernziele</td>
+                <td style="padding: 6px 12px 6px 0">
+                  PostgreSQL, <span class="mono">projectLearningContext</span>
+                </td>
+                <td style="padding: 6px 12px 6px 0">
+                  <span class="mono">learning-context-v1</span>
+                </td>
+                <td style="padding: 6px 0">
+                  <span class="mono">assertLearningSnapshotStillCurrent</span>
+                </td>
+              </tr>
+              <tr style="border-top: var(--linie-min) solid var(--linie)">
+                <td style="padding: 6px 12px 6px 0; font-weight: 600">Zusammensetzung</td>
+                <td style="padding: 6px 12px 6px 0">
+                  <span class="mono">buildModerationPromptContext</span>
+                </td>
+                <td style="padding: 6px 12px 6px 0">
+                  <span class="mono">moderation-analysis-context-v1</span>
+                </td>
+                <td style="padding: 6px 0">erste Prüfung</td>
+              </tr>
+              <tr style="border-top: var(--linie-min) solid var(--linie)">
+                <td style="padding: 6px 12px 6px 0; font-weight: 600">Vorschau, Auftrag</td>
+                <td style="padding: 6px 12px 6px 0">
+                  <span class="mono">qa.summaryContextPreview</span>,
+                  <span class="mono">qa.requestSummary</span>
+                </td>
+                <td style="padding: 6px 12px 6px 0">
+                  <span class="mono">qa-summary-context-preview-v1</span>
+                </td>
+                <td style="padding: 6px 0">
+                  <span class="mono">assertHostSessionAccessFromContext</span>
+                </td>
+              </tr>
+            </table>
+            <p style="margin: 12px 0 0; font-size: 22px">
+              Je Kontextaufbau acht Rechteprüfungen; ohne gültiges Host-Token weder Vorschau noch
+              Auftrag; kein Token im Draht-Body (E2).
+            </p>
+            <p
+              style="
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                margin: 0;
+                font-size: var(--s-min);
+                color: var(--gedaempft);
+              "
+            >
+              Beleg: 1C-diagrams.md, #456-Bereiche (Stand def56700) und Belege je Station;
+              apps/backend/src/routers/qa.ts
+            </p>
+          </div>
+        </div>
+        <div class="folie-fuss">
+          Reserve R8 · 1C-diagrams.md, #456-Bereiche · Code-Stand def56700 (Laptop, ThinkPad P50)
+        </div>
+      </section>
+      <section
+        class="folie"
+        data-id="R9"
+        data-teil="reserve"
+        aria-label="Reserve R9: Reserve: 1C Schritte 3–4, Konsistenzfälle"
+      >
+        <h1 class="folie-titel">Reserve: 1C Schritte 3–4, Konsistenzfälle</h1>
+        <div class="folie-flaeche">
+          <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; column-gap: 44px">
+              <div>
+                <p style="margin: 0 0 8px; font-weight: 700; font-size: 26px">Schritt 3</p>
+                <ul style="margin: 0; padding-left: 30px; font-size: 22px; line-height: 1.38">
+                  <li style="margin: 0 0 12px">
+                    Inkompatible Version: endet an jeder Grenze kontrolliert (T1, E4)
+                  </li>
+                  <li style="margin: 0 0 12px">
+                    Fehlender Bereich: bleibt mit Zustand und Grund (T2.1
+                    <span class="mono">disabled</span>, T2.2 <span class="mono">failed</span>)
+                  </li>
+                  <li style="margin: 0 0 12px">
+                    Langsamer oder fehlender Empfänger, belegter Slot, volle Queue: E6a, E6b, E10,
+                    E11
+                  </li>
+                  <li style="margin: 0 0 12px">
+                    Stiller Feldverlust, zwei Ausnahmen: fremde Snapshot-Version gilt als „keine
+                    Daten“ (T2.3); Bereich bleibt „available“, aber aus Budgetgründen leer (E15)
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <p style="margin: 0 0 8px; font-weight: 700; font-size: 26px">Schritt 4</p>
+                <ul style="margin: 0; padding-left: 30px; font-size: 22px; line-height: 1.38">
+                  <li style="margin: 0 0 12px">
+                    Stimme oder gelöschte Quelle nach dem Auftrag:
+                    <span class="mono">source_changed</span> (T5, E7, E8); ohne Änderung gültig (E9)
+                  </li>
+                  <li style="margin: 0 0 12px">
+                    Stimme während des Kontextaufbaus: <span class="mono">CONFLICT</span> (E12)
+                  </li>
+                  <li style="margin: 0 0 12px">
+                    Legacy-Pfad kontrolliert (E13, E14); Runtime fehlt: extraktiv mit
+                    <span class="mono">unavailable</span> (E6a)
+                  </li>
+                  <li style="margin: 0 0 12px">
+                    Häufigkeit unter Voting nicht belastbar vorhergesagt (M7)
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <p
+              style="
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                margin: 0;
+                font-size: var(--s-min);
+                color: var(--gedaempft);
+              "
+            >
+              Beleg: 1C-ergebnis.md, Abschnitt 3; Tests T1–T5, Teil 2 und Teil 3 (Test-Runtime); ADR
+              1C-005, 1C-010, 1C-011, 1C-015, 1C-017
+            </p>
+          </div>
+        </div>
+        <div class="folie-fuss">
+          Reserve R9 · 1C-ergebnis.md, Abschnitt 3 · Tests und Teil 2/3 auf 248029dc (Laptop,
+          ThinkPad P50); Labor def56700
+        </div>
+      </section>
+      <section
+        class="folie"
+        data-id="R10"
+        data-teil="reserve"
+        aria-label="Reserve R10: Reserve: 1B Schritt 1 und ADR-0035"
+      >
+        <h1 class="folie-titel">Reserve: 1B Schritt 1 und ADR-0035</h1>
+        <div class="folie-flaeche">
+          <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
+            <div
+              style="
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                column-gap: 28px;
+                margin-bottom: 24px;
+              "
+            >
+              <div
+                style="
+                  border: var(--linie-min) solid var(--bernstein);
+                  border-radius: 10px;
+                  padding: 12px 18px;
+                  background: var(--bernstein-hell);
+                "
+              >
+                <div style="font-weight: 700; font-size: 26px">App-Adapter</div>
+                <div class="mono" style="font-size: 22px; color: var(--text-2)">app-host</div>
+                <div style="font-size: 22px; margin-top: 6px; line-height: 1.3">
+                  <span class="mono">openWeightLlmClient.ts</span>: Prompt bauen, Runtime aufrufen,
+                  Antwort prüfen, sonst extraktiv; Bearer-Token
+                </div>
+              </div>
+              <div
+                style="
+                  border: var(--linie-min) solid var(--bernstein);
+                  border-radius: 10px;
+                  padding: 12px 18px;
+                  background: var(--bernstein-hell);
+                "
+              >
+                <div style="font-weight: 700; font-size: 26px">Encoder</div>
+                <div class="mono" style="font-size: 22px; color: var(--text-2)">
+                  nicht gestartet
+                </div>
+                <div style="font-size: 22px; margin-top: 6px; line-height: 1.3">
+                  Wortwolken-Encoder, Profil ab Werk aus; keine Abweichung
+                </div>
+              </div>
+              <div
+                style="
+                  border: var(--linie-min) solid var(--bernstein);
+                  border-radius: 10px;
+                  padding: 12px 18px;
+                  background: var(--bernstein-hell);
+                "
+              >
+                <div style="font-weight: 700; font-size: 26px">LLM-Server</div>
+                <div class="mono" style="font-size: 22px; color: var(--text-2)">llm-host</div>
+                <div style="font-size: 22px; margin-top: 6px; line-height: 1.3">
+                  <span class="mono">llama-server</span>, ein Slot, lauscht nur im privaten Netz,
+                  <span class="mono">--api-key</span>
+                </div>
+              </div>
+            </div>
+            <ul style="margin: 0; padding-left: 30px; font-size: 24px; line-height: 1.38">
+              <li style="margin: 0 0 12px">
+                Abgleich Punkt für Punkt mit ADR-0035: abweichend nur der Aufbau auf einem Rechner
+                und die CPU-Zahl, einige Punkte im Aufbau nicht prüfbar. Abnahmeprotokoll des
+                Runbooks: abweichend Baseline-Commit statt Tag, Token ohne Passwortmanager, Summary
+                eingeschaltet
+              </li>
+              <li style="margin: 0 0 12px">
+                Lücke: ADR-0035 nennt für <span class="mono">--n-predict</span> „Richtung 256“, das
+                Release setzt 768. Die Antworten hatten 506–613 Tokens, mit 256 wären sie
+                abgeschnitten
+              </li>
+            </ul>
+            <p
+              style="
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                margin: 0;
+                font-size: var(--s-min);
+                color: var(--gedaempft);
+              "
+            >
+              Beleg: Aufbauprotokoll 1B, Komponenten und Abgleich mit ADR-0035; Laufprotokoll 1B,
+              Manifest
+            </p>
+          </div>
+        </div>
+        <div class="folie-fuss">
+          Reserve R10 · evidenz/1B/2026-11-12-aufbau.md (Komponenten, Abgleich) · ThinkPad P50 ·
+          a19ca70f; Lücke: evidenz/1B/2026-11-13-lauf.md, Manifest · 8e9d1317
+        </div>
+      </section>
       <div class="weg-mini weg-wandernd" role="img" aria-label="Station des Auftrags" hidden>
         <svg
           class="weg-mini-karte"
@@ -4174,6 +4653,21 @@
           </li>
           <li>
             <button type="button" data-ziel="R7"><span class="mono">7</span> ADR-Zählung 1C</button>
+          </li>
+          <li>
+            <button type="button" data-ziel="R8">
+              <span class="mono">8</span> 1C Schritt 1, Autorisierung
+            </button>
+          </li>
+          <li>
+            <button type="button" data-ziel="R9">
+              <span class="mono">9</span> 1C Schritte 3–4, Konsistenzfälle
+            </button>
+          </li>
+          <li>
+            <button type="button" data-ziel="R10">
+              <span class="mono">10</span> 1B Schritt 1 und ADR-0035
+            </button>
           </li>
         </ol>
         <p class="reserve-hilfe">Ziffer oder Klick öffnet · Esc zurück zum Vortrag</p>

@@ -18,21 +18,21 @@ const nach = (id) => F.find((f) => f.id === id);
 const jonas = F.filter((f) => f.teil === 'jonas');
 const summe = (liste) => liste.reduce((s, f) => s + f.zeitS, 0);
 
-/** Zeiten aus Design Abschnitt 5 (Sekunden). */
+/** Zeiten aus Design Abschnitt 5 (Sekunden), angepasst nach der fachlichen Prüfung 1 (Offenlegung, Abdeckung). */
 const PLAN = {
   J1: 40,
-  J2: 60,
+  J2: 70,
   J3: 40,
-  J4: 50,
+  J4: 60,
   J5: 45,
-  J6: 60,
+  J6: 65,
   J7: 45,
   J8: 50,
   J9: 50,
   J10: 25,
-  J11: 50,
-  J12: 50,
-  J13: 70,
+  J11: 55,
+  J12: 55,
+  J13: 75,
   J14: 40,
   J15: 50,
 };
@@ -56,10 +56,10 @@ function sichtbar(html) {
 let grafikCache;
 function grafiken() {
   if (!grafikCache) {
-    const { b1, c1 } = daten;
+    const { b1, c1, auftrag } = daten;
     grafikCache = [
       ...['klick', 'kontext', 'netz', 'inferenz', 'nachpruefung', 'gate', null].map((aktiv) =>
-        wegSvg({ aktiv, b1, c1 }),
+        wegSvg({ aktiv, b1, c1, auftrag }),
       ),
       zeitzerlegungSvg(b1),
       zeitzerlegungSvg(b1, { kalt: false }),
@@ -76,7 +76,7 @@ const KENNUNGEN = [
   /#\d+/g, // Issues
   /\b(?=[0-9a-f]*[a-f])(?=[0-9a-f]*\d)[0-9a-f]{8,}\b/g, // Commits
   /\bThema 1\b/g,
-  /\bRelease 1\.3\b/g,
+  /\b(?:Release |Version |v)?1\.[34](?:\.0)?\b/g, // Release- und Versionsnummern
   /\bSchritte? \d(?:–\d)?\b/g,
   /\b[1][ABC]\b/g, // Aufträge
   /\bH_[A-Z]+\d\b/g,
@@ -89,6 +89,8 @@ const KENNUNGEN = [
   /\bOpus \d\.\d\b/g,
   /\bv\d\b/g, // Vertragsfassungen
   /\b\d{1,3}(?:\.\d{1,3}){3}\b/g, // IP-Adressen der Labor-VMs
+  /§\s?\d+/g, // Abschnitte des Runbooks
+  /#456\b/g,
 ];
 
 function whitelist() {
@@ -122,14 +124,14 @@ function whitelist() {
   return w;
 }
 
-test('Jonas-Folien J1–J15 in Reihenfolge mit den Zeiten aus Design Abschnitt 5', () => {
+test('Jonas-Folien J1–J15 in Reihenfolge mit den geplanten Zeiten, Summe 700–790 s', () => {
   assert.deepEqual(
     jonas.map((f) => f.id),
     Object.keys(PLAN),
   );
   for (const f of jonas) assert.equal(f.zeitS, PLAN[f.id], f.id);
   const s = summe(jonas);
-  assert.ok(s >= 700 && s <= 760, `Summe ${s}`);
+  assert.ok(s >= 700 && s <= 790, `Summe ${s}`);
 });
 
 test('Kurzfassung: nur Jonas-Folien, Summe 420–470 s', () => {
@@ -180,14 +182,25 @@ test('Rahmenfolien G0 und G9 sind als Entwurf markiert', () => {
   assert.equal(F.at(-1).teil === 'reserve' || F.at(-1).id === 'G9', true);
 });
 
-test('Reservefolien R1–R7 nach Design Abschnitt 5', () => {
+test('Reservefolien R1–R10 (Design Abschnitt 5 plus Abdeckung aus der fachlichen Prüfung 1)', () => {
   const r = F.filter((f) => f.teil === 'reserve');
   assert.deepEqual(
     r.map((f) => f.id),
-    ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7'],
+    ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10'],
   );
   const text = r.map((f) => f.titel).join(' | ');
-  for (const wort of ['Kalibrierung', 'C0', 'B0', 'Kaltläufe', 'Gültigkeitsgrenzen', 'KI', 'ADR'])
+  for (const wort of [
+    'Kalibrierung',
+    'C0',
+    'B0',
+    'Kaltläufe',
+    'Gültigkeitsgrenzen',
+    'KI',
+    'ADR',
+    'Autorisierung',
+    'Konsistenz',
+    'ADR-0035',
+  ])
     assert.ok(text.includes(wort), wort);
 });
 
@@ -300,22 +313,27 @@ test('J2 legt die CPU-Abweichung offen und behauptet keine Limits wie im Release
   assert.match(j2.notiz, /4 statt 8/);
 });
 
-test('J1 nennt die Zeit des verfolgten Auftrags, gerundet aus lauf.json', () => {
+test('J1 nennt die Wartezeit des verfolgten Auftrags am Client (Klick bis Ergebnis), gerundet', () => {
   const lauf = JSON.parse(
     readFileSync(resolve(ROOT, 'evidenz/1B/messung/2026-11-13-lauf.json'), 'utf8'),
   );
   const nr = daten.antwort.auftrag;
-  const sek = fmt(Math.round(lauf.zerlegung.auftraege[nr - 1].jobMs / 1000));
+  const t = lauf.treiber.auftraege.find((a) => a.index === nr);
+  const sek = fmt(Math.round(t.clientWaitMs / 1000));
+  assert.equal(sek, '152');
   const j1 = nach('J1');
   assert.ok(j1.titel.includes(`${sek} Sekunden`), `Titel ohne ${sek} Sekunden: ${j1.titel}`);
   assert.ok(!j1.titel.includes(fmt(daten.b1.jobWarmMs / 1000, 1)), 'Median im Titel');
   assert.match(j1.notiz, /dieser Auftrag/i);
   assert.match(j1.notiz, /Median/);
   assert.match(sichtbar(j1.inhalt), /Median warm, n = 9/);
+  // T_job bleibt als serverseitige Jobdauer benannt, nie als Zeit ab dem Klick.
+  assert.match(sichtbar(j1.inhalt), /Jobdauer T_job/);
+  assert.ok(!/T_job[^.]*vom Klick/.test(j1.notiz + sichtbar(j1.inhalt)));
 });
 
-test('Mediane auf J3, J9, J10 tragen die Gruppe warm, n = 9; Notizen trennen Auftrag und Median', () => {
-  for (const id of ['J3', 'J9', 'J10']) {
+test('Mediane auf J9, J10 tragen die Gruppe warm, n = 9; Notizen trennen Auftrag und Median', () => {
+  for (const id of ['J9', 'J10']) {
     assert.match(decode(nach(id).inhalt.replace(/<[^>]+>/g, '')), /warm, n = 9/, id);
     assert.match(nach(id).notiz, /Median/, `${id} notiz`);
   }
@@ -334,4 +352,130 @@ test('Jede Jonas-Folie zeigt ihr Auftragsetikett im Inhalt', () => {
     const noetig = f.auftrag === 'beide' ? ['1C', '1B'] : [f.auftrag];
     for (const a of noetig) assert.ok(hat(f.inhalt, a), `${f.id}: Etikett ${a} fehlt`);
   }
+});
+
+// ---------------------------------------------------------------- Fachliche Prüfung 1
+
+const alles = (f) => `${f.titel} ${sichtbar(f.inhalt)} ${f.notiz ?? ''}`;
+const jonasUndReserve = F.filter((f) => f.teil !== 'rahmen');
+
+test('K1: Der Fallback trägt einen allgemeinen Hinweis; nirgends „ohne Hinweis“', () => {
+  for (const f of F) assert.ok(!/ohne (jeden )?Hinweis/.test(alles(f)), `${f.id}: ohne Hinweis`);
+  const j13 = nach('J13');
+  assert.match(sichtbar(j13.inhalt), /Eine ausführliche Zusammenfassung war diesmal nicht möglich/);
+  assert.match(sichtbar(j13.inhalt), /Grund/);
+  assert.match(j13.quelle, /qaSummaryExtractive\.ts/);
+});
+
+test('K2: Messstand 1.4.0 benannt, Stand vor dem Gate mit 19 von 20 full-context', () => {
+  for (const id of ['J1', 'J13', 'G9']) {
+    assert.match(sichtbar(nach(id).inhalt), /1\.4\.0/, `${id}: Version 1.4.0 fehlt`);
+  }
+  for (const id of ['J13', 'G9']) {
+    assert.match(sichtbar(nach(id).inhalt), /19 von 20/, `${id}: Stand vor dem Gate fehlt`);
+  }
+  assert.match(nach('J13').notiz, /9f230abc|vor dem Gate/);
+  // „Release 1.3“ nur für die Architektur, nie als Messstand
+  for (const f of F) {
+    assert.ok(!/Release 1\.3 nachgebaut/.test(alles(f)), `${f.id}: Release 1.3 nachgebaut`);
+    assert.ok(
+      !/(gemessen|Messung)[^.]*Release 1\.3/.test(alles(f)),
+      `${f.id}: gemessen … Release 1.3`,
+    );
+  }
+  assert.match(sichtbar(nach('J2').inhalt), /1\.4\.0/);
+});
+
+test('W1: J8 erklärt den Abstand zwischen Wartezeit am Client und T_job', () => {
+  const j8 = nach('J8');
+  const s = sichtbar(j8.inhalt);
+  assert.match(s, new RegExp(fmt(daten.auftrag.clientWaitMs / 1000, 1)));
+  assert.match(s, new RegExp(fmt(daten.auftrag.jobMs / 1000, 1)));
+  assert.match(s, /T_job/);
+});
+
+test('W2: Das Gate prüft mehr als die Form; Sprache und Inhalt nennt die Folie getrennt', () => {
+  for (const f of F) {
+    assert.ok(
+      !/(prüft|scheitert)[^.]*nur (an )?(die|der) Form/.test(alles(f)),
+      `${f.id}: nur die Form`,
+    );
+  }
+  const j13 = nach('J13');
+  assert.match(j13.notiz, /Sprache/);
+  assert.match(j13.notiz, /mindestens zwei Aussagen|verschiedene Stichwörter/);
+  assert.match(sichtbar(nach('J15').inhalt), /inhaltlich/);
+});
+
+test('W3: Karte J3 kennzeichnet je Station die Herkunft; Auftrag 2 mit eigenen Werten', () => {
+  const j3 = nach('J3');
+  const svg = j3.inhalt;
+  assert.ok(svg.includes(`${fmt(daten.auftrag.hostReturnMs)} ms`), 'T_host von Auftrag 2');
+  assert.ok(svg.includes(`Auftrag ${daten.auftrag.nr}`));
+  assert.ok(svg.includes('1C-Test · 248029dc'));
+  assert.ok(svg.includes('1C-Labor · def56700'));
+  assert.ok(
+    !svg.includes(`${fmt(daten.c1.requestMs.wert, 1)} ms`),
+    '1C-Klickwert auf dem app-host',
+  );
+  assert.match(j3.notiz, /1C/);
+});
+
+test('W4/W5: Abweichungen und Grenzen je Auftrag offengelegt', () => {
+  const j2 = sichtbar(nach('J2').inhalt);
+  assert.match(j2, /Abweichungen und Grenzen/);
+  for (const re of [
+    /4 statt 8 CPUs/,
+    /Timeout 300 s statt 90 s/,
+    /202 s/,
+    /selbst gebaut/,
+    /ohne Wrapper/,
+    /Schalter/,
+    /von Hand/,
+  ])
+    assert.match(j2, re, `J2: ${re}`);
+  const c = F.filter(
+    (f) => f.auftrag !== '1B' && /Abweichungen und Grenzen/.test(sichtbar(f.inhalt)),
+  );
+  const c1 = c.find((f) => f.id !== 'J2');
+  assert.ok(c1, '1C-Block fehlt');
+  const s = sichtbar(c1.inhalt);
+  for (const re of [/ein Rechner/, /Loopback/, /4 CPUs/, /5 GiB/, /300 s/])
+    assert.match(s, re, `${c1.id}: ${re}`);
+  const j11 = sichtbar(nach('J11').inhalt);
+  assert.match(j11, /5 GiB/);
+  assert.match(j11, /21\./);
+  assert.match(j11, /9f230abc/);
+});
+
+test('W6/W7/W8: Speicher bei wechselnden Prompts, warm = identischer Snapshot, R1 mit den richtigen Kalibrierungen', () => {
+  assert.match(sichtbar(nach('J11').inhalt), /wechselnden Prompts/);
+  const r5 = sichtbar(nach('R5').inhalt);
+  assert.match(r5, /identische/);
+  assert.match(nach('J9').notiz, /identisch/);
+  const r1 = alles(nach('R1'));
+  assert.match(r1, /196/);
+  assert.match(r1, /202/);
+  assert.match(r1, /Laptop/);
+});
+
+test('W12: J15 nennt je Entscheidung Kosten, Risiko oder Betriebsfolge', () => {
+  const s = sichtbar(nach('J15').inhalt);
+  for (const re of [/Kosten/, /Risiko/, /Betrieb/]) assert.match(s, re);
+});
+
+test('W14: Die Notiz zu J13 ist bedingt formuliert (Clip oder kein Clip)', () => {
+  const n = nach('J13').notiz;
+  assert.match(n, /Falls (der )?Clip/);
+  assert.match(n, /[Ss]onst/);
+});
+
+test('Abdeckung: R8–R10 nennen Berechtigung, Konsistenzfälle und Rollen mit Belegen', () => {
+  assert.match(sichtbar(nach('R8').inhalt), /assertHostSessionAccessFromContext/);
+  for (const k of ['E7', 'E8', 'E12', 'T2.3', 'E15', 'T1'])
+    assert.match(sichtbar(nach('R9').inhalt), new RegExp(`\\b${k.replace('.', '\\.')}\\b`), k);
+  const r10 = sichtbar(nach('R10').inhalt);
+  for (const w of ['Encoder', 'Adapter', 'llama-server', '768', '256'])
+    assert.match(r10, new RegExp(w));
+  for (const f of jonasUndReserve) assert.ok(f.quelle, f.id);
 });

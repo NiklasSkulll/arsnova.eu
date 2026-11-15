@@ -76,9 +76,15 @@ export function baueHandout(daten, personen, { basis } = {}) {
     kalPc: fmt(c.kalibrierungPcS.wert, 1),
     delta: fmt(c.speicherDeltaGb.wert, 3),
     nachpr: fmt(c.nachpruefungAnteilProzent.wert, 2),
-    // Der verfolgte Auftrag; Titel gerundet wie Folie J1 (folien.mjs, z.auS).
-    auS: fmt(Math.round(au.jobMs / 1000)),
+    // Der verfolgte Auftrag; Titel = Wartezeit am Client gerundet wie Folie J1 (folien.mjs, z.auS).
+    auS: fmt(Math.round(au.clientWaitMs / 1000)),
+    auWarte: fmt(au.clientWaitMs / 1000, 1),
     auJob: fmt(au.jobMs / 1000, 1),
+    kaltAnteilMin: fmt(b.kaltAnteilSpanne[0] * 100, 2),
+    kaltAnteilMax: fmt(b.kaltAnteilSpanne[1] * 100, 2),
+    kaltNetz: fmt(b.kaltNetzMedianMs, 2),
+    transportAnteil: fmt(b.transportAnteil * 100, 2),
+    speicher1B: fmt(b.speicherMaxGb, 2),
   };
   const n = b.anzahl;
   const nWarm = b.nWarm;
@@ -97,100 +103,97 @@ export function baueHandout(daten, personen, { basis } = {}) {
         ? `${esc(personen[i].name)}, Matrikelnummer: ${esc(personen[i].matrikel)}`
         : PLATZHALTER
     }</td></tr>`;
+  const grenzen = (auftrag, punkte) =>
+    `<div class="grenzen ${auftrag === '1B' ? 'b' : ''}"><p><b>Abweichungen und Grenzen ${etikett(auftrag)}</b></p>` +
+    `<ul>${punkte.map((p) => `<li>${p}</li>`).join('')}</ul></div>`;
 
   const seite1 =
     `<h1>Ein Klick. ${z.auS} Sekunden. Keine Modellantwort.</h1>` +
-    `<p class="unter">${TITEL} im KI-Pfad von arsnova.eu Release 1.3</p>` +
+    `<p class="unter">${TITEL} im KI-Pfad von arsnova.eu: Architektur nach Release 1.3, gemessen auf Version 1.4.0</p>` +
     `<p class="meta" data-frei>Cloud Computing, Referat Thema 1 · Handout · Stand 15.11.2026</p>` +
     `<table class="personen"><tr><th>Gruppe</th><th>Teil im Referat</th><th>Name und Matrikelnummer</th></tr>` +
     GRUPPE.map(personZeile).join('') +
     `</table>` +
     `<p class="quelle">Verfasser aller Abschnitte: Jonas (ad personam).</p>` +
-    `<div class="kasten"><p><b>Kurzantwort.</b> Verfolgt wird ein echter Q&amp;A-Auftrag mit synthetischen Daten: Auftrag ${au.nr} des 1B-Laufs braucht vom Klick bis zum Ergebnis ${w(`${z.auJob} s`)}. ` +
-    `${etikett('1C')} Der Kontextpfad hält seine Zusagen, mit benannten Ausnahmen. ` +
-    `${etikett('1B')} Die zweite Serverrolle kostet keine relevante Zeit: Die Inferenz macht im Median ${w(`${z.anteil} %`)} der Auftragszeit aus, das Netz ${w(`${z.netz} ms`)}. ` +
-    `Trotzdem kommt keine Modellzusammenfassung an: Das Quality-Gate verwirft jede Antwort.</p></div>` +
+    `<div class="kasten"><p><b>Kurzantwort.</b> Auftrag ${au.nr} des 1B-Laufs (synthetische Daten) wartet vom Klick bis zum Ergebnis ${w(`${z.auWarte} s`)}, Jobdauer am Server (T_job) ${w(`${z.auJob} s`)}. ` +
+    `${etikett('1C')} Der Kontextpfad hält seine Zusagen, mit Ausnahmen. ` +
+    `${etikett('1B')} Die zweite Serverrolle kostet keine relevante Zeit: Transportanteil ${w(`${z.transportAnteil} %`)}, Inferenz ${w(`${z.anteil} %`)} (Mediane). ` +
+    `Auf Version 1.4.0 kommt trotzdem keine Modellzusammenfassung an, das Quality-Gate verwirft jede Antwort; vor dem Gate (${code('9f230abc')}) waren es ${w(c.fullContextVorGate.wert)}.</p></div>` +
     `<h2>1 Leitfragen und Weg eines Auftrags (Jonas)</h2>` +
     `<p class="zitat">${etikett('1C')} „Wie zuverlässig hält der implementierte 1.3-Kontextpfad seine Vertrags-, Konsistenz- und Entkopplungszusagen vom App-Zustand bis zur privaten Inferenz ein?“ (Prüfungsdokument [1])</p>` +
-    `<p class="zitat">${etikett('1B')} „Wie schlüsselt sich die Zeit eines echten Kompass-Auftrags […] über die zweite private Serverrolle auf, und wie groß ist der Transportanteil im Vergleich zur Inferenz?“ (ADR 1B-011 [10])</p>` +
-    `<figure>${wegSvg({ aktiv: null, b1: b, c1: c })}` +
-    `<figcaption><b>Abb. 1:</b> Weg eines Auftrags über beide Hosts im Labor; Kreis: Inferenz, Median warm (n = ${nWarm}). Eigene Darstellung. ` +
-    `Quelle: 1B-Werte [7], ${P50}, ${haupt}; 1C-Werte [8], ${P50}, ${nachlauf}, Validierung [9], ${P50}, ${teil2}.</figcaption></figure>`;
+    `<p class="zitat">${etikett('1B')} „Wie schlüsselt sich die Zeit eines echten Kompass-Auftrags […] auf, und wie groß ist der Transportanteil im Vergleich zur Inferenz?“ (ADR 1B-011 [10])</p>` +
+    `<figure>${wegSvg({ aktiv: null, b1: b, c1: c, auftrag: au })}` +
+    `<figcaption><b>Abb. 1:</b> Weg von Auftrag ${au.nr}; Kontext und Nachprüfung: 1C-Werte (ein Rechner, Loopback). Eigene Darstellung. ` +
+    `Quelle: Auftrag ${au.nr} [7], ${P50}, ${haupt}; Nachprüfung [8], ${P50}, ${nachlauf}; Validierung [9], ${P50}, ${teil2}.</figcaption></figure>`;
 
   // ------------------------------------------------------------ Seite 2: 1C
-  const zeile = (zusage, pruefung, ergebnis, urteil, klasse = 'ja') =>
-    `<tr><td><b>${zusage}</b></td><td>${pruefung}</td><td>${ergebnis}</td><td class="${klasse}">${urteil}</td></tr>`;
+  const zeile = (schritt, gezeigt, urteil, klasse = 'ja') =>
+    `<tr><td><b>${schritt}</b></td><td>${gezeigt}</td><td class="${klasse}">${urteil}</td></tr>`;
   const seite2 =
     `<h2>2 Auftrag 1C: Hält der Kontextpfad seine Zusagen? (Jonas)</h2>` +
-    `<p><b>Vorgehen.</b> Pfad am Code rekonstruiert [5], Hypothesen und Schwellen vorab festgelegt, zuerst modellfrei mit gekennzeichneten Negativproben getestet (ADR 1C-003 [10]), dann im Labor mit der ausgelieferten Runtime, zuletzt auf upstream ${code('def56700')} [8]. ` +
-    `Vertrag, Entkopplung und Konsistenz halten, zu kleinen Kosten (Tab. 1). Ergebnis: Empfehlung, kein Patch (ADR 1C-004).</p>` +
-    `<table><tr><th style="width:17%">Zusage</th><th style="width:27%">Prüfung</th><th style="width:36%">Ergebnis</th><th>Urteil</th></tr>` +
+    `<p><b>Vorgehen.</b> Code-Rekonstruktion [5], Schwellen vorab, modellfreie Tests mit Negativproben (ADR 1C-003), Labor mit echter Runtime auf ${code('def56700')} [8].</p>` +
+    `<table><tr><th style="width:15%">Schritt</th><th>Gezeigt und gemessen</th><th style="width:22%">Urteil</th></tr>` +
     zeile(
-      'Vertrag',
-      'Vorschau gegen gesendete Nutzlast; Schemavalidierung',
-      `gleicher Hash, byte-gleich; Validierung ${w(`${z.valMs} ms`)} = ${w(`${z.valP} %`)} eines Kontextaufbaus`,
-      'hält, bleibt (1C-011, 1C-013)',
+      '1 Datenfluss',
+      `je #456-Bereich Quelle, Funktion, Schema, Rechteprüfung [5]; Vorschau und Auftrag nur mit Host-Token (${code('assertHostSessionAccessFromContext')})`,
+      'belegt',
     ) +
     zeile(
-      'Entkopplung',
-      'Host-Aufruf gegen Inferenz',
-      `Host-Aufruf ${w(`${z.request} ms`)}, Inferenz ${w(`${z.infer1C} s`)} (Mediane); auf den Kontextaufbau wartet der Host`,
-      'hält, bleibt (1C-012)',
+      '2 Realer Auftrag',
+      `Vorschau = Nutzlast in allen ${w(c.n1LaeufeMitAufruf.wert)} Läufen mit Aufruf (zwei ohne, nach OOM-Kill); Host-Aufruf ${w(`${z.request} ms`)}, Inferenz ${w(`${z.infer1C} s`)} (Mediane)`,
+      'hält, bleibt (1C-012, 1C-013)',
     ) +
     zeile(
-      'Konsistenz',
-      'Hash vor und nach der Inferenz',
-      `ohne Datenänderung kein ${code('source_changed')}; Nachprüfung ${w(`${z.nachpr} %`)} des Auftrags (Regel: unter ${w(`${fw.schwelleNachpruefungProzent} %`)})`,
-      'hält, bleibt (1C-010)',
-    ) +
-    zeile(
-      'Ausnahme Blitzlicht',
-      'laufende Blitzlicht-Runde (T3.1)',
-      `Hash hängt von der Uhrzeit ab: ${code('YESNO')} endet ${w(c.yesno.wert)} ${code('source_changed')}`,
-      'empfohlen: beheben (1C-016)',
+      '3 Fehlerfälle',
+      'inkompatible Version kontrolliert (T1, E4); fehlender Bereich mit Grund (T2.1, T2.2); langsamer Empfänger, Slot, Queue (E6a/b, E10, E11). Stiller Feldverlust: fremde Snapshot-Version als „keine Daten“ (T2.3), Bereich aus Budgetgründen leer (E15)',
+      'hält; Ausnahmen empfohlen (1C-015, 1C-014)',
       'empf',
     ) +
     zeile(
-      'Kontextbereitstellung',
-      'Schätzung (ein Byte = ein Token) gegen echte Tokens',
-      `q = ${w(z.q)}: zwei Drittel des Fensters ungenutzt`,
-      'empfohlen: Zählung prüfen (1C-014)',
-      'empf',
+      '4 Änderungen',
+      `Stimme oder gelöschte Quelle: ${code('source_changed')} (T5, E7, E8); Stimme im Aufbau: ${code('CONFLICT')} (E12); Legacy- und Regelfallback kontrolliert (E13, E14, E6a); Nachprüfung ${w(`${z.nachpr} %`)} (Regel unter ${w(`${fw.schwelleNachpruefungProzent} %`)}). Blitzlicht außer TEMPO: ${code('YESNO')} ${w(c.yesno.wert)} ${code('source_changed')} ohne Änderung`,
+      'hält, bleibt (1C-010); Blitzlicht empfohlen (1C-016)',
     ) +
     zeile(
-      'Ergebnis für Lehrende',
-      'Endstatus im Nachlauf',
-      `${w(c.fullContextN4.wert)} mit Modellzusammenfassung; ${w(c.gateAntworten.wert)} Antworten bestehen das Gate`,
-      'empfohlen: Gate abstimmen (1C-018)',
+      'Kosten',
+      `Validierung ${w(`${z.valMs} ms`)} = ${w(`${z.valP} %`)} eines warmen Aufbaus (Test-Runtime, älterer Stand); q = ${w(z.q)}: zwei Drittel des geschätzten Budgets ungenutzt, ein BPE-Token umfasst mehrere Bytes [12]`,
+      'bleibt (1C-011); Zählung prüfen (1C-014)',
+    ) +
+    zeile(
+      'Ergebnis',
+      `${w(c.fullContextN4.wert)} mit Modellzusammenfassung, ${w(c.gateAntworten.wert)} Antworten bestehen das Gate`,
+      'Gate abstimmen (1C-018)',
       'empf',
     ) +
     `</table>` +
-    `<p class="quelle"><b>Tab. 1:</b> Zusagen des Kontextpfads (1C). Quelle: Nachlauf [8], ${P50}, ${nachlauf}; Validierung: Teil 2 [9], ${P50}, ${teil2}, Test-Runtime.</p>` +
-    `<p>Weitere Ausnahme (modellfrei): Ein Themen-Snapshot fremder Schemaversion gilt still als „keine Daten“ (T2.3, ADR 1C-015).</p>` +
+    `<p class="quelle"><b>Tab. 1:</b> Aufgabenabdeckung 1C, Details im Ergebnisbericht [10]. Quelle: Nachlauf [8], ${P50}, ${nachlauf}; Tests, Teil 2 [9], ${P50}, ${teil2}.</p>` +
     `<figure><pre class="nutzlast" data-frei>${['{…', ...nl.zeilen, `"limitations":[${nl.budgetZeile}]`, '…}'].map(esc).join('\n')}</pre>` +
-    `<figcaption><b>Abb. 2:</b> Echte Nutzlast an die Runtime, Ausschnitt. Vorschau und Nutzlast: Hash ${code(nl.hashVorschau.slice(0, 8))}; eine Frage fehlt aus Budgetgründen. ` +
-    `Quelle: ${code(`${nl.datei.replace(/^evidenz\//, 'evidenz/')}`)}, ${code(`runs[${nl.lauf}]`)} [8], ${rechnerKurz(nl.cpu)}, ${nl.commit} (${code('def56700')}).</figcaption></figure>` +
-    `<p><b>Grenze aus dem Auftrag.</b> „Hält“ heißt vertrags- und quellengültig; ein formal korrekter Releasepfad belegt keine optimierten Prompts.</p>`;
+    `<figcaption><b>Abb. 2:</b> Echte Nutzlast, Ausschnitt; Hash wie Vorschau ${code(nl.hashVorschau.slice(0, 8))}. ` +
+    `Quelle: ${code(nl.datei)}, ${code(`labor.quiet.runs[${nl.lauf}]`)} [8], ${rechnerKurz(nl.cpu)}, ${nl.commit} (${code('def56700')}).</figcaption></figure>` +
+    grenzen('1C', [
+      `ein Rechner, Runtime über Loopback, kein zweiter Host; Image lokal gebaut, Messproxy; eine synthetische Fixture`,
+      `Laborlimits ${w(`${fw.laborCpus1C} CPUs`)}, ${w(`${fw.laborSpeicher1CGiB} GiB`)} statt ${w(`${fw.releaseCpus} CPUs`)}, ${w(`${fw.prodSpeicherGiB} GiB`)}; Timeout ${w(`${fw.laborTimeoutS} s`)} statt ${w(`${fw.releaseTimeoutS} s`)} (Kalibrierung am Laptop ${w(`${fw.kalibrierungLaptopS} s`)}); Nachlauf mit Nebenlast`,
+      'Stand Version 1.4.0, nicht v1.3.0 (ADR 1C-001); „hält“ heißt vertragsgültig, kein Urteil über Prompts',
+    ]);
 
   // ------------------------------------------------------------ Seite 3: 1B
   const hyp = (h, groesse, schwelle, wert) =>
     `<tr><td><b>${h}</b></td><td>${groesse}</td><td>${schwelle}</td><td>${wert}</td><td class="ja">erfüllt</td></tr>`;
   const seite3 =
     `<h2>3 Auftrag 1B, Schritte 1–2: Wo steckt die Zeit? (Jonas)</h2>` +
-    `<p><b>Aufbau (Schritt 1).</b> Release 1.3 nach ADR-0035 [2] und Second-Host-Runbook [3] als zwei KVM-VMs auf einem Laptop: app-host mit App, PostgreSQL und Redis, llm-host mit ${code('llama-server')} und Qwen3-4B Q4_K_M; die Firewall lässt die Runtime nur vom app-host zu, dazu ein Token. ` +
-    `Offengelegt: Release-Images selbst gebaut (nicht öffentlich), beide VMs auf einer CPU [7].</p>` +
-    `<p><b>Messung (Schritt 2).</b> ${n} echte Summary-Aufträge über die App. Ein Mitschnitt auf beiden Hosts liefert t<sub>0</sub> bis t<sub>3</sub>, das Feld ${code('timings')} der Runtime die Inferenzzeit [4]: ` +
-    `Netz = (t<sub>3</sub> − t<sub>0</sub>) − (t<sub>2</sub> − t<sub>1</sub>), jede Differenz von einer Uhr, ohne Änderung am Produktionscode (ADR 1B-006; Begriffe nach [6]). ` +
-    `Der erste Auftrag ist kalt, die übrigen warm (Prompt im Cache); beide Gruppen stehen getrennt (ADR 1B-011).</p>` +
+    `<p><b>Aufbau (Schritt 1).</b> Nach ADR-0035 [2] und Runbook [3] zwei KVM-VMs auf einem Laptop: app-host mit App samt App-Adapter, PostgreSQL, Redis (Encoder ab Werk aus); llm-host mit dem LLM-Server ${code('llama-server')}, Qwen3-4B Q4_K_M; Firewall und Token. ` +
+    `Abgleich mit ADR-0035 [7]: Lücke bei ${code('--n-predict')} („Richtung ${fw.nPredictAdr}“, Release ${fw.nPredictRelease}); ${fw.nPredictAdr} hätte die Antworten (${fw.antwortTokensMin}–${fw.antwortTokensMax} Tokens) abgeschnitten.</p>` +
+    `<p><b>Messung (Schritt 2).</b> ${n} echte Aufträge über die App; Mitschnitt auf beiden Hosts (t<sub>0</sub>–t<sub>3</sub>), Inferenz aus ${code('timings')} [4]: ` +
+    `Netz = (t<sub>3</sub> − t<sub>0</sub>) − (t<sub>2</sub> − t<sub>1</sub>), ohne Änderung am Produktionscode (ADR 1B-006, Begriffe [6]). Kalt und warm getrennt (ADR 1B-011).</p>` +
     `<figure>${zeitzerlegungSvg(b)}` +
-    `<figcaption><b>Abb. 3:</b> Zeitzerlegung mit vorab festgelegten Schwellen (Log-Achse). Netz, Transport, Adapter und Inferenzanteil: Median über alle ${n} Aufträge; Inferenz warm: Median, n = ${nWarm}. Eigene Darstellung. ` +
+    `<figcaption><b>Abb. 3:</b> Zeitzerlegung, Schwellen vorab (Log-Achse). Netz, Transport, Adapter, Anteil: Median, alle ${n}; Inferenz warm: n = ${nWarm}; kalt: Median, ${b.nKaltLaeufe} Läufe. Eigene Darstellung. ` +
     `Quelle: Lauf [7], ${P50}, ${haupt}; Kaltläufe: Nachtrag [7], ${P50}, ${nachtrag}.</figcaption></figure>` +
-    `<table><tr><th style="width:15%">Hypothese</th><th style="width:33%">Messgröße</th><th style="width:15%">Schwelle, vorab</th><th>Messwert</th><th style="width:10%">Urteil</th></tr>` +
+    `<table><tr><th style="width:14%">Hypothese</th><th style="width:28%">Messgröße</th><th style="width:20%">Schwelle, vorab</th><th>Messwert</th><th style="width:9%">Urteil</th></tr>` +
     hyp(
       'H_B1',
-      'Netz je Auftrag, Median',
-      `≤ ${w(`${fw.schwelleNetzMs} ms`)}`,
-      `${w(`${z.netz} ms`)} (Maximum ${w(`${z.netzMax} ms`)})`,
+      'Netz je Auftrag',
+      `Median ≤ ${w(`${fw.schwelleNetzMs} ms`)}, Max. ≤ ${w(`${fw.schwelleNetzMaxMs} ms`)}`,
+      `${w(`${z.netz} ms`)}, Max. ${w(`${z.netzMax} ms`)}`,
     ) +
     hyp(
       'H_B2',
@@ -205,109 +208,127 @@ export function baueHandout(daten, personen, { basis } = {}) {
       w(`${z.anteil} %`),
     ) +
     hyp(
-      'H_C0 (M2)',
-      'Kontrollanfrage Strecke minus lokal (Mediane)',
-      `≤ ${w(`${fw.schwelleC0Ms} ms`)}`,
-      w(`${z.c0} ms`),
-    ) +
-    hyp(
-      'H_B0 (M3)',
-      'Runtime fehlt: Auftragszeit, Median',
-      `≤ ${w(`${fw.schwelleB0S} s`)}`,
-      `${w(`${z.b0} ms`)}, ${w(`${b.nB0} von ${b.nB0}`)} extraktiv`,
-    ) +
-    hyp(
       'H_B3 kalt (M4)',
-      `Inferenzanteil, ${b.nKaltLaeufe} Läufe mit frischer Runtime`,
-      `≥ ${w(`${fw.schwelleInferenzProzent} %`)}`,
-      `in allen ${b.nKaltLaeufe}; Median ${w(`${z.kaltMedian} s`)} (${w(`${z.kaltMin}–${z.kaltMax} s`)})`,
+      `Anteil in ${b.nKaltLaeufe} Kaltläufen; Netz`,
+      `≥ ${w(`${fw.schwelleInferenzProzent} %`)} in allen; Netz ≤ ${w(`${fw.schwelleNetzMs} ms`)}`,
+      `${w(`${z.kaltAnteilMin}–${z.kaltAnteilMax} %`)}, Netz ${w(`${z.kaltNetz} ms`)}`,
     ) +
     `</table>` +
-    `<p class="quelle"><b>Tab. 2:</b> Schwellen vorab (ADR 1B-008 [10]). Quelle: H_B1–H_B3 Lauf [7], n = ${n}, ${P50}, ${haupt}; M2–M4 Nachtrag [7], ${P50}, ${nachtrag}.</p>` +
-    `<p>Der kalte erste Auftrag dauert ${w(`${z.jobKalt} s`)}. Warme Aufträge dauern im Median ${w(`${z.jobWarm} s`)} (warm, n = ${nWarm}); der verfolgte Auftrag ${au.nr} liegt mit ${w(`${z.auJob} s`)} knapp darüber.</p>`;
+    `<p class="quelle"><b>Tab. 2:</b> Schwellen vorab (ADR 1B-008 [10]). Quelle: H_B1–H_B3 Lauf [7], n = ${n}, ${P50}, ${haupt}; M4 Nachtrag [7], ${P50}, ${nachtrag}.</p>` +
+    `<p>T_job: kalt ${w(`${z.jobKalt} s`)} (Kaltläufe ${w(`${z.kaltMedian} s`)}), Median warm ${w(`${z.jobWarm} s`)} (warm, n = ${nWarm}).</p>` +
+    grenzen('1B', [
+      `${w(`${fw.laborCpus} statt ${fw.releaseCpus} CPUs`)}; Timeout ${w(`${fw.laborTimeout1BS} s`)} statt ${w(`${fw.releaseTimeoutS} s`)} nach Kalibrierung (I = ${w(`${fw.kalibrierung1BS} s`)}), der Release-Timeout ist nicht gemessen`,
+      'Images selbst gebaut, Start ohne Wrapper (Runbook §6 bricht ihn), Summary-Schalter an; Hintergrunddienste vor dem gewerteten Lauf von Hand abgeschaltet',
+      `ein Laptop, virtuelles Netz, keine parallele Last; Netzauflösung ≈ ${w(`${fw.netzAufloesungMs} ms`)}; Token im Klartext über HTTP`,
+      `warm heißt: identischer Snapshot aus dem KV-Cache, bei geändertem Zustand gilt eher der Kaltwert; Stand Version 1.4.0 (${code(haupt)})`,
+    ]);
 
-  // ------------------------------------------------------------ Seite 4: Befunde, Entscheidung, Grenzen
-  const ent = (art, inhalt, beleg, klasse) =>
-    `<tr><td class="${klasse}">${art}</td><td>${inhalt}</td><td>${beleg}</td></tr>`;
+  // ------------------------------------------------------------ Seite 4: Befunde und Entscheidung
+  const ent = (art, inhalt, folge, beleg, klasse) =>
+    `<tr><td class="${klasse}">${art}</td><td>${inhalt}</td><td>${folge}</td><td>${beleg}</td></tr>`;
   const seite4 =
-    `<h2>4 Befunde, Entscheidung und Grenzen zu 1C und 1B (Jonas)</h2>` +
-    `<h3>Das Gate verwirft jede Modellantwort ${etikett('1C')} ${etikett('1B')}</h3>` +
-    `<p>Im 1B-Lauf verwirft das Quality-Gate ${w(`${b.verworfen} von ${n}`)} Antworten, im 1C-Nachlauf bestehen ${w(c.gateAntworten.wert)} [7, 8]. Es prüft nur die Form „Stichwort: Text“. ` +
-    `Die Antwort auf Auftrag ${a.auftrag} erfüllt sie in ${w(`${a.mitTrenner} von ${a.aussagen}`)} Aussagen und ist englisch statt deutsch:</p>` +
+    `<h2>4 Befunde und Entscheidung zu 1C und 1B (Jonas)</h2>` +
+    `<h3>Auf Version 1.4.0 verwirft das Gate jede Modellantwort ${etikett('1C')} ${etikett('1B')}</h3>` +
+    `<p>Im 1B-Lauf verwirft das Quality-Gate ${w(`${b.verworfen} von ${n}`)} Antworten, im 1C-Nachlauf bestehen ${w(c.gateAntworten.wert)} [7, 8]. Es verlangt mindestens zwei Aussagen „Stichwort: Text“ mit verschiedenen Stichwörtern, ganze Sätze, keine Metamuster; Sprache und Thema prüft es nicht. ` +
+    `Auftrag ${a.auftrag} scheitert an der Form (${w(`${a.mitTrenner} von ${a.aussagen}`)} Aussagen) und verfehlt auch den Inhalt (englisch, Moderationsstatus):</p>` +
     `<p class="zitat antwort" lang="en">${esc(ersteAussage)}</p>` +
     `<p class="quelle">Ausschnitt ohne Header und Token [7], Lauf ${haupt}, ${P50}.</p>` +
-    `<p>Die Lehrperson sieht ohne Hinweis eine extraktive Ersatzzusammenfassung; ${w(`${z.anteil} %`)} der Auftragszeit (Median) fließen in ein Ergebnis, das nicht ankommt.</p>` +
+    `<p>Die Lehrperson sieht eine extraktive Ersatzzusammenfassung mit dem allgemeinen Hinweis „Eine ausführliche Zusammenfassung war diesmal nicht möglich …“, den Grund nicht. ` +
+    `Das Gate kam mit Version 1.4.0 (${code('12f1d8e4')}, nicht in v1.3.0); davor, auf ${code('9f230abc')} mit älterer Instruktion, endeten ${w(c.fullContextVorGate.wert)} Aufträgen mit Modellzusammenfassung (ADR 1C-019 [10]).</p>` +
     `<h3>Betrieb: Timeout und Speicher ${etikett('1C')}</h3>` +
-    `<p>Ab Werk bricht die App nach ${w(`${fw.releaseTimeoutS} s`)} ab. Die Inferenz dauerte bei der Kalibrierung am PC (i7-8700, ${code(c.kalibrierungPcS.commit)}) ${w(`${z.kalPc} s`)}, am Laptop im Median ${w(`${z.infer1C} s`)} (${code('def56700')}); ` +
-    `das Labor lief offengelegt mit ${w(`${fw.laborTimeoutS} s`)}, der Obergrenze des Produkts. Der Prompt-Cache lässt den Speicher je Auftrag um ${w(`${z.delta} GB`)} wachsen (Median, Laptop, ${code('def56700')}); ` +
-    `der Kernel beendet die Runtime im ${w(`${c.oomAuftrag.wert}.`)} Auftrag per OOM-Kill, auf ${code(c.oomAuftrag9f230abc.commit)} beim ${w(`${c.oomAuftrag9f230abc.wert}.`)} mit Aufwärmlauf (Laptop und PC) [8, 10].</p>` +
-    `<h3>Was der Betrieb nicht sieht ${etikett('1B')}</h3>` +
-    `<p>Das Log nennt nur die Gesamtdauer ${code('latencyMs')} und als Grund nur ${code('invalid_response')}; Inferenz, Netz und Adapter trennt nur ein Mitschnitt [7].</p>` +
-    `<h3>Entscheidung</h3>` +
-    `<table><tr><th style="width:21%">Entscheidung</th><th>Inhalt</th><th style="width:24%">ADR, Issue im Fork</th></tr>` +
+    `<p>Ab Werk bricht die App nach ${w(`${fw.releaseTimeoutS} s`)} ab; die Inferenz dauerte bei der Kalibrierung am PC (${code(c.kalibrierungPcS.commit)}) ${w(`${z.kalPc} s`)}, am Laptop im Median ${w(`${z.infer1C} s`)} (${code('def56700')}, Nebenlast). ` +
+    `Bei wechselnden Prompts wächst der Speicher der Runtime je Auftrag um ${w(`${z.delta} GB`)} (Median, Laptop); der KV-Cache belegt Speicher je Token [11]. OOM-Kill am Laborlimit (${w(`${fw.laborSpeicher1CGiB} GiB`)} + ${w(`${fw.laborSpeicher1CGiB} GiB`)} Swap) im ${w(`${c.oomAuftrag.wert}.`)} Auftrag, mit Produktionslimits (${w(`${fw.prodSpeicherGiB} GiB`)} + ${w(`${fw.prodSwapGiB} GiB`)} Swap, PC, ${code(c.oomAuftrag9f230abc.commit)}) im ${w(`${c.oomAuftrag9f230abc.wert}.`)} [8, 10]. ` +
+    `Im 1B-Lauf mit gleichem Prompt blieb er bei höchstens ${w(`${z.speicher1B} GB`)} [7].</p>` +
+    `<table><tr><th style="width:15%">Entscheidung</th><th style="width:27%">Inhalt</th><th>Kosten, Risiko, Betrieb</th><th style="width:15%">ADR, Issue</th></tr>` +
     ent(
       'beibehalten (1C)',
-      'Nachprüfung, strikte Validierung, Entkopplung, Vorschau gleich Nutzlast',
+      'Nachprüfung, Validierung, Entkopplung, Vorschau = Nutzlast',
+      'Kosten unverändert; kein neues Risiko',
       `${adr('1C-010')} bis ${adr('1C-013')}`,
       'ja',
     ) +
     ent(
-      'empfohlen, nicht umgesetzt (1C)',
-      'Gate mit Instruktion und Grammatik abstimmen; Timeout kalibrieren; Prompt-Cache begrenzen; Token-Zählung prüfen; Snapshot-Zustand unterscheiden; Blitzlicht-Hash stabilisieren',
-      `${['1C-018', '1C-023', '1C-024'].map(adr).join(', ')}, ${adr('1C-014')} bis ${adr('1C-016')}; #13 bis #18`,
+      'empfohlen (1C)',
+      'Instruktion, Grammatik und Gate abstimmen',
+      'Abnahmemessung; lockere Schwelle zeigt Metaaussagen',
+      `${adr('1C-018')}, #13`,
+      'empf',
+    ) +
+    ent(
+      'empfohlen (1C)',
+      'Timeout am Inferenz-Host kalibrieren',
+      'eine Kalibrierung; Slot länger belegt',
+      `${adr('1C-023')}, #16`,
+      'empf',
+    ) +
+    ent(
+      'empfohlen (1C)',
+      'Prompt-Cache im RAM begrenzen',
+      'eine Zeile im Entry-Point; sonst OOM-Neustarts',
+      `${adr('1C-024')}, #14`,
+      'empf',
+    ) +
+    ent(
+      'empfohlen (1C)',
+      'genauere Token-Zählung prüfen',
+      'Änderung am Packer; Fenster kann überlaufen',
+      `${adr('1C-014')}, #17`,
+      'empf',
+    ) +
+    ent(
+      'empfohlen (1C)',
+      'Snapshot-Zustand unterscheiden; Blitzlicht-Hash stabilisieren',
+      'klein; Rückweg Revert',
+      `${adr('1C-015')}, ${adr('1C-016')}; #15, #18`,
       'empf',
     ) +
     ent(
       'Konfiguration (1B)',
-      'Topologie bleibt; der Hebel liegt am Inferenz-Host (Timeout, Limits, Promptgröße), vorher Gate abstimmen',
+      'Topologie bleibt; Hebel am Inferenz-Host',
+      'keine; nützt erst mit passendem Gate',
       '1B-Ergebnis; #13',
       'ja',
     ) +
     ent(
-      'empfohlen, nicht umgesetzt (1B)',
-      'Zeiten und Grund eines Fallbacks ohne Prompttext ins Log schreiben',
+      'empfohlen (1B)',
+      `Log zeigt nur ${code('latencyMs')} und ${code('invalid_response')} [7]: Zeiten und Grund loggen`,
+      'Logzeilen; kein Prompttext',
       '#19, #20',
       'empf',
     ) +
     `</table>` +
-    `<p class="quelle">Quelle: Berichte und ADRs [10].</p>` +
-    `<h3>Gültigkeitsgrenzen</h3>` +
-    `<ul>` +
-    `<li>Gemessen wurden spätere Codestände, nicht der Tag v1.3.0 (ADR 1C-001, 1B-001 [10]).</li>` +
-    `<li>Labor: CPU-Inferenz, ein Slot, ein Modell; Zeiten gelten nur für den jeweiligen Rechner.</li>` +
-    `<li>1B: beide Hosts auf einem Laptop, virtuelles Netz, eine Messreihe; Netzauflösung etwa eine Millisekunde.</li>` +
-    `<li>1C: eine synthetische Fixture; Nachlauf nur am Laptop, mit Nebenlast.</li>` +
-    `<li>Ein privates Netz ist kein Datenschutz; der Token läuft im Klartext über HTTP.</li>` +
-    `</ul>`;
+    `<p class="quelle"><b>Tab. 3:</b> Entscheidungen; Empfehlungen nicht umgesetzt. Quelle: ADRs (Folgen), Berichte [10].</p>`;
 
   // ------------------------------------------------------------ Seite 5: Quellen, Evidenz, KI
   const lit = [
-    `Referatsprüfung Cloud Computing: verbindliche Umsetzung. ${code('docs/didaktik/CLOUD-COMPUTING-REFERAT-PRUEFUNG.md')}, Abschnitte 3 und 4.3.`,
+    `arsnova.eu-Projektteam (2026): Referatsprüfung Cloud Computing: verbindliche Umsetzung. ${code('docs/didaktik/CLOUD-COMPUTING-REFERAT-PRUEFUNG.md')}, Abschnitte 3 und 4.3.`,
     `arsnova.eu-Projektteam (2026): ADR-0035, Selbstgehosteter Open-Weight-LLM-Server: llama.cpp (llama-server) statt Ollama. ${code('docs/architecture/decisions/0035-self-hosted-llm-runtime-llama-cpp-over-ollama.md')}.`,
-    `arsnova.eu-Projektteam (2026): Betriebshandbuch: private CPU-Inferenz auf einem zweiten Linux-Host (Second-Host-Runbook). ${code('docs/operations/OPEN-WEIGHT-LLM-SECOND-HOST-RUNBOOK.md')}.`,
-    `ggml-org: llama.cpp HTTP Server, README, Antwortfeld ${code('timings')}. <a href="https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md">github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md</a>.`,
-    `Dossier 1C: Autorisierter Kontext und asynchroner Adapterpfad. ${code('docs/referat-thema-1/1C-kontext-und-adapterpfad.md')}.`,
-    `Recherchedossier 1B: Private Inferenz als getrennte Serverrolle, Abschnitte 8.1 und 10. ${code('docs/referat-thema-1/1B-private-inferenz-zweiter-host.md')}.`,
-    `Eigene Messung 1B: Aufbau ${code('evidenz/1B/2026-11-12-aufbau.md')}, Lauf mit Nachtrag M1–M4 ${code('evidenz/1B/2026-11-13-lauf.md')}, Rohdaten und Antwortausschnitt ${code('evidenz/1B/messung/')}.`,
-    `Eigene Messung 1C: Nachlauf auf upstream ${code('evidenz/1C/2026-11-09-labor-nachlauf.md')}, Rohdaten und Auswertung ${code('evidenz/1C/messung/')}.`,
-    `Eigene Messung 1C, Teil 2 (Test-Runtime): ${code('evidenz/1C/2026-10-24-teil2.md')}.`,
-    `Eigene ADRs 1C-001 bis 1C-026 und 1B-001 bis 1B-012 (${code('adr/')}); Berichte ${code('1C-ergebnis.md')}, ${code('1B-ergebnis.md')}; Eigenanteil ${code('1C-eigenanteil.md')}, ${code('1B-eigenanteil.md')}.`,
+    `arsnova.eu-Projektteam (2026): Betriebshandbuch: private CPU-Inferenz auf einem zweiten Linux-Host. ${code('docs/operations/OPEN-WEIGHT-LLM-SECOND-HOST-RUNBOOK.md')}.`,
+    `ggml-org (o. J.): llama.cpp HTTP Server, README, Antwortfeld ${code('timings')}, Tag b10524. <a href="https://github.com/ggml-org/llama.cpp/blob/b10524/tools/server/README.md">github.com/ggml-org/llama.cpp/blob/b10524/tools/server/README.md</a>, abgerufen am 15.11.2026.`,
+    `Eigene Arbeit (2026): Dossier 1C, Autorisierter Kontext und asynchroner Adapterpfad. ${code('1C-kontext-und-adapterpfad.md')}; Diagrammdoku ${code('1C-diagrams.md')}.`,
+    `Eigene Arbeit (2026): Recherchedossier 1B, Private Inferenz als getrennte Serverrolle. ${code('1B-private-inferenz-zweiter-host.md')}.`,
+    `Eigene Messung (2026): 1B-Aufbau ${code('evidenz/1B/2026-11-12-aufbau.md')}, Lauf ${code('evidenz/1B/2026-11-13-lauf.md')}, Rohdaten ${code('evidenz/1B/messung/')}.`,
+    `Eigene Messung (2026): 1C-Nachlauf ${code('evidenz/1C/2026-11-09-labor-nachlauf.md')}, Rohdaten in ${code('messung/')}.`,
+    `Eigene Messung (2026): 1C, Teil 2 mit Test-Runtime, ${code('evidenz/1C/2026-10-24-teil2.md')}.`,
+    `Eigene Arbeit (2026): ADRs 1C-001 bis 1C-026 und 1B-001 bis 1B-012 (${code('adr/')}); Berichte ${code('1C-ergebnis.md')}, ${code('1B-ergebnis.md')}; Eigenanteil ${code('1C-eigenanteil.md')}, ${code('1B-eigenanteil.md')}.`,
+    `Kwon, W. et al. (2023): Efficient Memory Management for Large Language Model Serving with PagedAttention. In: Proc. 29th Symposium on Operating Systems Principles (SOSP ’23), ACM, S. 611–626. <a href="https://doi.org/10.1145/3600006.3613165">doi.org/10.1145/3600006.3613165</a>.`,
+    `Sennrich, R.; Haddow, B.; Birch, A. (2016): Neural Machine Translation of Rare Words with Subword Units. In: Proc. 54th Annual Meeting of the ACL, S. 1715–1725. <a href="https://doi.org/10.18653/v1/P16-1162">doi.org/10.18653/v1/P16-1162</a>.`,
   ];
   const seite5 =
     `<h2>5 Quellen, Evidenz und KI-Offenlegung (Jonas)</h2>` +
     `<h3>Literatur und Quellen</h3>` +
     `<ol class="literatur">${lit.map((t, i) => `<li id="q${i + 1}">${t}</li>`).join('')}</ol>` +
-    `<p class="quelle">Pfade [7]–[10] relativ zu ${code('docs/referat-thema-1/')}; Issues #13–#20 im Fork <a href="https://github.com/NiklasSkulll/arsnova.eu/issues">github.com/NiklasSkulll/arsnova.eu/issues</a>.</p>` +
+    `<p class="quelle">[1]–[3] im Fork, Stand ${code('a19ca70f')}; Pfade [5]–[10] relativ zu ${code('docs/referat-thema-1/')}; Issues #13–#20 im Fork <a href="https://github.com/NiklasSkulll/arsnova.eu/issues">github.com/NiklasSkulll/arsnova.eu/issues</a>.</p>` +
     `<h3>Evidenzort und Rechner</h3>` +
-    `<p>Alle eigenen Belege liegen im Fork <a href="https://github.com/NiklasSkulll/arsnova.eu">github.com/NiklasSkulll/arsnova.eu</a> unter ${code('docs/referat-thema-1/')}: 1C in ${code('main')} (PR #12), 1B im PR #23. ` +
-    `Die Zahlen hier setzt ein geprüftes Skript aus den Rohdaten ein (${code('abgabe/jonas/zahlen.mjs')}).</p>` +
-    `<p class="klein" data-frei><b>Rechner.</b> ThinkPad P50: ${esc(H.hauptlauf.rechner.replace(/\(R\)|\(TM\)| CPU @ [\d.]+GHz/g, ''))}. PC: Intel Core i7-8700.</p>` +
+    `<p>Alle eigenen Belege liegen im Fork <a href="https://github.com/NiklasSkulll/arsnova.eu">github.com/NiklasSkulll/arsnova.eu</a> unter ${code('docs/referat-thema-1/')}: 1C in ${code('main')} (PR #12), 1B im Zweig ${code('feature-1B-two-host')}, Stand ${code('bbc394c9')} (PR #23). ` +
+    `Die Zahlen setzt ein geprüftes Skript aus den Rohdaten ein (${code('abgabe/jonas/zahlen.mjs')}).</p>` +
+    `<p class="klein" data-frei><b>Rechner.</b> ThinkPad P50: ${esc(H.hauptlauf.rechner.replace(/Intel\(R\) Core\(TM\) | CPU @ [\d.]+GHz/g, ''))}. PC: i7-8700.</p>` +
     `<h3>KI-Offenlegung</h3>` +
     `<p>Werkzeug: Claude Code (Anthropic) mit Serena und codebase-memory-mcp, laut Protokollen Modell Claude Opus 5.5 (nicht unabhängig geprüft). ` +
-    `Die KI entwarf unter meiner Anleitung Skripte, Tests, Auswertungen, Texte, Diagramme und dieses Handout. ` +
-    `Ich habe Leitfragen, Hypothesen und Schwellen vor jeder Messung freigegeben, die Läufe gesteuert, über Abweichungen entschieden und die Ergebnisse geprüft (1C-Kernzahlen stichprobenartig nachgerechnet). ` +
-    `Zentrale Aufträge (sinngemäß): Pfad mit Code-Belegen nachverfolgen, 1C verteidigbar testen und messen, das Labor automatisiert nachbauen, einen echten Auftrag zerlegen. ` +
-    `Reviews waren KI-Sitzungen, keine menschlichen Gutachten. Details je Artefakt: Eigenanteil-Dateien [10].</p>`;
+    `Die KI entwarf Skripte, Tests, Auswertungen, Texte und dieses Handout. ` +
+    `Leitfragen, Hypothesen und Schwellen habe ich vor jeder Messung freigegeben, Läufe und Abweichungen entschieden, Ergebnisse geprüft. ` +
+    `Zentrale Aufträge sinngemäß: Pfad mit Code-Belegen verfolgen, 1C testen und messen, Labor nachbauen; Wortlaut nur in meiner Sitzungshistorie, einer in [5]. ` +
+    `Reviews waren KI-Sitzungen, keine menschlichen Gutachten. Details: Eigenanteil-Dateien [10].</p>`;
 
   // ADR-Kennungen nicht am Bindestrich umbrechen (nur im HTML-Text, nie in den SVG-Grafiken).
   const seiten = [seite1, seite2, seite3, seite4, seite5].map((t) =>

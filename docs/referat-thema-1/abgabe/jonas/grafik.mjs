@@ -125,8 +125,8 @@ export function zeitzerlegungSvg(b1, { kalt = true } = {}) {
   ];
   if (kalt) {
     zeilen.push({
-      name: 'Auftrag kalt',
-      gruppe: 'frische Runtime',
+      name: 'Kalt, Median',
+      gruppe: `n = ${b1.nKaltLaeufe}, Nachtrag`,
       ms: b1.kaltMedianS * 1000,
       wert: `${fmt(b1.kaltMedianS, 1)} s`,
       kalt: true,
@@ -252,7 +252,9 @@ export function zeitzerlegungSvg(b1, { kalt = true } = {}) {
     `Zeitzerlegung eines Summary-Auftrags auf logarithmischer Achse: Netz ${fmt(b1.netzMs, 2)} ms, ` +
     `Transport ${fmt(b1.transportMs, 1)} ms, Adapter ${fmt(b1.adapterMs, 0)} ms (Mediane über alle ${b1.anzahl} Aufträge), ` +
     `Inferenz ${fmt(b1.inferWarmMs / 1000, 1)} s (Median warm, n = ${nWarm})` +
-    (kalt ? `, Auftrag kalt ${fmt(b1.kaltMedianS, 1)} s (frische Runtime)` : '') +
+    (kalt
+      ? `, Auftrag kalt ${fmt(b1.kaltMedianS, 1)} s (Median aus ${b1.nKaltLaeufe} Läufen mit frischer Runtime, Nachtrag)`
+      : '') +
     `. Inferenzanteil ${fmt(b1.inferAnteil * 100, 2)} %. Alle drei Schwellen erfüllt.`;
   return svgHuelle(label, teile.join(''));
 }
@@ -360,11 +362,15 @@ function rasterBox(y, h, label, rechts) {
 /**
  * Karte des Auftrags über app-host und llm-host (J3 und als Leitfaden auf den Stationsfolien).
  * aktiv: Station mit dem Marker des wandernden Auftrags (genau ein data-aktiv) oder null.
+ * auftrag: der verfolgte Auftrag aus dem 1B-Lauf ({ nr, hostReturnMs, inferMs }); seine eigenen
+ * Werte stehen an Klick und Inferenz. Die 1C-Werte an Kontext und Nachprüfung stammen aus anderen
+ * Aufbauten (ein Rechner über Loopback) und tragen ihre Herkunft unter dem Wert.
  */
-export function wegSvg({ aktiv = null, b1, c1 }) {
+export function wegSvg({ aktiv = null, b1, c1, auftrag }) {
   if (aktiv !== null && !WEG_STATIONEN[aktiv]) throw new Error(`Unbekannte Station: ${aktiv}`);
+  if (!auftrag) throw new Error('wegSvg braucht den verfolgten Auftrag');
   const S = WEG_STATIONEN;
-  const nWarm = b1.anzahl - 1; // Auftrag 1 kalt, 2…n warm (ADR 1B-011)
+  const au = auftrag;
   const teile = [];
 
   teile.push(
@@ -375,6 +381,12 @@ export function wegSvg({ aktiv = null, b1, c1 }) {
       `Messpunkte ${tIndex(0)}–${tIndex(3)}: Mitschnitt auf beiden Hosts`,
     ),
     rasterBox(LLM_BOX.y, LLM_BOX.h, 'llm-host · 192.168.150.20'),
+    text(24, LLM_BOX.y + LLM_BOX.h - 18, '1C-Werte: ein Rechner, Loopback, kein llm-host', {
+      mono: true,
+      groesse: 22,
+      farbe: FARBEN.petrol,
+      halo: FARBEN.weiss,
+    }),
   );
 
   const pfad =
@@ -413,33 +425,50 @@ export function wegSvg({ aktiv = null, b1, c1 }) {
 
   const ring = (s, farbe) =>
     `<circle cx="${s.x}" cy="${s.y}" r="${s.r}" fill="${FARBEN.weiss}" stroke="${farbe}" stroke-width="7"/>`;
-  const obenStation = (id, sub, farbe = FARBEN.tinte, ringFarbe = FARBEN.petrol) => {
+  const obenStation = (id, sub, herkunft, farbe = FARBEN.tinte, ringFarbe = FARBEN.petrol) => {
     const s = S[id];
     return (
       `<g data-station="${id}">` +
       etikett(s.x, s.y - 78, s.auftrag) +
       ring(s, ringFarbe) +
-      text(s.x, s.y + 64, esc(s.name), { groesse: 30, gewicht: 700, farbe, anker: 'middle' }) +
-      text(s.x, s.y + 100, esc(sub), {
+      text(s.x, s.y + 58, esc(s.name), { groesse: 30, gewicht: 700, farbe, anker: 'middle' }) +
+      text(s.x, s.y + 90, esc(sub), {
         mono: true,
         groesse: 22,
-        farbe: farbe === FARBEN.tinte ? FARBEN.text2 : farbe,
+        gewicht: 600,
+        farbe: farbe === FARBEN.tinte ? FARBEN.tinte : farbe,
         anker: 'middle',
+      }) +
+      text(s.x, s.y + 118, esc(herkunft), {
+        mono: true,
+        groesse: 22,
+        farbe: FARBEN.gedaempft,
+        anker: 'middle',
+        extra: 'data-herkunft="1"',
       }) +
       `</g>`
     );
   };
 
   teile.push(
-    obenStation('klick', `${fmt(c1.requestMs.wert, 1)} ms`),
-    obenStation('kontext', `Validierung ${fmt(c1.validierungAnteilProzent.wert, 1)} %`),
-    obenStation('nachpruefung', `Anteil ${fmt(c1.nachpruefungAnteilProzent.wert, 2)} %`),
-    obenStation('gate', 'verwirft Antwort', FARBEN.rot, FARBEN.rot),
+    obenStation('klick', `${fmt(au.hostReturnMs)} ms`, `Auftrag ${au.nr}`),
+    obenStation(
+      'kontext',
+      `Validierung ${fmt(c1.validierungAnteilProzent.wert, 1)} %`,
+      `1C-Test · ${c1.validierungAnteilProzent.commit}`,
+    ),
+    obenStation(
+      'nachpruefung',
+      `Anteil ${fmt(c1.nachpruefungAnteilProzent.wert, 2)} %`,
+      `1C-Labor · ${c1.nachpruefungAnteilProzent.commit.slice(0, 8)}`,
+    ),
+    obenStation('gate', 'verwirft Antwort', '1B und 1C', FARBEN.rot, FARBEN.rot),
   );
 
   // Netz: kleiner Ring auf dem Abstieg, Beschriftung mittig zwischen den Hosts.
   const n = S.netz;
-  const netzText = `Netz ${fmt(b1.netzMs, 2)} ms`;
+  // Netz unter der Messauflösung von etwa 1 ms (ADR 1B-011): keine Nachkommastellen auf der Karte.
+  const netzText = 'Netz < 1 ms';
   const netzMitte = (n.x + aufKurve(AUF, NETZ_Y)[0]) / 2 + 6;
   const netzBreite = 60 + 14 + netzText.length * 14.4;
   const netzLinks = netzMitte - netzBreite / 2;
@@ -457,7 +486,7 @@ export function wegSvg({ aktiv = null, b1, c1 }) {
   teile.push(
     `<g data-station="inferenz">` +
       `<circle cx="${inf.x}" cy="${inf.y}" r="${inf.r}" fill="${FARBEN.bernstein}"/>` +
-      text(inf.x, inf.y + 10, `${fmt(b1.inferWarmMs / 1000, 0)} s`, {
+      text(inf.x, inf.y + 10, `${fmt(au.inferMs / 1000, 0)} s`, {
         mono: true,
         groesse: 28,
         gewicht: 600,
@@ -466,7 +495,7 @@ export function wegSvg({ aktiv = null, b1, c1 }) {
       }) +
       etikett(lx + 30, inf.y - 42, '1B') +
       text(lx + 76, inf.y - 16, 'Inferenz', { groesse: 30, gewicht: 700 }) +
-      text(lx, inf.y + 22, `Kreis: Median warm, n = ${nWarm}`, {
+      text(lx, inf.y + 22, `Kreis: Auftrag ${au.nr} (warm), 1B`, {
         mono: true,
         groesse: 22,
         farbe: FARBEN.text2,
@@ -493,9 +522,10 @@ export function wegSvg({ aktiv = null, b1, c1 }) {
   }
 
   const label =
-    `Weg eines Summary-Auftrags über app-host 192.168.150.10 und llm-host 192.168.150.20: ` +
-    `Klick (1C), Kontext (1C), Netz ${fmt(b1.netzMs, 2)} ms (1B), Inferenz ${fmt(b1.inferWarmMs / 1000, 0)} s (1B), ` +
-    `Nachprüfung (1C), Gate (1C) verwirft die Antwort. Messpunkte t0 bis t3 an den Host-Grenzen.` +
+    `Weg von Auftrag ${au.nr} über app-host 192.168.150.10 und llm-host 192.168.150.20: ` +
+    `Klick ${fmt(au.hostReturnMs)} ms (Auftrag ${au.nr}), Kontext (Validierung aus dem 1C-Test), Netz unter 1 ms, ` +
+    `Inferenz ${fmt(au.inferMs / 1000, 0)} s (Auftrag ${au.nr}), Nachprüfung (Anteil aus dem 1C-Labor, ein Rechner), ` +
+    `Gate verwirft die Antwort. Messpunkte t0 bis t3 an den Host-Grenzen.` +
     (aktiv ? ` Aktuelle Station: ${S[aktiv].name}.` : '');
   return svgHuelle(label, teile.join(''));
 }
@@ -658,7 +688,7 @@ export function fussballfeldSvg(b1, { zoom = 0 } = {}) {
       REIHE_Y,
       kNetz,
       BEREICH.netz,
-      feldText(-12, -30, `Netz · ${esc(tNetz)}`, { anker: 'end', groesse: 28 }),
+      feldText(-12, -30, `davon Netz · ${esc(tNetz)}`, { anker: 'end', groesse: 28 }),
     ),
     imFeld(
       0,
@@ -709,7 +739,7 @@ export function fussballfeldSvg(b1, { zoom = 0 } = {}) {
       FARBEN.tinte,
       `Transport · ${fmt(b1.transportMs, 1)} ms`,
     ],
-    ['netz', BEREICH.netz[0], 1030, tNetz, FARBEN.blau, `Netz · ${fmt(b1.netzMs, 2)} ms`],
+    ['netz', BEREICH.netz[0], 1030, tNetz, FARBEN.blau, `davon Netz · ${fmt(b1.netzMs, 2)} ms`],
   ];
   for (const [name, ab, x, wert, farbe, sub] of spalten) {
     const zoomAttr =
@@ -734,7 +764,7 @@ export function fussballfeldSvg(b1, { zoom = 0 } = {}) {
 
   const label =
     `Wäre der Auftrag ein Fußballfeld: 105 m entsprechen ${fmt(b1.jobWarmMs / 1000, 1)} s (T_job, Median warm, n = ${nWarm}). ` +
-    `Die Inferenz belegt ${tInf}, der Transport ${tTrans}, das Netz ${tNetz} ` +
+    `Die Inferenz belegt ${tInf}, der Transport ${tTrans}, davon das Netz ${tNetz} ` +
     `(Netz und Transport als Median über alle ${b1.anzahl} Aufträge).`;
   return svgHuelle(label, t.join(''));
 }

@@ -38,6 +38,7 @@ export function zahlen1B(lauf, kaltLaeufe, c0, b0) {
     throw new Error('Nachtrag-Laeufe haben uneinheitlichen Commit oder Rechner');
   }
   const kaltS = kaltLaeufe.map((l) => l.zerlegung.kennzahlen.kalt.jobMsMedian / 1000);
+  const kaltAnteil = kaltLaeufe.map((l) => l.zerlegung.kennzahlen.kalt.inferAnteilMedian);
   return {
     netzMs: k.netz.medianMs,
     netzMaxMs: k.netz.maxMs,
@@ -49,6 +50,15 @@ export function zahlen1B(lauf, kaltLaeufe, c0, b0) {
     jobKaltMs: k.kalt.jobMsMedian,
     kaltMedianS: median(kaltS),
     kaltSpanneS: [Math.min(...kaltS), Math.max(...kaltS)],
+    // H_B3 kalt misst den Inferenzanteil je Lauf, dazu Netz im Median über die fünf Läufe (Nachtrag M4).
+    kaltAnteilSpanne: [Math.min(...kaltAnteil), Math.max(...kaltAnteil)],
+    kaltNetzMedianMs: median(kaltLaeufe.map((l) => l.zerlegung.kennzahlen.netz.medianMs)),
+    // Transportanteil T_transport / T_job, Median je Auftrag über alle Aufträge (ADR 1B-011).
+    transportAnteil: median(
+      lauf.zerlegung.auftraege.map((a) => (a.netzMs + a.serverOhneInferenzMs) / a.jobMs),
+    ),
+    // Höchster Speicher des Runtime-Containers im Lauf (Proben alle 15 s), in GB (10^9 Byte).
+    speicherMaxGb: lauf.speicher.maxBytes / 1e9,
     c0DiffMs: c0.kennzahlen.differenzMs,
     b0JobMs: b0.b0.kennzahlen.medianJobMs,
     anzahl: lauf.n,
@@ -176,6 +186,22 @@ export const ZAHLEN_1C = {
     text: 'Aufträge mit Endstatus full-context (N4)',
     quelle: 'adr/1C-018-quality-gate-verwirft-echte-antworten.md',
     beleg: 'Anteil `full-context` 0 von 20 (Wilson 0–16,1 %)',
+    rechner: 'Laptop (ThinkPad P50)',
+    commit: NACHLAUF_STAND,
+  },
+  fullContextVorGate: {
+    wert: '19 von 20',
+    text: 'Aufträge mit Endstatus full-context vor dem Gate (L4, Instruktion v2)',
+    quelle: 'adr/1C-018-quality-gate-verwirft-echte-antworten.md',
+    beleg: '19 von 20 `full-context`, kein `invalid_response`',
+    rechner: 'Laptop (ThinkPad P50)',
+    commit: '9f230abc',
+  },
+  n1LaeufeMitAufruf: {
+    wert: 18,
+    text: 'Messläufe mit Completion-Aufruf, in denen Vorschau = Nutzlast geprüft wurde (N1)',
+    quelle: NACHLAUF,
+    beleg: 'In allen **18** Messläufen mit Completion-Aufruf 0 Abweichungen',
     rechner: 'Laptop (ThinkPad P50)',
     commit: NACHLAUF_STAND,
   },

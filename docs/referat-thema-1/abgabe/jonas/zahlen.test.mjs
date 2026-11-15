@@ -78,6 +78,26 @@ test('jede 1C-Zahl hat Felder und ihren Beleg wörtlich in der Quelle', () => {
   }
 });
 
+test('Review 1: Kaltläufe (Anteil, Netz), Transportanteil und Speicher-Plateau aus den JSONs', () => {
+  const { b1 } = ladeZahlen(ROOT);
+  // M2: H_B3 kalt misst den Anteil, dazu Netz im Median (Laufprotokoll, Nachtrag M4)
+  assert.deepEqual(
+    b1.kaltAnteilSpanne.map((a) => fmt(a * 100, 2)),
+    ['99,92', '99,94'],
+  );
+  assert.equal(fmt(b1.kaltNetzMedianMs, 2), '0,37');
+  // M13: Transportanteil T_transport / T_job, Median je Auftrag (ADR 1B-011: rund 0,01 %)
+  assert.equal(fmt(b1.transportAnteil * 100, 2), '0,01');
+  // W6: Speicher der Runtime im 1B-Lauf, höchstens 4,04 GB (Laufprotokoll, Beobachtungen)
+  assert.equal(fmt(b1.speicherMaxGb, 2), '4,04');
+});
+
+test('Review 1: 1C-Zahlen für die Rahmung (vor dem Gate) und den Vertrag (N1)', () => {
+  assert.equal(ZAHLEN_1C.fullContextVorGate.wert, '19 von 20');
+  assert.equal(ZAHLEN_1C.fullContextVorGate.commit, '9f230abc');
+  assert.equal(ZAHLEN_1C.n1LaeufeMitAufruf.wert, 18);
+});
+
 test('Gruppengrößen und verworfene Antworten für Beschriftungen', () => {
   const { b1 } = ladeZahlen(ROOT);
   assert.equal(b1.nWarm, 9);

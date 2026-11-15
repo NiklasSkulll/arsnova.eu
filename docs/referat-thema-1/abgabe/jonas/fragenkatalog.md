@@ -13,7 +13,7 @@ Drei davon stehen als Diskussionsfragen auf Folie J15; die anderen beiden zielen
 
 1. [F9](#f9-ist-ein-laptop-mit-zwei-vms-aussagekräftig-für-zwei-server): ein Laptop mit zwei VMs statt zwei Servern
 2. [F28](#f28-schützt-das-private-netz-die-runtime-ausreichend): reicht das private Netz als Schutz
-3. [F32](#f32-darf-ein-gate-eine-antwort-verwerfen-die-nur-an-der-form-scheitert): darf das Gate an der Form scheitern lassen
+3. [F32](#f32-prüft-das-gate-das-richtige-wenn-es-nach-der-form-verwirft): prüft das Gate das Richtige
 4. [F35](#f35-wer-legt-den-timeout-fest-das-release-oder-der-betreiber): wer legt den Timeout fest
 5. [F38](#f38-was-haben-sie-selbst-entschieden-und-was-die-ki): was habe ich entschieden, was die KI
 
@@ -86,9 +86,9 @@ Beleg: [ADR 1B-008](../../adr/1B-008-kernaussagen-und-schwellen.md#entscheidung)
 _(neu)_ Die Inferenz wäre kürzer: Schon der PC (i7-8700, Produktionslimits) brauchte im Median 98,8 s statt 163,4 s am Laptop (`9f230abc`), und upstream meldet 56,9 s am Produktionshost, gemessen mit Instruktion v2 und von mir nicht nachgeprüft. Der Inferenzanteil sänke, und ein physisches Netz wäre langsamer als das virtuelle; gemessen habe ich das nicht, aber der Abstand zur Schwelle ist groß (0,43 ms gegen 50 ms, ThinkPad P50, `8e9d1317`). Die Rückwirkung auf den App-Host lässt sich erst auf getrennter Hardware messen; das ist Niklas' Schritt 3.
 Beleg: [ADR 1C-023](../../adr/1C-023-release-timeout-90-s-zu-kurz.md#alternativen), [1B-Design 8](../../specs/2026-11-12-1b-zwei-host-design.md#8-gültigkeitsgrenzen)
 
-### F14. Warum steht im Titel 148 Sekunden, wenn der erste Auftrag 213,7 s dauerte?
+### F14. Warum steht im Titel 152 Sekunden, und wie realistisch sind die warmen Zeiten?
 
-_(neu)_ Kalt und warm sind getrennte Gruppen: Auftrag 1 ist kalt mit 213,7 s, die Aufträge 2 bis 10 holen den Prompt aus dem KV-Cache und dauern im Median 148,6 s (ThinkPad P50, `8e9d1317`). Für den Kaltfall gibt es fünf weitere Läufe mit frischer Runtime, Median 200,5 s (`9e111d35`). Warm-Mediane und Mediane über alle zehn mische ich nicht, das ist im ADR korrigiert festgehalten.
+_(neu)_ 152 s ist die Wartezeit am Client von Auftrag 2 vom Klick bis zum Endstatus (151,8 s), die Jobdauer am Server T_job war 151,2 s; dazwischen liegen der Host-Aufruf und das Nachfragen des Treibers im Sekundentakt (ThinkPad P50, `8e9d1317`). Warm heißt hier: identischer Snapshot, der Prompt kam fast ganz aus dem KV-Cache (Median warm 148,6 s); ändert sich der Zustand wie im Betrieb, liegt man eher beim Kaltwert, Auftrag 1 mit 213,7 s und fünf Kaltläufe im Median 200,5 s (`9e111d35`). Für H_B3 ändert das nichts, der Inferenzanteil liegt auch kalt über 95 %.
 Beleg: [Laufprotokoll, Ergebnis je Auftrag](../../evidenz/1B/2026-11-13-lauf.md#ergebnis-je-auftrag-versuch-3), [ADR 1B-011](../../adr/1B-011-zeitbegriffe-und-leitfrage.md#entscheidung)
 
 ### F15. Was ist mit den rund 350 ms „Server ohne Inferenz“ bei Auftrag 2 und 3?
@@ -150,13 +150,13 @@ Beleg: [Kernbefunde 6](../../1C-diagrams.md#kernbefunde), [ADR 1C-018](../../adr
 
 ### F26. Warum zählen Sie nicht genauer statt in Bytes?
 
-_(1C-Gerüst)_ Die Byte-Schätzung ist sicher, sie überschätzt nie, verschenkt aber rund zwei Drittel des Fensters: q = 0,318 (Laptop, `def56700`). Eine exakte Zählung oder ein Faktor sind beide nur als Prüfkandidaten benannt, gemessen habe ich keinen davon.
+_(1C-Gerüst)_ Die Byte-Schätzung ist sicher, sie überschätzt nie, verschenkt aber rund zwei Drittel des geschätzten Budgets: q = 0,318 (Laptop, `def56700`). Eine exakte Zählung oder ein Faktor sind beide nur als Prüfkandidaten benannt, gemessen habe ich keinen davon.
 Beleg: [ADR 1C-014](../../adr/1C-014-byte-schaetzung-kontextbudget-pruefen.md)
 
 ### F27. Warum stirbt die Runtime am Prompt-Cache, und trifft das die App?
 
-_(neu)_ Der Prompt-Cache im RAM wächst je Auftrag, am Laptop um 0,419 GB im Median, und im 19. Auftrag beendet der Kernel die Runtime (`def56700`); mit abgeschaltetem Cache war das Wachstum am PC 0,000 GB (U1, `9f230abc`). Getroffen wurde nur der Runtime-Container, die App beantwortete jeden Auftrag mit dem Fallback. In 1B gab es keinen OOM-Kill, weil eine Reihe höchstens 10 Aufträge nach frischem Start hatte.
-Beleg: [ADR 1C-024](../../adr/1C-024-prompt-cache-ram-begrenzen.md), [Nachlauf N6](../../evidenz/1C/2026-11-09-labor-nachlauf.md#n6-speicher), [1C-Ergebnis, Bezug zu 1A und 1B](../../1C-ergebnis.md#bezug-zu-1a-und-1b), [ADR 1B-007](../../adr/1B-007-umgang-mit-1c-fallen.md#entscheidung)
+_(neu)_ Bei wechselnden Prompts wächst der Speicher der Runtime am Laptop um 0,419 GB je Auftrag im Median; am Laborlimit (5 GiB + 5 GiB Swap) beendet der Kernel sie im 19. Auftrag (`def56700`), mit Produktionslimits (8 GiB + 2 GiB Swap) am PC im 21. (`9f230abc`), und mit abgeschaltetem Cache war das Wachstum dort 0,000 GB (U1). Getroffen wurde nur der Runtime-Container, die App beantwortete jeden Auftrag mit dem Fallback. Im 1B-Lauf blieb der Speicher ab dem zweiten Auftrag bei höchstens 4,04 GB (ThinkPad P50, `8e9d1317`); plausibel ist, dass derselbe Prompt jedes Mal aus dem Cache kam (`cache_n` 2344), getrennt gemessen habe ich das nicht.
+Beleg: [ADR 1C-024](../../adr/1C-024-prompt-cache-ram-begrenzen.md), [Nachlauf N6](../../evidenz/1C/2026-11-09-labor-nachlauf.md#n6-speicher), [Laufprotokoll 1B, Beobachtungen](../../evidenz/1B/2026-11-13-lauf.md#beobachtungen), [Speicherverlauf 1B](../../evidenz/1B/messung/2026-11-13-speicher.csv)
 
 ## Sicherheit und Datenschutz
 
@@ -182,10 +182,10 @@ Beleg: [ADR 1B-003](../../adr/1B-003-laborregel-virtuelles-netz.md#folgen)
 
 ## Entscheidung
 
-### F32. Darf ein Gate eine Antwort verwerfen, die nur an der Form scheitert?
+### F32. Prüft das Gate das Richtige, wenn es nach der Form verwirft?
 
-**★ Top 5** _(neu, Folie J15)_ Ein Gate entfernen würde ich nicht, denn die verworfenen Antworten sind englisch und fassen Moderationszustände statt Inhalte zusammen; nur prüft das Gate genau das nicht, es verwirft sie allein wegen der fehlenden Form „Lead: Text“. Solange Instruktion, Grammatik und Gate nicht zum ausgelieferten Modell passen, sieht die Lehrperson immer den Fallback, ohne Hinweis. Meine Empfehlung ist deshalb, alle drei gemeinsam am Modell abzustimmen und mit echter Runtime abzunehmen; umgesetzt ist das nicht.
-Beleg: [ADR 1C-018](../../adr/1C-018-quality-gate-verwirft-echte-antworten.md#alternativen), Issue [#13](https://github.com/NiklasSkulll/arsnova.eu/issues/13)
+**★ Top 5** _(neu, Folie J15)_ Das Gate prüft mehr als die Form (mindestens zwei Aussagen, verschiedene Stichwörter, ganze Sätze, keine Metamuster), aber weder Sprache noch Thema; die Antworten der ruhigen Läufe verwirft es allein wegen der fehlenden Form „Lead: Text“, inhaltlich verfehlen sie die Instruktion ebenfalls (englisch, Moderationsstatus). Entfernen würde ich es deshalb nicht; solange Instruktion, Grammatik und Gate nicht zum ausgelieferten Modell passen, sieht die Lehrperson immer den Fallback mit dem allgemeinen Hinweis „Eine ausführliche Zusammenfassung war diesmal nicht möglich …“, den Grund erfährt sie nicht. Meine Empfehlung ist, alle drei gemeinsam am Modell abzustimmen und mit echter Runtime abzunehmen; umgesetzt ist das nicht.
+Beleg: [ADR 1C-018](../../adr/1C-018-quality-gate-verwirft-echte-antworten.md#alternativen), Issue [#13](https://github.com/NiklasSkulll/arsnova.eu/issues/13), Hinweistext `apps/backend/src/lib/qaSummaryExtractive.ts` (Anzeige unter „Hinweise“ in `moderation-compass-dialog.component.html`)
 
 ### F33. Welche Kriterien hat das Gate, und woran scheitert das Modell?
 
@@ -194,7 +194,7 @@ Beleg: [ADR 1C-018](../../adr/1C-018-quality-gate-verwirft-echte-antworten.md#ko
 
 ### F34. 1C-019 sagt 19 von 20 `full-context`, 1C-018 sagt 0 von 20. Was gilt?
 
-_(neu)_ Beides, aber für verschiedene Codestände: 19 von 20 gilt für `main@9f230abc` (Laptop und PC), vor dem Quality-Gate. Das Gate kam upstream mit `12f1d8e4` und `a998ada0` (PR #643), und auf `def56700` endete kein Auftrag mehr `full-context` (Laptop). Die Pfaddateien sind zwischen `v1.4.0` und `def56700` byte-gleich, der Befund betrifft also auch das aktuelle Release.
+_(neu)_ Beides, aber für verschiedene Codestände: 19 von 20 gilt für `main@9f230abc` (Laptop und PC), vor dem Quality-Gate. Das Gate kam upstream mit `12f1d8e4` und `a998ada0` (PR #643), und auf `def56700` endete kein Auftrag mehr `full-context` (Laptop). Beide Gate-Commits sind nicht in `v1.3.0`, aber in `v1.4.0`, und die Pfaddateien sind zwischen `v1.4.0` und `def56700` byte-gleich; der Befund betrifft also das Release 1.4.0, nicht 1.3. Für die Diskussion: Ein Upgrade hat das Ergebnis gekippt, und upstream prüft nicht, ob das ausgelieferte Modell die verlangte Form trifft (ADR 1C-018, Kontext).
 Beleg: [1C-Ergebnis 2](../../1C-ergebnis.md#2-kurzantwort), [ADR 1C-019](../../adr/1C-019-endstatus-echter-pfad-beibehalten.md), [ADR 1C-018](../../adr/1C-018-quality-gate-verwirft-echte-antworten.md)
 
 ### F35. Wer legt den Timeout fest: das Release oder der Betreiber?

@@ -15,11 +15,11 @@ import {
   zeitzerlegungSvg,
   zoomDeckkraft,
 } from './grafik.mjs';
-import { ladeZahlen } from './zahlen.mjs';
+import { ladeFolienDaten } from './folien.mjs';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HIER, '../..');
-const { b1, c1 } = ladeZahlen(ROOT);
+const { b1, c1, auftrag } = ladeFolienDaten(ROOT);
 const ACHSE = { x0: 250, x1: 1330, minMs: 0.1, maxMs: 1_000_000 };
 
 const anzahl = (text, muster) => (text.match(muster) || []).length;
@@ -58,11 +58,13 @@ test('zeitzerlegungSvg: Werte, Schwellen und Gruppen der Mediane', () => {
   assert.ok(svg.includes('alle 10'));
   assert.ok(svg.includes('warm, n = 9'));
   assert.ok(svg.includes('200,5 s'));
+  // M3: der Kaltbalken ist ein Median aus den Nachtragsläufen
+  assert.ok(svg.includes('Kalt, Median') && svg.includes('n = 5, Nachtrag'));
   assert.ok(!zeitzerlegungSvg(b1, { kalt: false }).includes('200,5 s'));
 });
 
 test('wegSvg: genau ein aktiver Marker, Stationen, Etiketten, Hosts, Messpunkte', () => {
-  const svg = wegSvg({ aktiv: 'inferenz', b1, c1 });
+  const svg = wegSvg({ aktiv: 'inferenz', b1, c1, auftrag });
   pruefeSvg(svg);
   assert.equal(anzahl(svg, /data-aktiv="/g), 1);
   assert.equal(anzahl(svg, /data-aktiv="inferenz"/g), 1);
@@ -74,21 +76,28 @@ test('wegSvg: genau ein aktiver Marker, Stationen, Etiketten, Hosts, Messpunkte'
   assert.equal(anzahl(svg, /data-etikett="1C"/g), 4);
   assert.equal(anzahl(svg, /data-etikett="1B"/g), 2);
   assert.equal(anzahl(svg, /data-messpunkt="t[0-3]"/g), 4);
-  assert.ok(svg.includes('0,43 ms') && svg.includes('99,92 %'));
+  // Fachliche Prüfung 1, W3: Werte des verfolgten Auftrags, 1C-Werte mit Herkunft, Netz unter der Auflösung.
+  assert.ok(svg.includes(`${auftrag.hostReturnMs} ms`) && svg.includes('99,92 %'));
+  assert.ok(svg.includes(`Auftrag ${auftrag.nr}`));
+  assert.equal(anzahl(svg, /data-herkunft="1"/g), 4);
+  assert.ok(svg.includes('Netz &lt; 1 ms'));
+  assert.ok(svg.includes('ein Rechner, Loopback'));
+  assert.ok(!svg.includes('29,4 ms'), '1C-Klickwert auf dem app-host');
 
   for (const s of Object.keys(WEG_STATIONEN)) {
-    const andere = wegSvg({ aktiv: s, b1, c1 });
+    const andere = wegSvg({ aktiv: s, b1, c1, auftrag });
     assert.equal(anzahl(andere, /data-aktiv="/g), 1, s);
     assert.ok(andere.includes(`data-aktiv="${s}"`));
   }
-  assert.equal(anzahl(wegSvg({ aktiv: null, b1, c1 }), /data-aktiv="/g), 0);
-  assert.throws(() => wegSvg({ aktiv: 'unbekannt', b1, c1 }));
+  assert.equal(anzahl(wegSvg({ aktiv: null, b1, c1, auftrag }), /data-aktiv="/g), 0);
+  assert.throws(() => wegSvg({ aktiv: 'unbekannt', b1, c1, auftrag }));
+  assert.throws(() => wegSvg({ aktiv: null, b1, c1 }), /verfolgten Auftrag/);
 });
 
 test('fussballfeldSvg: Maßstab aus T_job warm, Gruppen in der Bildunterschrift', () => {
   const svg = fussballfeldSvg(b1, { zoom: 0 });
   pruefeSvg(svg);
-  for (const t of ['0,3 mm', '1,3 cm', '104,9 m', '148,6 s', 'alle 10']) {
+  for (const t of ['0,3 mm', '1,3 cm', '104,9 m', '148,6 s', 'alle 10', 'davon Netz']) {
     assert.ok(svg.includes(t), `fehlt: ${t}`);
   }
   assert.ok(svg.includes('warm, n = 9'));

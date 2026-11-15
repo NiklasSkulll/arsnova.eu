@@ -339,7 +339,11 @@ async function main() {
         const info = await pdfInfo(p);
         e.seiten = info.seiten;
         if (datei === 'jonas-handout.pdf') {
-          handoutWoerter = info.text.trim().split(/\s+/).filter(Boolean).length;
+          // Wie handout.test.mjs: Seitentrenner von pdf-parse und reine Satzzeichen (·, –, =) zählen nicht.
+          handoutWoerter = info.text
+            .replace(/-- \d+ of \d+ --/g, ' ')
+            .split(/\s+/)
+            .filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
         }
       }
       ausgaben.push(e);

@@ -9,8 +9,8 @@
     },
     "teil2": { "quelle": "Platzhalter (Teil noch nicht geliefert)", "stand": null, "sha256": null }
   },
-  "folien": { "gemeinsamesDeck": 17, "jonasUndReserve": 22 },
-  "handoutWoerter": 1669,
+  "folien": { "gemeinsamesDeck": 17, "jonasUndReserve": 25 },
+  "handoutWoerter": 1739,
   "eingaben": [
     {
       "pfad": "docs/referat-thema-1/evidenz/1B/messung/2026-11-13-lauf.json",
@@ -81,8 +81,24 @@
       "sha256": "f35d4b02746839c9be2eac45a91b2fb697b507f3419e8c6116c7e3468ca06315"
     },
     {
+      "pfad": "docs/referat-thema-1/evidenz/1C/2026-11-09-labor-nachlauf.md",
+      "sha256": "f0b92369384810a744fcb3ea5eb9aa35afb53dfdb055c0782d835768bace3e28"
+    },
+    {
+      "pfad": "docs/referat-thema-1/adr/1C-021-zusatzlauf-produktionslimits-zweiter-rechner.md",
+      "sha256": "f8142b6c7c170b36805462b7a29758124206ef271574fda2f291977d5fe01c3d"
+    },
+    {
+      "pfad": "docs/referat-thema-1/adr/1C-024-prompt-cache-ram-begrenzen.md",
+      "sha256": "870bc1ef9e369ecafaff5164988e24cc3b9fcdce6067d5aad229e972ed92f477"
+    },
+    {
+      "pfad": "docs/referat-thema-1/adr/1B-011-zeitbegriffe-und-leitfrage.md",
+      "sha256": "700c94261964be06dcd5cbadae48a4cabf97aca23e2ecb49b6b444f5fcdeb158"
+    },
+    {
       "pfad": "docs/referat-thema-1/abgabe/jonas/bau.mjs",
-      "sha256": "1b41c7b58f0a9ebbc190a6e4274635079c82f44fd2d1098d102e5ce172245df1"
+      "sha256": "fa17e549f1410e146f83906edd9bf988bd5731f96f041f4de51fb238dabad66a"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/deck-vorlage.html",
@@ -98,19 +114,19 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/folien.mjs",
-      "sha256": "f9038260fb91e36e0f3b0d9b75558dc0aab9107a99a6268727d653ff615a3a58"
+      "sha256": "f33771d4e34de9fe4d716976a82d24f9b64fcb9d0c1f20f28953b61308fc20b9"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/grafik.mjs",
-      "sha256": "847297cb3472bd170e4a8508cea80e6dcd1ce938704c297871d5ace1ed54b414"
+      "sha256": "a527ffc94bc553c7ee5fd1e8a8ae44bd680a8ca520d39aed95fdcac537b96caf"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/handout-vorlage.html",
-      "sha256": "60b6c2a272c59bf9e7be4cef7e4a95fb9dc7cd843e285ba8927c8b4af99d39c9"
+      "sha256": "98e3899d53dd3bd659ceb6cdd216bf72bf72618843ce4787345c5a27e229eec2"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/handout.mjs",
-      "sha256": "021eaae041a0fbf104e9629b4efcdd9d3494abd9758a36511436e389a9bbb770"
+      "sha256": "46ac4d2489577f56359a41e5333c6fc3eeee949e66336565c85cfe8cb8bc0490"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/niklas-seiten.mjs",
@@ -122,7 +138,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/zahlen.mjs",
-      "sha256": "ee6c08ebe81e4d5c7af40c46dd7fa55c746fb94809766147610accb7f90ca376"
+      "sha256": "29dd074ace67c37feddf164273f0ceb3acc6bad4a530aebcf354b337c6ea9d7e"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/schriften/OFL-IBMPlexMono.txt",
@@ -164,31 +180,31 @@
   "ausgaben": [
     {
       "datei": "jonas-deck.html",
-      "bytes": 1860757,
-      "sha256": "fc734df6df01763f7acccc2bdb5cf8527eb5a0888be9469bd8610f90144b991a"
+      "bytes": 1884149,
+      "sha256": "49bc47b333b9a0bdb8e304a05472db1c8e2e728ebf7588769cbc09fa167fa083"
     },
     {
       "datei": "gemeinsames-deck.pdf",
-      "bytes": 1449855,
-      "sha256": "54b148f649a8730ec307d870284e1baa295aa2a829c55a47bdb306a479561384",
-      "seiten": 34
+      "bytes": 1507551,
+      "sha256": "63642930b723401758fdd86e97998e7cc1099873140e9dbf69e61a68bd493bf5",
+      "seiten": 37
     },
     {
       "datei": "jonas-folien.pdf",
-      "bytes": 437229,
-      "sha256": "c33d773d8b4a92e8d4ca8587ef80dec47bbc3692ae9c5fa0fe5c32db49708509",
-      "seiten": 22
+      "bytes": 494482,
+      "sha256": "b5edf35343d1149cf5957e92402fe63761525aa4058a56a6db6a3d831cdb34a3",
+      "seiten": 25
     },
     {
       "datei": "jonas-handout.pdf",
-      "bytes": 258203,
-      "sha256": "1e4d2a0e65a5e215ca9597de184636fb3f9a4d80c5c5a1d7a129a0149bab3bc9",
+      "bytes": 279699,
+      "sha256": "dd29c88a1b25faab75822a9db2f46bd07253f7a8f38e21d73df871bc2799ce30",
       "seiten": 5
     },
     {
       "datei": "sprechnotizen.md",
-      "bytes": 13132,
-      "sha256": "9971be00da4f0a4948b3cbe188acf9a7355c3f460d0d5204e879d587df90432f"
+      "bytes": 16285,
+      "sha256": "9bfedff089eeaa7c312034f570e99479b863b0234814e712deeeee216e53fe3f"
     }
   ]
 }
