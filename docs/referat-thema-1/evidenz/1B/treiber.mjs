@@ -20,13 +20,15 @@ import {
 } from '@arsnova/shared-types';
 import { createHttpTrpcSingle } from '../../../../scripts/load/lib/trpc-runtime.mjs';
 import { configureQaSessionIfNeeded } from '../../../../scripts/load/lib/configure-qa-if-needed.mjs';
-import { hostZugang } from './hostzugang.mjs';
+import { hostZugang, zugangSchreiben } from './hostzugang.mjs';
 
 const { values: arg } = parseArgs({
   options: {
     trpc: { type: 'string', default: 'http://127.0.0.1:3000/trpc' },
     auftraege: { type: 'string', default: '1' },
     out: { type: 'string' },
+    // Nur für die Clip-Aufnahme: Host-Zugang (Modus 0600) in diese Datei, siehe clip.mjs.
+    'zugang-datei': { type: 'string' },
     teilnehmer: { type: 'string', default: '200' },
     'pause-ms': { type: 'string', default: '31000' },
     'warte-max-ms': { type: 'string', default: '900000' },
@@ -181,7 +183,7 @@ async function szenarioAnlegen() {
     if (token !== aktuell.token) aktuell = { token, client: createHttpTrpcSingle(arg.trpc, token) };
     return aktuell.client;
   };
-  return { hostClient, sessionId, stimmen };
+  return { hostClient, sessionId, stimmen, zugang: { code, hostToken, hostBrowserCapability } };
 }
 
 async function auftrag(hostClient, sessionId, index) {
@@ -215,7 +217,8 @@ async function auftrag(hostClient, sessionId, index) {
 }
 
 const startedAt = jetzt();
-const { hostClient, sessionId, stimmen } = await szenarioAnlegen();
+const { hostClient, sessionId, stimmen, zugang } = await szenarioAnlegen();
+if (arg['zugang-datei']) zugangSchreiben(arg['zugang-datei'], zugang);
 log(`Szenario fertig: ${TEXTE.length} Fragen, ${stimmen} Stimmen`);
 const ergebnisse = [];
 for (let i = 1; i <= auftraege; i += 1) {
