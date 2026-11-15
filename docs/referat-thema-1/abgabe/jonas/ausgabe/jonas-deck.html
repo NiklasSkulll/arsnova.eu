@@ -82,65 +82,129 @@
         --f-mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
         --s-min: 22px;
         --s-text: 28px;
-        --s-titel: 58px;
+        --s-titel: 52px;
 
         /* Folie */
         --folie-breite: 1600px;
         --folie-hoehe: 900px;
-        --rand: 110px;
+        --rand: 90px;
         --linie-min: 2px;
       }
 
+      /* Folie als Spalte: Titel, Fläche, Fußzeile im Fluss. Ein zweizeiliger Titel schiebt die Fläche
+   nach unten, statt mit ihr zu kollidieren; der Layouttest in deck.test.mjs misst das je Folie. */
       .folie {
         position: relative;
         box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
         width: var(--folie-breite);
         height: var(--folie-hoehe);
+        padding: 92px var(--rand) 0;
         overflow: hidden;
         background: var(--grund);
         color: var(--tinte);
         font-family: var(--f-text);
         font-size: var(--s-text);
         line-height: 1.35;
+        hyphens: manual;
       }
 
       .folie-titel {
-        position: absolute;
-        left: var(--rand);
-        right: var(--rand);
-        top: 72px;
+        flex: none;
         margin: 0;
         color: var(--blau);
-        font-weight: 800;
+        font-weight: 700;
         font-size: var(--s-titel);
-        line-height: 1.1;
+        line-height: 1.15;
         letter-spacing: -0.01em;
       }
 
-      /* Diagrammfläche: Grafiken aus grafik.mjs haben viewBox 0 0 1380 560 und sitzen hier im Maßstab 1:1. */
+      /* Fläche zwischen Titel und Fußzeile (etwa 1420 × 630 px). Grafiken aus grafik.mjs (viewBox
+   1380 × 560) füllen die Breite; .grafik-box skaliert eine Grafik unter einer Frage auf die Resthöhe. */
       .folie-flaeche {
-        position: absolute;
-        left: var(--rand);
-        top: 190px;
-        width: 1380px;
-        height: 560px;
+        position: relative;
+        flex: 1 1 auto;
+        min-height: 0;
+        margin: 30px 0 18px;
+        display: flex;
+        flex-direction: column;
       }
       .folie-flaeche > svg {
         display: block;
         width: 100%;
+        height: auto;
+      }
+      .flaeche-inhalt {
+        position: relative;
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .grafik-box {
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+      .grafik-box > svg {
+        display: block;
+        width: auto;
+        max-width: 100%;
         height: 100%;
       }
+      .folie-frage {
+        flex: none;
+        margin: 0 0 24px;
+        color: var(--text-2);
+        font-size: 30px;
+        font-weight: 600;
+        line-height: 1.25;
+      }
+      .folie-frage .etikett {
+        margin-right: 10px;
+        vertical-align: 3px;
+      }
+      .beleg {
+        flex: none;
+        margin: auto 0 0;
+        padding-top: 14px;
+        color: var(--gedaempft);
+        font-size: var(--s-min);
+        line-height: 1.3;
+      }
 
+      /* Fußzeile: eine Zeile, Seitenzahl und Kurzquelle; die volle Quelle steht in den Sprechnotizen. */
       .folie-fuss {
-        position: absolute;
-        left: var(--rand);
-        right: var(--rand);
-        top: 790px;
-        padding-top: 18px;
+        flex: none;
+        margin: 0 0 24px;
+        padding-top: 12px;
         border-top: var(--linie-min) solid var(--linie);
         color: var(--gedaempft);
-        font-family: var(--f-mono);
+        font-family: var(--f-text);
         font-size: var(--s-min);
+        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      /* Große Kennzahl: Inter mit Tabellenziffern; Plex Mono bleibt für kleine Messwerte im Text. */
+      .kennzahl {
+        font-family: var(--f-text);
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.01em;
+      }
+      .kennzahl .einheit {
+        font-weight: 500;
+      }
+
+      .folie span.mono,
+      .folie .nowrap {
+        white-space: nowrap;
+      }
+      .folie table.eng .mono {
+        letter-spacing: -1px;
       }
 
       .mono,
@@ -202,13 +266,16 @@
         display: none;
       }
       .buehne > .folie[data-aktuell] {
-        display: block;
+        display: flex;
       }
       [hidden] {
         display: none !important;
       }
 
       /* Seiten aus Niklas' PDF */
+      .folie.folie-bild {
+        padding: 0;
+      }
       .folie-bild img {
         display: block;
         width: 100%;
@@ -216,7 +283,7 @@
         object-fit: contain;
       }
       .niklas-platzhalter {
-        margin: 120px 0 0;
+        margin: 90px 0 0;
         color: var(--text-2);
         font-size: 40px;
         font-weight: 700;
@@ -228,17 +295,31 @@
         font-weight: 400;
       }
 
-      /* Kleine Wegkarte mit dem Auftrag (oben links über dem Titel) */
+      /* Kleine Wegkarte mit dem Auftrag (oben links über dem Titel, Kreisrand bündig mit dem Titel) */
       .weg-mini {
         position: absolute;
-        left: 97px;
-        top: 8px;
+        left: calc(var(--rand) - 12px);
+        top: 22px;
         width: 450px;
         height: 52px;
         z-index: 2;
       }
       .weg-mini-karte {
         display: block;
+      }
+      /* Folie neben dem Weg (J11): Vermerk an der Stelle der Wegkarte */
+      .weg-exkurs {
+        position: absolute;
+        left: var(--rand);
+        top: 30px;
+        margin: 0;
+        padding: 0 14px;
+        border: var(--linie-min) dashed var(--linie);
+        border-radius: 999px;
+        color: var(--gedaempft);
+        font-size: var(--s-min);
+        font-weight: 600;
+        line-height: 32px;
       }
       .weg-punkt {
         position: absolute;
@@ -304,7 +385,7 @@
         inset: 0;
         z-index: 5;
         box-sizing: border-box;
-        padding: 72px 110px;
+        padding: 92px var(--rand);
         background: var(--grund);
         color: var(--tinte);
         font-family: var(--f-text);
@@ -313,7 +394,7 @@
         margin: 0 0 44px;
         color: var(--blau);
         font-size: var(--s-titel);
-        font-weight: 800;
+        font-weight: 700;
         line-height: 1.1;
       }
       .reserve-uebersicht ol {
@@ -351,7 +432,7 @@
       }
       .reserve-hilfe {
         position: absolute;
-        left: 110px;
+        left: var(--rand);
         bottom: 72px;
         margin: 0;
         color: var(--gedaempft);
@@ -392,7 +473,7 @@
         }
         .buehne > .folie {
           position: relative;
-          display: block;
+          display: flex;
         }
         .buehne > .folie + .folie {
           break-before: page;
@@ -418,18 +499,19 @@
       >
         <h1 class="folie-titel">Thema 1: KI-Inferenz im Moderationskompass</h1>
         <div class="folie-flaeche">
-          <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
+          <div class="flaeche-inhalt">
             <p
               style="
                 position: absolute;
                 right: 0;
-                top: -50px;
+                top: -150px;
                 margin: 0;
-                padding: 4px 14px;
-                border: var(--linie-min) dashed var(--rot);
-                color: var(--rot);
+                padding: 0 10px;
+                border: var(--linie-min) dashed var(--linie);
+                border-radius: 6px;
+                color: var(--gedaempft);
                 font-size: var(--s-min);
-                font-weight: 700;
+                font-weight: 600;
               "
             >
               Entwurf, mit Niklas abzustimmen
@@ -517,8 +599,7 @@
           </div>
         </div>
         <div class="folie-fuss">
-          01 / 26 · Prüfungsdokument Abschnitt 4.3 (Thema 1, Aufträge 1A–1C); 01-aufteilung.md;
-          Design Abschnitt 3
+          01 / 26 · Prüfungsdokument, Abschnitt 4.3 · Aufteilung der Aufträge
         </div>
       </section>
       <section
@@ -628,11 +709,12 @@
       >
         <h1 class="folie-titel">Ein Klick. 152 Sekunden. Keine Modellantwort.</h1>
         <div class="folie-flaeche">
-          <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
-            <p style="margin: 0 0 40px; font-size: 30px; color: var(--text-2)">
+          <div class="flaeche-inhalt">
+            <p style="margin: 0 0 10px; font-size: 30px; line-height: 1.3; color: var(--text-2)">
               Ein echter Auftrag der Q&amp;A-Zusammenfassung mit synthetischen Daten, verfolgt vom
               Klick der Lehrperson bis zum Ergebnis.
             </p>
+            <p style="margin: 0 0 44px; font-size: 26px; font-weight: 600">Jonas Weirauch</p>
             <div
               style="
                 display: grid;
@@ -656,53 +738,32 @@
                 </p>
               </div>
             </div>
-            <p
-              class="mono"
+            <div
               style="
-                position: absolute;
-                left: 0;
-                bottom: 112px;
-                margin: 0;
+                margin-top: auto;
                 font-size: var(--s-min);
+                line-height: 1.45;
                 color: var(--gedaempft);
               "
             >
-              Auftrag Nr. 2: Klick bis Ergebnis 151,8 s, Jobdauer T_job 151,2 s · Median warm, n =
-              9: 148,6 s
-            </p>
-            <p
-              style="
-                position: absolute;
-                left: 0;
-                bottom: 44px;
-                margin: 0;
-                font-size: var(--s-min);
-                color: var(--gedaempft);
-              "
-            >
-              Architektur nach Release 1.3 (ADR-0035); 1B auf
-              <span class="mono">a19ca70f</span> (v1.4.0-184), 1C-Nachlauf auf
-              <span class="mono">def56700</span> (v1.4.0-14), frühere 1C-Messungen auf v1.3.0-228
-              und v1.3.0-322, je Zahl angegeben
-            </p>
-            <p
-              style="
-                position: absolute;
-                left: 0;
-                bottom: 0;
-                margin: 0;
-                font-size: 26px;
-                font-weight: 600;
-              "
-            >
-              Jonas Weirauch
-            </p>
+              <p style="margin: 0; color: var(--text-2)">
+                Auftrag Nr. 2: Klick bis Ergebnis 151,8 s, Jobdauer T_job 151,2 s · Median warm, n =
+                9: 148,6 s
+              </p>
+              <p style="margin: 0">
+                Architektur nach Release 1.3 (<span class="nowrap">ADR-0035</span>) · 1B auf
+                <span class="mono">a19ca70f</span> (<span class="nowrap">v1.4.0-184</span>),
+                1C-Nachlauf auf <span class="mono">def56700</span> (<span class="nowrap"
+                  >v1.4.0-14</span
+                >) · frühere 1C-Messungen auf <span class="nowrap">v1.3.0-228</span> und
+                <span class="nowrap">v1.3.0-322</span>, je Zahl angegeben
+              </p>
+            </div>
           </div>
         </div>
         <div class="folie-fuss">
-          11 / 26 · evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317 (Auftrag 2:
-          treiber.auftraege clientWaitMs, zerlegung.auftraege jobMs); Version: package.json und git
-          describe (v1.4.0-255); Leitfragen: Prüfungsdokument 4.3, ADR 1B-011
+          11 / 26 · Lauf 1B, Auftrag 2 · 8e9d1317 · ThinkPad P50 · Leitfragen: Prüfungsdokument 4.3,
+          ADR 1B-011
         </div>
       </section>
       <section
@@ -713,52 +774,48 @@
       >
         <h1 class="folie-titel">Zwei Hosts nach Release 1.3, Code nach v1.4.0</h1>
         <div class="folie-flaeche">
-          <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
-            <p style="margin: 0 0 26px; font-size: 30px; font-weight: 600; color: var(--text-2)">
-              <span class="etikett etikett-1b">1B</span> Lässt sich das Zwei-Host-Release nachbauen,
+          <div class="flaeche-inhalt">
+            <p class="folie-frage">
+              <span class="etikett etikett-1b">1B</span>Lässt sich das Zwei-Host-Release nachbauen,
               ohne Produktionscode zu ändern?
             </p>
-            <div style="display: grid; grid-template-columns: 800px 1fr; column-gap: 70px">
+            <div style="display: grid; grid-template-columns: 860px 1fr; column-gap: 70px">
               <div>
-                <ul style="margin: 0; padding-left: 30px; font-size: 22px; line-height: 1.38">
-                  <li style="margin: 0 0 12px">
-                    Aufbau von null mit <span class="mono">labor.sh up</span>, Prüfungen grün;
-                    privates Netz, Firewall, Token; Speicherlimits wie ab Werk v1.4.0, Modell per
-                    SHA-256 gepinnt
-                  </li>
-                </ul>
+                <p style="margin: 0 0 16px; font-size: 24px; line-height: 1.35">
+                  Aufbau von null mit
+                  <span class="mono"><span class="nowrap">labor.sh</span> up</span>, Prüfungen grün;
+                  privates Netz, Firewall, Token; Speicherlimits wie ab Werk v1.4.0, Modell per
+                  SHA-256 gepinnt
+                </p>
                 <div
                   style="
                     border: var(--linie-min) solid var(--bernstein);
                     border-radius: 10px;
-                    padding: 10px 18px 4px;
+                    padding: 12px 20px 6px;
                   "
                 >
-                  <p style="margin: 0 0 4px; font-weight: 700; font-size: 24px">
+                  <p style="margin: 0 0 6px; font-weight: 700; font-size: 24px">
                     Abweichungen und Grenzen
                   </p>
                   <ul style="margin: 0; padding-left: 26px; font-size: 22px; line-height: 1.3">
                     <li style="margin: 0 0 4px">
-                      4 statt 8 CPUs, Timeout 300 s statt 90 s ab Werk v1.4.0 (Kalibrierung I = 202
-                      s)
+                      4 statt 8 CPUs, Timeout 300 s statt 90 s ab Werk v1.4.0 (I = 202 s)
                     </li>
                     <li style="margin: 0 0 4px">
-                      v1.3.0 hatte 4 CPUs, 5 GiB, 8 s; gemessen ist auf Wunsch des Prüfers der
-                      aktuelle Stand
+                      v1.3.0: 4 CPUs, 5 GiB, 8 s; gemessen auf Wunsch des Prüfers der aktuelle Stand
                     </li>
                     <li style="margin: 0 0 4px">
-                      Images selbst gebaut; Start ohne Wrapper, er reicht das CPU-Override nicht
-                      durch
+                      Images selbst gebaut; Start ohne Wrapper (reicht das CPU-Override nicht durch)
                     </li>
                     <li style="margin: 0 0 4px">
-                      Summary-Schalter an; Hintergrunddienste vor dem gewerteten Lauf von Hand aus
-                    </li>
-                    <li style="margin: 0 0 4px">
-                      Code <span class="mono">a19ca70f</span> (v1.4.0-184); Lauf-Commit
-                      <span class="mono">8e9d1317</span> nur Laborskripte
+                      Summary-Schalter an; Hintergrunddienste von Hand aus
                     </li>
                   </ul>
                 </div>
+                <p style="margin: 10px 0 0; font-size: var(--s-min); color: var(--gedaempft)">
+                  Code <span class="mono">a19ca70f</span> (<span class="nowrap">v1.4.0-184</span>);
+                  Lauf-Commit <span class="mono">8e9d1317</span> nur Laborskripte
+                </p>
               </div>
               <div>
                 <div
@@ -818,10 +875,7 @@
           </div>
         </div>
         <div class="folie-fuss">
-          12 / 26 · evidenz/1B/messung/2026-11-13-aufbau-von-null.txt · ThinkPad P50 · 82319946;
-          Abweichungen: evidenz/1B/2026-11-12-aufbau.md (Komponenten, Befund 2, Abweichungen),
-          evidenz/1B/2026-11-13-lauf.md (Kalibrierung, Versuch 3), ADR 1B-001, 1B-002, 1B-005,
-          1B-010
+          12 / 26 · Aufbau 1B von null · 82319946 · ThinkPad P50 · Abweichungen: ADR 1B-005
         </div>
       </section>
       <section
@@ -834,497 +888,11 @@
       >
         <h1 class="folie-titel">Der Weg eines Auftrags</h1>
         <div class="folie-flaeche">
-          <svg
-            viewBox="0 0 1380 560"
-            role="img"
-            aria-label="Weg von Auftrag 2 über app-host 192.168.150.10 und llm-host 192.168.150.20: Klick 67 ms (Auftrag 2), Kontext (Validierung aus dem 1C-Test), Netz unter 1 ms, Inferenz 151 s (Auftrag 2), Nachprüfung (Anteil aus dem 1C-Labor, ein Rechner), Gate verwirft die Antwort. Messpunkte t0 bis t3 an den Host-Grenzen. Aktuelle Station: Klick."
-          >
-            <rect width="1380" height="560" fill="#ffffff" />
-            <path
-              d="M32,2V268M64,2V268M96,2V268M128,2V268M160,2V268M192,2V268M224,2V268M256,2V268M288,2V268M320,2V268M352,2V268M384,2V268M416,2V268M448,2V268M480,2V268M512,2V268M544,2V268M576,2V268M608,2V268M640,2V268M672,2V268M704,2V268M736,2V268M768,2V268M800,2V268M832,2V268M864,2V268M896,2V268M928,2V268M960,2V268M992,2V268M1024,2V268M1056,2V268M1088,2V268M1120,2V268M1152,2V268M1184,2V268M1216,2V268M1248,2V268M1280,2V268M1312,2V268M1344,2V268M1376,2V268M2,32H1378M2,64H1378M2,96H1378M2,128H1378M2,160H1378M2,192H1378M2,224H1378M2,256H1378"
-              fill="none"
-              stroke="#e8edf3"
-              stroke-width="2"
-            />
-            <rect
-              x="1"
-              y="1"
-              width="1378"
-              height="268"
-              rx="10"
-              fill="none"
-              stroke="#c9d2de"
-              stroke-width="2"
-            />
-            <text
-              x="24"
-              y="38"
-              font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-              font-size="22"
-              font-weight="400"
-              fill="#566173"
-              stroke="#ffffff"
-              stroke-width="6"
-              stroke-linejoin="round"
-              paint-order="stroke"
-            >
-              app-host · 192.168.150.10
-            </text>
-            <text
-              x="1356"
-              y="38"
-              font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-              font-size="22"
-              font-weight="400"
-              fill="#566173"
-              text-anchor="end"
-              stroke="#ffffff"
-              stroke-width="6"
-              stroke-linejoin="round"
-              paint-order="stroke"
-            >
-              Messpunkte t
-              <tspan font-size="22" baseline-shift="-6">0</tspan>
-              –t
-              <tspan font-size="22" baseline-shift="-6">3</tspan>
-              : Mitschnitt auf beiden Hosts
-            </text>
-            <path
-              d="M32,352V548M64,352V548M96,352V548M128,352V548M160,352V548M192,352V548M224,352V548M256,352V548M288,352V548M320,352V548M352,352V548M384,352V548M416,352V548M448,352V548M480,352V548M512,352V548M544,352V548M576,352V548M608,352V548M640,352V548M672,352V548M704,352V548M736,352V548M768,352V548M800,352V548M832,352V548M864,352V548M896,352V548M928,352V548M960,352V548M992,352V548M1024,352V548M1056,352V548M1088,352V548M1120,352V548M1152,352V548M1184,352V548M1216,352V548M1248,352V548M1280,352V548M1312,352V548M1344,352V548M1376,352V548M2,382H1378M2,414H1378M2,446H1378M2,478H1378M2,510H1378M2,542H1378"
-              fill="none"
-              stroke="#e8edf3"
-              stroke-width="2"
-            />
-            <rect
-              x="1"
-              y="351"
-              width="1378"
-              height="198"
-              rx="10"
-              fill="none"
-              stroke="#c9d2de"
-              stroke-width="2"
-            />
-            <text
-              x="24"
-              y="388"
-              font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-              font-size="22"
-              font-weight="400"
-              fill="#566173"
-              stroke="#ffffff"
-              stroke-width="6"
-              stroke-linejoin="round"
-              paint-order="stroke"
-            >
-              llm-host · 192.168.150.20
-            </text>
-            <text
-              x="24"
-              y="532"
-              font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-              font-size="22"
-              font-weight="400"
-              fill="#0f766e"
-              stroke="#ffffff"
-              stroke-width="6"
-              stroke-linejoin="round"
-              paint-order="stroke"
-            >
-              1C-Werte: ein Rechner, Loopback, kein llm-host
-            </text>
-            <path
-              class="weg-pfad"
-              d="M120,140 L450,140 C530,140 530,460 610,460 L770,460 C850,460 850,140 930,140 L1250,140"
-              fill="none"
-              stroke="#0b5ea8"
-              stroke-width="8"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <g data-messpunkt="t0">
-              <circle cx="513.18" cy="236" r="9" fill="#b45309" stroke="#ffffff" stroke-width="3" />
-              <text
-                x="533.18"
-                y="244"
-                font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-                font-size="26"
-                font-weight="600"
-                fill="#9a4a0b"
-                text-anchor="start"
-                stroke="#ffffff"
-                stroke-width="6"
-                stroke-linejoin="round"
-                paint-order="stroke"
-              >
-                t
-                <tspan font-size="22" baseline-shift="-6">0</tspan>
-              </text>
-            </g>
-            <g data-messpunkt="t1">
-              <circle cx="552.97" cy="384" r="9" fill="#b45309" stroke="#ffffff" stroke-width="3" />
-              <text
-                x="532.97"
-                y="392"
-                font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-                font-size="26"
-                font-weight="600"
-                fill="#9a4a0b"
-                text-anchor="end"
-                stroke="#ffffff"
-                stroke-width="6"
-                stroke-linejoin="round"
-                paint-order="stroke"
-              >
-                t
-                <tspan font-size="22" baseline-shift="-6">1</tspan>
-              </text>
-            </g>
-            <g data-messpunkt="t2">
-              <circle cx="827.03" cy="384" r="9" fill="#b45309" stroke="#ffffff" stroke-width="3" />
-              <text
-                x="847.03"
-                y="392"
-                font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-                font-size="26"
-                font-weight="600"
-                fill="#9a4a0b"
-                text-anchor="start"
-                stroke="#ffffff"
-                stroke-width="6"
-                stroke-linejoin="round"
-                paint-order="stroke"
-              >
-                t
-                <tspan font-size="22" baseline-shift="-6">2</tspan>
-              </text>
-            </g>
-            <g data-messpunkt="t3">
-              <circle cx="866.82" cy="236" r="9" fill="#b45309" stroke="#ffffff" stroke-width="3" />
-              <text
-                x="846.82"
-                y="244"
-                font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-                font-size="26"
-                font-weight="600"
-                fill="#9a4a0b"
-                text-anchor="end"
-                stroke="#ffffff"
-                stroke-width="6"
-                stroke-linejoin="round"
-                paint-order="stroke"
-              >
-                t
-                <tspan font-size="22" baseline-shift="-6">3</tspan>
-              </text>
-            </g>
-            <g data-station="klick">
-              <g data-etikett="1C">
-                <rect x="90" y="62" width="60" height="32" rx="6" fill="#e3f1ee" />
-                <text
-                  x="120"
-                  y="86"
-                  font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
-                  font-size="22"
-                  font-weight="700"
-                  fill="#0f766e"
-                  text-anchor="middle"
-                >
-                  1C
-                </text>
-              </g>
-              <circle cx="120" cy="140" r="20" fill="#ffffff" stroke="#0f766e" stroke-width="7" />
-              <text
-                x="120"
-                y="198"
-                font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
-                font-size="30"
-                font-weight="700"
-                fill="#16202c"
-                text-anchor="middle"
-              >
-                Klick
-              </text>
-              <text
-                x="120"
-                y="230"
-                font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-                font-size="22"
-                font-weight="600"
-                fill="#16202c"
-                text-anchor="middle"
-              >
-                67 ms
-              </text>
-              <text
-                x="120"
-                y="258"
-                font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-                font-size="22"
-                font-weight="400"
-                fill="#566173"
-                text-anchor="middle"
-                data-herkunft="1"
-              >
-                Auftrag 2
-              </text>
-            </g>
-            <g data-station="kontext">
-              <g data-etikett="1C">
-                <rect x="310" y="62" width="60" height="32" rx="6" fill="#e3f1ee" />
-                <text
-                  x="340"
-                  y="86"
-                  font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
-                  font-size="22"
-                  font-weight="700"
-                  fill="#0f766e"
-                  text-anchor="middle"
-                >
-                  1C
-                </text>
-              </g>
-              <circle cx="340" cy="140" r="20" fill="#ffffff" stroke="#0f766e" stroke-width="7" />
-              <text
-                x="340"
-                y="198"
-                font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
-                font-size="30"
-                font-weight="700"
-                fill="#16202c"
-                text-anchor="middle"
-              >
-                Kontext
-              </text>
-              <text
-                x="340"
-                y="230"
-                font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-                font-size="22"
-                font-weight="600"
-                fill="#16202c"
-                text-anchor="middle"
-              >
-                Validierung 1,6 %
-              </text>
-              <text
-                x="340"
-                y="258"
-                font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-                font-size="22"
-                font-weight="400"
-                fill="#566173"
-                text-anchor="middle"
-                data-herkunft="1"
-              >
-                1C-Test · 248029dc
-              </text>
-            </g>
-            <g data-station="nachpruefung">
-              <g data-etikett="1C">
-                <rect x="990" y="62" width="60" height="32" rx="6" fill="#e3f1ee" />
-                <text
-                  x="1020"
-                  y="86"
-                  font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
-                  font-size="22"
-                  font-weight="700"
-                  fill="#0f766e"
-                  text-anchor="middle"
-                >
-                  1C
-                </text>
-              </g>
-              <circle cx="1020" cy="140" r="20" fill="#ffffff" stroke="#0f766e" stroke-width="7" />
-              <text
-                x="1020"
-                y="198"
-                font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
-                font-size="30"
-                font-weight="700"
-                fill="#16202c"
-                text-anchor="middle"
-              >
-                Nachprüfung
-              </text>
-              <text
-                x="1020"
-                y="230"
-                font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-                font-size="22"
-                font-weight="600"
-                fill="#16202c"
-                text-anchor="middle"
-              >
-                Anteil 0,03 %
-              </text>
-              <text
-                x="1020"
-                y="258"
-                font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-                font-size="22"
-                font-weight="400"
-                fill="#566173"
-                text-anchor="middle"
-                data-herkunft="1"
-              >
-                1C-Labor · def56700
-              </text>
-            </g>
-            <g data-station="gate">
-              <g data-etikett="1C">
-                <rect x="1220" y="62" width="60" height="32" rx="6" fill="#e3f1ee" />
-                <text
-                  x="1250"
-                  y="86"
-                  font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
-                  font-size="22"
-                  font-weight="700"
-                  fill="#0f766e"
-                  text-anchor="middle"
-                >
-                  1C
-                </text>
-              </g>
-              <circle cx="1250" cy="140" r="20" fill="#ffffff" stroke="#b42318" stroke-width="7" />
-              <text
-                x="1250"
-                y="198"
-                font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
-                font-size="30"
-                font-weight="700"
-                fill="#b42318"
-                text-anchor="middle"
-              >
-                Gate
-              </text>
-              <text
-                x="1250"
-                y="230"
-                font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-                font-size="22"
-                font-weight="600"
-                fill="#b42318"
-                text-anchor="middle"
-              >
-                verwirft Antwort
-              </text>
-              <text
-                x="1250"
-                y="258"
-                font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-                font-size="22"
-                font-weight="400"
-                fill="#566173"
-                text-anchor="middle"
-                data-herkunft="1"
-              >
-                1B und 1C
-              </text>
-            </g>
-            <g data-station="netz">
-              <circle cx="532.5" cy="310" r="12" fill="#ffffff" stroke="#b45309" stroke-width="6" />
-              <g data-etikett="1B">
-                <rect x="579.8" y="294" width="60" height="32" rx="6" fill="#fbefe0" />
-                <text
-                  x="609.8"
-                  y="318"
-                  font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
-                  font-size="22"
-                  font-weight="700"
-                  fill="#9a4a0b"
-                  text-anchor="middle"
-                >
-                  1B
-                </text>
-              </g>
-              <text
-                x="653.8"
-                y="319"
-                font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-                font-size="24"
-                font-weight="600"
-                fill="#16202c"
-              >
-                Netz &lt; 1 ms
-              </text>
-            </g>
-            <g data-station="inferenz">
-              <circle cx="690" cy="460" r="50" fill="#b45309" />
-              <text
-                x="690"
-                y="470"
-                font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-                font-size="28"
-                font-weight="600"
-                fill="#ffffff"
-                text-anchor="middle"
-              >
-                151 s
-              </text>
-              <g data-etikett="1B">
-                <rect x="900" y="418" width="60" height="32" rx="6" fill="#fbefe0" />
-                <text
-                  x="930"
-                  y="442"
-                  font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
-                  font-size="22"
-                  font-weight="700"
-                  fill="#9a4a0b"
-                  text-anchor="middle"
-                >
-                  1B
-                </text>
-              </g>
-              <text
-                x="976"
-                y="444"
-                font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
-                font-size="30"
-                font-weight="700"
-                fill="#16202c"
-              >
-                Inferenz
-              </text>
-              <text
-                x="900"
-                y="482"
-                font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-                font-size="22"
-                font-weight="400"
-                fill="#3d4757"
-              >
-                Kreis: Auftrag 2 (warm), 1B
-              </text>
-              <text
-                x="900"
-                y="514"
-                font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-                font-size="22"
-                font-weight="400"
-                fill="#3d4757"
-              >
-                Anteil 99,69 %, langsame CPU
-              </text>
-            </g>
-            <g class="auftrag" data-aktiv="klick" transform="translate(120 140)">
-              <circle
-                cx="0"
-                cy="0"
-                r="36"
-                fill="#0b5ea8"
-                fill-opacity="0.14"
-                stroke="#0b5ea8"
-                stroke-width="4"
-              />
-              <circle cx="0" cy="0" r="9" fill="#0b5ea8" />
-            </g>
-          </svg>
+          <!-- prettier-ignore --><svg viewBox="0 0 1380 560" role="img" aria-label="Weg von Auftrag 2 über app-host 192.168.150.10 und llm-host 192.168.150.20: Klick 67 ms (Auftrag 2), Kontext (Validierung aus dem 1C-Test), Netz unter 1 ms, Inferenz 151 s (Auftrag 2), Nachprüfung (Anteil aus dem 1C-Labor, ein Rechner), Gate verwirft die Antwort. Messpunkte t0 bis t3 an den Host-Grenzen. Aktuelle Station: Klick."><rect width="1380" height="560" fill="#ffffff"/><path d="M32,2V268M64,2V268M96,2V268M128,2V268M160,2V268M192,2V268M224,2V268M256,2V268M288,2V268M320,2V268M352,2V268M384,2V268M416,2V268M448,2V268M480,2V268M512,2V268M544,2V268M576,2V268M608,2V268M640,2V268M672,2V268M704,2V268M736,2V268M768,2V268M800,2V268M832,2V268M864,2V268M896,2V268M928,2V268M960,2V268M992,2V268M1024,2V268M1056,2V268M1088,2V268M1120,2V268M1152,2V268M1184,2V268M1216,2V268M1248,2V268M1280,2V268M1312,2V268M1344,2V268M1376,2V268M2,32H1378M2,64H1378M2,96H1378M2,128H1378M2,160H1378M2,192H1378M2,224H1378M2,256H1378" fill="none" stroke="#e8edf3" stroke-width="2"/><rect x="1" y="1" width="1378" height="268" rx="10" fill="none" stroke="#c9d2de" stroke-width="2"/><text x="24" y="38" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">app-host · 192.168.150.10</text><text x="1356" y="38" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#0f766e" text-anchor="end" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">1C-Werte: ein Rechner, Loopback, kein llm-host</text><path d="M32,352V548M64,352V548M96,352V548M128,352V548M160,352V548M192,352V548M224,352V548M256,352V548M288,352V548M320,352V548M352,352V548M384,352V548M416,352V548M448,352V548M480,352V548M512,352V548M544,352V548M576,352V548M608,352V548M640,352V548M672,352V548M704,352V548M736,352V548M768,352V548M800,352V548M832,352V548M864,352V548M896,352V548M928,352V548M960,352V548M992,352V548M1024,352V548M1056,352V548M1088,352V548M1120,352V548M1152,352V548M1184,352V548M1216,352V548M1248,352V548M1280,352V548M1312,352V548M1344,352V548M1376,352V548M2,382H1378M2,414H1378M2,446H1378M2,478H1378M2,510H1378M2,542H1378" fill="none" stroke="#e8edf3" stroke-width="2"/><rect x="1" y="351" width="1378" height="198" rx="10" fill="none" stroke="#c9d2de" stroke-width="2"/><text x="24" y="388" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">llm-host · 192.168.150.20</text><text x="24" y="528" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">Messpunkte t<tspan dx="-3" dy="6" font-size="22">0</tspan><tspan dy="-6">–t</tspan><tspan dx="-3" dy="6" font-size="22">3</tspan><tspan dy="-6">: Mitschnitt auf beiden Hosts</tspan></text><path class="weg-pfad" d="M120,140 L450,140 C530,140 530,460 610,460 L770,460 C850,460 850,140 930,140 L1250,140" fill="none" stroke="#0b5ea8" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><g data-messpunkt="t0"><circle cx="513.18" cy="236" r="9" fill="#b45309" stroke="#ffffff" stroke-width="3"/><text x="533.18" y="244" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="26" font-weight="600" fill="#9a4a0b" text-anchor="start" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">t<tspan dx="-3" dy="6" font-size="22">0</tspan></text></g><g data-messpunkt="t1"><circle cx="552.97" cy="384" r="9" fill="#b45309" stroke="#ffffff" stroke-width="3"/><text x="532.97" y="392" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="26" font-weight="600" fill="#9a4a0b" text-anchor="end" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">t<tspan dx="-3" dy="6" font-size="22">1</tspan></text></g><g data-messpunkt="t2"><circle cx="827.03" cy="384" r="9" fill="#b45309" stroke="#ffffff" stroke-width="3"/><text x="847.03" y="392" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="26" font-weight="600" fill="#9a4a0b" text-anchor="start" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">t<tspan dx="-3" dy="6" font-size="22">2</tspan></text></g><g data-messpunkt="t3"><circle cx="866.82" cy="236" r="9" fill="#b45309" stroke="#ffffff" stroke-width="3"/><text x="846.82" y="244" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="26" font-weight="600" fill="#9a4a0b" text-anchor="end" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">t<tspan dx="-3" dy="6" font-size="22">3</tspan></text></g><g data-station="klick"><g data-etikett="1C"><rect x="90" y="62" width="60" height="32" rx="6" fill="#e3f1ee"/><text x="120" y="86" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#0f766e" text-anchor="middle">1C</text></g><circle cx="120" cy="140" r="20" fill="#ffffff" stroke="#0f766e" stroke-width="7"/><text x="120" y="206" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="700" fill="#16202c" text-anchor="middle">Klick</text><text x="120" y="236" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="600" fill="#16202c" text-anchor="middle">67 ms</text><text x="120" y="262" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle" data-herkunft="1">Auftrag 2</text></g><g data-station="kontext"><g data-etikett="1C"><rect x="310" y="62" width="60" height="32" rx="6" fill="#e3f1ee"/><text x="340" y="86" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#0f766e" text-anchor="middle">1C</text></g><circle cx="340" cy="140" r="20" fill="#ffffff" stroke="#0f766e" stroke-width="7"/><text x="340" y="206" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="700" fill="#16202c" text-anchor="middle">Kontext</text><text x="340" y="236" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="600" fill="#16202c" text-anchor="middle">Validierung 1,6 %</text><text x="340" y="262" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle" data-herkunft="1">1C-Test · 248029dc</text></g><g data-station="nachpruefung"><g data-etikett="1C"><rect x="990" y="62" width="60" height="32" rx="6" fill="#e3f1ee"/><text x="1020" y="86" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#0f766e" text-anchor="middle">1C</text></g><circle cx="1020" cy="140" r="20" fill="#ffffff" stroke="#0f766e" stroke-width="7"/><text x="1020" y="206" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="700" fill="#16202c" text-anchor="middle">Nachprüfung</text><text x="1020" y="236" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="600" fill="#16202c" text-anchor="middle">Anteil 0,03 %</text><text x="1020" y="262" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle" data-herkunft="1">1C-Labor · def56700</text></g><g data-station="gate"><g data-etikett="1C"><rect x="1220" y="62" width="60" height="32" rx="6" fill="#e3f1ee"/><text x="1250" y="86" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#0f766e" text-anchor="middle">1C</text></g><circle cx="1250" cy="140" r="20" fill="#ffffff" stroke="#b42318" stroke-width="7"/><text x="1250" y="206" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="700" fill="#b42318" text-anchor="middle">Gate</text><text x="1250" y="236" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="600" fill="#b42318" text-anchor="middle">verwirft Antwort</text><text x="1250" y="262" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle" data-herkunft="1">1B und 1C</text></g><g data-station="netz"><circle cx="532.5" cy="310" r="12" fill="#ffffff" stroke="#b45309" stroke-width="6"/><g data-etikett="1B"><rect x="579.8" y="294" width="60" height="32" rx="6" fill="#fbefe0"/><text x="609.8" y="318" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#9a4a0b" text-anchor="middle">1B</text></g><text x="653.8" y="319" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#16202c">Netz &lt; 1 ms</text></g><g data-station="inferenz"><circle cx="690" cy="460" r="50" fill="#b45309"/><text x="690" y="470" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="28" font-weight="600" fill="#ffffff" text-anchor="middle">151 s</text><g data-etikett="1B"><rect x="900" y="418" width="60" height="32" rx="6" fill="#fbefe0"/><text x="930" y="442" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#9a4a0b" text-anchor="middle">1B</text></g><text x="976" y="444" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="700" fill="#16202c">Inferenz</text><text x="900" y="482" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#3d4757">Kreis: Auftrag 2 (warm), 1B</text><text x="900" y="514" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#3d4757">Anteil 99,69 %, langsame CPU</text></g><g class="auftrag" data-aktiv="klick" transform="translate(120 140)"><circle cx="0" cy="0" r="36" fill="#0b5ea8" fill-opacity="0.14" stroke="#0b5ea8" stroke-width="4"/><circle cx="0" cy="0" r="9" fill="#0b5ea8"/></g></svg>
         </div>
         <div class="folie-fuss">
-          13 / 26 · evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317 (Auftrag 2:
-          hostReturnMs, inferMs); 1C-Werte: Nachlauf, Laptop (ThinkPad P50) · def56700, und Teil 2,
-          Laptop · 248029dc (Test-Runtime)
+          13 / 26 · Lauf 1B, Auftrag 2 · 8e9d1317 · ThinkPad P50 · 1C: Nachlauf def56700, Teil 2
+          248029dc
         </div>
       </section>
       <section
@@ -1335,60 +903,69 @@
       >
         <h1 class="folie-titel">Erst die Hypothese, dann die Messung</h1>
         <div class="folie-flaeche">
-          <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
+          <div class="flaeche-inhalt">
             <div
               style="
                 display: grid;
                 grid-template-columns: repeat(3, 1fr);
-                column-gap: 36px;
-                margin-bottom: 22px;
+                column-gap: 40px;
+                margin-bottom: 32px;
               "
             >
-              <div style="border-top: 6px solid var(--blau); padding-top: 10px">
-                <div style="font-weight: 700; font-size: 26px; margin: 0 0 6px">
-                  <span class="messwert" style="color: var(--blau)">A</span> Vorab festgelegt
+              <div style="border-top: 6px solid var(--blau); padding-top: 12px">
+                <div style="font-weight: 700; font-size: 28px; margin: 0 0 6px">
+                  <span style="color: var(--blau)">A</span> Vorab festgelegt
                 </div>
-                <div style="font-size: 22px; color: var(--text-2); line-height: 1.3">
-                  Hypothesen und Schwellen vor den gewerteten Läufen freigegeben. Ausnahmen: T3.1
+                <div style="font-size: 22px; color: var(--text-2); line-height: 1.35">
+                  Hypothesen und Schwellen vor den gewerteten Läufen. Ausnahmen: T3.1
                   exploratorisch, M7b/c ohne vorherige Freigabe, 1B-Leitfrage nach dem Lauf
-                  bestätigt.
+                  bestätigt
                 </div>
               </div>
-              <div style="border-top: 6px solid var(--petrol); padding-top: 10px">
-                <div style="font-weight: 700; font-size: 26px; margin: 0 0 6px">
-                  <span class="messwert" style="color: var(--petrol)">B</span> Ohne Modell geprüft
+              <div style="border-top: 6px solid var(--petrol); padding-top: 12px">
+                <div style="font-weight: 700; font-size: 28px; margin: 0 0 6px">
+                  <span style="color: var(--petrol)">B</span> Ohne Modell geprüft
                 </div>
-                <div style="font-size: 22px; color: var(--text-2); line-height: 1.3">
-                  <span class="etikett etikett-1c">1C</span> Tests mit Test-Runtime und
-                  Negativproben: Ein absichtlich eingebauter Fehler muss den Test rot machen.
+                <div style="font-size: 22px; color: var(--text-2); line-height: 1.35">
+                  <span class="etikett etikett-1c">1C</span> Test-Runtime und Negativproben: Ein
+                  eingebauter Fehler muss den Test rot machen
                 </div>
               </div>
-              <div style="border-top: 6px solid var(--bernstein); padding-top: 10px">
-                <div style="font-weight: 700; font-size: 26px; margin: 0 0 6px">
-                  <span class="messwert" style="color: var(--bernstein)">C</span> Im Labor gemessen
+              <div style="border-top: 6px solid var(--bernstein); padding-top: 12px">
+                <div style="font-weight: 700; font-size: 28px; margin: 0 0 6px">
+                  <span style="color: var(--bernstein)">C</span> Im Labor gemessen
                 </div>
-                <div style="font-size: 22px; color: var(--text-2); line-height: 1.3">
-                  <span class="etikett etikett-1c">1C</span> Nachlauf mit echter Runtime.
-                  <span class="etikett etikett-1b">1B</span> gewerteter Lauf über zwei Hosts, n =
-                  10.
+                <div style="font-size: 22px; color: var(--text-2); line-height: 1.35">
+                  <span class="etikett etikett-1c">1C</span> Nachlauf mit echter Runtime<br /><span
+                    class="etikett etikett-1b"
+                    >1B</span
+                  >
+                  gewerteter Lauf über zwei Hosts, <span class="nowrap">n = 10</span>
                 </div>
               </div>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; column-gap: 36px">
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                column-gap: 40px;
+                align-items: start;
+              "
+            >
               <div
                 style="
                   border: var(--linie-min) solid var(--petrol);
                   border-radius: 10px;
-                  padding: 10px 18px 4px;
+                  padding: 12px 20px 6px;
                 "
               >
-                <p style="margin: 0 0 4px; font-weight: 700; font-size: 24px">
+                <p style="margin: 0 0 6px; font-weight: 700; font-size: 24px">
                   <span class="etikett etikett-1c">1C</span> Abweichungen und Grenzen im Labor
                 </p>
                 <ul style="margin: 0; padding-left: 26px; font-size: 22px; line-height: 1.3">
                   <li style="margin: 0 0 4px">
                     ein Rechner, Runtime über Loopback, kein zweiter Host; Image lokal gebaut,
-                    Messproxy davor
+                    Messproxy
                   </li>
                   <li style="margin: 0 0 4px">
                     Laborlimits 4 CPUs, 5 GiB (ab Werk v1.4.0: 8 CPUs, 8 GiB; v1.3.0: 4 CPUs, 5 GiB)
@@ -1398,53 +975,47 @@
                   </li>
                 </ul>
               </div>
-              <table
-                style="border-collapse: collapse; font-size: 22px; width: 100%; align-self: start"
-              >
-                <tr style="color: var(--gedaempft); text-align: left">
-                  <th style="padding: 4px 10px 4px 0">
-                    <span class="etikett etikett-1b">1B</span> Hypothese
-                  </th>
-                  <th>Messgröße</th>
-                  <th>Schwelle vorab</th>
-                </tr>
-                <tr style="border-top: var(--linie-min) solid var(--linie)">
-                  <td style="padding: 6px 10px 6px 0">H_B1</td>
-                  <td>Netz je Auftrag</td>
-                  <td class="mono">Median ≤ 50 ms, Max. ≤ 200 ms</td>
-                </tr>
-                <tr style="border-top: var(--linie-min) solid var(--linie)">
-                  <td style="padding: 6px 10px 6px 0">H_B2</td>
-                  <td>Adapter je Auftrag</td>
-                  <td class="mono">Median ≤ 2 s</td>
-                </tr>
-                <tr style="border-top: var(--linie-min) solid var(--linie)">
-                  <td style="padding: 6px 10px 6px 0">H_B3</td>
-                  <td>Inferenzanteil</td>
-                  <td class="mono">Median ≥ 95 %</td>
-                </tr>
-              </table>
+              <div>
+                <p style="margin: 0 0 6px; font-weight: 700; font-size: 24px">
+                  <span class="etikett etikett-1b">1B</span> Hypothesen und Schwellen, vorab
+                </p>
+                <table style="border-collapse: collapse; font-size: 22px; width: 100%">
+                  <tr style="color: var(--gedaempft); text-align: left">
+                    <th style="padding: 4px 12px 6px 0; font-weight: 600">Hypothese</th>
+                    <th style="padding: 4px 12px 6px 0; font-weight: 600">Messgröße</th>
+                    <th style="padding: 4px 0 6px; font-weight: 600">Schwelle</th>
+                  </tr>
+                  <tr style="border-top: var(--linie-min) solid var(--linie)">
+                    <td style="padding: 8px 12px 8px 0; font-weight: 600">H_B1</td>
+                    <td style="padding: 8px 12px 8px 0">Netz je Auftrag</td>
+                    <td style="padding: 8px 0">
+                      <span class="mono">Median ≤ 50 ms</span><br /><span class="mono"
+                        >Max. ≤ 200 ms</span
+                      >
+                    </td>
+                  </tr>
+                  <tr style="border-top: var(--linie-min) solid var(--linie)">
+                    <td style="padding: 8px 12px 8px 0; font-weight: 600">H_B2</td>
+                    <td style="padding: 8px 12px 8px 0">Adapter je Auftrag</td>
+                    <td style="padding: 8px 0"><span class="mono">Median ≤ 2 s</span></td>
+                  </tr>
+                  <tr style="border-top: var(--linie-min) solid var(--linie)">
+                    <td style="padding: 8px 12px 8px 0; font-weight: 600">H_B3</td>
+                    <td style="padding: 8px 12px 8px 0">Inferenzanteil</td>
+                    <td style="padding: 8px 0"><span class="mono">Median ≥ 95 %</span></td>
+                  </tr>
+                </table>
+              </div>
             </div>
-            <p
-              style="
-                position: absolute;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                margin: 0;
-                font-size: var(--s-min);
-                color: var(--gedaempft);
-              "
-            >
-              Beleg: ADR 1C-002, 1C-003, 1C-020, 1C-021, 1B-008; Nachlauf, Umgebung und Abweichungen
+            <p class="beleg">
+              Beleg: ADR <span class="nowrap">1C-002</span>, <span class="nowrap">1C-003</span>,
+              <span class="nowrap">1C-020</span>, <span class="nowrap">1C-021</span>,
+              <span class="nowrap">1B-008</span>; Nachlauf, Umgebung und Abweichungen
             </p>
           </div>
         </div>
         <div class="folie-fuss">
-          14 / 26 · adr/1B-008-kernaussagen-und-schwellen.md;
-          adr/1C-003-teststrategie-modellfrei.md; evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad
-          P50 · 8e9d1317; Nachlauf 1C (Umgebung, Abweichungen): Laptop (ThinkPad P50) · def56700;
-          ADR 1C-021 (Produktionslimits)
+          14 / 26 · Nachlauf 1C · def56700 · Laptop · Lauf 1B · 8e9d1317 · ThinkPad P50
         </div>
       </section>
       <section
@@ -1503,9 +1074,9 @@
         </div>
         <h1 class="folie-titel">Der Host wartet nicht auf das Modell</h1>
         <div class="folie-flaeche">
-          <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
-            <p style="margin: 0 0 26px; font-size: 30px; font-weight: 600; color: var(--text-2)">
-              <span class="etikett etikett-1c">1C</span> Blockiert ein langsames Modell die
+          <div class="flaeche-inhalt">
+            <p class="folie-frage">
+              <span class="etikett etikett-1c">1C</span>Blockiert ein langsames Modell die
               Lehrperson?
             </p>
             <div style="display: grid; grid-template-columns: 760px 1fr; column-gap: 70px">
@@ -1528,63 +1099,71 @@
                 <div
                   style="
                     border-left: 6px solid var(--petrol);
-                    padding: 6px 0 6px 24px;
-                    margin: 0 0 26px;
+                    padding: 4px 0 4px 24px;
+                    margin: 0 0 24px;
                   "
                 >
                   <div
-                    class="messwert"
+                    class="kennzahl"
                     style="font-size: 84px; line-height: 1.05; color: var(--tinte)"
                   >
-                    29,4<span style="font-size: 42px"> ms</span>
+                    29,4<span class="einheit" style="font-size: 38px"> ms</span>
                   </div>
-                  <div style="font-size: 26px; margin-top: 8px">Host-Aufruf, Median</div>
-                  <div class="mono" style="font-size: var(--s-min); color: var(--gedaempft)">
+                  <div style="font-size: 26px; line-height: 1.25; margin-top: 8px">
+                    Host-Aufruf, Median
+                  </div>
+                  <div
+                    style="
+                      font-size: var(--s-min);
+                      line-height: 1.3;
+                      margin-top: 4px;
+                      color: var(--gedaempft);
+                    "
+                  >
                     Laptop · def56700
                   </div>
                 </div>
                 <div
                   style="
                     border-left: 6px solid var(--petrol);
-                    padding: 6px 0 6px 24px;
-                    margin: 0 0 26px;
+                    padding: 4px 0 4px 24px;
+                    margin: 0 0 24px;
                   "
                 >
                   <div
-                    class="messwert"
+                    class="kennzahl"
                     style="font-size: 84px; line-height: 1.05; color: var(--tinte)"
                   >
-                    223,7<span style="font-size: 42px"> s</span>
+                    223,7<span class="einheit" style="font-size: 38px"> s</span>
                   </div>
-                  <div style="font-size: 26px; margin-top: 8px">Inferenz, Median</div>
-                  <div class="mono" style="font-size: var(--s-min); color: var(--gedaempft)">
+                  <div style="font-size: 26px; line-height: 1.25; margin-top: 8px">
+                    Inferenz, Median
+                  </div>
+                  <div
+                    style="
+                      font-size: var(--s-min);
+                      line-height: 1.3;
+                      margin-top: 4px;
+                      color: var(--gedaempft);
+                    "
+                  >
                     Laptop · def56700
                   </div>
                 </div>
               </div>
             </div>
             <p style="margin: 0; font-size: 24px; color: var(--text-2)">
-              <span class="etikett etikett-1b">1B</span> zwei Hosts: Host-Aufruf im Median 56,5 ms
-              (alle 10)
+              <span class="etikett etikett-1b">1B</span>&nbsp; zwei Hosts: Host-Aufruf im Median
+              56,5 ms (alle 10)
             </p>
-            <p
-              style="
-                position: absolute;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                margin: 0;
-                font-size: var(--s-min);
-                color: var(--gedaempft);
-              "
-            >
-              Beleg: ADR 1C-012, Test E5, Nachlauf N3; 1B: ADR 1B-011
+            <p class="beleg">
+              Beleg: ADR <span class="nowrap">1C-012</span>, Test E5, Nachlauf N3; 1B: ADR
+              <span class="nowrap">1B-011</span>
             </p>
           </div>
         </div>
         <div class="folie-fuss">
-          15 / 26 · evidenz/1C/2026-11-09-labor-nachlauf.md · Laptop (ThinkPad P50) · def56700
-          (Branch f746ffba); 1B: evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317
+          15 / 26 · Nachlauf 1C · def56700 · Laptop · Lauf 1B · 8e9d1317 · ThinkPad P50
         </div>
       </section>
       <section
@@ -1643,12 +1222,12 @@
         </div>
         <h1 class="folie-titel">Was die Vorschau zeigt, kommt an</h1>
         <div class="folie-flaeche">
-          <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
-            <p style="margin: 0 0 26px; font-size: 30px; font-weight: 600; color: var(--text-2)">
-              <span class="etikett etikett-1c">1C</span> Bekommt die Runtime genau das, was die
+          <div class="flaeche-inhalt">
+            <p class="folie-frage">
+              <span class="etikett etikett-1c">1C</span>Bekommt die Runtime genau das, was die
               Lehrperson in der Vorschau sieht?
             </p>
-            <div style="display: grid; grid-template-columns: 800px 1fr; column-gap: 70px">
+            <div style="display: grid; grid-template-columns: 780px 1fr; column-gap: 70px">
               <div>
                 <ul style="margin: 0; padding-left: 30px; font-size: 24px; line-height: 1.38">
                   <li style="margin: 0 0 12px">
@@ -1667,69 +1246,64 @@
                 <div
                   style="
                     border-left: 6px solid var(--petrol);
-                    padding: 6px 0 6px 24px;
-                    margin: 0 0 26px;
+                    padding: 4px 0 4px 24px;
+                    margin: 0 0 24px;
                   "
                 >
                   <div
-                    class="messwert"
+                    class="kennzahl"
                     style="font-size: 64px; line-height: 1.05; color: var(--tinte)"
                   >
-                    1,2<span style="font-size: 32px"> ms</span>
+                    1,2<span class="einheit" style="font-size: 29px"> ms</span>
                   </div>
-                  <div style="font-size: 26px; margin-top: 8px">
+                  <div style="font-size: 26px; line-height: 1.25; margin-top: 8px">
                     Validierung = 1,6 % eines warmen Aufbaus
                   </div>
-                  <div class="mono" style="font-size: var(--s-min); color: var(--gedaempft)">
+                  <div
+                    style="
+                      font-size: var(--s-min);
+                      line-height: 1.3;
+                      margin-top: 4px;
+                      color: var(--gedaempft);
+                    "
+                  >
                     Laptop · 248029dc · Test-Runtime, älterer Stand
                   </div>
                 </div>
               </div>
             </div>
-            <div style="position: absolute; left: 0; right: 0; top: 292px">
-              <p style="margin: 0 0 6px; font-size: var(--s-min); color: var(--gedaempft)">
-                Echte Nutzlast an die Runtime, Ausschnitt (synthetische Referenzfixture, erster
-                Messlauf des Nachlaufs)
-              </p>
-              <pre
-                data-artefakt="nutzlast"
-                class="mono"
-                style="
-                  margin: 0;
-                  padding: 14px 20px;
-                  background: var(--raster);
-                  border-left: 6px solid var(--petrol);
-                  font-size: var(--s-min);
-                  line-height: 1.35;
-                  white-space: pre-wrap;
-                  overflow-wrap: anywhere;
-                "
-              >
+            <p style="margin: 4px 0 6px; font-size: var(--s-min); color: var(--gedaempft)">
+              Echte Nutzlast an die Runtime, Ausschnitt (synthetische Referenzfixture, erster
+              Messlauf des Nachlaufs)
+            </p>
+            <pre
+              data-artefakt="nutzlast"
+              class="mono"
+              style="
+                margin: 0;
+                padding: 14px 20px;
+                background: var(--raster);
+                border-left: 6px solid var(--petrol);
+                font-size: var(--s-min);
+                line-height: 1.4;
+                white-space: pre-wrap;
+                overflow-wrap: anywhere;
+              "
+            >
 {…
 "contractVersion":"moderation-domain-context-v1"
 "feedback":{"reason":"Quick feedback is disabled for this session.","state":"disabled"}
 "content":{"state":"included","text":"Ist Kapitel 4 klausurrelevant?","truncated":false}
 …}</pre>
-            </div>
-            <p
-              style="
-                position: absolute;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                margin: 0;
-                font-size: var(--s-min);
-                color: var(--gedaempft);
-              "
-            >
-              Beleg: ADR 1C-013 (Nachlauf N1), ADR 1C-011 (Validierung), 1C-diagrams (#456-Bereiche)
+            <p class="beleg">
+              Beleg: ADR <span class="nowrap">1C-013</span> (Nachlauf N1), ADR
+              <span class="nowrap">1C-011</span> (Validierung), 1C-diagrams (#456-Bereiche)
             </p>
           </div>
         </div>
         <div class="folie-fuss">
-          16 / 26 · evidenz/1C/messung/2026-11-09-labor-nachlauf.json.gz, labor.quiet.runs[1] ·
-          Laptop (ThinkPad P50) · f746ffba (def56700); evidenz/1C/2026-10-24-teil2.md · Laptop
-          (ThinkPad P50) · 248029dc; Berechtigung: routers/qa.ts, 1C-diagrams.md · def56700
+          16 / 26 · Nachlauf 1C · def56700 · Laptop, labor.quiet.runs[1] · Validierung: Teil 2,
+          248029dc
         </div>
       </section>
       <section
@@ -1788,25 +1362,24 @@
         </div>
         <h1 class="folie-titel">Sicher geschätzt, aber Platz verschenkt</h1>
         <div class="folie-flaeche">
-          <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
-            <p style="margin: 0 0 26px; font-size: 30px; font-weight: 600; color: var(--text-2)">
-              <span class="etikett etikett-1c">1C</span> Wie viel vom Kontextfenster nutzt der
+          <div class="flaeche-inhalt">
+            <p class="folie-frage">
+              <span class="etikett etikett-1c">1C</span>Wie viel vom Kontextfenster nutzt der
               Kontext wirklich?
             </p>
             <ul style="margin: 0; padding-left: 30px; font-size: 26px; line-height: 1.38">
               <li style="margin: 0 0 12px">
-                Das Budget zählt jedes UTF-8-Byte als ein Token. In keinem Lauf lief das Fenster
-                über; der Template-Anteil ist nicht budgetiert.
+                Das Budget zählt jedes UTF-8-Byte als ein Token: in keinem Lauf lief das Fenster
+                über
               </li>
               <li style="margin: 0 0 12px">
-                Echte Tokens laut Runtime sind nur ein Bruchteil davon: Rund zwei Drittel des
-                geschätzten Budgets bleiben ungenutzt.
+                Echte Tokens sind nur ein Bruchteil davon; der Template-Anteil ist nicht budgetiert
               </li>
             </ul>
-            <div style="margin: 26px 0 8px; display: flex; align-items: baseline; gap: 24px">
-              <span class="messwert" style="font-size: 72px">q = 0,318</span
+            <div style="margin: 14px 0 10px; display: flex; align-items: baseline; gap: 24px">
+              <span class="kennzahl" style="font-size: 72px; line-height: 1.05">q = 0,318</span
               ><span style="font-size: 26px">echte / geschätzte Tokens, Median</span
-              ><span class="mono" style="font-size: var(--s-min); color: var(--gedaempft)"
+              ><span style="font-size: var(--s-min); color: var(--gedaempft)"
                 >Laptop · def56700</span
               >
             </div>
@@ -1815,6 +1388,7 @@
               aria-label="Balken: echte Tokens als Anteil der Schätzung"
               style="
                 position: relative;
+                flex: none;
                 height: 40px;
                 border: var(--linie-min) solid var(--petrol);
                 border-radius: 6px;
@@ -1834,16 +1408,26 @@
               <span
                 style="
                   position: absolute;
+                  left: 14px;
+                  top: 4px;
+                  font-size: var(--s-min);
+                  font-weight: 600;
+                  color: var(--grund);
+                "
+                >echte Tokens</span
+              ><span
+                style="
+                  position: absolute;
                   right: 14px;
                   top: 4px;
                   font-size: var(--s-min);
                   color: var(--text-2);
                 "
-                >geschätzt = ganzes Budget</span
+                >geschätzt = ganzes Budget; rund zwei Drittel bleiben ungenutzt</span
               >
             </div>
             <p style="margin: 22px 0 6px; font-size: var(--s-min); color: var(--gedaempft)">
-              Dieselbe Nutzlast meldet zugleich, wörtlich:
+              Zugleich meldet dieselbe Nutzlast, wörtlich:
             </p>
             <pre
               data-artefakt="budget"
@@ -1854,33 +1438,21 @@
                 background: var(--raster);
                 border-left: 6px solid var(--petrol);
                 font-size: var(--s-min);
-                line-height: 1.35;
+                line-height: 1.4;
                 white-space: pre-wrap;
                 overflow-wrap: anywhere;
               "
             >
-{"code":"budget-truncated","detail":"1 item(s) were omitted by deterministic prompt packing.","section":"questions"}</pre>
-            <p
-              style="
-                position: absolute;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                margin: 0;
-                font-size: var(--s-min);
-                color: var(--gedaempft);
-              "
-            >
-              Beleg: ADR 1C-014 (empfohlen: genauere Zählung prüfen, nicht umgesetzt), Nachlauf N2,
-              Issue #17
+{"code":"budget-truncated",
+ "detail":"1 item(s) were omitted by deterministic prompt packing.",
+ "section":"questions"}</pre>
+            <p class="beleg">
+              Beleg: ADR <span class="nowrap">1C-014</span> (empfohlen: genauere Zählung prüfen,
+              nicht umgesetzt), Nachlauf N2, Issue #17
             </p>
           </div>
         </div>
-        <div class="folie-fuss">
-          17 / 26 · evidenz/1C/2026-11-09-labor-nachlauf.md · Laptop (ThinkPad P50) · def56700
-          (Branch f746ffba); Meldung: evidenz/1C/messung/2026-11-09-labor-nachlauf.json.gz,
-          labor.quiet.runs[1] · Laptop (ThinkPad P50) · f746ffba (def56700)
-        </div>
+        <div class="folie-fuss">17 / 26 · Nachlauf 1C · def56700 · Laptop, labor.quiet.runs[1]</div>
       </section>
       <section
         class="folie"
@@ -1938,130 +1510,22 @@
         </div>
         <h1 class="folie-titel">Gemessen am Draht, auf beiden Hosts</h1>
         <div class="folie-flaeche">
-          <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
-            <p style="margin: 0 0 26px; font-size: 30px; font-weight: 600; color: var(--text-2)">
-              <span class="etikett etikett-1b">1B</span> Wie trennt man Netz und Inferenz, ohne
+          <div class="flaeche-inhalt">
+            <p class="folie-frage">
+              <span class="etikett etikett-1b">1B</span>Wie trennt man Netz und Inferenz, ohne
               Produktionscode zu ändern?
             </p>
-            <div style="display: grid; grid-template-columns: 640px 1fr; column-gap: 60px">
+            <div style="display: grid; grid-template-columns: 680px 1fr; column-gap: 40px">
               <div>
-                <svg
-                  viewBox="0 0 640 380"
-                  width="640"
-                  height="380"
-                  role="img"
-                  aria-label="Messpunkte t0 bis t3 am app-host und am llm-host"
-                >
-                  <line
-                    x1="110"
-                    y1="50"
-                    x2="110"
-                    y2="370"
-                    style="stroke: var(--blau); stroke-width: 4"
-                  />
-                  <line
-                    x1="520"
-                    y1="50"
-                    x2="520"
-                    y2="370"
-                    style="stroke: var(--bernstein); stroke-width: 4"
-                  />
-                  <text
-                    x="110"
-                    y="34"
-                    text-anchor="middle"
-                    style="font: 700 26px var(--f-text); fill: var(--tinte)"
-                  >
-                    app-host
-                  </text>
-                  <text
-                    x="520"
-                    y="34"
-                    text-anchor="middle"
-                    style="font: 700 26px var(--f-text); fill: var(--tinte)"
-                  >
-                    llm-host
-                  </text>
-                  <line
-                    x1="110"
-                    y1="80"
-                    x2="510"
-                    y2="120"
-                    style="stroke: var(--tinte); stroke-width: 3"
-                  />
-                  <path d="M510,120 l-16,-9 l2,16 z" style="fill: var(--tinte)" />
-                  <rect
-                    x="508"
-                    y="130"
-                    width="24"
-                    height="170"
-                    rx="4"
-                    style="fill: var(--bernstein)"
-                  />
-                  <text
-                    x="548"
-                    y="222"
-                    style="font: 600 24px var(--f-text); fill: var(--bernstein-text)"
-                  >
-                    Inferenz
-                  </text>
-                  <line
-                    x1="520"
-                    y1="310"
-                    x2="120"
-                    y2="350"
-                    style="stroke: var(--tinte); stroke-width: 3"
-                  />
-                  <path d="M120,350 l16,-11 l1,16 z" style="fill: var(--tinte)" />
-                  <circle cx="110" cy="80" r="9" style="fill: var(--bernstein)" />
-                  <text
-                    x="90"
-                    y="89"
-                    text-anchor="end"
-                    style="font: 600 28px var(--f-mono); fill: var(--bernstein-text)"
-                  >
-                    t
-                    <tspan font-size="22" baseline-shift="-6">0</tspan>
-                  </text>
-                  <circle cx="520" cy="120" r="9" style="fill: var(--bernstein)" />
-                  <text
-                    x="540"
-                    y="129"
-                    text-anchor="start"
-                    style="font: 600 28px var(--f-mono); fill: var(--bernstein-text)"
-                  >
-                    t
-                    <tspan font-size="22" baseline-shift="-6">1</tspan>
-                  </text>
-                  <circle cx="520" cy="310" r="9" style="fill: var(--bernstein)" />
-                  <text
-                    x="540"
-                    y="319"
-                    text-anchor="start"
-                    style="font: 600 28px var(--f-mono); fill: var(--bernstein-text)"
-                  >
-                    t
-                    <tspan font-size="22" baseline-shift="-6">2</tspan>
-                  </text>
-                  <circle cx="110" cy="350" r="9" style="fill: var(--bernstein)" />
-                  <text
-                    x="90"
-                    y="359"
-                    text-anchor="end"
-                    style="font: 600 28px var(--f-mono); fill: var(--bernstein-text)"
-                  >
-                    t
-                    <tspan font-size="22" baseline-shift="-6">3</tspan>
-                  </text>
-                </svg>
+                <!-- prettier-ignore --><svg viewBox="0 0 680 380" width="680" height="380" role="img" aria-label="Messpunkte t0 bis t3 am app-host und am llm-host"><line x1="110" y1="50" x2="110" y2="370" style="stroke:var(--blau);stroke-width:4"/><line x1="520" y1="50" x2="520" y2="370" style="stroke:var(--bernstein);stroke-width:4"/><text x="110" y="34" text-anchor="middle" style="font:700 26px var(--f-text);fill:var(--tinte)">app-host</text><text x="520" y="34" text-anchor="middle" style="font:700 26px var(--f-text);fill:var(--tinte)">llm-host</text><line x1="110" y1="80" x2="510" y2="120" style="stroke:var(--tinte);stroke-width:3"/><path d="M510,120 l-16,-9 l2,16 z" style="fill:var(--tinte)"/><rect x="508" y="130" width="24" height="170" rx="4" style="fill:var(--bernstein)"/><text x="548" y="222" style="font:600 24px var(--f-text);fill:var(--bernstein-text)">Inferenz</text><line x1="520" y1="310" x2="120" y2="350" style="stroke:var(--tinte);stroke-width:3"/><path d="M120,350 l16,-11 l1,16 z" style="fill:var(--tinte)"/><circle cx="110" cy="80" r="9" style="fill:var(--bernstein)"/><text x="90" y="89" text-anchor="end" style="font:600 28px var(--f-mono);fill:var(--bernstein-text)">t<tspan dx="-2" dy="6" style="font-size:22px">0</tspan></text><circle cx="520" cy="120" r="9" style="fill:var(--bernstein)"/><text x="540" y="129" text-anchor="start" style="font:600 28px var(--f-mono);fill:var(--bernstein-text)">t<tspan dx="-2" dy="6" style="font-size:22px">1</tspan></text><circle cx="520" cy="310" r="9" style="fill:var(--bernstein)"/><text x="540" y="319" text-anchor="start" style="font:600 28px var(--f-mono);fill:var(--bernstein-text)">t<tspan dx="-2" dy="6" style="font-size:22px">2</tspan></text><circle cx="110" cy="350" r="9" style="fill:var(--bernstein)"/><text x="90" y="359" text-anchor="end" style="font:600 28px var(--f-mono);fill:var(--bernstein-text)">t<tspan dx="-2" dy="6" style="font-size:22px">3</tspan></text></svg>
               </div>
               <div>
-                <p style="margin: 0 0 10px; font-size: 24px">
+                <p style="margin: 0 0 12px; font-size: 24px; line-height: 1.35">
                   Mitschnitt auf beiden Hosts plus <span class="mono">timings</span>; jede Dauer von
-                  einer Uhr, Restunschärfe zweier VM-Uhren ≈ ±1 ms. Netz summiert über GET /slots
-                  und POST.
+                  einer Uhr (zwei VM-Uhren: ≈ ±1 ms). Netz summiert über
+                  <span class="nowrap">GET /slots und POST</span>.
                 </p>
-                <p class="mono" style="margin: 0 0 12px; font-size: 28px; font-weight: 600">
+                <p class="mono" style="margin: 0 0 18px; font-size: 28px; font-weight: 600">
                   Netz = (t<sub>3</sub> − t<sub>0</sub>) − (t<sub>2</sub> − t<sub>1</sub>)
                 </p>
                 <div
@@ -2076,41 +1540,24 @@
                   <div class="mono">Klick&nbsp;&nbsp;&nbsp;08:20:35,594 UTC</div>
                   <div class="mono">Fertig&nbsp;&nbsp;08:23:07,383 UTC</div>
                   <div class="mono">Netz &lt; 1 ms · Inferenz 150,8 s</div>
-                  <div style="font-size: 22px; line-height: 1.3; margin-top: 4px">
-                    Server ohne Inferenz 368 ms (Ausreißer wie Auftrag 3, Median 17,4 ms)
-                  </div>
-                  <div style="font-size: 22px; line-height: 1.3; margin-top: 4px">
-                    Wartezeit am Client 151,8 s, T_job 151,2 s: dazu Host-Aufruf und Nachfragen im
-                    Sekundentakt
+                  <div
+                    style="font-size: 22px; line-height: 1.3; margin-top: 4px; color: var(--text-2)"
+                  >
+                    Wartezeit am Client 151,8 s, T_job 151,2 s
                   </div>
                 </div>
-                <p
-                  class="mono"
-                  style="margin: 8px 0 0; font-size: var(--s-min); color: var(--gedaempft)"
-                >
+                <p style="margin: 14px 0 0; font-size: var(--s-min); color: var(--gedaempft)">
                   Alle 10, Median: Netz 0,43 ms, Transport 17,8 ms
                 </p>
               </div>
             </div>
-            <p
-              style="
-                position: absolute;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                margin: 0;
-                font-size: var(--s-min);
-                color: var(--gedaempft);
-              "
-            >
-              Beleg: ADR 1B-006 (Methode), ADR 1B-011 (Zeitbegriffe), Laufprotokoll 1B
+            <p class="beleg">
+              Beleg: ADR <span class="nowrap">1B-006</span> (Methode), ADR
+              <span class="nowrap">1B-011</span> (Zeitbegriffe), Laufprotokoll 1B
             </p>
           </div>
         </div>
-        <div class="folie-fuss">
-          18 / 26 · evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317 (Auftrag 2:
-          treiber.auftraege, zerlegung.auftraege)
-        </div>
+        <div class="folie-fuss">18 / 26 · Lauf 1B, Auftrag 2 · 8e9d1317 · ThinkPad P50</div>
       </section>
       <section
         class="folie"
@@ -2168,455 +1615,17 @@
         </div>
         <h1 class="folie-titel">Die Zeit steckt in der Inferenz</h1>
         <div class="folie-flaeche">
-          <svg
-            viewBox="0 0 1380 560"
-            role="img"
-            aria-label="Zeitzerlegung eines Summary-Auftrags auf logarithmischer Achse: Netz 0,43 ms, Transport 17,8 ms, Adapter 101 ms (Mediane über alle 10 Aufträge), Inferenz 148,3 s (Median warm, n = 9), Auftrag kalt 200,5 s (Median aus 5 Läufen mit frischer Runtime, Nachtrag). Inferenzanteil 99,92 %. Alle drei Schwellen erfüllt."
-          >
-            <rect width="1380" height="560" fill="#ffffff" />
-            <line x1="296.44" y1="30" x2="296.44" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="323.61" y1="30" x2="323.61" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="342.89" y1="30" x2="342.89" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="357.84" y1="30" x2="357.84" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="370.06" y1="30" x2="370.06" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="380.39" y1="30" x2="380.39" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="389.33" y1="30" x2="389.33" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="397.23" y1="30" x2="397.23" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="450.73" y1="30" x2="450.73" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="477.9" y1="30" x2="477.9" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="497.17" y1="30" x2="497.17" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="512.13" y1="30" x2="512.13" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="524.34" y1="30" x2="524.34" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="534.67" y1="30" x2="534.67" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="543.62" y1="30" x2="543.62" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="551.51" y1="30" x2="551.51" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="605.02" y1="30" x2="605.02" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="632.18" y1="30" x2="632.18" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="651.46" y1="30" x2="651.46" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="666.41" y1="30" x2="666.41" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="678.63" y1="30" x2="678.63" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="688.96" y1="30" x2="688.96" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="697.91" y1="30" x2="697.91" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="705.8" y1="30" x2="705.8" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="759.3" y1="30" x2="759.3" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="786.47" y1="30" x2="786.47" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="805.75" y1="30" x2="805.75" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="820.7" y1="30" x2="820.7" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="832.91" y1="30" x2="832.91" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="843.24" y1="30" x2="843.24" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="852.19" y1="30" x2="852.19" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="860.08" y1="30" x2="860.08" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="913.59" y1="30" x2="913.59" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="940.76" y1="30" x2="940.76" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="960.03" y1="30" x2="960.03" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="974.98" y1="30" x2="974.98" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="987.2" y1="30" x2="987.2" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="997.53" y1="30" x2="997.53" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="1006.48" y1="30" x2="1006.48" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="1014.37" y1="30" x2="1014.37" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="1067.87" y1="30" x2="1067.87" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="1095.04" y1="30" x2="1095.04" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="1114.32" y1="30" x2="1114.32" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="1129.27" y1="30" x2="1129.27" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="1141.49" y1="30" x2="1141.49" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="1151.82" y1="30" x2="1151.82" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="1160.76" y1="30" x2="1160.76" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="1168.65" y1="30" x2="1168.65" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="1222.16" y1="30" x2="1222.16" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="1249.33" y1="30" x2="1249.33" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="1268.6" y1="30" x2="1268.6" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="1283.56" y1="30" x2="1283.56" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="1295.77" y1="30" x2="1295.77" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="1306.1" y1="30" x2="1306.1" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="1315.05" y1="30" x2="1315.05" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="1322.94" y1="30" x2="1322.94" y2="450" stroke="#e8edf3" stroke-width="2" />
-            <line x1="250" y1="30" x2="250" y2="450" stroke="#c9d2de" stroke-width="2" />
-            <text
-              x="250"
-              y="484"
-              font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-              font-size="22"
-              font-weight="400"
-              fill="#566173"
-              text-anchor="middle"
-            >
-              0,1 ms
-            </text>
-            <line x1="404.29" y1="30" x2="404.29" y2="450" stroke="#c9d2de" stroke-width="2" />
-            <text
-              x="404.29"
-              y="484"
-              font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-              font-size="22"
-              font-weight="400"
-              fill="#566173"
-              text-anchor="middle"
-            >
-              1 ms
-            </text>
-            <line x1="558.57" y1="30" x2="558.57" y2="450" stroke="#c9d2de" stroke-width="2" />
-            <text
-              x="558.57"
-              y="484"
-              font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-              font-size="22"
-              font-weight="400"
-              fill="#566173"
-              text-anchor="middle"
-            >
-              10 ms
-            </text>
-            <line x1="712.86" y1="30" x2="712.86" y2="450" stroke="#c9d2de" stroke-width="2" />
-            <text
-              x="712.86"
-              y="484"
-              font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-              font-size="22"
-              font-weight="400"
-              fill="#566173"
-              text-anchor="middle"
-            >
-              100 ms
-            </text>
-            <line x1="867.14" y1="30" x2="867.14" y2="450" stroke="#c9d2de" stroke-width="2" />
-            <text
-              x="867.14"
-              y="484"
-              font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-              font-size="22"
-              font-weight="400"
-              fill="#566173"
-              text-anchor="middle"
-            >
-              1 s
-            </text>
-            <line x1="1021.43" y1="30" x2="1021.43" y2="450" stroke="#c9d2de" stroke-width="2" />
-            <text
-              x="1021.43"
-              y="484"
-              font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-              font-size="22"
-              font-weight="400"
-              fill="#566173"
-              text-anchor="middle"
-            >
-              10 s
-            </text>
-            <line x1="1175.71" y1="30" x2="1175.71" y2="450" stroke="#c9d2de" stroke-width="2" />
-            <text
-              x="1175.71"
-              y="484"
-              font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-              font-size="22"
-              font-weight="400"
-              fill="#566173"
-              text-anchor="middle"
-            >
-              100 s
-            </text>
-            <line x1="1330" y1="30" x2="1330" y2="450" stroke="#c9d2de" stroke-width="2" />
-            <text
-              x="1330"
-              y="484"
-              font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-              font-size="22"
-              font-weight="400"
-              fill="#566173"
-              text-anchor="middle"
-            >
-              1000 s
-            </text>
-            <text
-              x="226"
-              y="76"
-              font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
-              font-size="30"
-              font-weight="400"
-              fill="#16202c"
-              text-anchor="end"
-            >
-              Netz
-            </text>
-            <text
-              x="226"
-              y="104"
-              font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-              font-size="22"
-              font-weight="400"
-              fill="#566173"
-              text-anchor="end"
-            >
-              Median, alle 10
-            </text>
-            <rect x="250" y="52" width="97.66" height="40" fill="#e9b47a" />
-            <text
-              x="363.66"
-              y="81"
-              font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-              font-size="26"
-              font-weight="600"
-              fill="#16202c"
-              stroke="#ffffff"
-              stroke-width="6"
-              stroke-linejoin="round"
-              paint-order="stroke"
-            >
-              0,43 ms
-            </text>
-            <line
-              x1="666.41"
-              y1="42"
-              x2="666.41"
-              y2="102"
-              stroke="#16202c"
-              stroke-width="3"
-              stroke-dasharray="8 6"
-            />
-            <text
-              x="680.41"
-              y="80"
-              font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-              font-size="22"
-              font-weight="400"
-              fill="#16202c"
-              stroke="#ffffff"
-              stroke-width="6"
-              stroke-linejoin="round"
-              paint-order="stroke"
-            >
-              Schwelle 50 ms
-            </text>
-            <path
-              d="M877.21,69 l6,7 l12,-14"
-              fill="none"
-              stroke="#16202c"
-              stroke-width="3"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <text
-              x="226"
-              y="160"
-              font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
-              font-size="30"
-              font-weight="400"
-              fill="#16202c"
-              text-anchor="end"
-            >
-              Transport
-            </text>
-            <text
-              x="226"
-              y="188"
-              font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-              font-size="22"
-              font-weight="400"
-              fill="#566173"
-              text-anchor="end"
-            >
-              Median, alle 10
-            </text>
-            <rect x="250" y="136" width="347.29" height="40" fill="#e9b47a" />
-            <text
-              x="613.29"
-              y="165"
-              font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-              font-size="26"
-              font-weight="600"
-              fill="#16202c"
-              stroke="#ffffff"
-              stroke-width="6"
-              stroke-linejoin="round"
-              paint-order="stroke"
-            >
-              17,8 ms
-            </text>
-            <text
-              x="226"
-              y="244"
-              font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
-              font-size="30"
-              font-weight="400"
-              fill="#16202c"
-              text-anchor="end"
-            >
-              Adapter
-            </text>
-            <text
-              x="226"
-              y="272"
-              font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-              font-size="22"
-              font-weight="400"
-              fill="#566173"
-              text-anchor="end"
-            >
-              Median, alle 10
-            </text>
-            <rect x="250" y="220" width="463.82" height="40" fill="#e9b47a" />
-            <text
-              x="729.82"
-              y="249"
-              font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-              font-size="26"
-              font-weight="600"
-              fill="#16202c"
-              stroke="#ffffff"
-              stroke-width="6"
-              stroke-linejoin="round"
-              paint-order="stroke"
-            >
-              101 ms
-            </text>
-            <line
-              x1="913.59"
-              y1="210"
-              x2="913.59"
-              y2="270"
-              stroke="#16202c"
-              stroke-width="3"
-              stroke-dasharray="8 6"
-            />
-            <text
-              x="927.59"
-              y="248"
-              font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-              font-size="22"
-              font-weight="400"
-              fill="#16202c"
-              stroke="#ffffff"
-              stroke-width="6"
-              stroke-linejoin="round"
-              paint-order="stroke"
-            >
-              Schwelle 2 s
-            </text>
-            <path
-              d="M1097.99,237 l6,7 l12,-14"
-              fill="none"
-              stroke="#16202c"
-              stroke-width="3"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <text
-              x="226"
-              y="328"
-              font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
-              font-size="30"
-              font-weight="700"
-              fill="#16202c"
-              text-anchor="end"
-            >
-              Inferenz
-            </text>
-            <text
-              x="226"
-              y="356"
-              font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-              font-size="22"
-              font-weight="400"
-              fill="#566173"
-              text-anchor="end"
-            >
-              warm, n = 9
-            </text>
-            <rect x="250" y="304" width="952.13" height="40" fill="#b45309" />
-            <text
-              x="1218.13"
-              y="333"
-              font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-              font-size="26"
-              font-weight="600"
-              fill="#16202c"
-              stroke="#ffffff"
-              stroke-width="6"
-              stroke-linejoin="round"
-              paint-order="stroke"
-            >
-              148,3 s
-            </text>
-            <text
-              x="1158.13"
-              y="332"
-              font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-              font-size="22"
-              font-weight="600"
-              fill="#ffffff"
-              text-anchor="end"
-            >
-              Anteil 99,92 % (Median, alle 10) · Schwelle mind. 95 %
-            </text>
-            <path
-              d="M1170.13,321 l6,7 l12,-14"
-              fill="none"
-              stroke="#ffffff"
-              stroke-width="3"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <text
-              x="226"
-              y="412"
-              font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
-              font-size="30"
-              font-weight="400"
-              fill="#16202c"
-              text-anchor="end"
-            >
-              T_job kalt
-            </text>
-            <text
-              x="226"
-              y="440"
-              font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-              font-size="22"
-              font-weight="400"
-              fill="#566173"
-              text-anchor="end"
-            >
-              Median, n = 5
-            </text>
-            <rect
-              x="251.5"
-              y="389.5"
-              width="969.34"
-              height="37"
-              fill="#fbefe0"
-              stroke="#b45309"
-              stroke-width="3"
-            />
-            <text
-              x="1238.34"
-              y="417"
-              font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-              font-size="26"
-              font-weight="600"
-              fill="#16202c"
-              stroke="#ffffff"
-              stroke-width="6"
-              stroke-linejoin="round"
-              paint-order="stroke"
-            >
-              200,5 s
-            </text>
-            <line x1="250" y1="450" x2="1330" y2="450" stroke="#566173" stroke-width="2" />
-            <text
-              x="0"
-              y="542"
-              font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
-              font-size="24"
-              font-weight="400"
-              fill="#3d4757"
-            >
-              Log-Achse, je Strich ×10. Schwellen vorab (ADR 1B-008). Der Anteil gilt für diese
-              langsame CPU.
-            </text></svg
-          ><span class="etikett etikett-1b" style="position: absolute; left: 0; top: 0">1B</span>
+          <div class="flaeche-inhalt">
+            <p class="folie-frage">
+              <span class="etikett etikett-1b">1B</span>Wie verteilt sich die Zeit eines Auftrags?
+            </p>
+            <div class="grafik-box">
+              <!-- prettier-ignore --><svg viewBox="0 0 1380 560" role="img" aria-label="Zeitzerlegung eines Summary-Auftrags auf logarithmischer Achse: Netz 0,43 ms, Transport 17,8 ms, Adapter 101 ms (Mediane über alle 10 Aufträge), Inferenz 148,3 s (Median warm, n = 9), Auftrag kalt 200,5 s (Median aus 5 Läufen mit frischer Runtime, Nachtrag). Inferenzanteil 99,92 %. Alle drei Schwellen erfüllt."><rect width="1380" height="560" fill="#ffffff"/><line x1="250" y1="30" x2="250" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="250" y="484" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">0,1 ms</text><line x1="404.29" y1="30" x2="404.29" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="404.29" y="484" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">1 ms</text><line x1="558.57" y1="30" x2="558.57" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="558.57" y="484" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">10 ms</text><line x1="712.86" y1="30" x2="712.86" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="712.86" y="484" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">100 ms</text><line x1="867.14" y1="30" x2="867.14" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="867.14" y="484" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">1 s</text><line x1="1021.43" y1="30" x2="1021.43" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="1021.43" y="484" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">10 s</text><line x1="1175.71" y1="30" x2="1175.71" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="1175.71" y="484" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">100 s</text><line x1="1330" y1="30" x2="1330" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="1330" y="484" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">1000 s</text><text x="226" y="76" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="400" fill="#16202c" text-anchor="end">Netz</text><text x="226" y="104" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="end">Median, alle 10</text><rect x="250" y="52" width="97.66" height="40" fill="#e9b47a"/><text x="363.66" y="81" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="26" font-weight="600" fill="#16202c" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">0,43 ms</text><line x1="666.41" y1="42" x2="666.41" y2="102" stroke="#16202c" stroke-width="3" stroke-dasharray="8 6"/><path d="M680.41,69 l6,7 l12,-14" fill="none" stroke="#16202c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><text x="710.41" y="80" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#16202c" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">Schwelle 50 ms</text><text x="226" y="160" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="400" fill="#16202c" text-anchor="end">Transport</text><text x="226" y="188" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="end">Median, alle 10</text><rect x="250" y="136" width="347.29" height="40" fill="#e9b47a"/><text x="613.29" y="165" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="26" font-weight="600" fill="#16202c" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">17,8 ms</text><text x="226" y="244" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="400" fill="#16202c" text-anchor="end">Adapter</text><text x="226" y="272" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="end">Median, alle 10</text><rect x="250" y="220" width="463.82" height="40" fill="#e9b47a"/><text x="729.82" y="249" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="26" font-weight="600" fill="#16202c" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">101 ms</text><line x1="913.59" y1="210" x2="913.59" y2="270" stroke="#16202c" stroke-width="3" stroke-dasharray="8 6"/><path d="M927.59,237 l6,7 l12,-14" fill="none" stroke="#16202c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><text x="957.59" y="248" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#16202c" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">Schwelle 2 s</text><text x="226" y="328" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="700" fill="#16202c" text-anchor="end">Inferenz</text><text x="226" y="356" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="end">warm, n = 9</text><rect x="250" y="304" width="952.13" height="40" fill="#b45309"/><text x="1218.13" y="333" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="26" font-weight="600" fill="#16202c" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">148,3 s</text><text x="1158.13" y="332" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="600" fill="#ffffff" text-anchor="end">Anteil 99,92 % (Median, alle 10) · Schwelle mind. 95 %</text><path d="M1170.13,321 l6,7 l12,-14" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><text x="226" y="412" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="400" fill="#16202c" text-anchor="end">T_job kalt</text><text x="226" y="440" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="end">Median, n = 5</text><rect x="251.5" y="389.5" width="969.34" height="37" fill="#fbefe0" stroke="#b45309" stroke-width="3"/><text x="1238.34" y="417" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="26" font-weight="600" fill="#16202c" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">200,5 s</text><line x1="250" y1="450" x2="1330" y2="450" stroke="#566173" stroke-width="2"/><text x="0" y="542" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="24" font-weight="400" fill="#3d4757">Log-Achse, je Strich ×10. Schwellen vorab (ADR 1B-008). Der Anteil gilt für diese langsame CPU.</text></svg>
+            </div>
+          </div>
         </div>
         <div class="folie-fuss">
-          19 / 26 · evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317; Kalt:
-          evidenz/1B/2026-11-13-lauf.md, Nachtrag · ThinkPad P50 · 9e111d35
+          19 / 26 · Lauf 1B · 8e9d1317 · ThinkPad P50 · Kaltläufe: Nachtrag 9e111d35
         </div>
       </section>
       <section
@@ -2676,378 +1685,17 @@
         </div>
         <h1 class="folie-titel">Wäre der Auftrag ein Fußballfeld …</h1>
         <div class="folie-flaeche">
-          <svg
-            viewBox="0 0 1380 560"
-            role="img"
-            aria-label="Wäre der Auftrag ein Fußballfeld: 105 m entsprechen 148,6 s (T_job, Median warm, n = 9). Die Inferenz belegt 104,9 m, der Transport 1,3 cm, davon das Netz 0,3 mm (Netz und Transport als Median über alle 10 Aufträge)."
-          >
-            <rect width="1380" height="560" fill="#ffffff" />
-            <text
-              x="1380"
-              y="28"
-              font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-              font-size="22"
-              font-weight="400"
-              fill="#566173"
-              text-anchor="end"
-            >
-              Maßstab: 105 m = 148,6 s
-            </text>
-            <svg
-              class="kamera"
-              x="0"
-              y="44"
-              width="1380"
-              height="290"
-              viewBox="-0.9 6999.842391 1.5 0.315217"
-              preserveAspectRatio="xMidYMid meet"
-              overflow="hidden"
-              data-zoom="1"
-              data-w0="112000"
-              data-w1="1.5"
-              data-sx0="0.96875"
-              data-sy0="0.797414"
-              data-sx1="0.6"
-              data-sy1="0.5"
-              data-anker-y="7000"
-            >
-              <rect x="-120000" y="-30000" width="140000" height="60000" fill="#245f3d" />
-              <rect x="-105000" y="-10000" width="105000" height="20000" fill="#2f7a4f" />
-              <rect x="-99750" y="-10000" width="5250" height="20000" fill="#2a7147" />
-              <rect x="-89250" y="-10000" width="5250" height="20000" fill="#2a7147" />
-              <rect x="-78750" y="-10000" width="5250" height="20000" fill="#2a7147" />
-              <rect x="-68250" y="-10000" width="5250" height="20000" fill="#2a7147" />
-              <rect x="-57750" y="-10000" width="5250" height="20000" fill="#2a7147" />
-              <rect x="-47250" y="-10000" width="5250" height="20000" fill="#2a7147" />
-              <rect x="-36750" y="-10000" width="5250" height="20000" fill="#2a7147" />
-              <rect x="-26250" y="-10000" width="5250" height="20000" fill="#2a7147" />
-              <rect x="-15750" y="-10000" width="5250" height="20000" fill="#2a7147" />
-              <rect x="-5250" y="-10000" width="5250" height="20000" fill="#2a7147" />
-              <rect
-                x="-105000"
-                y="-10000"
-                width="105000"
-                height="20000"
-                fill="none"
-                stroke="#ffffff"
-                stroke-width="4"
-                stroke-opacity="0.9"
-                vector-effect="non-scaling-stroke"
-              />
-              <line
-                x1="-52500"
-                y1="-10000"
-                x2="-52500"
-                y2="10000"
-                fill="none"
-                stroke="#ffffff"
-                stroke-width="4"
-                stroke-opacity="0.9"
-                vector-effect="non-scaling-stroke"
-              />
-              <circle
-                cx="-52500"
-                cy="0"
-                r="4500"
-                fill="none"
-                stroke="#ffffff"
-                stroke-width="4"
-                stroke-opacity="0.9"
-                vector-effect="non-scaling-stroke"
-              />
-              <rect
-                x="-105000"
-                y="-5500"
-                width="16500"
-                height="11000"
-                fill="none"
-                stroke="#ffffff"
-                stroke-width="4"
-                stroke-opacity="0.9"
-                vector-effect="non-scaling-stroke"
-              />
-              <rect
-                x="-16500"
-                y="-5500"
-                width="16500"
-                height="11000"
-                fill="none"
-                stroke="#ffffff"
-                stroke-width="4"
-                stroke-opacity="0.9"
-                vector-effect="non-scaling-stroke"
-              />
-              <rect
-                x="-105000"
-                y="-2600"
-                width="5500"
-                height="5200"
-                fill="none"
-                stroke="#ffffff"
-                stroke-width="4"
-                stroke-opacity="0.9"
-                vector-effect="non-scaling-stroke"
-              />
-              <rect
-                x="-5500"
-                y="-2600"
-                width="5500"
-                height="5200"
-                fill="none"
-                stroke="#ffffff"
-                stroke-width="4"
-                stroke-opacity="0.9"
-                vector-effect="non-scaling-stroke"
-              />
-              <line
-                x1="-105000"
-                y1="7000"
-                x2="-85.053951"
-                y2="7000"
-                stroke="#ffffff"
-                stroke-width="22"
-                vector-effect="non-scaling-stroke"
-              />
-              <line
-                x1="-105000"
-                y1="7000"
-                x2="-85.053951"
-                y2="7000"
-                stroke="#b45309"
-                stroke-width="14"
-                vector-effect="non-scaling-stroke"
-              />
-              <line
-                x1="-12.594641"
-                y1="7000"
-                x2="0"
-                y2="7000"
-                stroke="#ffffff"
-                stroke-width="22"
-                vector-effect="non-scaling-stroke"
-              />
-              <line
-                x1="-12.594641"
-                y1="7000"
-                x2="0"
-                y2="7000"
-                stroke="#16202c"
-                stroke-width="14"
-                vector-effect="non-scaling-stroke"
-              />
-              <line
-                x1="-0.303521"
-                y1="7000"
-                x2="0"
-                y2="7000"
-                stroke="#ffffff"
-                stroke-width="22"
-                vector-effect="non-scaling-stroke"
-              />
-              <line
-                x1="-0.303521"
-                y1="7000"
-                x2="0"
-                y2="7000"
-                stroke="#0b5ea8"
-                stroke-width="14"
-                vector-effect="non-scaling-stroke"
-              />
-              <g
-                transform="translate(-87000 7000) scale(81.15942)"
-                data-zoom-von="0"
-                data-zoom-bis="0.12"
-                opacity="0"
-              >
-                <text
-                  x="16"
-                  y="-24"
-                  font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-                  font-size="26"
-                  font-weight="600"
-                  fill="#ffffff"
-                  stroke="#245f3d"
-                  stroke-width="6"
-                  stroke-linejoin="round"
-                  paint-order="stroke"
-                >
-                  Inferenz · 104,9 m
-                </text>
-              </g>
-              <g
-                transform="translate(-6.29732 7000) scale(0.04409)"
-                data-zoom-von="0.58"
-                data-zoom-bis="0.76"
-                opacity="0"
-              >
-                <text
-                  x="0"
-                  y="-26"
-                  font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-                  font-size="26"
-                  font-weight="600"
-                  fill="#ffffff"
-                  text-anchor="middle"
-                  stroke="#245f3d"
-                  stroke-width="6"
-                  stroke-linejoin="round"
-                  paint-order="stroke"
-                >
-                  Transport · 1,3 cm
-                </text>
-              </g>
-              <g
-                transform="translate(-12.594641 7000) scale(0.04409)"
-                data-zoom-von="0.58"
-                data-zoom-bis="0.76"
-                opacity="0"
-              >
-                <line x1="0" y1="-22" x2="0" y2="22" stroke="#ffffff" stroke-width="3" />
-              </g>
-              <g
-                transform="translate(-0.303521 7000) scale(0.001522)"
-                data-zoom-von="0.92"
-                data-zoom-bis="1"
-                opacity="1"
-              >
-                <line x1="0" y1="-22" x2="0" y2="22" stroke="#ffffff" stroke-width="3" />
-              </g>
-              <g
-                transform="translate(0 7000) scale(0.001522)"
-                data-zoom-von="0.92"
-                data-zoom-bis="1"
-                opacity="1"
-              >
-                <text
-                  x="-12"
-                  y="-30"
-                  font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-                  font-size="28"
-                  font-weight="600"
-                  fill="#ffffff"
-                  text-anchor="end"
-                  stroke="#245f3d"
-                  stroke-width="6"
-                  stroke-linejoin="round"
-                  paint-order="stroke"
-                >
-                  davon Netz · 0,3 mm
-                </text>
-              </g>
-              <g
-                transform="translate(0 7000) scale(0.001522)"
-                data-zoom-von="0.92"
-                data-zoom-bis="1"
-                opacity="1"
-              >
-                <text
-                  x="16"
-                  y="52"
-                  font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-                  font-size="22"
-                  font-weight="400"
-                  fill="#ffffff"
-                  stroke="#245f3d"
-                  stroke-width="6"
-                  stroke-linejoin="round"
-                  paint-order="stroke"
-                >
-                  Torlinie
-                </text>
-              </g>
-            </svg>
-            <rect
-              x="1"
-              y="45"
-              width="1378"
-              height="288"
-              fill="none"
-              stroke="#245f3d"
-              stroke-width="2"
-            />
-            <g data-spalte="inferenz">
-              <text
-                x="-4"
-                y="438"
-                font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-                font-size="80"
-                font-weight="600"
-                fill="#b45309"
-              >
-                104,9 m
-              </text>
-              <text
-                x="0"
-                y="480"
-                font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
-                font-size="28"
-                font-weight="400"
-                fill="#3d4757"
-              >
-                Inferenz · Anteil 99,92 %
-              </text>
-            </g>
-            <g data-spalte="transport" data-zoom-von="0.58" data-zoom-bis="1" opacity="1">
-              <text
-                x="586"
-                y="438"
-                font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-                font-size="80"
-                font-weight="600"
-                fill="#16202c"
-              >
-                1,3 cm
-              </text>
-              <text
-                x="590"
-                y="480"
-                font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
-                font-size="28"
-                font-weight="400"
-                fill="#3d4757"
-              >
-                Transport · 17,8 ms
-              </text>
-            </g>
-            <g data-spalte="netz" data-zoom-von="0.92" data-zoom-bis="1" opacity="1">
-              <text
-                x="1026"
-                y="438"
-                font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-                font-size="80"
-                font-weight="600"
-                fill="#0b5ea8"
-              >
-                0,3 mm
-              </text>
-              <text
-                x="1030"
-                y="480"
-                font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
-                font-size="28"
-                font-weight="400"
-                fill="#3d4757"
-              >
-                davon Netz · 0,43 ms
-              </text>
-            </g>
-            <text
-              x="0"
-              y="544"
-              font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace"
-              font-size="22"
-              font-weight="400"
-              fill="#566173"
-            >
-              105 m = T_job, Median warm, n = 9 · Netz, Transport, Anteil: Median, alle 10 ·
-              langsame CPU
-            </text></svg
-          ><span class="etikett etikett-1b" style="position: absolute; left: 0; top: 0">1B</span>
+          <div class="flaeche-inhalt">
+            <p class="folie-frage">
+              <span class="etikett etikett-1b">1B</span>Wie groß ist das Netz im Verhältnis zum
+              ganzen Auftrag?
+            </p>
+            <div class="grafik-box">
+              <!-- prettier-ignore --><svg viewBox="0 0 1380 560" role="img" aria-label="Wäre der Auftrag ein Fußballfeld: 105 m entsprechen 148,6 s (T_job, Median warm, n = 9). Die Inferenz belegt 104,9 m, der Transport 1,3 cm, davon das Netz 0,3 mm (Netz und Transport als Median über alle 10 Aufträge)."><rect width="1380" height="560" fill="#ffffff"/><text x="1380" y="28" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="end">Maßstab: 105 m = 148,6 s</text><!-- prettier-ignore --><svg class="kamera" x="0" y="44" width="1380" height="290" viewBox="-0.9 6999.842391 1.5 0.315217" preserveAspectRatio="xMidYMid meet" overflow="hidden" data-zoom="1" data-w0="112000" data-w1="1.5" data-sx0="0.96875" data-sy0="0.797414" data-sx1="0.6" data-sy1="0.5" data-anker-y="7000"><rect x="-120000" y="-30000" width="140000" height="60000" fill="#245f3d"/><rect x="-105000" y="-10000" width="105000" height="20000" fill="#2f7a4f"/><rect x="-99750" y="-10000" width="5250" height="20000" fill="#2a7147"/><rect x="-89250" y="-10000" width="5250" height="20000" fill="#2a7147"/><rect x="-78750" y="-10000" width="5250" height="20000" fill="#2a7147"/><rect x="-68250" y="-10000" width="5250" height="20000" fill="#2a7147"/><rect x="-57750" y="-10000" width="5250" height="20000" fill="#2a7147"/><rect x="-47250" y="-10000" width="5250" height="20000" fill="#2a7147"/><rect x="-36750" y="-10000" width="5250" height="20000" fill="#2a7147"/><rect x="-26250" y="-10000" width="5250" height="20000" fill="#2a7147"/><rect x="-15750" y="-10000" width="5250" height="20000" fill="#2a7147"/><rect x="-5250" y="-10000" width="5250" height="20000" fill="#2a7147"/><rect x="-105000" y="-10000" width="105000" height="20000" fill="none" stroke="#ffffff" stroke-width="4" stroke-opacity="0.9" vector-effect="non-scaling-stroke"/><line x1="-52500" y1="-10000" x2="-52500" y2="10000" fill="none" stroke="#ffffff" stroke-width="4" stroke-opacity="0.9" vector-effect="non-scaling-stroke"/><circle cx="-52500" cy="0" r="4500" fill="none" stroke="#ffffff" stroke-width="4" stroke-opacity="0.9" vector-effect="non-scaling-stroke"/><rect x="-105000" y="-5500" width="16500" height="11000" fill="none" stroke="#ffffff" stroke-width="4" stroke-opacity="0.9" vector-effect="non-scaling-stroke"/><rect x="-16500" y="-5500" width="16500" height="11000" fill="none" stroke="#ffffff" stroke-width="4" stroke-opacity="0.9" vector-effect="non-scaling-stroke"/><rect x="-105000" y="-2600" width="5500" height="5200" fill="none" stroke="#ffffff" stroke-width="4" stroke-opacity="0.9" vector-effect="non-scaling-stroke"/><rect x="-5500" y="-2600" width="5500" height="5200" fill="none" stroke="#ffffff" stroke-width="4" stroke-opacity="0.9" vector-effect="non-scaling-stroke"/><line x1="-105000" y1="7000" x2="-85.053951" y2="7000" stroke="#ffffff" stroke-width="22" vector-effect="non-scaling-stroke"/><line x1="-105000" y1="7000" x2="-85.053951" y2="7000" stroke="#b45309" stroke-width="14" vector-effect="non-scaling-stroke"/><line x1="-12.594641" y1="7000" x2="0" y2="7000" stroke="#ffffff" stroke-width="22" vector-effect="non-scaling-stroke"/><line x1="-12.594641" y1="7000" x2="0" y2="7000" stroke="#16202c" stroke-width="14" vector-effect="non-scaling-stroke"/><line x1="-0.303521" y1="7000" x2="0" y2="7000" stroke="#ffffff" stroke-width="22" vector-effect="non-scaling-stroke"/><line x1="-0.303521" y1="7000" x2="0" y2="7000" stroke="#0b5ea8" stroke-width="14" vector-effect="non-scaling-stroke"/><g transform="translate(-87000 7000) scale(81.15942)" data-zoom-von="0" data-zoom-bis="0.12" opacity="0"><text x="16" y="-24" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="26" font-weight="600" fill="#ffffff" stroke="#245f3d" stroke-width="6" stroke-linejoin="round" paint-order="stroke">Inferenz · 104,9 m</text></g><g transform="translate(-6.29732 7000) scale(0.04409)" data-zoom-von="0.58" data-zoom-bis="0.76" opacity="0"><text x="0" y="-26" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="26" font-weight="600" fill="#ffffff" text-anchor="middle" stroke="#245f3d" stroke-width="6" stroke-linejoin="round" paint-order="stroke">Transport · 1,3 cm</text></g><g transform="translate(-12.594641 7000) scale(0.04409)" data-zoom-von="0.58" data-zoom-bis="0.76" opacity="0"><line x1="0" y1="-22" x2="0" y2="22" stroke="#ffffff" stroke-width="3"/></g><g transform="translate(-0.303521 7000) scale(0.001522)" data-zoom-von="0.92" data-zoom-bis="1" opacity="1"><line x1="0" y1="-22" x2="0" y2="22" stroke="#ffffff" stroke-width="3"/></g><g transform="translate(0 7000) scale(0.001522)" data-zoom-von="0.92" data-zoom-bis="1" opacity="1"><text x="-12" y="-30" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="28" font-weight="600" fill="#ffffff" text-anchor="end" stroke="#245f3d" stroke-width="6" stroke-linejoin="round" paint-order="stroke">davon Netz · 0,3 mm</text></g><g transform="translate(-0.88 7000) scale(0.001522)" data-zoom-von="0.92" data-zoom-bis="1" opacity="1"><text x="0" y="52" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#ffffff" stroke="#245f3d" stroke-width="6" stroke-linejoin="round" paint-order="stroke">Transport · 1,3 cm, reicht links weiter</text></g><g transform="translate(0 7000) scale(0.001522)" data-zoom-von="0.92" data-zoom-bis="1" opacity="1"><text x="16" y="52" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#ffffff" stroke="#245f3d" stroke-width="6" stroke-linejoin="round" paint-order="stroke">Torlinie = Ende des Auftrags</text></g></svg><rect x="1" y="45" width="1378" height="288" fill="none" stroke="#245f3d" stroke-width="2"/><g data-spalte="inferenz"><text x="-2" y="438" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="80" font-weight="700" fill="#b45309" style="font-variant-numeric:tabular-nums;letter-spacing:-1px">104,9 m</text><rect x="0" y="463" width="40" height="14" rx="2" fill="#b45309"/><text x="54" y="480" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="28" font-weight="400" fill="#3d4757">Inferenz · Anteil 99,92 %</text></g><g data-spalte="transport" data-zoom-von="0.58" data-zoom-bis="1" opacity="1"><text x="588" y="438" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="80" font-weight="700" fill="#16202c" style="font-variant-numeric:tabular-nums;letter-spacing:-1px">1,3 cm</text><rect x="590" y="463" width="40" height="14" rx="2" fill="#16202c"/><text x="644" y="480" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="28" font-weight="400" fill="#3d4757">Transport · 17,8 ms</text></g><g data-spalte="netz" data-zoom-von="0.92" data-zoom-bis="1" opacity="1"><text x="1028" y="438" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="80" font-weight="700" fill="#0b5ea8" style="font-variant-numeric:tabular-nums;letter-spacing:-1px">0,3 mm</text><rect x="1030" y="463" width="40" height="14" rx="2" fill="#0b5ea8"/><text x="1084" y="480" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="28" font-weight="400" fill="#3d4757">davon Netz · 0,43 ms</text></g><text x="0" y="544" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173">105 m = T_job, Median warm, n = 9 · Netz, Transport, Anteil: Median, alle 10 · langsame CPU</text></svg>
+            </div>
+          </div>
         </div>
-        <div class="folie-fuss">
-          20 / 26 · evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317; Maßstab:
-          T_job warm (n = 9), Netz und Transport Median über alle 10
-        </div>
+        <div class="folie-fuss">20 / 26 · Lauf 1B · 8e9d1317 · ThinkPad P50</div>
       </section>
       <section
         class="folie"
@@ -3055,128 +1703,75 @@
         data-teil="jonas"
         aria-label="21 von 26: Betrieb: Timeout zu kurz, Speicher läuft voll"
       >
+        <p class="weg-exkurs">Exkurs: Betrieb</p>
         <h1 class="folie-titel">Betrieb: Timeout zu kurz, Speicher läuft voll</h1>
         <div class="folie-flaeche">
-          <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
-            <p style="margin: 0 0 26px; font-size: 30px; font-weight: 600; color: var(--text-2)">
-              <span class="etikett etikett-1c">1C</span> Reicht die Konfiguration ab Werk für
+          <div class="flaeche-inhalt">
+            <p class="folie-frage">
+              <span class="etikett etikett-1c">1C</span>Reicht die Konfiguration ab Werk für
               Inferenz auf der CPU?
             </p>
             <div style="display: grid; grid-template-columns: 680px 1fr; column-gap: 60px">
               <div>
-                <svg
-                  viewBox="0 0 680 250"
-                  width="680"
-                  height="250"
-                  role="img"
-                  aria-label="Inferenzzeiten gegen den Timeout ab Werk v1.4.0"
-                >
-                  <text x="0" y="30" style="font: 400 24px var(--f-text); fill: var(--tinte)">
-                    Kalibrierung
-                    <tspan style="font: 400 22px var(--f-mono); fill: var(--gedaempft)">
-                      PC · 9f230abc
-                    </tspan>
-                  </text>
-                  <rect x="0" y="44" width="229.4" height="44" rx="4" style="fill: var(--petrol)" />
-                  <text x="241.4" y="75" style="font: 600 26px var(--f-mono); fill: var(--tinte)">
-                    98,7 s
-                  </text>
-                  <line
-                    x1="209.2"
-                    y1="38"
-                    x2="209.2"
-                    y2="94"
-                    style="stroke: var(--rot); stroke-width: 4"
-                  />
-                  <text x="0" y="140" style="font: 400 24px var(--f-text); fill: var(--tinte)">
-                    Inferenz, Median
-                    <tspan style="font: 400 22px var(--f-mono); fill: var(--gedaempft)">
-                      Laptop · def56700, Nebenlast
-                    </tspan>
-                  </text>
-                  <rect x="0" y="154" width="520" height="44" rx="4" style="fill: var(--petrol)" />
-                  <text x="532" y="185" style="font: 600 26px var(--f-mono); fill: var(--tinte)">
-                    223,7 s
-                  </text>
-                  <line
-                    x1="209.2"
-                    y1="148"
-                    x2="209.2"
-                    y2="204"
-                    style="stroke: var(--rot); stroke-width: 4"
-                  />
-                  <line
-                    x1="209.2"
-                    y1="204"
-                    x2="209.2"
-                    y2="222"
-                    style="stroke: var(--rot); stroke-width: 4"
-                  />
-                  <text
-                    x="209.2"
-                    y="246"
-                    text-anchor="middle"
-                    style="font: 700 24px var(--f-text); fill: var(--rot)"
-                  >
-                    Timeout ab Werk v1.4.0: 90 s
-                  </text>
-                </svg>
-                <p style="margin: 10px 0 0; font-size: 24px">
-                  Mit 90 s wäre der Modellpfad auf beiden Laborrechnern nicht nutzbar. Verschiedene
-                  Stände und Lasten: kein reiner Rechnervergleich.
+                <!-- prettier-ignore --><svg viewBox="0 0 680 250" width="680" height="250" role="img" aria-label="Inferenzzeiten gegen den Timeout ab Werk v1.4.0"><text x="0" y="30" style="font:400 24px var(--f-text);fill:var(--tinte)">Kalibrierung <tspan style="font:400 22px var(--f-mono);fill:var(--gedaempft)">PC · 9f230abc</tspan></text><rect x="0" y="44" width="229.4" height="44" rx="4" style="fill:var(--petrol)"/><text x="241.4" y="75" style="font:600 26px var(--f-mono);fill:var(--tinte)">98,7 s</text><line x1="209.2" y1="38" x2="209.2" y2="94" style="stroke:var(--rot);stroke-width:4"/><text x="0" y="140" style="font:400 24px var(--f-text);fill:var(--tinte)">Inferenz, Median <tspan style="font:400 22px var(--f-mono);fill:var(--gedaempft)">Laptop · def56700, Nebenlast</tspan></text><rect x="0" y="154" width="520" height="44" rx="4" style="fill:var(--petrol)"/><text x="532" y="185" style="font:600 26px var(--f-mono);fill:var(--tinte)">223,7 s</text><line x1="209.2" y1="148" x2="209.2" y2="204" style="stroke:var(--rot);stroke-width:4"/><line x1="209.2" y1="204" x2="209.2" y2="222" style="stroke:var(--rot);stroke-width:4"/><text x="209.2" y="246" text-anchor="middle" style="font:700 24px var(--f-text);fill:var(--rot)">Timeout ab Werk v1.4.0: 90 s</text></svg>
+                <p style="margin: 14px 0 0; font-size: 24px; line-height: 1.35">
+                  Mit 90 s wäre der Modellpfad auf beiden Laborrechnern nicht nutzbar.
+                </p>
+                <p style="margin: 6px 0 0; font-size: var(--s-min); color: var(--gedaempft)">
+                  Verschiedene Stände und Lasten: kein reiner Rechnervergleich
                 </p>
               </div>
               <div>
                 <div
                   style="
                     border-left: 6px solid var(--petrol);
-                    padding: 6px 0 6px 24px;
-                    margin: 0 0 26px;
+                    padding: 4px 0 4px 24px;
+                    margin: 0 0 24px;
                   "
                 >
                   <div
-                    class="messwert"
+                    class="kennzahl"
                     style="font-size: 52px; line-height: 1.05; color: var(--tinte)"
                   >
-                    +0,419<span style="font-size: 26px"> GB</span>
+                    +0,419<span class="einheit" style="font-size: 23px"> GB</span>
                   </div>
-                  <div style="font-size: 26px; margin-top: 8px">
+                  <div style="font-size: 26px; line-height: 1.25; margin-top: 8px">
                     Runtime-Speicher je Auftrag, bei wechselnden Prompts, Median
                   </div>
-                  <div class="mono" style="font-size: var(--s-min); color: var(--gedaempft)">
+                  <div
+                    style="
+                      font-size: var(--s-min);
+                      line-height: 1.3;
+                      margin-top: 4px;
+                      color: var(--gedaempft);
+                    "
+                  >
                     Laptop · def56700; Ursache Cache (U1, PC)
                   </div>
                 </div>
-                <p style="margin: 0 0 10px; font-size: 24px; line-height: 1.3">
+                <p style="margin: 0 0 10px; font-size: 24px; line-height: 1.35">
                   Beide Grenzen 10 GiB: Labor 5 GiB + 5 GiB Swap, Produktion 8 GiB + bis zu 2 GiB
-                  (Swap des Hosts unbekannt).
+                  <span class="nowrap" style="color: var(--gedaempft)"
+                    >(Swap des Hosts unbekannt)</span
+                  >
                 </p>
-                <p style="margin: 0; font-size: 24px; line-height: 1.3">
-                  OOM-Kill: 9f230abc im 21. Auftrag (Laptop und PC), def56700 schon im
-                  <b class="messwert">19.</b>; Ursache nicht getrennt gemessen.
+                <p style="margin: 0; font-size: 24px; line-height: 1.35">
+                  OOM-Kill: 9f230abc im 21. Auftrag (Laptop und PC), def56700 schon im <b>19.</b>
+                  <span class="nowrap" style="color: var(--gedaempft)"
+                    >Ursache nicht getrennt gemessen</span
+                  >
                 </p>
               </div>
             </div>
-            <p
-              style="
-                position: absolute;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                margin: 0;
-                font-size: var(--s-min);
-                color: var(--gedaempft);
-              "
-            >
-              Beleg: ADR 1C-021, 1C-023 und 1C-024: empfohlen (Timeout am Inferenz-Host kalibrieren,
+            <p class="beleg">
+              Beleg: ADR <span class="nowrap">1C-021</span>, <span class="nowrap">1C-023</span> und
+              <span class="nowrap">1C-024</span>: empfohlen (Timeout am Inferenz-Host kalibrieren,
               Cache begrenzen), nicht umgesetzt; Issues #16, #14
             </p>
           </div>
         </div>
         <div class="folie-fuss">
-          21 / 26 · ADR 1C-020, 1C-024 · PC (i7-8700) · 9f230abc; Nachlauf N3, N6 · Laptop (ThinkPad
-          P50) · def56700; 1B-Speicher: evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 ·
-          8e9d1317
+          21 / 26 · ADR 1C-020, 1C-024 · PC 9f230abc · Nachlauf 1C · def56700 · Laptop
         </div>
       </section>
       <section
@@ -3184,7 +1779,7 @@
         data-id="J12"
         data-teil="jonas"
         data-station="nachpruefung"
-        aria-label="22 von 26: Die Nachprüfung: wenig Zeit, unter Voting ein Risiko"
+        aria-label="22 von 26: Nachprüfung: wenig Zeit, unter Voting riskant"
       >
         <div
           class="weg-mini weg-mini-statisch"
@@ -3233,29 +1828,28 @@
             <span class="weg-name">Nachprüfung</span><span class="etikett etikett-1c">1C</span>
           </p>
         </div>
-        <h1 class="folie-titel">Die Nachprüfung: wenig Zeit, unter Voting ein Risiko</h1>
+        <h1 class="folie-titel">Nachprüfung: wenig Zeit, unter Voting riskant</h1>
         <div class="folie-flaeche">
-          <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
-            <p style="margin: 0 0 26px; font-size: 30px; font-weight: 600; color: var(--text-2)">
-              <span class="etikett etikett-1c">1C</span> Was, wenn sich die Daten ändern, während
-              das Modell rechnet?
+          <div class="flaeche-inhalt">
+            <p class="folie-frage">
+              <span class="etikett etikett-1c">1C</span>Was, wenn sich die Daten ändern, während das
+              Modell rechnet?
             </p>
-            <div style="display: grid; grid-template-columns: 800px 1fr; column-gap: 70px">
+            <div style="display: grid; grid-template-columns: 860px 1fr; column-gap: 70px">
               <div>
-                <ul style="margin: 0; padding-left: 30px; font-size: 22px; line-height: 1.38">
+                <ul style="margin: 0; padding-left: 30px; font-size: 24px; line-height: 1.38">
                   <li style="margin: 0 0 12px">
-                    Nach der Inferenz wird der Kontext noch einmal gebaut und sein Hash verglichen.
-                    Stimme oder gelöschte Quelle: Antwort verworfen,
-                    <span class="mono">source_changed</span> (E7, E8)
+                    <b>Hash nach der Inferenz verglichen:</b> Stimme oder gelöschte Quelle verwirft
+                    die Antwort, <span class="mono">source_changed</span> (E7, E8)
                   </li>
                   <li style="margin: 0 0 12px">
                     <b>Preis unter Voting:</b> Jede Stimme zwischen Aufbau und Nachprüfung verwirft
-                    die Antwort (belegt). Wie oft das passiert, ist nicht belastbar gemessen: Modell
-                    M7 verfehlt sein Kriterium, Empfehlung zurückgehalten (1C-017)
+                    die Antwort (belegt). Wie oft, ist nicht belastbar gemessen (M7 verfehlt,
+                    Empfehlung zurückgehalten, <span class="nowrap">1C-017</span>)
                   </li>
                   <li style="margin: 0 0 12px">
-                    <b>Befund:</b> Bei laufender Blitzlicht-Runde außer
-                    <span class="mono">TEMPO</span> hängt der Hash von der Uhrzeit ab:
+                    <b>Befund Blitzlicht:</b> Runde läuft, Typ außer
+                    <span class="mono">TEMPO</span>: Hash hängt an der Uhrzeit,
                     <span class="mono">YESNO</span> 5 von 5
                     <span class="mono">source_changed</span> ohne Datenänderung (geprüft: YESNO;
                     andere Typen laut Code)
@@ -3266,20 +1860,27 @@
                 <div
                   style="
                     border-left: 6px solid var(--petrol);
-                    padding: 6px 0 6px 24px;
-                    margin: 0 0 26px;
+                    padding: 4px 0 4px 24px;
+                    margin: 0 0 24px;
                   "
                 >
                   <div
-                    class="messwert"
+                    class="kennzahl"
                     style="font-size: 64px; line-height: 1.05; color: var(--tinte)"
                   >
-                    0,03<span style="font-size: 32px"> %</span>
+                    0,03<span class="einheit" style="font-size: 29px"> %</span>
                   </div>
-                  <div style="font-size: 26px; margin-top: 8px">
+                  <div style="font-size: 26px; line-height: 1.25; margin-top: 8px">
                     Zeitanteil der Nachprüfung am Auftrag
                   </div>
-                  <div class="mono" style="font-size: var(--s-min); color: var(--gedaempft)">
+                  <div
+                    style="
+                      font-size: var(--s-min);
+                      line-height: 1.3;
+                      margin-top: 4px;
+                      color: var(--gedaempft);
+                    "
+                  >
                     Laptop · def56700
                   </div>
                 </div>
@@ -3289,25 +1890,17 @@
                 </p>
               </div>
             </div>
-            <p
-              style="
-                position: absolute;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                margin: 0;
-                font-size: var(--s-min);
-                color: var(--gedaempft);
-              "
-            >
-              Beleg: ADR 1C-010 (bleibt), ADR 1C-017 (Voting), ADR 1C-016 (Blitzlicht: empfohlen,
-              nicht umgesetzt; Issue #18), Nachlauf N3, N5; Teil 2 E7, E8
+            <p class="beleg">
+              Beleg: ADR <span class="nowrap">1C-010</span> (bleibt), ADR
+              <span class="nowrap">1C-017</span> (Voting), ADR
+              <span class="nowrap">1C-016</span> (Blitzlicht: empfohlen, nicht umgesetzt; Issue
+              #18), Nachlauf N3, N5; Teil 2 E7, E8
             </p>
           </div>
         </div>
         <div class="folie-fuss">
-          22 / 26 · Nachlauf N3, N5 · Laptop (ThinkPad P50) · def56700; ADR 1C-017 · Laptop und PC ·
-          9f230abc; E7, E8: evidenz/1C/2026-10-24-teil2.md · Laptop · 248029dc (Test-Runtime)
+          22 / 26 · Nachlauf 1C · def56700 · Laptop · ADR 1C-017: 9f230abc · E7, E8: Teil 2,
+          248029dc
         </div>
       </section>
       <section
@@ -3366,8 +1959,8 @@
         </div>
         <h1 class="folie-titel">38 geprüfte Antworten, keine besteht das Gate</h1>
         <div class="folie-flaeche">
-          <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
-            <div style="display: grid; grid-template-columns: 780px 1fr; column-gap: 44px">
+          <div class="flaeche-inhalt">
+            <div style="display: grid; grid-template-columns: 770px 1fr; column-gap: 50px">
               <div>
                 <p style="margin: 0 0 8px; font-size: var(--s-min); color: var(--gedaempft)">
                   Echte Antwort des Modells auf Auftrag 2, gekürzt, im Original
@@ -3394,37 +1987,50 @@
                     border: var(--linie-min) solid var(--rot);
                     border-radius: 8px;
                     padding: 8px 18px;
-                    margin-bottom: 12px;
+                    margin-bottom: 18px;
                   "
                 >
                   <span class="ablehnung" style="font-weight: 800; font-size: 26px"
                     >Verworfen.</span
                   >
                   <span style="font-size: 22px"
-                    >0 von 4 Aussagen in der Form „Stichwort: Text“ (qaSummaryQuality.ts)</span
+                    >0 von 4 Aussagen in der Form „Stichwort: Text“ (<span class="nowrap"
+                      >qaSummaryQuality.ts</span
+                    >)</span
                   >
                 </div>
-                <div
-                  style="
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    column-gap: 24px;
-                    font-size: 22px;
-                    line-height: 1.3;
-                  "
-                >
-                  <div>
-                    <span class="etikett etikett-1b">1B</span>
-                    <span class="messwert" style="font-size: 32px">10 von 10</span><br />verworfen
-                    (<span class="mono">a19ca70f</span>)
-                  </div>
-                  <div>
-                    <span class="etikett etikett-1c">1C</span>
-                    <span class="messwert" style="font-size: 32px">0 von 28</span><br />bestehen
-                    (<span class="mono">def56700</span>)
+                <div style="display: flex; align-items: center; gap: 26px">
+                  <span
+                    class="kennzahl ablehnung"
+                    style="font-size: 84px; line-height: 1; white-space: nowrap"
+                    >0 / 38</span
+                  >
+                  <div style="font-size: 22px; line-height: 1.45; color: var(--text-2)">
+                    <p
+                      style="
+                        margin: 0 0 2px;
+                        font-size: 28px;
+                        font-weight: 600;
+                        color: var(--tinte);
+                      "
+                    >
+                      bestehen das Gate
+                    </p>
+                    <p style="margin: 0">
+                      <span class="etikett etikett-1b">1B</span> 10 von 10 verworfen (<span
+                        class="mono"
+                        >a19ca70f</span
+                      >)
+                    </p>
+                    <p style="margin: 4px 0 0">
+                      <span class="etikett etikett-1c">1C</span> 0 von 28 bestehen (<span
+                        class="mono"
+                        >def56700</span
+                      >)
+                    </p>
                   </div>
                 </div>
-                <p style="margin: 10px 0 0; font-size: 22px; line-height: 1.3">
+                <p style="margin: 12px 0 0; font-size: 22px; line-height: 1.35">
                   Geltung: ein Modell, eine Fixture, Code nach v1.4.0. <b>Vor v1.4.0</b> (<span
                     class="mono"
                     >9f230abc</span
@@ -3443,70 +2049,75 @@
                   style="
                     flex: none;
                     border: var(--linie-min) solid var(--linie);
-                    border-radius: 10px;
+                    border-radius: 14px;
                     background: var(--grund);
-                    padding: 12px 16px;
+                    box-shadow:
+                      0 2px 4px rgb(22 32 44 / 0.12),
+                      0 8px 24px rgb(22 32 44 / 0.1);
+                    overflow: hidden;
                     font-size: 22px;
-                    line-height: 1.28;
+                    line-height: 1.3;
                   "
                 >
                   <p
                     style="
-                      margin: 0 0 6px;
-                      font-size: var(--s-min);
-                      color: var(--rot);
+                      margin: 0;
+                      padding: 12px 18px;
+                      background: var(--raster);
                       font-weight: 700;
+                      font-size: 24px;
                     "
                   >
-                    Nachbau, keine Bildschirmaufnahme
+                    Wichtige offene Fragen
                   </p>
-                  <p style="margin: 0 0 6px; font-weight: 700">Wichtige offene Fragen</p>
-                  <ul style="margin: 0 0 8px; padding-left: 24px">
-                    <li>Können wir mehr Beispiele zur linearen Regression bearbeiten?</li>
-                    <li>Ist Kapitel 4 klausurrelevant?</li>
-                    <li>Müssen wir den vierten Abschnitt für die Prüfung lernen?</li>
-                  </ul>
-                  <p style="margin: 0 0 2px; font-weight: 700">Hinweise</p>
-                  <p style="margin: 0; color: var(--text-2)">
-                    Eine ausführliche Zusammenfassung war diesmal nicht möglich. Deshalb werden die
-                    wichtigsten Fragen im Wortlaut angezeigt.
-                  </p>
+                  <div style="padding: 12px 18px 14px">
+                    <ul style="margin: 0 0 10px; padding-left: 24px">
+                      <li>Können wir mehr Beispiele zur linearen Regression bearbeiten?</li>
+                      <li>Ist Kapitel 4 klausurrelevant?</li>
+                      <li>Müssen wir den vierten Abschnitt für die Prüfung lernen?</li>
+                    </ul>
+                    <p style="margin: 0 0 2px; font-weight: 700">Hinweise</p>
+                    <p style="margin: 0; color: var(--text-2)">
+                      Eine ausführliche Zusammenfassung war diesmal nicht möglich. Deshalb werden
+                      die wichtigsten Fragen im Wortlaut angezeigt.
+                    </p>
+                  </div>
                 </div>
                 <!--/nachbau-->
                 <figcaption
                   style="
-                    margin-top: 8px;
+                    margin-top: 12px;
                     font-size: var(--s-min);
-                    line-height: 1.3;
+                    line-height: 1.35;
                     color: var(--gedaempft);
                   "
                 >
-                  Fragen nach der Regel des Fallbacks aus der echten Nutzlast (1C-Nachlauf);
-                  Überschrift und Hinweis wörtlich aus der App. Den Grund erfährt die Lehrperson
-                  nicht.
+                  <span
+                    style="
+                      display: inline-block;
+                      padding: 0 10px;
+                      margin-right: 8px;
+                      border: var(--linie-min) solid var(--linie);
+                      border-radius: 999px;
+                      color: var(--text-2);
+                      font-weight: 600;
+                    "
+                    >Nachbau, keine Bildschirmaufnahme</span
+                  >Fragen aus der echten Nutzlast, Überschrift und Hinweis wörtlich aus der App; den
+                  Grund erfährt die Lehrperson nicht.
                 </figcaption>
               </figure>
             </div>
-            <p
-              style="
-                position: absolute;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                margin: 0;
-                font-size: var(--s-min);
-                color: var(--gedaempft);
-              "
-            >
-              Beleg: ADR 1C-018 (empfohlen: Instruktion, Grammatik und Gate abstimmen, nicht
-              umgesetzt; Issue #13), ADR 1C-019, Laufprotokoll 1B, Befund
+            <p class="beleg">
+              Beleg: ADR <span class="nowrap">1C-018</span> (empfohlen: Instruktion, Grammatik und
+              Gate abstimmen, nicht umgesetzt; Issue #13), ADR <span class="nowrap">1C-019</span>,
+              Laufprotokoll 1B, Befund
             </p>
           </div>
         </div>
         <div class="folie-fuss">
-          23 / 26 · evidenz/1B/messung/2026-11-15-abgelehnte-antwort.json (Auftrag 2); Lauf 1B ·
-          ThinkPad P50 · 8e9d1317; Nachlauf · Laptop · def56700; ADR 1C-018 · 9f230abc; Nachbau:
-          Nutzlast labor.quiet.runs[1], Hinweis qaSummaryExtractive.ts
+          23 / 26 · Lauf 1B · 8e9d1317 · ThinkPad P50, Auftrag 2 · Nachlauf 1C · def56700 · Laptop ·
+          Nachbau: qaSummaryExtractive.ts
         </div>
       </section>
       <section
@@ -3517,116 +2128,119 @@
       >
         <h1 class="folie-titel">Entscheidung und Fragen</h1>
         <div class="folie-flaeche">
-          <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
+          <div class="flaeche-inhalt">
             <div
               style="
                 display: grid;
-                grid-template-columns: 880px 1fr;
-                column-gap: 36px;
+                grid-template-columns: 900px 1fr;
+                column-gap: 40px;
                 font-size: 22px;
-                line-height: 1.28;
+                line-height: 1.3;
               "
             >
-              <div style="border-left: 6px solid var(--petrol); padding-left: 16px">
-                <span class="etikett etikett-1c">1C</span>
-                <span style="color: var(--gedaempft)"
-                  >Kosten, Risiko, Betrieb; Änderungen empfohlen, nicht umgesetzt</span
-                >
-                <ul style="margin: 6px 0 0; padding-left: 22px">
-                  <li style="margin: 0 0 4px">
-                    <b>Bleibt (1C-010 bis 1C-013):</b>
+              <div style="border-left: 6px solid var(--petrol); padding-left: 18px">
+                <p style="margin: 0 0 6px">
+                  <span class="etikett etikett-1c">1C</span>
+                  <span style="color: var(--gedaempft)"
+                    >Kosten, Risiko, Betrieb; Änderungen empfohlen, nicht umgesetzt</span
+                  >
+                </p>
+                <ul style="margin: 0; padding: 0; list-style: none">
+                  <li style="margin: 0 0 3px">
+                    <b style="font-weight: 600"
+                      >Bleibt (<span class="nowrap">1C-010</span> bis
+                      <span class="nowrap">1C-013</span>):</b
+                    >
                     <span style="color: var(--text-2)"
                       >wenig Zeit; Risiko: unter Voting verwirft jede Stimme während der Inferenz
-                      die Antwort, Häufigkeit offen (1C-017)</span
+                      die Antwort, Häufigkeit offen (<span class="nowrap">1C-017</span>)</span
                     >
                   </li>
-                  <li style="margin: 0 0 4px">
-                    <b>Gate (1C-018):</b>
+                  <li style="margin: 0 0 3px">
+                    <b style="font-weight: 600">Gate (<span class="nowrap">1C-018</span>):</b>
                     <span style="color: var(--text-2)"
-                      >Abnahmemessung nötig; Risiko: lockere Schwelle zeigt Metaaussagen</span
+                      >Abnahmemessung; Risiko: lockere Schwelle zeigt Metaaussagen</span
                     >
                   </li>
-                  <li style="margin: 0 0 4px">
-                    <b>Timeout (1C-023):</b>
+                  <li style="margin: 0 0 3px">
+                    <b style="font-weight: 600">Timeout (<span class="nowrap">1C-023</span>):</b>
                     <span style="color: var(--text-2)"
                       >eine Kalibrierung je Host; Slot länger belegt</span
                     >
                   </li>
-                  <li style="margin: 0 0 4px">
-                    <b>Cache (1C-024):</b>
+                  <li style="margin: 0 0 3px">
+                    <b style="font-weight: 600">Cache (<span class="nowrap">1C-024</span>):</b>
                     <span style="color: var(--text-2)"
-                      >eine Zeile im Entry-Point; Risiko: nur ein Slot und ein Auftragstyp
-                      gemessen</span
+                      >eine Zeile; Risiko: nur ein Slot und ein Auftragstyp gemessen</span
                     >
                   </li>
-                  <li style="margin: 0 0 4px">
-                    <b>Zählung (1C-014):</b>
+                  <li style="margin: 0 0 3px">
+                    <b style="font-weight: 600">Zählung (<span class="nowrap">1C-014</span>):</b>
                     <span style="color: var(--text-2)"
                       >Änderung am Packer; Risiko: Fenster läuft über</span
                     >
                   </li>
-                  <li style="margin: 0 0 4px">
-                    <b>Snapshot, Blitzlicht (1C-015, 1C-016):</b>
+                  <li style="margin: 0 0 3px">
+                    <b style="font-weight: 600"
+                      >Snapshot, Blitzlicht (<span class="nowrap">1C-015</span>,
+                      <span class="nowrap">1C-016</span>):</b
+                    >
                     <span style="color: var(--text-2)"
-                      >klein; Risiko: Fenster beschreibt die Rundenlaufzeit nicht mehr</span
+                      >klein; Risiko: Fenster ohne Rundenlaufzeit</span
                     >
                   </li>
                 </ul>
               </div>
-              <div style="border-left: 6px solid var(--bernstein); padding-left: 16px">
-                <span class="etikett etikett-1b">1B</span>
-                <ul style="margin: 6px 0 0; padding-left: 22px">
-                  <li style="margin: 0 0 4px">
-                    <b>Topologie bleibt:</b>
-                    <span style="color: var(--text-2)"
-                      >Hebel am Inferenz-Host; Aufwand der zweiten Rolle: Niklas</span
-                    >
+              <div style="border-left: 6px solid var(--bernstein); padding-left: 18px">
+                <p style="margin: 0 0 6px">
+                  <span class="etikett etikett-1b">1B</span>
+                  <span style="color: var(--gedaempft)">Konfiguration</span>
+                </p>
+                <ul style="margin: 0; padding: 0; list-style: none">
+                  <li style="margin: 0 0 3px">
+                    <b style="font-weight: 600">Topologie bleibt:</b>
+                    <span style="color: var(--text-2)">Hebel am Inferenz-Host</span>
                   </li>
-                  <li style="margin: 0 0 4px">
-                    <b>Logs (#19, #20):</b>
+                  <li style="margin: 0 0 3px">
+                    <b style="font-weight: 600">Aufwand der zweiten Rolle:</b>
+                    <span style="color: var(--text-2)">Niklas</span>
+                  </li>
+                  <li style="margin: 0 0 3px">
+                    <b style="font-weight: 600">Logs (#19, #20):</b>
                     <span style="color: var(--text-2)"
                       >Kosten: Logzeilen; empfohlen, nicht umgesetzt</span
                     >
                   </li>
-                  <li style="margin: 0 0 4px">
-                    <b>Vorher:</b>
+                  <li style="margin: 0 0 3px">
+                    <b style="font-weight: 600">Vorher:</b>
                     <span style="color: var(--text-2)">Gate passend zum Modell (#13)</span>
                   </li>
                 </ul>
               </div>
             </div>
-            <p style="margin: 16px 0 4px; font-weight: 700; font-size: 24px; color: var(--blau)">
+            <p style="margin: 30px 0 8px; font-weight: 700; font-size: 28px; color: var(--blau)">
               Zur Diskussion
             </p>
-            <ol style="margin: 0; padding-left: 34px; font-size: 24px; line-height: 1.3">
-              <li>
+            <ol style="margin: 0; padding-left: 36px; font-size: 26px; line-height: 1.35">
+              <li style="margin: 0 0 8px">
                 Nach v1.4.0 besteht keine der 38 geprüften Antworten das Gate; davor (andere
                 Instruktion, kein Gate) endeten 19 von 20 mit Modellzusammenfassung. Prüft das Gate
                 das Richtige, wenn die Antworten auch inhaltlich verfehlt sind?
               </li>
-              <li>Wer legt den Timeout fest: das Release oder der Betreiber am Inferenz-Host?</li>
+              <li style="margin: 0 0 8px">
+                Wer legt den Timeout fest: das Release oder der Betreiber am Inferenz-Host?
+              </li>
               <li>Reicht ein privates Netz mit Token über HTTP als Schutz für die zweite Rolle?</li>
             </ol>
-            <p
-              style="
-                position: absolute;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                margin: 0;
-                font-size: 26px;
-                font-weight: 700;
-              "
-            >
+            <p style="margin: auto 0 0; font-size: 28px; font-weight: 700">
               Und wenn der zweite Host langsam ist oder ausfällt?
               <span style="color: var(--blau)">→ Niklas</span>
             </p>
           </div>
         </div>
         <div class="folie-fuss">
-          24 / 26 · 1C-ergebnis.md, Abschnitt 5, ADRs 1C-010 bis 1C-024, Abschnitt Folgen (Laptop
-          und PC · 9f230abc; Laptop · def56700); 1B-ergebnis.md, Entscheidung (ThinkPad P50 ·
-          8e9d1317)
+          24 / 26 · 1C-ergebnis.md, ADRs 1C-010 bis 1C-024 (Folgen) · 1B-ergebnis.md, Entscheidung ·
+          8e9d1317
         </div>
       </section>
       <section
@@ -3653,18 +2267,19 @@
       >
         <h1 class="folie-titel">Kurzfazit Thema 1</h1>
         <div class="folie-flaeche">
-          <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
+          <div class="flaeche-inhalt">
             <p
               style="
                 position: absolute;
                 right: 0;
-                top: -50px;
+                top: -150px;
                 margin: 0;
-                padding: 4px 14px;
-                border: var(--linie-min) dashed var(--rot);
-                color: var(--rot);
+                padding: 0 10px;
+                border: var(--linie-min) dashed var(--linie);
+                border-radius: 6px;
+                color: var(--gedaempft);
                 font-size: var(--s-min);
-                font-weight: 700;
+                font-weight: 600;
               "
             >
               Entwurf, mit Niklas abzustimmen
@@ -3676,7 +2291,7 @@
                 column-gap: 40px;
                 font-size: 26px;
                 line-height: 1.4;
-                padding-top: 60px;
+                padding-top: 20px;
               "
             >
               <div style="border-top: 6px solid var(--blau); padding-top: 14px">
@@ -3702,24 +2317,12 @@
                 </p>
               </div>
             </div>
-            <p
-              style="
-                position: absolute;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                margin: 0;
-                font-size: 28px;
-                font-weight: 600;
-              "
-            >
+            <p style="margin: auto 0 0; font-size: 28px; font-weight: 600">
               Gemeinsam: [Satz zur Leitfrage von Thema 1, mit Niklas]
             </p>
           </div>
         </div>
-        <div class="folie-fuss">
-          26 / 26 · 1B-ergebnis.md, 1C-ergebnis.md (Kurzantwort, Verlauf 9f230abc); 1A von Niklas
-        </div>
+        <div class="folie-fuss">26 / 26 · 1B-ergebnis.md, 1C-ergebnis.md · 1A: Niklas</div>
       </section>
       <section
         class="folie"
@@ -3729,9 +2332,9 @@
       >
         <h1 class="folie-titel">Reserve: Kalibrierung des Timeouts</h1>
         <div class="folie-flaeche">
-          <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
-            <p style="margin: 0 0 26px; font-size: 30px; font-weight: 600; color: var(--text-2)">
-              <span class="etikett etikett-1c">1C</span> Warum liefen die Labore mit 300 s statt 90
+          <div class="flaeche-inhalt">
+            <p class="folie-frage">
+              <span class="etikett etikett-1c">1C</span>Warum liefen die Labore mit 300 s statt 90
               s?
             </p>
             <div style="display: grid; grid-template-columns: 820px 1fr; column-gap: 70px">
@@ -3751,7 +2354,7 @@
                   </li>
                   <li style="margin: 0 0 12px">
                     <span class="etikett etikett-1b">1B</span> I = 202 s, nach der Regel aus ADR
-                    1B-005 ebenfalls 300 s
+                    <span class="nowrap">1B-005</span> ebenfalls 300 s
                   </li>
                   <li style="margin: 0 0 12px">
                     Ab Werk v1.4.0 90 s (v1.3.0: 8 s); 300 s ist die Obergrenze des Produkts, offen
@@ -3763,42 +2366,42 @@
                 <div
                   style="
                     border-left: 6px solid var(--petrol);
-                    padding: 6px 0 6px 24px;
-                    margin: 0 0 26px;
+                    padding: 4px 0 4px 24px;
+                    margin: 0 0 24px;
                   "
                 >
                   <div
-                    class="messwert"
+                    class="kennzahl"
                     style="font-size: 84px; line-height: 1.05; color: var(--tinte)"
                   >
-                    196<span style="font-size: 42px"> s</span>
+                    196<span class="einheit" style="font-size: 38px"> s</span>
                   </div>
-                  <div style="font-size: 26px; margin-top: 8px">Kalibrierung Laptop (1C)</div>
-                  <div class="mono" style="font-size: var(--s-min); color: var(--gedaempft)">
+                  <div style="font-size: 26px; line-height: 1.25; margin-top: 8px">
+                    Kalibrierung Laptop (1C)
+                  </div>
+                  <div
+                    style="
+                      font-size: var(--s-min);
+                      line-height: 1.3;
+                      margin-top: 4px;
+                      color: var(--gedaempft);
+                    "
+                  >
                     Laptop · Wandzeit, vor dem ersten Laborlauf
                   </div>
                 </div>
               </div>
             </div>
-            <p
-              style="
-                position: absolute;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                margin: 0;
-                font-size: var(--s-min);
-                color: var(--gedaempft);
-              "
-            >
-              Beleg: ADR 1C-020 (Laptop und PC), ADR 1C-023, ADR 1B-005; Laufprotokoll 1B,
-              Kalibrierung
+            <p class="beleg">
+              Beleg: ADR <span class="nowrap">1C-020</span> (Laptop und PC), ADR
+              <span class="nowrap">1C-023</span>, ADR <span class="nowrap">1B-005</span>;
+              Laufprotokoll 1B, Kalibrierung
             </p>
           </div>
         </div>
         <div class="folie-fuss">
-          Reserve R1 · adr/1C-020-timeout-300-s-und-kalibrierungsregel.md (Laptop; PC · 9f230abc);
-          evidenz/1B/2026-11-13-lauf.md, Kalibrierung (ThinkPad P50 · 3b2aa5e6)
+          Reserve R1 · ADR 1C-020 · Laptop, PC 9f230abc · Lauf 1B, Kalibrierung · 3b2aa5e6 ·
+          ThinkPad P50
         </div>
       </section>
       <section
@@ -3809,10 +2412,10 @@
       >
         <h1 class="folie-titel">Reserve: Kontrolle C0, Strecke gegen lokal</h1>
         <div class="folie-flaeche">
-          <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
-            <p style="margin: 0 0 26px; font-size: 30px; font-weight: 600; color: var(--text-2)">
-              <span class="etikett etikett-1b">1B</span> Ist die Strecke zwischen den Hosts
-              langsamer als ein Aufruf im selben Host?
+          <div class="flaeche-inhalt">
+            <p class="folie-frage">
+              <span class="etikett etikett-1b">1B</span>Ist die Strecke zwischen den Hosts langsamer
+              als ein Aufruf im selben Host?
             </p>
             <div style="display: grid; grid-template-columns: 760px 1fr; column-gap: 70px">
               <div>
@@ -3829,41 +2432,39 @@
                 <div
                   style="
                     border-left: 6px solid var(--bernstein);
-                    padding: 6px 0 6px 24px;
-                    margin: 0 0 26px;
+                    padding: 4px 0 4px 24px;
+                    margin: 0 0 24px;
                   "
                 >
                   <div
-                    class="messwert"
+                    class="kennzahl"
                     style="font-size: 84px; line-height: 1.05; color: var(--tinte)"
                   >
-                    −2,0<span style="font-size: 42px"> ms</span>
+                    −2,0<span class="einheit" style="font-size: 38px"> ms</span>
                   </div>
-                  <div style="font-size: 26px; margin-top: 8px">Differenz der Mediane</div>
-                  <div class="mono" style="font-size: var(--s-min); color: var(--gedaempft)">
+                  <div style="font-size: 26px; line-height: 1.25; margin-top: 8px">
+                    Differenz der Mediane
+                  </div>
+                  <div
+                    style="
+                      font-size: var(--s-min);
+                      line-height: 1.3;
+                      margin-top: 4px;
+                      color: var(--gedaempft);
+                    "
+                  >
                     Nachtrag · 9e111d35
                   </div>
                 </div>
               </div>
             </div>
-            <p
-              style="
-                position: absolute;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                margin: 0;
-                font-size: var(--s-min);
-                color: var(--gedaempft);
-              "
-            >
-              Beleg: Laufprotokoll 1B, Nachtrag M2; ADR 1B-011 (zwei Kontrollen namens C0)
+            <p class="beleg">
+              Beleg: Laufprotokoll 1B, Nachtrag M2; ADR <span class="nowrap">1B-011</span> (zwei
+              Kontrollen namens C0)
             </p>
           </div>
         </div>
-        <div class="folie-fuss">
-          Reserve R2 · evidenz/1B/2026-11-13-lauf.md, Nachtrag · ThinkPad P50 · 9e111d35
-        </div>
+        <div class="folie-fuss">Reserve R2 · Nachtrag 1B · 9e111d35 · ThinkPad P50</div>
       </section>
       <section
         class="folie"
@@ -3873,9 +2474,9 @@
       >
         <h1 class="folie-titel">Reserve: Ausfall B0</h1>
         <div class="folie-flaeche">
-          <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
-            <p style="margin: 0 0 26px; font-size: 30px; font-weight: 600; color: var(--text-2)">
-              <span class="etikett etikett-1b">1B</span> Was passiert, wenn die zweite Rolle fehlt?
+          <div class="flaeche-inhalt">
+            <p class="folie-frage">
+              <span class="etikett etikett-1b">1B</span>Was passiert, wenn die zweite Rolle fehlt?
             </p>
             <div style="display: grid; grid-template-columns: 760px 1fr; column-gap: 70px">
               <div>
@@ -3893,41 +2494,36 @@
                 <div
                   style="
                     border-left: 6px solid var(--bernstein);
-                    padding: 6px 0 6px 24px;
-                    margin: 0 0 26px;
+                    padding: 4px 0 4px 24px;
+                    margin: 0 0 24px;
                   "
                 >
                   <div
-                    class="messwert"
+                    class="kennzahl"
                     style="font-size: 84px; line-height: 1.05; color: var(--tinte)"
                   >
-                    88,5<span style="font-size: 42px"> ms</span>
+                    88,5<span class="einheit" style="font-size: 38px"> ms</span>
                   </div>
-                  <div style="font-size: 26px; margin-top: 8px">T_job, Median</div>
-                  <div class="mono" style="font-size: var(--s-min); color: var(--gedaempft)">
+                  <div style="font-size: 26px; line-height: 1.25; margin-top: 8px">
+                    T_job, Median
+                  </div>
+                  <div
+                    style="
+                      font-size: var(--s-min);
+                      line-height: 1.3;
+                      margin-top: 4px;
+                      color: var(--gedaempft);
+                    "
+                  >
                     Nachtrag · 9e111d35
                   </div>
                 </div>
               </div>
             </div>
-            <p
-              style="
-                position: absolute;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                margin: 0;
-                font-size: var(--s-min);
-                color: var(--gedaempft);
-              "
-            >
-              Beleg: Laufprotokoll 1B, Nachtrag M3
-            </p>
+            <p class="beleg">Beleg: Laufprotokoll 1B, Nachtrag M3</p>
           </div>
         </div>
-        <div class="folie-fuss">
-          Reserve R3 · evidenz/1B/2026-11-13-lauf.md, Nachtrag · ThinkPad P50 · 9e111d35
-        </div>
+        <div class="folie-fuss">Reserve R3 · Nachtrag 1B · 9e111d35 · ThinkPad P50</div>
       </section>
       <section
         class="folie"
@@ -3937,10 +2533,10 @@
       >
         <h1 class="folie-titel">Reserve: Kaltläufe, n = 5</h1>
         <div class="folie-flaeche">
-          <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
-            <p style="margin: 0 0 26px; font-size: 30px; font-weight: 600; color: var(--text-2)">
-              <span class="etikett etikett-1b">1B</span> Gilt die Aussage auch mit frisch
-              gestarteter Runtime?
+          <div class="flaeche-inhalt">
+            <p class="folie-frage">
+              <span class="etikett etikett-1b">1B</span>Gilt die Aussage auch mit frisch gestarteter
+              Runtime?
             </p>
             <div style="display: grid; grid-template-columns: 760px 1fr; column-gap: 70px">
               <div>
@@ -3959,41 +2555,41 @@
                 <div
                   style="
                     border-left: 6px solid var(--bernstein);
-                    padding: 6px 0 6px 24px;
-                    margin: 0 0 26px;
+                    padding: 4px 0 4px 24px;
+                    margin: 0 0 24px;
                   "
                 >
                   <div
-                    class="messwert"
+                    class="kennzahl"
                     style="font-size: 84px; line-height: 1.05; color: var(--tinte)"
                   >
-                    200,5<span style="font-size: 42px"> s</span>
+                    200,5<span class="einheit" style="font-size: 38px"> s</span>
                   </div>
-                  <div style="font-size: 26px; margin-top: 8px">T_job kalt, Median</div>
-                  <div class="mono" style="font-size: var(--s-min); color: var(--gedaempft)">
+                  <div style="font-size: 26px; line-height: 1.25; margin-top: 8px">
+                    T_job kalt, Median
+                  </div>
+                  <div
+                    style="
+                      font-size: var(--s-min);
+                      line-height: 1.3;
+                      margin-top: 4px;
+                      color: var(--gedaempft);
+                    "
+                  >
                     n = 5 · 9e111d35
                   </div>
                 </div>
               </div>
             </div>
-            <p
-              style="
-                position: absolute;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                margin: 0;
-                font-size: var(--s-min);
-                color: var(--gedaempft);
-              "
-            >
-              Beleg: Laufprotokoll 1B, Nachtrag M4; ADR 1B-011 (Gruppen kalt und warm)
+            <p class="beleg">
+              Beleg: Laufprotokoll 1B, Nachtrag M4; ADR <span class="nowrap">1B-011</span> (Gruppen
+              kalt und warm)
             </p>
           </div>
         </div>
         <div class="folie-fuss">
-          Reserve R4 · evidenz/1B/2026-11-13-lauf.md, Nachtrag · ThinkPad P50 · 9e111d35; warm und
-          Auftrag 1: evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317
+          Reserve R4 · Nachtrag 1B · 9e111d35 · ThinkPad P50 · warm: Lauf 1B · 8e9d1317 · ThinkPad
+          P50
         </div>
       </section>
       <section
@@ -4004,10 +2600,10 @@
       >
         <h1 class="folie-titel">Reserve: Gültigkeitsgrenzen</h1>
         <div class="folie-flaeche">
-          <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
+          <div class="flaeche-inhalt">
             <div style="display: grid; grid-template-columns: 1fr 1fr; column-gap: 50px">
               <div>
-                <span class="etikett etikett-1c">1C</span>
+                <p style="margin: 0 0 14px"><span class="etikett etikett-1c">1C</span></p>
                 <ul style="margin: 0; padding-left: 30px; font-size: 22px; line-height: 1.38">
                   <li style="margin: 0 0 12px">
                     Laborrechner mit CPU-Inferenz, ein Slot, Qwen3-4B Q4_K_M; ein Rechner über
@@ -4026,7 +2622,7 @@
                 </ul>
               </div>
               <div>
-                <span class="etikett etikett-1b">1B</span>
+                <p style="margin: 0 0 14px"><span class="etikett etikett-1b">1B</span></p>
                 <ul style="margin: 0; padding-left: 30px; font-size: 22px; line-height: 1.38">
                   <li style="margin: 0 0 12px">
                     Ein Laptop für beide „Hosts“, die Kerne teilen sich
@@ -4047,26 +2643,15 @@
                 </ul>
               </div>
             </div>
-            <p
-              style="
-                position: absolute;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                margin: 0;
-                font-size: var(--s-min);
-                color: var(--gedaempft);
-              "
-            >
+            <p class="beleg">
               Beleg: Labor-Design 1C, Abschnitt 7; Nachlauf, Gültigkeitsgrenzen; Laufprotokoll 1B,
-              Ergebnis je Auftrag und Beobachtungen; ADR 1B-011
+              Ergebnis je Auftrag und Beobachtungen; ADR <span class="nowrap">1B-011</span>
             </p>
           </div>
         </div>
         <div class="folie-fuss">
-          Reserve R5 · evidenz/1C/2026-11-09-labor-nachlauf.md (Laptop · def56700);
-          evidenz/1B/2026-11-13-lauf.md (ThinkPad P50 · 8e9d1317); Kaltwert:
-          evidenz/1B/2026-11-13-lauf.md, Nachtrag · ThinkPad P50 · 9e111d35
+          Reserve R5 · Nachlauf 1C · def56700 · Laptop · Lauf 1B · 8e9d1317 · ThinkPad P50 ·
+          Kaltwert: Nachtrag 9e111d35
         </div>
       </section>
       <section
@@ -4077,7 +2662,7 @@
       >
         <h1 class="folie-titel">Reserve: Anteil der KI</h1>
         <div class="folie-flaeche">
-          <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
+          <div class="flaeche-inhalt">
             <div style="display: grid; grid-template-columns: 1fr 1fr; column-gap: 50px">
               <div>
                 <p style="margin: 0 0 12px; font-weight: 700; font-size: 28px">
@@ -4087,7 +2672,7 @@
                   <li style="margin: 0 0 12px">
                     Hypothesen und Schwellen vor den gewerteten Läufen freigegeben; Ausnahmen:
                     M7b/M7c ohne vorherige Freigabe, T3.1 exploratorisch, 1B-Leitfrage nach dem Lauf
-                    bestätigt (ADR 1B-011)
+                    bestätigt (ADR <span class="nowrap">1B-011</span>)
                   </li>
                   <li style="margin: 0 0 12px">
                     Läufe angestoßen, Wiederholung nach Störung entschieden
@@ -4115,25 +2700,14 @@
                 </ul>
               </div>
             </div>
-            <p
-              style="
-                position: absolute;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                margin: 0;
-                font-size: var(--s-min);
-                color: var(--gedaempft);
-              "
-            >
-              Beleg: 1C-eigenanteil.md, 1B-eigenanteil.md
+            <p class="beleg">
+              Beleg: <span class="nowrap">1C-eigenanteil.md</span>,
+              <span class="nowrap">1B-eigenanteil.md</span>
             </p>
           </div>
         </div>
         <div class="folie-fuss">
-          Reserve R6 · 1C-eigenanteil.md (Autorenprüfung); adr/1B-011-zeitbegriffe-und-leitfrage.md;
-          1B-eigenanteil.md (Stand 2026-11-14) · Arbeit an Laptop (ThinkPad P50) und PC (i7-8700) ·
-          Baselines 9f230abc, def56700, a19ca70f
+          Reserve R6 · ADR 1B-011 · Arbeit an Laptop und PC · Baselines 9f230abc, def56700, a19ca70f
         </div>
       </section>
       <section
@@ -4144,18 +2718,26 @@
       >
         <h1 class="folie-titel">Reserve: ADR-Zählung 1C</h1>
         <div class="folie-flaeche">
-          <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
+          <div class="flaeche-inhalt">
             <table style="border-collapse: collapse; font-size: 26px; width: 100%">
               <tr>
                 <td style="padding: 12px 20px 12px 0; font-weight: 700; width: 300px">
                   Beibehaltung
                 </td>
                 <td>
-                  <span class="mono" style="white-space: nowrap">1C-010</span>,
-                  <span class="mono" style="white-space: nowrap">1C-011</span>,
-                  <span class="mono" style="white-space: nowrap">1C-012</span>,
-                  <span class="mono" style="white-space: nowrap">1C-013</span>; dazu
-                  <span class="mono">1C-019</span> nur für <span class="mono">9f230abc</span>
+                  <span class="mono" style="white-space: nowrap"
+                    ><span class="nowrap">1C-010</span></span
+                  >,
+                  <span class="mono" style="white-space: nowrap"
+                    ><span class="nowrap">1C-011</span></span
+                  >,
+                  <span class="mono" style="white-space: nowrap"
+                    ><span class="nowrap">1C-012</span></span
+                  >,
+                  <span class="mono" style="white-space: nowrap"
+                    ><span class="nowrap">1C-013</span></span
+                  >; dazu <span class="mono"><span class="nowrap">1C-019</span></span> nur für
+                  <span class="mono">9f230abc</span>
                 </td>
               </tr>
               <tr style="border-top: var(--linie-min) solid var(--linie)">
@@ -4163,55 +2745,81 @@
                   Empfohlen, nicht umgesetzt
                 </td>
                 <td>
-                  <span class="mono" style="white-space: nowrap">1C-014</span>,
-                  <span class="mono" style="white-space: nowrap">1C-015</span>,
-                  <span class="mono" style="white-space: nowrap">1C-016</span>,
-                  <span class="mono" style="white-space: nowrap">1C-018</span>,
-                  <span class="mono" style="white-space: nowrap">1C-023</span>,
-                  <span class="mono" style="white-space: nowrap">1C-024</span>
+                  <span class="mono" style="white-space: nowrap"
+                    ><span class="nowrap">1C-014</span></span
+                  >,
+                  <span class="mono" style="white-space: nowrap"
+                    ><span class="nowrap">1C-015</span></span
+                  >,
+                  <span class="mono" style="white-space: nowrap"
+                    ><span class="nowrap">1C-016</span></span
+                  >,
+                  <span class="mono" style="white-space: nowrap"
+                    ><span class="nowrap">1C-018</span></span
+                  >,
+                  <span class="mono" style="white-space: nowrap"
+                    ><span class="nowrap">1C-023</span></span
+                  >,
+                  <span class="mono" style="white-space: nowrap"
+                    ><span class="nowrap">1C-024</span></span
+                  >
                 </td>
               </tr>
               <tr style="border-top: var(--linie-min) solid var(--linie)">
                 <td style="padding: 12px 20px 12px 0; font-weight: 700">Zurückgehalten</td>
-                <td><span class="mono" style="white-space: nowrap">1C-017</span></td>
+                <td>
+                  <span class="mono" style="white-space: nowrap"
+                    ><span class="nowrap">1C-017</span></span
+                  >
+                </td>
               </tr>
               <tr style="border-top: var(--linie-min) solid var(--linie)">
                 <td style="padding: 12px 20px 12px 0; font-weight: 700">Methodisch</td>
                 <td>
-                  <span class="mono" style="white-space: nowrap">1C-001</span>,
-                  <span class="mono" style="white-space: nowrap">1C-002</span>,
-                  <span class="mono" style="white-space: nowrap">1C-003</span>,
-                  <span class="mono" style="white-space: nowrap">1C-004</span>,
-                  <span class="mono" style="white-space: nowrap">1C-005</span>,
-                  <span class="mono" style="white-space: nowrap">1C-020</span>,
-                  <span class="mono" style="white-space: nowrap">1C-021</span>,
-                  <span class="mono" style="white-space: nowrap">1C-022</span>,
-                  <span class="mono" style="white-space: nowrap">1C-025</span>,
-                  <span class="mono" style="white-space: nowrap">1C-026</span>
+                  <span class="mono" style="white-space: nowrap"
+                    ><span class="nowrap">1C-001</span></span
+                  >,
+                  <span class="mono" style="white-space: nowrap"
+                    ><span class="nowrap">1C-002</span></span
+                  >,
+                  <span class="mono" style="white-space: nowrap"
+                    ><span class="nowrap">1C-003</span></span
+                  >,
+                  <span class="mono" style="white-space: nowrap"
+                    ><span class="nowrap">1C-004</span></span
+                  >,
+                  <span class="mono" style="white-space: nowrap"
+                    ><span class="nowrap">1C-005</span></span
+                  >,
+                  <span class="mono" style="white-space: nowrap"
+                    ><span class="nowrap">1C-020</span></span
+                  >,
+                  <span class="mono" style="white-space: nowrap"
+                    ><span class="nowrap">1C-021</span></span
+                  >,
+                  <span class="mono" style="white-space: nowrap"
+                    ><span class="nowrap">1C-022</span></span
+                  >,
+                  <span class="mono" style="white-space: nowrap"
+                    ><span class="nowrap">1C-025</span></span
+                  >,
+                  <span class="mono" style="white-space: nowrap"
+                    ><span class="nowrap">1C-026</span></span
+                  >
                 </td>
               </tr>
             </table>
             <p style="margin: 24px 0 0; font-size: 26px">
-              Das Ergebnis ist eine Empfehlung, kein Patch (ADR 1C-004).
+              Das Ergebnis ist eine Empfehlung, kein Patch (ADR <span class="nowrap">1C-004</span>).
             </p>
-            <p
-              style="
-                position: absolute;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                margin: 0;
-                font-size: var(--s-min);
-                color: var(--gedaempft);
-              "
-            >
-              Beleg: adr/README.md, Index; 1C-ergebnis.md, Abschnitt 5
+            <p class="beleg">
+              Beleg: <span class="nowrap">adr/README.md</span>, Index;
+              <span class="nowrap">1C-ergebnis.md</span>, Abschnitt 5
             </p>
           </div>
         </div>
         <div class="folie-fuss">
-          Reserve R7 · adr/README.md, Index · Messstände 9f230abc (Laptop und PC) und def56700
-          (Laptop)
+          Reserve R7 · adr/README.md, Index · Messstände 9f230abc, def56700
         </div>
       </section>
       <section
@@ -4222,8 +2830,9 @@
       >
         <h1 class="folie-titel">Reserve: 1C Schritt 1, Autorisierung</h1>
         <div class="folie-flaeche">
-          <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
+          <div class="flaeche-inhalt">
             <table
+              class="eng"
               style="border-collapse: collapse; font-size: 22px; line-height: 1.25; width: 100%"
             >
               <tr style="color: var(--gedaempft); text-align: left">
@@ -4300,24 +2909,14 @@
               Je Kontextaufbau acht Rechteprüfungen; ohne gültiges Host-Token weder Vorschau noch
               Auftrag; kein Token im Draht-Body (E2).
             </p>
-            <p
-              style="
-                position: absolute;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                margin: 0;
-                font-size: var(--s-min);
-                color: var(--gedaempft);
-              "
-            >
-              Beleg: 1C-diagrams.md, #456-Bereiche (Stand def56700) und Belege je Station;
-              apps/backend/src/routers/qa.ts
+            <p class="beleg">
+              Beleg: <span class="nowrap">1C-diagrams.md</span>, #456-Bereiche (Stand def56700) und
+              Belege je Station; <span class="nowrap">apps/backend/src/routers/qa.ts</span>
             </p>
           </div>
         </div>
         <div class="folie-fuss">
-          Reserve R8 · 1C-diagrams.md, #456-Bereiche · Code-Stand def56700 (Laptop, ThinkPad P50)
+          Reserve R8 · 1C-diagrams.md, #456-Bereiche · Code-Stand def56700
         </div>
       </section>
       <section
@@ -4328,7 +2927,7 @@
       >
         <h1 class="folie-titel">Reserve: 1C Schritte 3–4, Konsistenzfälle</h1>
         <div class="folie-flaeche">
-          <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
+          <div class="flaeche-inhalt">
             <div style="display: grid; grid-template-columns: 1fr 1fr; column-gap: 44px">
               <div>
                 <p style="margin: 0 0 8px; font-weight: 700; font-size: 26px">Schritt 3</p>
@@ -4370,25 +2969,16 @@
                 </ul>
               </div>
             </div>
-            <p
-              style="
-                position: absolute;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                margin: 0;
-                font-size: var(--s-min);
-                color: var(--gedaempft);
-              "
-            >
-              Beleg: 1C-ergebnis.md, Abschnitt 3; Tests T1–T5, Teil 2 und Teil 3 (Test-Runtime); ADR
-              1C-005, 1C-010, 1C-011, 1C-015, 1C-017
+            <p class="beleg">
+              Beleg: <span class="nowrap">1C-ergebnis.md</span>, Abschnitt 3; Tests T1–T5, Teil 2
+              und Teil 3 (Test-Runtime); ADR <span class="nowrap">1C-005</span>,
+              <span class="nowrap">1C-010</span>, <span class="nowrap">1C-011</span>,
+              <span class="nowrap">1C-015</span>, <span class="nowrap">1C-017</span>
             </p>
           </div>
         </div>
         <div class="folie-fuss">
-          Reserve R9 · 1C-ergebnis.md, Abschnitt 3 · Tests und Teil 2/3 auf 248029dc (Laptop,
-          ThinkPad P50); Labor def56700
+          Reserve R9 · 1C-ergebnis.md, Abschnitt 3 · Tests 248029dc · Labor def56700 · Laptop
         </div>
       </section>
       <section
@@ -4399,7 +2989,7 @@
       >
         <h1 class="folie-titel">Reserve: 1B Schritt 1 und ADR-0035</h1>
         <div class="folie-flaeche">
-          <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
+          <div class="flaeche-inhalt">
             <div
               style="
                 display: grid;
@@ -4419,8 +3009,9 @@
                 <div style="font-weight: 700; font-size: 26px">App-Adapter</div>
                 <div class="mono" style="font-size: 22px; color: var(--text-2)">app-host</div>
                 <div style="font-size: 22px; margin-top: 6px; line-height: 1.3">
-                  <span class="mono">openWeightLlmClient.ts</span> ruft die Runtime (Bearer-Token);
-                  Gate und Fallback in <span class="mono">qaSummaryRuntimeAdapter.ts</span>
+                  <span class="mono"><span class="nowrap">openWeightLlmClient.ts</span></span> ruft
+                  die Runtime (Bearer-Token); Gate und Fallback in
+                  <span class="mono"><span class="nowrap">qaSummaryRuntimeAdapter.ts</span></span>
                 </div>
               </div>
               <div
@@ -4457,36 +3048,25 @@
             </div>
             <ul style="margin: 0; padding-left: 30px; font-size: 24px; line-height: 1.38">
               <li style="margin: 0 0 12px">
-                Abgleich Punkt für Punkt mit ADR-0035: abweichend nur der Aufbau auf einem Rechner
-                und die CPU-Zahl, einige Punkte im Aufbau nicht prüfbar. Abnahmeprotokoll des
-                Runbooks: abweichend Baseline-Commit statt Tag, Token ohne Passwortmanager, Summary
-                eingeschaltet
+                Abgleich Punkt für Punkt mit <span class="nowrap">ADR-0035</span>: abweichend nur
+                der Aufbau auf einem Rechner und die CPU-Zahl, einige Punkte im Aufbau nicht
+                prüfbar. Abnahmeprotokoll des Runbooks: abweichend Baseline-Commit statt Tag, Token
+                ohne Passwortmanager, Summary eingeschaltet
               </li>
               <li style="margin: 0 0 12px">
-                Lücke: ADR-0035 nennt für <span class="mono">--n-predict</span> „Richtung 256“, das
-                Release setzt 768. Die Antworten hatten 506–613 Tokens, mit 256 wären sie
-                abgeschnitten
+                Lücke: <span class="nowrap">ADR-0035</span> nennt für
+                <span class="mono">--n-predict</span> „Richtung 256“, das Release setzt 768. Die
+                Antworten hatten 506–613 Tokens, mit 256 wären sie abgeschnitten
               </li>
             </ul>
-            <p
-              style="
-                position: absolute;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                margin: 0;
-                font-size: var(--s-min);
-                color: var(--gedaempft);
-              "
-            >
-              Beleg: Aufbauprotokoll 1B, Komponenten und Abgleich mit ADR-0035; Laufprotokoll 1B,
-              Manifest
+            <p class="beleg">
+              Beleg: Aufbauprotokoll 1B, Komponenten und Abgleich mit
+              <span class="nowrap">ADR-0035</span>; Laufprotokoll 1B, Manifest
             </p>
           </div>
         </div>
         <div class="folie-fuss">
-          Reserve R10 · evidenz/1B/2026-11-12-aufbau.md (Komponenten, Abgleich) · ThinkPad P50 ·
-          a19ca70f; Lücke: evidenz/1B/2026-11-13-lauf.md, Manifest · 8e9d1317
+          Reserve R10 · Aufbau 1B · a19ca70f · ThinkPad P50 · Lücke: Lauf 1B, Manifest · 8e9d1317
         </div>
       </section>
       <section
@@ -4497,9 +3077,9 @@
       >
         <h1 class="folie-titel">Reserve: Was der Betrieb nicht sieht</h1>
         <div class="folie-flaeche">
-          <div style="position: relative; width: 1380px; height: 560px; box-sizing: border-box">
-            <p style="margin: 0 0 26px; font-size: 30px; font-weight: 600; color: var(--text-2)">
-              <span class="etikett etikett-1b">1B</span> Was davon steht im Log der App?
+          <div class="flaeche-inhalt">
+            <p class="folie-frage">
+              <span class="etikett etikett-1b">1B</span>Was davon steht im Log der App?
             </p>
             <div style="display: grid; grid-template-columns: 820px 1fr; column-gap: 70px">
               <div>
@@ -4532,45 +3112,39 @@
                 <div
                   style="
                     border-left: 6px solid var(--bernstein);
-                    padding: 6px 0 6px 24px;
-                    margin: 0 0 26px;
+                    padding: 4px 0 4px 24px;
+                    margin: 0 0 24px;
                   "
                 >
                   <div
-                    class="messwert"
+                    class="kennzahl"
                     style="font-size: 72px; line-height: 1.05; color: var(--tinte)"
                   >
-                    17,8<span style="font-size: 36px"> ms</span>
+                    17,8<span class="einheit" style="font-size: 32px"> ms</span>
                   </div>
-                  <div style="font-size: 26px; margin-top: 8px">
+                  <div style="font-size: 26px; line-height: 1.25; margin-top: 8px">
                     Transport je Auftrag, Median, alle 10
                   </div>
-                  <div class="mono" style="font-size: var(--s-min); color: var(--gedaempft)">
+                  <div
+                    style="
+                      font-size: var(--s-min);
+                      line-height: 1.3;
+                      margin-top: 4px;
+                      color: var(--gedaempft);
+                    "
+                  >
                     Inferenzanteil 99,92 %, nur auf dieser langsamen CPU so hoch
                   </div>
                 </div>
               </div>
             </div>
-            <p
-              style="
-                position: absolute;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                margin: 0;
-                font-size: var(--s-min);
-                color: var(--gedaempft);
-              "
-            >
+            <p class="beleg">
               Beleg: Laufprotokoll 1B, Befund C; empfohlen: Zeiten und Grund des Fallbacks ohne
               Prompttext loggen, nicht umgesetzt; Issues #19, #20
             </p>
           </div>
         </div>
-        <div class="folie-fuss">
-          Reserve R11 · evidenz/1B/2026-11-13-lauf.md, Befund C;
-          evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317
-        </div>
+        <div class="folie-fuss">Reserve R11 · Lauf 1B, Befund C · 8e9d1317 · ThinkPad P50</div>
       </section>
       <div class="weg-mini weg-wandernd" role="img" aria-label="Station des Auftrags" hidden>
         <svg

@@ -175,7 +175,11 @@ export function baueHandout(daten, personen, { basis } = {}) {
       `ein Rechner, Runtime über Loopback, kein zweiter Host; Image lokal gebaut, Messproxy; eine synthetische Fixture`,
       `Laborlimits ${w(`${fw.laborCpus1C} CPUs`)}, ${w(`${fw.laborSpeicher1CGiB} GiB`)} statt ${w(`${fw.releaseCpus} CPUs`)}, ${w(`${fw.prodSpeicherGiB} GiB`)} ab Werk v1.4.0; Timeout ${w(`${fw.laborTimeoutS} s`)} statt ${w(`${fw.releaseTimeoutS} s`)} (Kalibrierung am Laptop ${w(`${fw.kalibrierungLaptopS} s`)}); Nachlauf mit Nebenlast`,
       `Stand ${code('def56700')} (v1.4.0-14), nicht v1.3.0 (ADR 1C-001); „hält“ heißt vertragsgültig, kein Urteil über Prompts`,
-    ]);
+    ]) +
+    `<h3>Betrieb: Timeout und Speicher ${etikett('1C')}</h3>` +
+    `<p>Ab Werk v1.4.0 bricht die App nach ${w(`${fw.releaseTimeoutS} s`)} ab; die Inferenz dauerte bei der Kalibrierung am PC (${code(c.kalibrierungPcS.commit)}) ${w(`${z.kalPc} s`)}, am Laptop im Median ${w(`${z.infer1C} s`)} (${code('def56700')}, Nebenlast). ` +
+    `Bei wechselnden Prompts wächst der Speicher der Runtime je Auftrag um ${w(`${z.delta} GB`)} (Median, Laptop); der KV-Cache belegt Speicher je Token [11]. Beide Grenzen ${w(`${fw.grenzeGesamtGiB} GiB`)} (Labor ${w(`${fw.laborSpeicher1CGiB} GiB`)} + ${w(`${fw.laborSpeicher1CGiB} GiB`)}, Produktion ${w(`${fw.prodSpeicherGiB} GiB`)} + bis zu ${w(`${fw.prodSwapGiB} GiB`)} Swap, Swap des Hosts unbekannt): OOM-Kill auf ${code(c.oomAuftrag9f230abc.commit)} im ${w(`${c.oomAuftrag9f230abc.wert}.`)} Auftrag (Laptop und PC), auf ${code('def56700')} im ${w(`${c.oomAuftrag.wert}.`)} (Ursache nicht getrennt gemessen) [8, 10]. ` +
+    `Im 1B-Lauf mit gleichem Prompt blieb er bei höchstens ${w(`${z.speicher1B} GB`)} [7].</p>`;
 
   // ------------------------------------------------------------ Seite 3: 1B
   const hyp = (h, groesse, schwelle, wert) =>
@@ -216,17 +220,18 @@ export function baueHandout(daten, personen, { basis } = {}) {
     `</table>` +
     `<p class="quelle"><b>Tab. 2:</b> Schwellen vorab (ADR 1B-008 [10]). Quelle: H_B1–H_B3 Lauf [7], n = ${n}, ${P50}, ${haupt}; M4 Nachtrag [7], ${P50}, ${nachtrag}.</p>` +
     `<p>T_job: Auftrag 1 kalt (n = 1) ${w(`${z.jobKalt} s`)} (Kaltläufe ${w(`${z.kaltMedian} s`)}), Median warm ${w(`${z.jobWarm} s`)} (warm, n = ${nWarm}).</p>` +
-    `<p><b>Gegenprüfung.</b> C0 Strecke gegen lokal ${w(`${z.c0} ms`)}, kein messbarer Unterschied; B0 ohne Runtime ${w(`${z.b0} ms`)}, ${w(`${b.nB0} von ${b.nB0}`)} extraktiv [7]. Gegenalternative vorab: Netz und Adapter über ${w('5 %')} oder ${w(`${fw.schwelleAdapterS} s`)} (ADR 1B-008).</p>` +
-    grenzen('1B', [
-      `${w(`${fw.laborCpus} statt ${fw.releaseCpus} CPUs`)} und Timeout ${w(`${fw.laborTimeout1BS} s`)} statt ${w(`${fw.releaseTimeoutS} s`)} ab Werk v1.4.0, nach Kalibrierung (I = ${w(`${fw.kalibrierung1BS} s`)}); v1.3.0 hatte ${fw.v13Cpus} CPUs, ${fw.v13SpeicherGiB} GiB, ${fw.v13TimeoutS} s; gemessen ist auf Wunsch des Prüfers der aktuelle Stand`,
-      'Images selbst gebaut; Start ohne Wrapper, weil er das CPU-Override nicht durchreicht (Trockenlauf vorher); Summary-Schalter an; Hintergrunddienste vor dem gewerteten Lauf von Hand abgeschaltet',
-      `ein Laptop, virtuelles Netz, keine parallele Last; Netzauflösung ≈ ${w(`${fw.netzAufloesungMs} ms`)}; Token im Klartext über HTTP`,
-      `warm heißt: identischer Snapshot aus dem KV-Cache, bei geändertem Zustand gilt eher der Kaltwert; Code ${code('a19ca70f')} (v1.4.0-184), Lauf-Commit ${code(haupt)} nur Laborskripte`,
-    ]);
+    `<p><b>Gegenprüfung.</b> C0 Strecke gegen lokal ${w(`${z.c0} ms`)}, kein messbarer Unterschied; B0 ohne Runtime ${w(`${z.b0} ms`)}, ${w(`${b.nB0} von ${b.nB0}`)} extraktiv [7]. Gegenalternative vorab: Netz und Adapter über ${w('5 %')} oder ${w(`${fw.schwelleAdapterS} s`)} (ADR 1B-008).</p>`;
 
   // ------------------------------------------------------------ Seite 4: Befunde und Entscheidung
   const ent = (art, inhalt, folge, beleg, klasse) =>
     `<tr><td class="${klasse}">${art}</td><td>${inhalt}</td><td>${folge}</td><td>${beleg}</td></tr>`;
+  // Abweichungen 1B stehen auf Seite 4 bei den Grenzen (Design Abschnitt 9), damit die Seiten ausgewogen bleiben.
+  const grenzen1B = grenzen('1B', [
+    `${w(`${fw.laborCpus} statt ${fw.releaseCpus} CPUs`)} und Timeout ${w(`${fw.laborTimeout1BS} s`)} statt ${w(`${fw.releaseTimeoutS} s`)} ab Werk v1.4.0, nach Kalibrierung (I = ${w(`${fw.kalibrierung1BS} s`)}); v1.3.0 hatte ${fw.v13Cpus} CPUs, ${fw.v13SpeicherGiB} GiB, ${fw.v13TimeoutS} s; gemessen ist auf Wunsch des Prüfers der aktuelle Stand`,
+    'Images selbst gebaut; Start ohne Wrapper, weil er das CPU-Override nicht durchreicht (Trockenlauf vorher); Summary-Schalter an; Hintergrunddienste vor dem gewerteten Lauf von Hand abgeschaltet',
+    `ein Laptop, virtuelles Netz, keine parallele Last; Netzauflösung ≈ ${w(`${fw.netzAufloesungMs} ms`)}; Token im Klartext über HTTP`,
+    `warm heißt: identischer Snapshot aus dem KV-Cache, bei geändertem Zustand gilt eher der Kaltwert; Code ${code('a19ca70f')} (v1.4.0-184), Lauf-Commit ${code(haupt)} nur Laborskripte`,
+  ]);
   const seite4 =
     `<h2>4 Befunde und Entscheidung zu 1C und 1B (Jonas)</h2>` +
     `<h3>Keine geprüfte Modellantwort besteht das Gate ${etikett('1C')} ${etikett('1B')}</h3>` +
@@ -236,10 +241,6 @@ export function baueHandout(daten, personen, { basis } = {}) {
     `<p class="quelle">Ausschnitt ohne Header und Token [7], Lauf ${haupt}, ${P50}.</p>` +
     `<p>Die Lehrperson sieht eine extraktive Ersatzzusammenfassung mit dem allgemeinen Hinweis „Eine ausführliche Zusammenfassung war diesmal nicht möglich …“, den Grund nicht. ` +
     `</p>` +
-    `<h3>Betrieb: Timeout und Speicher ${etikett('1C')}</h3>` +
-    `<p>Ab Werk v1.4.0 bricht die App nach ${w(`${fw.releaseTimeoutS} s`)} ab; die Inferenz dauerte bei der Kalibrierung am PC (${code(c.kalibrierungPcS.commit)}) ${w(`${z.kalPc} s`)}, am Laptop im Median ${w(`${z.infer1C} s`)} (${code('def56700')}, Nebenlast). ` +
-    `Bei wechselnden Prompts wächst der Speicher der Runtime je Auftrag um ${w(`${z.delta} GB`)} (Median, Laptop); der KV-Cache belegt Speicher je Token [11]. Beide Grenzen ${w(`${fw.grenzeGesamtGiB} GiB`)} (Labor ${w(`${fw.laborSpeicher1CGiB} GiB`)} + ${w(`${fw.laborSpeicher1CGiB} GiB`)}, Produktion ${w(`${fw.prodSpeicherGiB} GiB`)} + bis zu ${w(`${fw.prodSwapGiB} GiB`)} Swap, Swap des Hosts unbekannt): OOM-Kill auf ${code(c.oomAuftrag9f230abc.commit)} im ${w(`${c.oomAuftrag9f230abc.wert}.`)} Auftrag (Laptop und PC), auf ${code('def56700')} im ${w(`${c.oomAuftrag.wert}.`)} (Ursache nicht getrennt gemessen) [8, 10]. ` +
-    `Im 1B-Lauf mit gleichem Prompt blieb er bei höchstens ${w(`${z.speicher1B} GB`)} [7].</p>` +
     `<table><tr><th style="width:15%">Entscheidung</th><th style="width:27%">Inhalt</th><th>Kosten, Risiko, Betrieb</th><th style="width:15%">ADR, Issue</th></tr>` +
     ent(
       'beibehalten (1C)',
@@ -298,7 +299,8 @@ export function baueHandout(daten, personen, { basis } = {}) {
       'empf',
     ) +
     `</table>` +
-    `<p class="quelle"><b>Tab. 3:</b> Entscheidungen; Empfehlungen nicht umgesetzt. Quelle: ADRs (Folgen), Berichte [10].</p>`;
+    `<p class="quelle"><b>Tab. 3:</b> Entscheidungen; Empfehlungen nicht umgesetzt. Quelle: ADRs (Folgen), Berichte [10].</p>` +
+    grenzen1B;
 
   // ------------------------------------------------------------ Seite 5: Quellen, Evidenz, KI
   const lit = [

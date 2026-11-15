@@ -179,6 +179,23 @@ export const ZOOM_STUFEN = Object.freeze([
 
 // ------------------------------------------------------------------ Folien
 
+/**
+ * Kennungen (ADR-Nummern, Dateinamen, git describe) nicht am Bindestrich umbrechen: im sichtbaren
+ * Text außerhalb von Tags und SVG-Grafiken in nowrap-Spannen setzen.
+ */
+const KENNUNG =
+  /(?<![\w./-])(?:ADR-\d{4}|1[ABC]-\d{3}|v\d\.\d\.\d-\d+|[\w-]+(?:\/[\w.-]+)*\.(?:md|ts|json|html|sh))(?![\w-])/g;
+function ohneUmbruchInKennungen(html) {
+  return html
+    .split(/(<svg[\s\S]*?<\/svg>|<pre[\s\S]*?<\/pre>|<[^>]+>)/)
+    .map((teil) =>
+      teil.startsWith('<')
+        ? teil
+        : teil.replace(KENNUNG, (k) => `<span class="nowrap">${k}</span>`),
+    )
+    .join('');
+}
+
 function jonasFolie(f, nr, gesamt, clipUri) {
   let inhalt = f.inhalt.replaceAll(' xmlns="http://www.w3.org/2000/svg"', '');
   if (clipUri) {
@@ -195,6 +212,10 @@ function jonasFolie(f, nr, gesamt, clipUri) {
       throw new Error(`${f.id}: Nachbau für den Clip nicht gefunden`);
     }
   }
+  inhalt = ohneUmbruchInKennungen(inhalt)
+    // Prettier (bau.mjs) bricht sonst zwischen <tspan>-Elementen um; der Umbruch wird in SVG-Text zu
+    // einem Leerzeichen („t 0“ statt t mit tiefgestellter 0).
+    .replace(/<svg\b/g, '<!-- prettier-ignore --><svg');
   const eigenerWeg = inhalt.includes('class="auftrag"');
   const fussNr = f.teil === 'reserve' ? `Reserve ${f.id}` : `${zwei(nr)} / ${gesamt}`;
   const attrs = [
@@ -211,9 +232,10 @@ function jonasFolie(f, nr, gesamt, clipUri) {
   const html =
     `<section ${attrs}>` +
     (f.station && !eigenerWeg ? wegMini({ aktiv: f.station }) : '') +
+    (f.exkurs ? `<p class="weg-exkurs">${esc(f.exkurs)}</p>` : '') +
     `<h1 class="folie-titel">${f.titel}</h1>` +
     `<div class="folie-flaeche">${inhalt}</div>` +
-    `<div class="folie-fuss">${fussNr} · ${esc(f.quelle ?? '')}</div>` +
+    `<div class="folie-fuss">${fussNr} · ${esc(f.fuss ?? f.quelle ?? '')}</div>` +
     `</section>`;
   return f.quellenverzeichnis ? `<!--quellen-->${html}<!--/quellen-->` : html;
 }

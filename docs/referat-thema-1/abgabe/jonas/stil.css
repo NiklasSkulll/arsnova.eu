@@ -68,65 +68,129 @@
   --f-mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
   --s-min: 22px;
   --s-text: 28px;
-  --s-titel: 58px;
+  --s-titel: 52px;
 
   /* Folie */
   --folie-breite: 1600px;
   --folie-hoehe: 900px;
-  --rand: 110px;
+  --rand: 90px;
   --linie-min: 2px;
 }
 
+/* Folie als Spalte: Titel, Fläche, Fußzeile im Fluss. Ein zweizeiliger Titel schiebt die Fläche
+   nach unten, statt mit ihr zu kollidieren; der Layouttest in deck.test.mjs misst das je Folie. */
 .folie {
   position: relative;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
   width: var(--folie-breite);
   height: var(--folie-hoehe);
+  padding: 92px var(--rand) 0;
   overflow: hidden;
   background: var(--grund);
   color: var(--tinte);
   font-family: var(--f-text);
   font-size: var(--s-text);
   line-height: 1.35;
+  hyphens: manual;
 }
 
 .folie-titel {
-  position: absolute;
-  left: var(--rand);
-  right: var(--rand);
-  top: 72px;
+  flex: none;
   margin: 0;
   color: var(--blau);
-  font-weight: 800;
+  font-weight: 700;
   font-size: var(--s-titel);
-  line-height: 1.1;
+  line-height: 1.15;
   letter-spacing: -0.01em;
 }
 
-/* Diagrammfläche: Grafiken aus grafik.mjs haben viewBox 0 0 1380 560 und sitzen hier im Maßstab 1:1. */
+/* Fläche zwischen Titel und Fußzeile (etwa 1420 × 630 px). Grafiken aus grafik.mjs (viewBox
+   1380 × 560) füllen die Breite; .grafik-box skaliert eine Grafik unter einer Frage auf die Resthöhe. */
 .folie-flaeche {
-  position: absolute;
-  left: var(--rand);
-  top: 190px;
-  width: 1380px;
-  height: 560px;
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 30px 0 18px;
+  display: flex;
+  flex-direction: column;
 }
 .folie-flaeche > svg {
   display: block;
   width: 100%;
+  height: auto;
+}
+.flaeche-inhalt {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.grafik-box {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.grafik-box > svg {
+  display: block;
+  width: auto;
+  max-width: 100%;
   height: 100%;
 }
+.folie-frage {
+  flex: none;
+  margin: 0 0 24px;
+  color: var(--text-2);
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.folie-frage .etikett {
+  margin-right: 10px;
+  vertical-align: 3px;
+}
+.beleg {
+  flex: none;
+  margin: auto 0 0;
+  padding-top: 14px;
+  color: var(--gedaempft);
+  font-size: var(--s-min);
+  line-height: 1.3;
+}
 
+/* Fußzeile: eine Zeile, Seitenzahl und Kurzquelle; die volle Quelle steht in den Sprechnotizen. */
 .folie-fuss {
-  position: absolute;
-  left: var(--rand);
-  right: var(--rand);
-  top: 790px;
-  padding-top: 18px;
+  flex: none;
+  margin: 0 0 24px;
+  padding-top: 12px;
   border-top: var(--linie-min) solid var(--linie);
   color: var(--gedaempft);
-  font-family: var(--f-mono);
+  font-family: var(--f-text);
   font-size: var(--s-min);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Große Kennzahl: Inter mit Tabellenziffern; Plex Mono bleibt für kleine Messwerte im Text. */
+.kennzahl {
+  font-family: var(--f-text);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.kennzahl .einheit {
+  font-weight: 500;
+}
+
+.folie span.mono,
+.folie .nowrap {
+  white-space: nowrap;
+}
+.folie table.eng .mono {
+  letter-spacing: -1px;
 }
 
 .mono,

@@ -101,10 +101,10 @@
       li {
         margin: 0 0 1mm;
       }
+      /* Messwerte im Fließtext: Inter halbfett mit Tabellenziffern (Plex Mono nur für Commits, Pfade). */
       .w {
-        font-family: var(--f-mono);
-        font-size: 0.93em;
         font-weight: 600;
+        font-variant-numeric: tabular-nums;
         white-space: nowrap;
       }
       code,
@@ -177,13 +177,15 @@
         font-size: 7.8pt;
         font-weight: 700;
       }
+      /* Urteile neutral: Petrol und Bernstein bleiben den Etiketten 1C und 1B vorbehalten. */
       td.ja {
-        color: var(--petrol);
+        color: var(--tinte);
         font-weight: 700;
       }
       td.empf {
-        color: var(--bernstein-text);
-        font-weight: 700;
+        color: var(--text-2);
+        font-weight: 600;
+        font-style: italic;
       }
       table.personen td,
       table.personen th {

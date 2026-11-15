@@ -37,13 +37,16 @@
         display: none;
       }
       .buehne > .folie[data-aktuell] {
-        display: block;
+        display: flex;
       }
       [hidden] {
         display: none !important;
       }
 
       /* Seiten aus Niklas' PDF */
+      .folie.folie-bild {
+        padding: 0;
+      }
       .folie-bild img {
         display: block;
         width: 100%;
@@ -51,7 +54,7 @@
         object-fit: contain;
       }
       .niklas-platzhalter {
-        margin: 120px 0 0;
+        margin: 90px 0 0;
         color: var(--text-2);
         font-size: 40px;
         font-weight: 700;
@@ -63,17 +66,31 @@
         font-weight: 400;
       }
 
-      /* Kleine Wegkarte mit dem Auftrag (oben links über dem Titel) */
+      /* Kleine Wegkarte mit dem Auftrag (oben links über dem Titel, Kreisrand bündig mit dem Titel) */
       .weg-mini {
         position: absolute;
-        left: 97px;
-        top: 8px;
+        left: calc(var(--rand) - 12px);
+        top: 22px;
         width: 450px;
         height: 52px;
         z-index: 2;
       }
       .weg-mini-karte {
         display: block;
+      }
+      /* Folie neben dem Weg (J11): Vermerk an der Stelle der Wegkarte */
+      .weg-exkurs {
+        position: absolute;
+        left: var(--rand);
+        top: 30px;
+        margin: 0;
+        padding: 0 14px;
+        border: var(--linie-min) dashed var(--linie);
+        border-radius: 999px;
+        color: var(--gedaempft);
+        font-size: var(--s-min);
+        font-weight: 600;
+        line-height: 32px;
       }
       .weg-punkt {
         position: absolute;
@@ -139,7 +156,7 @@
         inset: 0;
         z-index: 5;
         box-sizing: border-box;
-        padding: 72px 110px;
+        padding: 92px var(--rand);
         background: var(--grund);
         color: var(--tinte);
         font-family: var(--f-text);
@@ -148,7 +165,7 @@
         margin: 0 0 44px;
         color: var(--blau);
         font-size: var(--s-titel);
-        font-weight: 800;
+        font-weight: 700;
         line-height: 1.1;
       }
       .reserve-uebersicht ol {
@@ -186,7 +203,7 @@
       }
       .reserve-hilfe {
         position: absolute;
-        left: 110px;
+        left: var(--rand);
         bottom: 72px;
         margin: 0;
         color: var(--gedaempft);
@@ -227,7 +244,7 @@
         }
         .buehne > .folie {
           position: relative;
-          display: block;
+          display: flex;
         }
         .buehne > .folie + .folie {
           break-before: page;

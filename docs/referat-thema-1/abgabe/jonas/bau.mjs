@@ -203,11 +203,20 @@ export function baueSprechnotizen(alle) {
       '',
       f.notiz.trim(),
       '',
+      `_Quelle:_ ${f.quelle ?? ''}`,
+      '',
     );
   }
   zeilen.push('# Reserve', '', 'Nur auf Nachfrage (Taste `r`), keine Zeit im Vortrag.', '');
   for (const f of reserve) {
-    zeilen.push(`## ${f.id} ${ohneTags(f.titel)}`, '', f.notiz.trim(), '');
+    zeilen.push(
+      `## ${f.id} ${ohneTags(f.titel)}`,
+      '',
+      f.notiz.trim(),
+      '',
+      `_Quelle:_ ${f.quelle}`,
+      '',
+    );
   }
   return zeilen.join('\n');
 }

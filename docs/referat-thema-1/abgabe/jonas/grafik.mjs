@@ -64,8 +64,14 @@ function text(x, y, inhalt, o = {}) {
   return `<text ${a.join(' ')}>${inhalt}</text>`;
 }
 
-/** t mit tiefgestellter Ziffer als <tspan> (die latin-Schriftschnitte haben keine ₀–₃). */
-const tIndex = (i) => `t<tspan font-size="22" baseline-shift="-6">${i}</tspan>`;
+/**
+ * t mit tiefgestellter Ziffer als <tspan> (die latin-Schriftschnitte haben keine ₀–₃). dy statt
+ * baseline-shift: Chromium setzt baseline-shift in Plex Mono mit Lücke und zu tief. Folgt Text, setzt
+ * hoch() die Grundlinie zurück.
+ */
+const TIEF = 6;
+const tIndex = (i) => `t<tspan dx="-3" dy="${TIEF}" font-size="22">${i}</tspan>`;
+const hoch = (s) => `<tspan dy="-${TIEF}">${s}</tspan>`;
 
 /** Haken als Pfad (✓ fehlt ebenfalls in den latin-Schnitten). */
 const haken = (x, y, farbe) =>
@@ -139,15 +145,7 @@ export function zeitzerlegungSvg(b1, { kalt = true } = {}) {
   const balkenH = 40;
   const teile = [];
 
-  // Raster: Dekaden kräftiger, Zwischenstriche (2…9) zart; nur in der Diagrammfläche.
-  for (let d = -1; d < 6; d++) {
-    for (let k = 2; k <= 9; k++) {
-      const x = r2(logX(k * 10 ** d, ACHSE));
-      teile.push(
-        `<line x1="${x}" y1="${oben}" x2="${x}" y2="${unten}" stroke="${FARBEN.raster}" stroke-width="2"/>`,
-      );
-    }
-  }
+  // Raster: nur Dekaden (je Strich ×10); Zwischenstriche machten die Fläche bei 960 px unruhig.
   for (const [ms, label] of STRICHE) {
     const x = r2(logX(ms, ACHSE));
     teile.push(
@@ -165,12 +163,9 @@ export function zeitzerlegungSvg(b1, { kalt = true } = {}) {
     const xs = r2(x);
     return (
       `<line x1="${xs}" y1="${r2(cy - 30)}" x2="${xs}" y2="${r2(cy + 30)}" stroke="${FARBEN.tinte}" stroke-width="3" stroke-dasharray="8 6"/>` +
-      text(x + 14, cy + 8, esc(label), { mono: true, groesse: 22, halo: FARBEN.weiss }) +
-      (ok ? haken : kreuz)(
-        x + 14 + label.length * 13.2 + 12,
-        cy + 4,
-        ok ? FARBEN.tinte : FARBEN.rot,
-      )
+      // Haken vor dem Text: sein Abstand hängt so nicht von der gemessenen Textbreite ab.
+      (ok ? haken : kreuz)(x + 14, cy + 4, ok ? FARBEN.tinte : FARBEN.rot) +
+      text(x + 44, cy + 8, esc(label), { mono: true, groesse: 22, halo: FARBEN.weiss })
     );
   };
 
@@ -332,7 +327,7 @@ function etikett(cx, y, auftrag) {
   );
 }
 
-function rasterBox(y, h, label, rechts) {
+function rasterBox(y, h, label, rechts, rechtsFarbe = FARBEN.gedaempft) {
   const t = [];
   for (let x = 32; x < FLAECHE.breite; x += 32) {
     t.push(`M${x},${y + 2}V${y + h - 2}`);
@@ -351,7 +346,7 @@ function rasterBox(y, h, label, rechts) {
       ? text(FLAECHE.breite - 24, y + 38, rechts, {
           mono: true,
           groesse: 22,
-          farbe: FARBEN.gedaempft,
+          farbe: rechtsFarbe,
           anker: 'end',
           halo: FARBEN.weiss,
         })
@@ -374,19 +369,21 @@ export function wegSvg({ aktiv = null, b1, c1, auftrag }) {
   const teile = [];
 
   teile.push(
+    // 1C-Werte stehen an Kontext und Nachprüfung im app-host; ihr Hinweis gehört in dessen Kopf.
     rasterBox(
       APP_BOX.y,
       APP_BOX.h,
       'app-host · 192.168.150.10',
-      `Messpunkte ${tIndex(0)}–${tIndex(3)}: Mitschnitt auf beiden Hosts`,
+      '1C-Werte: ein Rechner, Loopback, kein llm-host',
+      FARBEN.petrol,
     ),
     rasterBox(LLM_BOX.y, LLM_BOX.h, 'llm-host · 192.168.150.20'),
-    text(24, LLM_BOX.y + LLM_BOX.h - 18, '1C-Werte: ein Rechner, Loopback, kein llm-host', {
-      mono: true,
-      groesse: 22,
-      farbe: FARBEN.petrol,
-      halo: FARBEN.weiss,
-    }),
+    text(
+      24,
+      LLM_BOX.y + LLM_BOX.h - 22,
+      `Messpunkte ${tIndex(0)}${hoch('–t')}<tspan dx="-3" dy="${TIEF}" font-size="22">3</tspan>${hoch(': Mitschnitt auf beiden Hosts')}`,
+      { mono: true, groesse: 22, farbe: FARBEN.gedaempft, halo: FARBEN.weiss },
+    ),
   );
 
   const pfad =
@@ -431,15 +428,15 @@ export function wegSvg({ aktiv = null, b1, c1, auftrag }) {
       `<g data-station="${id}">` +
       etikett(s.x, s.y - 78, s.auftrag) +
       ring(s, ringFarbe) +
-      text(s.x, s.y + 58, esc(s.name), { groesse: 30, gewicht: 700, farbe, anker: 'middle' }) +
-      text(s.x, s.y + 90, esc(sub), {
+      text(s.x, s.y + 66, esc(s.name), { groesse: 30, gewicht: 700, farbe, anker: 'middle' }) +
+      text(s.x, s.y + 96, esc(sub), {
         mono: true,
         groesse: 22,
         gewicht: 600,
         farbe: farbe === FARBEN.tinte ? FARBEN.tinte : farbe,
         anker: 'middle',
       }) +
-      text(s.x, s.y + 118, esc(herkunft), {
+      text(s.x, s.y + 122, esc(herkunft), {
         mono: true,
         groesse: 22,
         farbe: FARBEN.gedaempft,
@@ -691,12 +688,23 @@ export function fussballfeldSvg(b1, { zoom = 0 } = {}) {
       BEREICH.netz,
       feldText(-12, -30, `davon Netz · ${esc(tNetz)}`, { anker: 'end', groesse: 28 }),
     ),
+    // Letztes Bild (auch im PDF): jede Strecke an ihrem Ende beschriftet, der dunkle Rand erklärt.
+    imFeld(
+      -0.88,
+      REIHE_Y,
+      kNetz,
+      BEREICH.netz,
+      feldText(0, 52, `Transport · ${esc(tTrans)}, reicht links weiter`, {
+        groesse: 22,
+        gewicht: 400,
+      }),
+    ),
     imFeld(
       0,
       REIHE_Y,
       kNetz,
       BEREICH.netz,
-      feldText(16, 52, 'Torlinie', { groesse: 22, gewicht: 400 }),
+      feldText(16, 52, 'Torlinie = Ende des Auftrags', { groesse: 22, gewicht: 400 }),
     ),
   );
 
@@ -747,10 +755,17 @@ export function fussballfeldSvg(b1, { zoom = 0 } = {}) {
       ab === null
         ? ''
         : ` data-zoom-von="${ab}" data-zoom-bis="1" opacity="${rund6(zoomDeckkraft(zoom, ab, 1))}"`;
+    // Farbmuster wie die Strecke im Feld (weiße Einfassung, farbiger Kern) als Legende zur Zahl.
     t.push(
       `<g data-spalte="${name}"${zoomAttr}>`,
-      text(x - 4, 438, esc(wert), { mono: true, groesse: 80, gewicht: 600, farbe }),
-      text(x, 480, esc(sub), { groesse: 28, farbe: FARBEN.text2 }),
+      text(x - 2, 438, esc(wert), {
+        groesse: 80,
+        gewicht: 700,
+        farbe,
+        extra: 'style="font-variant-numeric:tabular-nums;letter-spacing:-1px"',
+      }),
+      `<rect x="${x}" y="463" width="40" height="14" rx="2" fill="${farbe}"/>`,
+      text(x + 54, 480, esc(sub), { groesse: 28, farbe: FARBEN.text2 }),
       '</g>',
     );
   }
