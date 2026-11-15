@@ -13,6 +13,8 @@ export const FLAECHE = { x: 110, y: 190, breite: 1380, hoehe: 560 };
 
 export const FARBEN = {
   blau: '#0b5ea8',
+  // Netz im Fußballfeld: hell genug gegen Rasen (auch in Graustufen und nach Videokompression)
+  blauHell: '#7cc0ff',
   petrol: '#0f766e',
   petrolHell: '#e3f1ee',
   bernstein: '#b45309',
@@ -219,7 +221,7 @@ export function zeitzerlegungSvg(b1, { kalt = true } = {}) {
       // H_B3 ist ein Anteil, keine Zeit: als Text im Balken, rechtsbündig.
       const ok = b1.inferAnteil >= SCHWELLE.inferAnteil;
       const label = `Anteil ${fmt(b1.inferAnteil * 100, 2)} % (${alle}) · Schwelle ≥ 95 %`;
-      const xr = xEnde - 44;
+      const xr = xEnde - 54;
       teile.push(
         text(xr, cy + 9, esc(label), {
           mono: true,
@@ -306,7 +308,7 @@ export const WEG_STATIONEN = Object.freeze({
   netz: { ...xy(aufKurve(AB, NETZ_Y)), r: 12, auftrag: '1B', name: 'Netz' },
   inferenz: { x: 690, y: UNTEN_Y, r: 50, auftrag: '1B', name: 'Inferenz' },
   nachpruefung: { x: 1020, y: OBEN_Y, r: 20, auftrag: '1C', name: 'Nachprüfung' },
-  gate: { x: 1250, y: OBEN_Y, r: 20, auftrag: '1C', name: 'Gate' },
+  gate: { x: 1270, y: OBEN_Y, r: 20, auftrag: '1C', name: 'Gate' },
 });
 function xy([x, y]) {
   return { x, y };
@@ -459,7 +461,8 @@ export function wegSvg({ aktiv = null, b1, c1, auftrag }) {
       `Anteil ${fmt(c1.nachpruefungAnteilProzent.wert, 2)} %`,
       `1C-Labor · ${c1.nachpruefungAnteilProzent.commit.slice(0, 8)}`,
     ),
-    obenStation('gate', 'verwirft Antwort', '1B und 1C', FARBEN.rot, FARBEN.rot),
+    // Kurz „verwirft“: mit „Gate“ darüber eindeutig, und die Zeile läuft nicht in die der Nachprüfung.
+    obenStation('gate', 'verwirft', '1B und 1C', FARBEN.rot, FARBEN.rot),
   );
 
   // Netz: kleiner Ring auf dem Abstieg, Beschriftung mittig zwischen den Hosts.
@@ -637,7 +640,7 @@ export function fussballfeldSvg(b1, { zoom = 0 } = {}) {
   w.push(
     strecke(-FELD_MM, -FELD_MM + infMm, FARBEN.bernstein),
     strecke(-transMm, 0, FARBEN.tinte),
-    strecke(-netzMm, 0, FARBEN.blau),
+    strecke(-netzMm, 0, FARBEN.blauHell),
   );
 
   // Beschriftung in Pixeln, für ihren Zoom skaliert (k = mm je px dort). Jede Gruppe ist nur in
@@ -702,7 +705,7 @@ export function fussballfeldSvg(b1, { zoom = 0 } = {}) {
       REIHE_Y,
       kNetz,
       BEREICH.netz,
-      feldText(16, 52, 'Torlinie = Ende des Auftrags', { groesse: 22, gewicht: 400 }),
+      feldText(16, 52, 'Torlinie = Auftragsende', { groesse: 22, gewicht: 400 }),
     ),
   );
 
@@ -790,7 +793,10 @@ export function fussballfeldSvg(b1, { zoom = 0 } = {}) {
         farbe,
         extra: 'style="font-variant-numeric:tabular-nums;letter-spacing:-1px"',
       }),
-      `<rect x="${x}" y="463" width="40" height="14" rx="2" fill="${farbe}"/>`,
+      // Netz: Muster in hellem Blau wie die Strecke im Feld, mit blauem Rand; die Zahl bleibt blau.
+      name === 'netz'
+        ? `<rect x="${x + 1}" y="464" width="38" height="12" rx="2" fill="${FARBEN.blauHell}" stroke="${FARBEN.blau}" stroke-width="2"/>`
+        : `<rect x="${x}" y="463" width="40" height="14" rx="2" fill="${farbe}"/>`,
       text(x + 54, 480, esc(sub), { groesse: 28, farbe: FARBEN.text2 }),
       '</g>',
     );

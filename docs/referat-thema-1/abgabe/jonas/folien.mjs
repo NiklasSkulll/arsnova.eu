@@ -894,7 +894,7 @@ export function folien(daten) {
     zeitS: 50,
     kurzfassung: true,
     quelle: `ADR 1C-020, 1C-024 · PC (i7-8700) · 9f230abc; Nachlauf N3, N6 · Laptop (ThinkPad P50) · def56700; 1B-Speicher: ${q1B}`,
-    fuss: `ADR 1C-020, 1C-024 · PC 9f230abc · ${fNachlauf}`,
+    fuss: `ADR 1C-020, 1C-024 · 9f230abc · PC · ${fNachlauf}`,
     exkurs: 'Exkurs: Betrieb',
     station: null,
   });
@@ -966,7 +966,7 @@ export function folien(daten) {
         gekuerzt.map((s) => `<p style="margin:0 0 4px">${esc(s)}</p>`).join('') +
         `</blockquote>` +
         `<div style="border:var(--linie-min) solid var(--rot);border-radius:8px;padding:8px 18px;margin-bottom:18px">` +
-        `<span class="ablehnung" style="font-weight:800;font-size:26px">Verworfen.</span> ` +
+        `<span class="ablehnung" style="font-weight:800;font-size:22px">Verworfen.</span> ` +
         `<span style="font-size:22px">${esc(a.grund)}</span></div>` +
         `<div style="display:flex;align-items:center;gap:26px">` +
         `<span class="kennzahl ablehnung" style="font-size:84px;line-height:1;white-space:nowrap">0 / ${daten.abgeleitet.gateBeobachtet}</span>` +
@@ -1295,7 +1295,7 @@ export function folien(daten) {
     'Reserve: 1C Schritt 1, Autorisierung',
     // Lange Bezeichner in Plex Mono etwas enger (.eng), damit die vier Spalten in die Breite passen.
     `<table class="eng" style="border-collapse:collapse;font-size:22px;line-height:1.25;width:100%">` +
-      `<tr style="color:var(--gedaempft);text-align:left"><th style="padding:0 12px 6px 0;width:190px">Bereich (#456)</th><th>Quelle, Funktion</th><th>Schemafassung</th><th>Rechteprüfung</th></tr>` +
+      `<tr style="color:var(--gedaempft);text-align:left"><th style="padding:0 12px 6px 0;width:190px;vertical-align:bottom">Bereich (#456)</th><th style="padding:0 0 6px;vertical-align:bottom">Quelle, Funktion</th><th style="padding:0 0 6px;vertical-align:bottom">Schemafassung</th><th style="padding:0 0 6px;vertical-align:bottom">Rechteprüfung</th></tr>` +
       bz(
         'Q&amp;A-Fragen, Stimmen',
         `PostgreSQL, ${mono('collectQaContextCandidates')}`,

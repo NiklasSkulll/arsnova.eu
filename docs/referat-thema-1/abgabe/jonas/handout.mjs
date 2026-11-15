@@ -150,7 +150,7 @@ export function baueHandout(daten, personen, { basis } = {}) {
     ) +
     zeile(
       '4 Änderungen',
-      `Stimme oder gelöschte Quelle: ${code('source_changed')} (T5, E7, E8); Stimme im Aufbau: ${code('CONFLICT')} (E12); Legacy- und Regelfallback kontrolliert (E13, E14, E6a); Nachprüfung ${w(`${z.nachpr} %`)} (Regel unter ${w(`${fw.schwelleNachpruefungProzent} %`)}). Blitzlicht außer TEMPO: ${code('YESNO')} ${w(c.yesno.wert)} ${code('source_changed')} ohne Änderung`,
+      `Stimme oder gelöschte Quelle: ${code('source_changed')} (T5, E7, E8); Stimme im Aufbau: ${code('CONFLICT')} (E12); Legacy- und Regelfallback kontrolliert (E13, E14, E6a); Nachprüfung ${w(`${z.nachpr} %`)} (Regel unter ${w(`${fw.schwelleNachpruefungProzent} %`)}). Blitzlicht außer TEMPO: <span style="white-space:nowrap">${code('YESNO')} ${w(c.yesno.wert)}</span> ${code('source_changed')} ohne Änderung`,
       'hält, bleibt (1C-010); Blitzlicht empfohlen (1C-016)',
     ) +
     zeile(
@@ -196,25 +196,25 @@ export function baueHandout(daten, personen, { basis } = {}) {
     hyp(
       'H_B1',
       'Netz je Auftrag',
-      `Median ≤ ${w(`${fw.schwelleNetzMs} ms`)}, Max. ≤ ${w(`${fw.schwelleNetzMaxMs} ms`)}`,
+      `${w(`Median ≤ ${fw.schwelleNetzMs} ms`)}, ${w(`Max. ≤ ${fw.schwelleNetzMaxMs} ms`)}`,
       `${w(`${z.netz} ms`)}, Max. ${w(`${z.netzMax} ms`)}`,
     ) +
     hyp(
       'H_B2',
       'Adapter je Auftrag, Median',
-      `≤ ${w(`${fw.schwelleAdapterS} s`)}`,
+      w(`≤ ${fw.schwelleAdapterS} s`),
       w(`${z.adapter} ms`),
     ) +
     hyp(
       'H_B3',
       'Inferenzanteil, Median',
-      `≥ ${w(`${fw.schwelleInferenzProzent} %`)}`,
+      w(`≥ ${fw.schwelleInferenzProzent} %`),
       w(`${z.anteil} %`),
     ) +
     hyp(
       'H_B3 kalt (M4)',
       `Anteil in ${b.nKaltLaeufe} Kaltläufen; Netz`,
-      `≥ ${w(`${fw.schwelleInferenzProzent} %`)} in allen; Netz ≤ ${w(`${fw.schwelleNetzMs} ms`)}`,
+      `${w(`≥ ${fw.schwelleInferenzProzent} %`)} in allen; ${w(`Netz ≤ ${fw.schwelleNetzMs} ms`)}`,
       `${w(`${z.kaltAnteilMin}–${z.kaltAnteilMax} %`)}, Netz ${w(`${z.kaltNetz} ms`)}`,
     ) +
     `</table>` +

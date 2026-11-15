@@ -10,7 +10,7 @@
     "teil2": { "quelle": "Platzhalter (Teil noch nicht geliefert)", "stand": null, "sha256": null }
   },
   "folien": { "gemeinsamesDeck": 16, "jonasUndReserve": 26 },
-  "handoutWoerter": 1784,
+  "handoutWoerter": 1783,
   "eingaben": [
     {
       "pfad": "docs/referat-thema-1/evidenz/1B/messung/2026-11-13-lauf.json",
@@ -122,11 +122,11 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/folien.mjs",
-      "sha256": "7080deee2f4ba691f6722335dcc1df68f80741fb3e393bf580cb0c7f1a92c8cf"
+      "sha256": "9c270f78ba85a2b5c5d0ab9e575045d8dd8287528e3ad185fb8299557cf1e736"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/grafik.mjs",
-      "sha256": "cf27aa7fd44126916f96eb2d84a296b6b70b104ddaf71674f6945d4fa4488532"
+      "sha256": "c11aa1297bce24f6f08f9b81bed2123ad3cfa600cd762a3c054ec9745ba87173"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/handout-vorlage.html",
@@ -134,7 +134,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/handout.mjs",
-      "sha256": "b3e5a6b11cb10e7d900e7bf3ae65ac24573252485d2f8ba4e969cf6272e2c36f"
+      "sha256": "18cbea5962c26c0ff56d197aece9ce5e3367601fd7ac0d0c99b3b07aa302a579"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/niklas-seiten.mjs",
@@ -188,25 +188,25 @@
   "ausgaben": [
     {
       "datei": "jonas-deck.html",
-      "bytes": 1862109,
-      "sha256": "26b7b3df39f36cad96a3c9623e3346b893a0bad7245149ac7e22bea1d674cd06"
+      "bytes": 1862298,
+      "sha256": "3636801e81dbf8a99068f2ec72cc35fd888498a87b80f9e62b5cd2e1a4ed1556"
     },
     {
       "datei": "gemeinsames-deck.pdf",
-      "bytes": 1653244,
-      "sha256": "01251ded026cf48a44a6b672a02e221f3df79439c87ec511dd2242364f695831",
+      "bytes": 1650806,
+      "sha256": "461394b2798ed9e42f902fb4c9fe2dcde0ac0b5e1304bdaee90bb6066b032903",
       "seiten": 38
     },
     {
       "datei": "jonas-folien.pdf",
-      "bytes": 636825,
-      "sha256": "c37dbd42743a6c05019b0d7862d34cf7069b058ab13dca1adac3697a95bba69e",
+      "bytes": 634386,
+      "sha256": "abcb487b9c03b92c9d42b4c13c82fe4a58ce1f0b885fe315c3e6e070b8fd8a5a",
       "seiten": 26
     },
     {
       "datei": "jonas-handout.pdf",
-      "bytes": 282548,
-      "sha256": "2f0bdd287ebf3d841fdf6ecc77a6a473310bab532c68120984036e6a6ada9bc1",
+      "bytes": 290905,
+      "sha256": "7665eff6eaec634b542bf18070d21cdf3c5520891e178a69401f5dba6b83ce2c",
       "seiten": 5
     },
     {
