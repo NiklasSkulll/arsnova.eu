@@ -75,8 +75,8 @@ export function folien1A(d) {
       entwurf +
         frage('Darf die spaCy-Glättung der Wortwolke neben den Live-Aktionen laufen?', '1A') +
         zweiSpalten(
-          `<p style="margin:0 0 36px;font-size:42px;line-height:1.25;font-weight:700">Nein, noch nicht. Im Normalbetrieb bleibt spaCy im Budget, doch die vorab festgelegte Regel hält nicht in allen Blöcken.</p>` +
-            `<p style="margin:0;font-size:32px;line-height:1.35;padding-left:18px;border-left:6px solid var(--blau)">Entscheidung: ${mono('NLP_ENABLED=false')} bleibt, die lexikalische Wortwolke reicht.</p>`,
+          `<p style="margin:0 0 36px;font-size:42px;line-height:1.25;font-weight:700">Freigabe nicht erteilt: Die vorab festgelegte Regel hält nicht, und der Nutzen ist nicht gemessen.</p>` +
+            `<p style="margin:0;font-size:32px;line-height:1.35;padding-left:18px;border-left:6px solid var(--blau)">Deutlich schadet spaCy nur, wenn ihm die CPU knapp wird. Entscheidung: ${mono('NLP_ENABLED=false')} bleibt.</p>`,
           zahl({
             wert: `${d.h1.fehl + d.h2.fehl}`,
             einheit: `/ ${d.h1.gesamt + d.h2.gesamt}`,
@@ -95,7 +95,7 @@ export function folien1A(d) {
           760,
         ),
     ),
-    'Ich bin Niklas Schneider und habe untersucht, ob der App-Host von arsnova.eu die optionale spaCy-Glättung der Wortwolke neben den Live-Aktionen tragen kann. Kurz: nein, noch nicht. Im Normalbetrieb bleibt spaCy in seinem Budget, aber die Regel, die ich vor der Messung festgelegt habe, hält nicht in allen Blöcken. Deshalb bleibt spaCy aus.',
+    'Ich bin Niklas Schneider und habe untersucht, ob der App-Host von arsnova.eu die optionale spaCy-Glättung der Wortwolke neben den Live-Aktionen tragen kann. Kurz: Ich erteile keine Freigabe. Die Regel, die ich vor der Messung festgelegt habe, hält nicht, und einen Nutzen von spaCy habe ich nicht gemessen. Deutlich schadet spaCy nur, wenn ihm die CPU knapp wird. Deshalb bleibt spaCy aus.',
     40,
     `${umgebung}`,
   );
@@ -259,7 +259,8 @@ export function folien1A(d) {
     'Entscheidung: lexikalische Wortwolke beibehalten',
     flaeche(
       `<div style="display:grid;grid-template-columns:1fr;row-gap:14px;font-size:28px;line-height:1.35">` +
-        `<p style="margin:0;padding-left:18px;border-left:6px solid var(--blau)">${mono('NLP_ENABLED=false')} bleibt; keine Freigabe durch nachträglich weichere Kriterien</p>` +
+        `<p style="margin:0;padding-left:18px;border-left:6px solid var(--blau)">Freigabe nicht erteilt: Regel verfehlt (${d.h1.fehl + d.h2.fehl} von ${d.h1.gesamt + d.h2.gesamt}), Nutzen nicht gemessen; ${mono('NLP_ENABLED=false')} bleibt</p>` +
+        `<p style="margin:0;padding-left:18px;border-left:6px solid var(--blau)">Deutlich schadet spaCy nur bei knapper CPU (V3, Block 5); die Regel lockere ich nachträglich nicht</p>` +
         `<p style="margin:0;padding-left:18px;border-left:6px solid var(--blau)">Für neue Versuche: Budget 1 CPU, 1 GiB, 64 PIDs beibehalten</p>` +
         `<p style="margin:0;padding-left:18px;border-left:6px solid var(--linie)">Grenzen: ein gemeinsamer WSL2-Host mit Lastgenerator, Beitrittswelle statt Dauerlast, keine Aussage zu Rendering oder LLM</p>` +
         `</div>` +
@@ -271,7 +272,7 @@ export function folien1A(d) {
         `</ol>` +
         `<p class="beleg">KI: Umsetzung, Auswertung und Entwurf mit OpenAI Codex; Messung durch Niklas nach Anleitung; Folienentwurf im Deck-Stil von Jonas. Auswertung ${H.auswertungSha}</p>`,
     ),
-    'Meine Entscheidung ist die Gegenalternative aus dem Vertrag: spaCy bleibt aus, die lexikalische Wortwolke reicht. Ich weiche die Kriterien nachträglich nicht auf. Für weitere Versuche bleibt das Budget von einer CPU und einem Gibibyte. Die Grenzen: Alles lief auf einem WSL2-Host zusammen mit dem Lastgenerator, das Profil ist eine Beitrittswelle, und über Rendering oder das LLM sage ich nichts. Drei Fragen würde ich gern diskutieren.',
+    'Meine Entscheidung ist die Gegenalternative aus dem Vertrag: keine Freigabe, spaCy bleibt aus. Das heißt nicht, dass spaCy schädlich ist. Die vorab festgelegte Regel hält nicht, den Nutzen habe ich nicht gemessen, und die Beweislast liegt bei der optionalen Komponente. Deutlich geschadet hat spaCy nur gedrosselt, in einem Block. Die Regel war für p95-Werte um zwanzig Millisekunden wohl zu streng; für einen neuen Versuch würde ich sie ändern, für diesen gilt sie. Für weitere Versuche bleibt das Budget von einer CPU und einem Gibibyte. Die Grenzen: Alles lief auf einem WSL2-Host zusammen mit dem Lastgenerator, das Profil ist eine Beitrittswelle, und über Rendering oder das LLM sage ich nichts. Drei Fragen würde ich gern diskutieren.',
     50,
     `Versuchsvertrag V2, Gegenalternative · ${umgebung}`,
   );

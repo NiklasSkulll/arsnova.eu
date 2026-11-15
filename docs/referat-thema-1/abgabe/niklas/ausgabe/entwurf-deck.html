@@ -689,8 +689,8 @@
             <div style="display: grid; grid-template-columns: 760px 1fr; column-gap: 70px">
               <div>
                 <p style="margin: 0 0 36px; font-size: 42px; line-height: 1.25; font-weight: 700">
-                  Nein, noch nicht. Im Normalbetrieb bleibt spaCy im Budget, doch die vorab
-                  festgelegte Regel hält nicht in allen Blöcken.
+                  Freigabe nicht erteilt: Die vorab festgelegte Regel hält nicht, und der Nutzen ist
+                  nicht gemessen.
                 </p>
                 <p
                   style="
@@ -701,8 +701,8 @@
                     border-left: 6px solid var(--blau);
                   "
                 >
-                  Entscheidung: <span class="mono">NLP_ENABLED=false</span> bleibt, die lexikalische
-                  Wortwolke reicht.
+                  Deutlich schadet spaCy nur, wenn ihm die CPU knapp wird. Entscheidung:
+                  <span class="mono">NLP_ENABLED=false</span> bleibt.
                 </p>
               </div>
               <div>
@@ -1228,8 +1228,12 @@
               "
             >
               <p style="margin: 0; padding-left: 18px; border-left: 6px solid var(--blau)">
-                <span class="mono">NLP_ENABLED=false</span> bleibt; keine Freigabe durch
-                nachträglich weichere Kriterien
+                Freigabe nicht erteilt: Regel verfehlt (7 von 60), Nutzen nicht gemessen;
+                <span class="mono">NLP_ENABLED=false</span> bleibt
+              </p>
+              <p style="margin: 0; padding-left: 18px; border-left: 6px solid var(--blau)">
+                Deutlich schadet spaCy nur bei knapper CPU (V3, Block 5); die Regel lockere ich
+                nachträglich nicht
               </p>
               <p style="margin: 0; padding-left: 18px; border-left: 6px solid var(--blau)">
                 Für neue Versuche: Budget 1 CPU, 1 GiB, 64 PIDs beibehalten

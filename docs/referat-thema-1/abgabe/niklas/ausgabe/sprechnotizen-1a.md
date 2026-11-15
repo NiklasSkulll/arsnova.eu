@@ -4,7 +4,7 @@ Gesamt 6:35 min. Erzeugt aus `abgabe/niklas/folien-1a.mjs` (`notiz`, `zeitS`); E
 
 ## N1 Wie viel optionale Analyse verträgt der App-Host? (40 s, kumuliert 0:40)
 
-Ich bin Niklas Schneider und habe untersucht, ob der App-Host von arsnova.eu die optionale spaCy-Glättung der Wortwolke neben den Live-Aktionen tragen kann. Kurz: nein, noch nicht. Im Normalbetrieb bleibt spaCy in seinem Budget, aber die Regel, die ich vor der Messung festgelegt habe, hält nicht in allen Blöcken. Deshalb bleibt spaCy aus.
+Ich bin Niklas Schneider und habe untersucht, ob der App-Host von arsnova.eu die optionale spaCy-Glättung der Wortwolke neben den Live-Aktionen tragen kann. Kurz: Ich erteile keine Freigabe. Die Regel, die ich vor der Messung festgelegt habe, hält nicht, und einen Nutzen von spaCy habe ich nicht gemessen. Deutlich schadet spaCy nur, wenn ihm die CPU knapp wird. Deshalb bleibt spaCy aus.
 
 _Quelle:_ evidenz/1A/reihe-main-a19ca70f-20261115-122547/auswertung/auswertung.json
 
@@ -46,7 +46,7 @@ _Quelle:_ evidenz/1A/reihe-main-a19ca70f-20261115-122547/auswertung/auswertung.j
 
 ## N8 Entscheidung: lexikalische Wortwolke beibehalten (50 s, kumuliert 6:30)
 
-Meine Entscheidung ist die Gegenalternative aus dem Vertrag: spaCy bleibt aus, die lexikalische Wortwolke reicht. Ich weiche die Kriterien nachträglich nicht auf. Für weitere Versuche bleibt das Budget von einer CPU und einem Gibibyte. Die Grenzen: Alles lief auf einem WSL2-Host zusammen mit dem Lastgenerator, das Profil ist eine Beitrittswelle, und über Rendering oder das LLM sage ich nichts. Drei Fragen würde ich gern diskutieren.
+Meine Entscheidung ist die Gegenalternative aus dem Vertrag: keine Freigabe, spaCy bleibt aus. Das heißt nicht, dass spaCy schädlich ist. Die vorab festgelegte Regel hält nicht, den Nutzen habe ich nicht gemessen, und die Beweislast liegt bei der optionalen Komponente. Deutlich geschadet hat spaCy nur gedrosselt, in einem Block. Die Regel war für p95-Werte um zwanzig Millisekunden wohl zu streng; für einen neuen Versuch würde ich sie ändern, für diesen gilt sie. Für weitere Versuche bleibt das Budget von einer CPU und einem Gibibyte. Die Grenzen: Alles lief auf einem WSL2-Host zusammen mit dem Lastgenerator, das Profil ist eine Beitrittswelle, und über Rendering oder das LLM sage ich nichts. Drei Fragen würde ich gern diskutieren.
 
 _Quelle:_ evidenz/1A/reihe-main-a19ca70f-20261115-122547/auswertung/auswertung.json
 
