@@ -689,15 +689,38 @@ export function fussballfeldSvg(b1, { zoom = 0 } = {}) {
     kamera,
     `<rect x="${FENSTER.x + 1}" y="${FENSTER.y + 1}" width="${FENSTER.w - 2}" height="${FENSTER.h - 2}" fill="none" stroke="${FARBEN.rasenRand}" stroke-width="2"/>`,
   );
+  // Kennzahlen unter dem Feld: jede erscheint, sobald der Zoom ihre Strecke lesbar zeigt, und bleibt
+  // dann stehen (Bereich bis 1). Das Deck setzt opacity je Bild wie bei den Feldbeschriftungen;
+  // bei zoom 1 (Folie, Druck) sind alle drei sichtbar.
   const spalten = [
-    [0, tInf, FARBEN.bernstein, `Inferenz · Anteil ${fmt(b1.inferAnteil * 100, 2)} %`],
-    [590, tTrans, FARBEN.tinte, `Transport · ${fmt(b1.transportMs, 1)} ms`],
-    [1030, tNetz, FARBEN.blau, `Netz · ${fmt(b1.netzMs, 2)} ms`],
+    [
+      'inferenz',
+      null,
+      0,
+      tInf,
+      FARBEN.bernstein,
+      `Inferenz · Anteil ${fmt(b1.inferAnteil * 100, 2)} %`,
+    ],
+    [
+      'transport',
+      BEREICH.transport[0],
+      590,
+      tTrans,
+      FARBEN.tinte,
+      `Transport · ${fmt(b1.transportMs, 1)} ms`,
+    ],
+    ['netz', BEREICH.netz[0], 1030, tNetz, FARBEN.blau, `Netz · ${fmt(b1.netzMs, 2)} ms`],
   ];
-  for (const [x, wert, farbe, sub] of spalten) {
+  for (const [name, ab, x, wert, farbe, sub] of spalten) {
+    const zoomAttr =
+      ab === null
+        ? ''
+        : ` data-zoom-von="${ab}" data-zoom-bis="1" opacity="${rund6(zoomDeckkraft(zoom, ab, 1))}"`;
     t.push(
+      `<g data-spalte="${name}"${zoomAttr}>`,
       text(x - 4, 438, esc(wert), { mono: true, groesse: 80, gewicht: 600, farbe }),
       text(x, 480, esc(sub), { groesse: 28, farbe: FARBEN.text2 }),
+      '</g>',
     );
   }
   t.push(

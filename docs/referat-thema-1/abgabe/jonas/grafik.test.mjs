@@ -194,3 +194,26 @@ test('fussballfeldSvg: Feldbeschriftungen nur in ihrem Zoombereich sichtbar', ()
   assert.equal(deckkraft(fussballfeldSvg(b1, { zoom: 1 }), 'Netz · 0,3 mm'), 1);
   assert.equal(deckkraft(fussballfeldSvg(b1, { zoom: 0 }), 'Inferenz · 104,9 m'), 1);
 });
+
+test('fussballfeldSvg: Kennzahlen unter dem Feld erscheinen mit ihrer Zoomstufe', () => {
+  // Deckkraft der Spalte (Gruppe mit data-spalte); ohne Gruppe gilt sie als immer sichtbar.
+  const spalte = (svg, name) => {
+    const g = svg.match(new RegExp(`<g data-spalte="${name}"[^>]*>`));
+    assert.ok(g, `Spalte ${name} fehlt`);
+    const o = g[0].match(/opacity="([\d.]+)"/);
+    return o ? Number(o[1]) : 1;
+  };
+  const bei = (zoom) => {
+    const svg = fussballfeldSvg(b1, { zoom });
+    return ['inferenz', 'transport', 'netz'].map((n) => spalte(svg, n));
+  };
+  assert.deepEqual(bei(0), [1, 0, 0], 'Feld: nur Inferenz');
+  assert.deepEqual(bei(0.42), [1, 0, 0], '1 m: noch kein Transport');
+  assert.deepEqual(bei(0.67), [1, 1, 0], 'Transport lesbar: Transport dazu');
+  assert.deepEqual(bei(1), [1, 1, 1], '0,3 mm: alle (auch im Druck)');
+  // Die Spalte bleibt sichtbar, wenn die Feldbeschriftung weiterzoomt (kein Ausblenden nach oben).
+  assert.deepEqual(bei(0.85), [1, 1, 0]);
+  const svg1 = fussballfeldSvg(b1, { zoom: 1 });
+  assert.match(svg1, /<g data-spalte="transport" data-zoom-von="0\.58" data-zoom-bis="1"/);
+  assert.match(svg1, /<g data-spalte="netz" data-zoom-von="0\.92" data-zoom-bis="1"/);
+});

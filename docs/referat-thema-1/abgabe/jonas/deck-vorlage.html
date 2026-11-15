@@ -1,0 +1,256 @@
+<!doctype html>
+<!-- Vorlage des Browser-Decks; deck.mjs setzt die Platzhalter ein (Stil, Folien, Laufzeit). -->
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Thema 1 · Vortragsdeck</title>
+    <!--{{STIL}}-->
+    <style>
+      /* Bühne: 1600 × 900, auf das Fenster skaliert, mit Rand in Bühnenfarbe. */
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #10161d;
+      }
+      body.maus-ruhig {
+        cursor: none;
+      }
+      .buehne {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 1600px;
+        height: 900px;
+        overflow: hidden;
+        background: var(--grund);
+        color: var(--tinte);
+        font-family: var(--f-text);
+        transform: translate(-50%, -50%) scale(var(--massstab, 1));
+        outline: none;
+      }
+      .buehne > .folie {
+        position: absolute;
+        inset: 0;
+        display: none;
+      }
+      .buehne > .folie[data-aktuell] {
+        display: block;
+      }
+      [hidden] {
+        display: none !important;
+      }
+
+      /* Seiten aus Niklas' PDF */
+      .folie-bild img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+      .niklas-platzhalter {
+        margin: 120px 0 0;
+        color: var(--text-2);
+        font-size: 40px;
+        font-weight: 700;
+        line-height: 1.4;
+      }
+      .niklas-platzhalter span {
+        color: var(--gedaempft);
+        font-size: var(--s-text);
+        font-weight: 400;
+      }
+
+      /* Kleine Wegkarte mit dem Auftrag (oben links über dem Titel) */
+      .weg-mini {
+        position: absolute;
+        left: 97px;
+        top: 8px;
+        width: 450px;
+        height: 52px;
+        z-index: 2;
+      }
+      .weg-mini-karte {
+        display: block;
+      }
+      .weg-punkt {
+        position: absolute;
+        left: 0;
+        top: 0;
+        box-sizing: border-box;
+        width: 30px;
+        height: 30px;
+        border: 3px solid var(--blau);
+        border-radius: 50%;
+        background: rgb(11 94 168 / 0.16);
+      }
+      .weg-punkt::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 10px;
+        height: 10px;
+        margin: -5px 0 0 -5px;
+        border-radius: 50%;
+        background: var(--blau);
+      }
+      .weg-wandernd .weg-punkt {
+        offset-rotate: 0deg;
+        offset-distance: 0%;
+        transition: offset-distance 600ms ease;
+      }
+      .weg-mini-statisch .weg-punkt {
+        transform: translate(-50%, -50%);
+      }
+      .weg-beschriftung {
+        position: absolute;
+        left: 462px;
+        top: 0;
+        height: 30px;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        white-space: nowrap;
+        color: var(--text-2);
+        font-size: var(--s-min);
+        font-weight: 600;
+      }
+      .weg-beschriftung .etikett {
+        padding: 0 10px;
+      }
+      @media screen {
+        .weg-mini-statisch {
+          display: none;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .weg-wandernd .weg-punkt {
+          transition: none;
+        }
+      }
+
+      /* Reserve-Übersicht (Taste r) */
+      .reserve-uebersicht {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        box-sizing: border-box;
+        padding: 72px 110px;
+        background: var(--grund);
+        color: var(--tinte);
+        font-family: var(--f-text);
+      }
+      .reserve-uebersicht h2 {
+        margin: 0 0 44px;
+        color: var(--blau);
+        font-size: var(--s-titel);
+        font-weight: 800;
+        line-height: 1.1;
+      }
+      .reserve-uebersicht ol {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px 40px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .reserve-uebersicht button {
+        display: flex;
+        gap: 18px;
+        align-items: baseline;
+        width: 100%;
+        padding: 18px 24px;
+        border: var(--linie-min) solid var(--linie);
+        border-radius: 10px;
+        background: var(--grund);
+        color: var(--tinte);
+        font: 400 var(--s-text) / 1.3 var(--f-text);
+        text-align: left;
+        cursor: pointer;
+      }
+      .reserve-uebersicht button .mono {
+        color: var(--blau);
+        font-weight: 600;
+      }
+      .reserve-uebersicht button:hover {
+        border-color: var(--blau);
+      }
+      .reserve-uebersicht button:focus-visible {
+        outline: 4px solid var(--blau);
+        outline-offset: 3px;
+      }
+      .reserve-hilfe {
+        position: absolute;
+        left: 110px;
+        bottom: 72px;
+        margin: 0;
+        color: var(--gedaempft);
+        font-size: var(--s-min);
+      }
+
+      .live {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+      }
+
+      /* Druck/PDF: jede Folie eine Seite 1600 × 900, Marker fest an der Station. */
+      @page {
+        size: 1600px 900px;
+        margin: 0;
+      }
+      @media print {
+        * {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+        html,
+        body {
+          height: auto;
+          overflow: visible;
+          background: #fff;
+        }
+        .buehne {
+          position: static;
+          width: auto;
+          height: auto;
+          overflow: visible;
+          transform: none;
+        }
+        .buehne > .folie {
+          position: relative;
+          display: block;
+        }
+        .buehne > .folie + .folie {
+          break-before: page;
+        }
+        .weg-wandernd,
+        .reserve-uebersicht,
+        .live {
+          display: none !important;
+        }
+        html[data-druck='jonas'] .folie:not([data-teil='jonas']):not([data-teil='reserve']) {
+          display: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="buehne" tabindex="-1" aria-roledescription="Präsentation" aria-label="Thema 1">
+      <!--{{FOLIEN}}-->
+      <!--{{WEG}}-->
+      <!--{{UEBERSICHT}}-->
+    </main>
+    <p class="live" aria-live="polite"></p>
+    <!--{{KONFIG}}-->
+    <!--{{SKRIPT}}-->
+  </body>
+</html>
