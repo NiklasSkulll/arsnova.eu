@@ -3,13 +3,13 @@
 // Ausgabe in <zielordner>: zahlen.tex (\newcommand je Wert), abb-weg.pdf, abb-zeit.pdf.
 // Abbildungen in Arial wie der Text (Schriftregel RL S. 2); Farbe nur in Abbildungen.
 //
-// CLI: node handout-latex.mjs <zielordner> [--arial <ordner mit Arial282-*.ttf>]
-/* global console, document, process -- Node-Skript, page.evaluate läuft im Browser */
-import { mkdirSync, writeFileSync } from 'node:fs';
+// CLI: node handout-latex.mjs <zielordner>   (braucht rsvg-convert und pdffonts)
+/* global console, process -- Node-Skript */
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { parseArgs } from 'node:util';
 
 import { ladeFolienDaten } from './folien.mjs';
 import { wegSvg, zeitzerlegungSvg } from './grafik.mjs';
@@ -93,30 +93,25 @@ export function svgArial(svg) {
     .replace(/font-family:[^;"]*/g, 'font-family:Arial');
 }
 
-async function svgZuPdf(svg, pfad, { breiteMm, arial }) {
-  const { chromium } = await import('playwright');
-  const vb = /viewBox="0 0 ([\d.]+) ([\d.]+)"/.exec(svg);
-  const hoeheMm = Math.ceil((breiteMm * Number(vb[2])) / Number(vb[1]));
-  const face = (gewicht, datei) =>
-    `@font-face{font-family:Arial;font-weight:${gewicht};src:url(${pathToFileURL(join(arial, datei)).href})}`;
-  const html =
-    `<!doctype html><meta charset="utf-8"><style>${face(400, 'Arial282-Regular.ttf')}${face(700, 'Arial282-Bold.ttf')}` +
-    `@page{size:${breiteMm}mm ${hoeheMm}mm;margin:0}html,body{margin:0}svg{display:block;width:${breiteMm}mm;height:${hoeheMm}mm}</style>${svg}`;
-  const browser = await chromium.launch();
+// SVG → PDF mit rsvg-convert (cairo): bettet Arial als TrueType ein. Chromium schrieb Teile als
+// Type-3-Schrift, die PaperLab ablehnt (Schriftregel RL S. 2: alle Schriften eingebettet, eine Familie).
+function svgZuPdf(svg, pfad, { breiteMm }) {
+  const tmp = mkdtempSync(join(tmpdir(), 'handout-svg-'));
   try {
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'load' });
-    await page.evaluate(() => document.fonts.ready);
-    await page.pdf({ path: pfad, preferCSSPageSize: true, printBackground: true });
+    const quelle = join(tmp, 'abb.svg');
+    writeFileSync(quelle, svg);
+    const breitePt = Math.round((breiteMm / 25.4) * 72);
+    execFileSync('rsvg-convert', ['-f', 'pdf', '-w', String(breitePt), '-o', pfad, quelle]);
   } finally {
-    await browser.close();
+    rmSync(tmp, { recursive: true, force: true });
   }
   const fonts = execFileSync('pdffonts', [pfad], { encoding: 'utf8' });
-  if (/Inter|Plex|DejaVu|Liberation/.test(fonts))
-    throw new Error(`${pfad}: fremde Schrift\n${fonts}`);
+  if (/Type 3|Inter|Plex|DejaVu|Liberation/.test(fonts)) {
+    throw new Error(`${pfad}: unzulässige Schrift\n${fonts}`);
+  }
 }
 
-export async function erzeuge(ziel, { arial }) {
+export async function erzeuge(ziel) {
   const daten = ladeFolienDaten(ROOT);
   mkdirSync(ziel, { recursive: true });
   const commit = execFileSync('git', ['rev-parse', '--short=8', 'HEAD'], {
@@ -126,28 +121,15 @@ export async function erzeuge(ziel, { arial }) {
   const datum = new Date().toISOString().slice(0, 10);
   writeFileSync(join(ziel, 'zahlen.tex'), zahlenTex(handoutMakros(daten), { commit, datum }));
   const { b1, c1, auftrag } = daten;
-  await svgZuPdf(svgArial(wegSvg({ aktiv: null, b1, c1, auftrag })), join(ziel, 'abb-weg.pdf'), {
+  svgZuPdf(svgArial(wegSvg({ aktiv: null, b1, c1, auftrag })), join(ziel, 'abb-weg.pdf'), {
     breiteMm: 170,
-    arial,
   });
-  await svgZuPdf(svgArial(zeitzerlegungSvg(b1)), join(ziel, 'abb-zeit.pdf'), {
-    breiteMm: 170,
-    arial,
-  });
+  svgZuPdf(svgArial(zeitzerlegungSvg(b1)), join(ziel, 'abb-zeit.pdf'), { breiteMm: 170 });
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const { values, positionals } = parseArgs({
-    allowPositionals: true,
-    options: {
-      arial: {
-        type: 'string',
-        default: `${process.env.HOME}/Documents/Code/PaperLab/fonts/arial282`,
-      },
-    },
-  });
-  if (!positionals[0])
-    throw new Error('Aufruf: node handout-latex.mjs <zielordner> [--arial <ordner>]');
-  await erzeuge(resolve(positionals[0]), { arial: values.arial });
-  console.log(`erzeugt: ${positionals[0]}`);
+  const ziel = process.argv[2];
+  if (!ziel) throw new Error('Aufruf: node handout-latex.mjs <zielordner>');
+  await erzeuge(resolve(ziel));
+  console.log(`erzeugt: ${ziel}`);
 }

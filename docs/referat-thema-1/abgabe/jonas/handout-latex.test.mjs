@@ -57,3 +57,24 @@ test('svgArial ersetzt jede Schriftfamilie durch Arial', () => {
   assert.doesNotMatch(s, /Inter|Plex/);
   assert.equal((s.match(/Arial/g) || []).length, 2);
 });
+
+test('erzeuge: Abbildungen nur mit eingebetteten TrueType-Schriften (Arial), keine Type-3-Schrift', async () => {
+  const { mkdtempSync, readdirSync, rmSync } = await import('node:fs');
+  const { execFileSync } = await import('node:child_process');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const { erzeuge } = await import('./handout-latex.mjs');
+  const ziel = mkdtempSync(join(tmpdir(), 'hl-'));
+  try {
+    await erzeuge(ziel);
+    assert.deepEqual(readdirSync(ziel).sort(), ['abb-weg.pdf', 'abb-zeit.pdf', 'zahlen.tex']);
+    for (const f of ['abb-weg.pdf', 'abb-zeit.pdf']) {
+      const fonts = execFileSync('pdffonts', [join(ziel, f)], { encoding: 'utf8' });
+      assert.doesNotMatch(fonts, /Type 3/, f);
+      assert.match(fonts, /ArialMT/, f);
+      assert.doesNotMatch(fonts, /Inter|Plex|DejaVu/, f);
+    }
+  } finally {
+    rmSync(ziel, { recursive: true, force: true });
+  }
+});
