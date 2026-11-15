@@ -4,8 +4,8 @@
   "niklas": {
     "teil1": {
       "quelle": "Datei 1A-folien.pdf",
-      "stand": "Niklas' Zweig origin/feature-1A-resource-isolation, Commit e3b27b32 (noch nicht gemergt)",
-      "sha256": "5cff03e569de4351758f3e9adaf06883ae15543e2b0329bc559c685acf2d01ff"
+      "stand": "main nach Merge von PR #24",
+      "sha256": "8db5e854dee4df3cf64acc7eface52c5524571b98eb5a515ebf3a556cbfe32b7"
     },
     "teil2": { "quelle": "Platzhalter (Teil noch nicht geliefert)", "stand": null, "sha256": null }
   },
@@ -105,7 +105,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/bau.mjs",
-      "sha256": "0cf98c3cb5927dc42ae09393cb160a04ae5c9aff6a6b96bb2e77b0aef4dab15e"
+      "sha256": "17935c96f3b429e354fbd7500c9eb233cc919d5c9ad895d5be06c5e41cc7b684"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/deck-vorlage.html",
@@ -189,43 +189,43 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/medien/clip.webm",
-      "sha256": "bc37540553de17ec7286ba263892892fc3a8315b6a0d2134ba878b343f69f221"
+      "sha256": "3f57520cf2f9a2d96b83965a6c7940f9b55982cf85a9dd8b7f5d5f7107efc24f"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/medien/clip.json",
-      "sha256": "ebc13ec86c16d13bbed83c88c2b9a0d40d0c3114758c845b1b41fe7206bdc1d3"
+      "sha256": "d2ab6d4ab9b4a60cbffb90cb7417763b236c0aab338ec5dea3ade78f7ff59dc1"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/medien/clip-standbild.png",
-      "sha256": "56c37aa3307286cb10658acffefcf1e699f3ed1f9c13046738649989514c8bc5"
+      "sha256": "473611cff3da188962549e4e88f7c26cd747cb49a2f949ae1865cfe7f3feed27"
     },
     {
-      "pfad": "extern/1A-folien.pdf",
-      "sha256": "5cff03e569de4351758f3e9adaf06883ae15543e2b0329bc559c685acf2d01ff"
+      "pfad": "docs/referat-thema-1/abgabe/1A-folien.pdf",
+      "sha256": "8db5e854dee4df3cf64acc7eface52c5524571b98eb5a515ebf3a556cbfe32b7"
     }
   ],
   "ausgaben": [
     {
       "datei": "jonas-deck.html",
-      "bytes": 5505505,
-      "sha256": "4b4392c21837aa29f656e1cd2d60f6a6b6e8ea07c78bc95138eb24d862573f29"
+      "bytes": 5262968,
+      "sha256": "95c99b165330134829c4a39c572b5de819f114e968b18c669763658dd8305f58"
     },
     {
       "datei": "gemeinsames-deck.pdf",
-      "bytes": 1763629,
-      "sha256": "36a3d9a5176dfba32fb426d84548398b21d1ef1a02f5b2dfbf74d9635caa7e90",
+      "bytes": 1742321,
+      "sha256": "77c1a6ddce01885839adf0164e57e9feb5b97fa322c8013e8da9b08c4246cbb6",
       "seiten": 39
     },
     {
       "datei": "jonas-folien.pdf",
-      "bytes": 747347,
-      "sha256": "613a18ff357cfca2f7441e28573ee3a02358c355c704f33b7dbdf3614b023aed",
+      "bytes": 742267,
+      "sha256": "853c8690c632f25217a6da8c3a7e8d0ec0cdda7f5268c1ca7e86ac9b4c7f5536",
       "seiten": 27
     },
     {
       "datei": "sprechnotizen.md",
-      "bytes": 22569,
-      "sha256": "a4f8afa88c764df260bfa6bd4e5129d1819aecd78f35422698d674392688f66d"
+      "bytes": 22563,
+      "sha256": "43f7f4f6bc250c755408bfe086fcb4aafd9ef6e151cdfc4edd97e98f60727951"
     }
   ]
 }
