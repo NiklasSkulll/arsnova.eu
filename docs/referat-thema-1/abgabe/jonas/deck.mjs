@@ -201,12 +201,15 @@ function jonasFolie(f, nr, gesamt, clipUri) {
   if (clipUri) {
     const vorher = inhalt;
     inhalt = inhalt.replace(
-      // Der Clip ersetzt den gezeichneten Nachbau (data-nachbau … <!--/nachbau-->).
+      // Der Clip ersetzt den gezeichneten Nachbau samt seinem Vermerk (data-nachbau … <!--/nachbau-->)
+      // und bringt eine eigene Bildunterschrift mit (Schlussprüfung I1).
       /(<figure data-clip="[^"]*"[^>]*>)<div data-nachbau[\s\S]*?<!--\/nachbau-->/,
       (_, figure) =>
         `${figure}<video class="clip" src="${clipUri}" muted playsinline preload="auto" ` +
         `aria-label="Clip: Lehrenden-Sicht, Klick, Warten, Ersatzzusammenfassung" ` +
-        `style="display:block;width:100%;height:300px;object-fit:contain;background:var(--tinte);border-radius:8px"></video>`,
+        `style="display:block;width:100%;height:300px;object-fit:contain;background:var(--tinte);border-radius:8px"></video>` +
+        `<figcaption style="margin-top:12px;font-size:var(--s-min);line-height:1.35;color:var(--gedaempft)">` +
+        `Bildschirmaufnahme aus dem Labor, Entwicklungslauf (Tag dev-…), Illustration, kein Nachweis; den Grund erfährt die Lehrperson nicht.</figcaption>`,
     );
     if (inhalt === vorher && f.inhalt.includes('data-clip')) {
       throw new Error(`${f.id}: Nachbau für den Clip nicht gefunden`);

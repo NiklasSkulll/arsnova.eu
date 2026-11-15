@@ -809,7 +809,8 @@
                   </p>
                   <ul style="margin: 0; padding-left: 26px; font-size: 22px; line-height: 1.3">
                     <li style="margin: 0 0 4px">
-                      4 statt 8 CPUs, Timeout 300 s statt 90 s ab Werk v1.4.0 (I = 202 s)
+                      4 statt 8 CPUs, Timeout 300 s statt 90 s ab Werk v1.4.0 (Kalibrierung I = 202
+                      s)
                     </li>
                     <li style="margin: 0 0 4px">
                       v1.3.0: 4 CPUs, 5 GiB, 8 s; gemessen: aktueller Stand (Prüfer)
@@ -936,8 +937,8 @@
                   <span style="color: var(--blau)">B</span> Ohne Modell geprüft
                 </div>
                 <div style="font-size: 24px; color: var(--text-2); line-height: 1.35">
-                  <span class="etikett etikett-1c">1C</span> Test-Runtime, Negativproben: Ein Fehler
-                  muss den Test rot machen
+                  <span class="etikett etikett-1c">1C</span> Test-Runtime, Negativproben: Ein
+                  absichtlicher Fehler muss den Test rot machen
                 </div>
               </div>
               <div style="border-top: 6px solid var(--blau); padding-top: 12px">
@@ -1431,7 +1432,7 @@
               >
             </div>
             <p style="margin: 22px 0 6px; font-size: var(--s-min); color: var(--gedaempft)">
-              Zugleich meldet dieselbe Nutzlast, wörtlich:
+              Zugleich meldet dieselbe Nutzlast, wörtlich (umbrochen):
             </p>
             <pre
               data-artefakt="budget"
@@ -1548,6 +1549,11 @@
                     style="font-size: 22px; line-height: 1.3; margin-top: 4px; color: var(--text-2)"
                   >
                     Wartezeit am Client 151,8 s, T_job 151,2 s
+                  </div>
+                  <div
+                    style="font-size: 22px; line-height: 1.3; margin-top: 2px; color: var(--text-2)"
+                  >
+                    Server ohne Inferenz 368 ms, Ausreißer wie Auftrag 3
                   </div>
                 </div>
                 <p style="margin: 14px 0 0; font-size: var(--s-min); color: var(--gedaempft)">
@@ -1847,11 +1853,12 @@
                   </li>
                   <li style="margin: 0 0 12px">
                     <b>Preis unter Voting:</b> jede Stimme während der Inferenz verwirft die Antwort
-                    (belegt); Häufigkeit nicht belastbar gemessen (M7)
+                    (belegt); Häufigkeit nicht belastbar gemessen (M7 verfehlt, Empfehlung
+                    zurückgehalten)
                   </li>
                   <li style="margin: 0 0 12px">
                     <b>Befund Blitzlicht:</b> Runde außer TEMPO, Hash hängt an der Uhrzeit (geprüft:
-                    YESNO, 5 von 5 ohne Datenänderung verworfen)
+                    YESNO, 5 von 5 ohne Datenänderung verworfen; andere Typen laut Code)
                   </li>
                 </ul>
               </div>
@@ -2047,68 +2054,70 @@
                 data-clip="jonas-gate-clip.webm"
                 style="margin: 0; display: flex; flex-direction: column"
               >
-                <div
-                  data-nachbau="j13"
-                  style="
-                    flex: none;
-                    border: var(--linie-min) solid var(--linie);
-                    border-radius: 14px;
-                    background: var(--grund);
-                    box-shadow:
-                      0 2px 4px rgb(22 32 44 / 0.12),
-                      0 8px 24px rgb(22 32 44 / 0.1);
-                    overflow: hidden;
-                    font-size: 22px;
-                    line-height: 1.3;
-                  "
-                >
-                  <p
+                <div data-nachbau="j13" style="display: flex; flex-direction: column">
+                  <div
                     style="
-                      margin: 0;
-                      padding: 12px 18px;
-                      background: var(--raster);
-                      font-weight: 700;
-                      font-size: 24px;
+                      flex: none;
+                      border: var(--linie-min) solid var(--linie);
+                      border-radius: 14px;
+                      background: var(--grund);
+                      box-shadow:
+                        0 2px 4px rgb(22 32 44 / 0.12),
+                        0 8px 24px rgb(22 32 44 / 0.1);
+                      overflow: hidden;
+                      font-size: 22px;
+                      line-height: 1.3;
                     "
                   >
-                    Wichtige offene Fragen
-                  </p>
-                  <div style="padding: 12px 18px 14px">
-                    <ul style="margin: 0 0 10px; padding-left: 24px">
-                      <li>Können wir mehr Beispiele zur linearen Regression bearbeiten?</li>
-                      <li>Ist Kapitel 4 klausurrelevant?</li>
-                      <li>Müssen wir den vierten Abschnitt für die Prüfung lernen?</li>
-                    </ul>
-                    <p style="margin: 0 0 2px; font-weight: 700">Hinweise</p>
-                    <p style="margin: 0; color: var(--text-2)">
-                      Eine ausführliche Zusammenfassung war diesmal nicht möglich. Deshalb werden
-                      die wichtigsten Fragen im Wortlaut angezeigt.
+                    <p
+                      style="
+                        margin: 0;
+                        padding: 12px 18px;
+                        background: var(--raster);
+                        font-weight: 700;
+                        font-size: 24px;
+                      "
+                    >
+                      Wichtige offene Fragen
                     </p>
+                    <div style="padding: 12px 18px 14px">
+                      <ul style="margin: 0 0 10px; padding-left: 24px">
+                        <li>Können wir mehr Beispiele zur linearen Regression bearbeiten?</li>
+                        <li>Ist Kapitel 4 klausurrelevant?</li>
+                        <li>Müssen wir den vierten Abschnitt für die Prüfung lernen?</li>
+                      </ul>
+                      <p style="margin: 0 0 2px; font-weight: 700">Hinweise</p>
+                      <p style="margin: 0; color: var(--text-2)">
+                        Eine ausführliche Zusammenfassung war diesmal nicht möglich. Deshalb werden
+                        die wichtigsten Fragen im Wortlaut angezeigt.
+                      </p>
+                    </div>
                   </div>
+                  <p
+                    style="
+                      margin: 12px 0 0;
+                      font-size: var(--s-min);
+                      line-height: 1.35;
+                      color: var(--gedaempft);
+                    "
+                  >
+                    <span
+                      style="
+                        display: inline-block;
+                        padding: 0 10px;
+                        margin-right: 8px;
+                        border: var(--linie-min) solid var(--linie);
+                        border-radius: 999px;
+                        color: var(--text-2);
+                        font-weight: 600;
+                      "
+                      >Nachbau, keine Bildschirmaufnahme</span
+                    >Fragen nach der Fallback-Regel aus der echten Nutzlast (1C-Nachlauf),
+                    Überschrift und Hinweis wörtlich aus der App; den Grund erfährt die Lehrperson
+                    nicht.
+                  </p>
                 </div>
                 <!--/nachbau-->
-                <figcaption
-                  style="
-                    margin-top: 12px;
-                    font-size: var(--s-min);
-                    line-height: 1.35;
-                    color: var(--gedaempft);
-                  "
-                >
-                  <span
-                    style="
-                      display: inline-block;
-                      padding: 0 10px;
-                      margin-right: 8px;
-                      border: var(--linie-min) solid var(--linie);
-                      border-radius: 999px;
-                      color: var(--text-2);
-                      font-weight: 600;
-                    "
-                    >Nachbau, keine Bildschirmaufnahme</span
-                  >Fragen aus der echten Nutzlast, Überschrift und Hinweis wörtlich aus der App; den
-                  Grund erfährt die Lehrperson nicht.
-                </figcaption>
               </figure>
             </div>
             <p class="beleg">
@@ -2119,7 +2128,7 @@
           </div>
         </div>
         <div class="folie-fuss">
-          23 / 26 · Lauf 1B · 8e9d1317 · ThinkPad P50, Auftrag 2 · Nachlauf 1C · def56700 · Laptop ·
+          23 / 26 · Lauf 1B, Auftrag 2 · 8e9d1317 · ThinkPad P50 · Nachlauf 1C · def56700 · Laptop ·
           Nachbau: qaSummaryExtractive.ts
         </div>
       </section>
@@ -2143,8 +2152,8 @@
             >
               <p style="margin: 0; padding-left: 18px; border-left: 6px solid var(--petrol)">
                 <span class="etikett etikett-1c">1C</span> Nachprüfung, Validierung, Entkopplung und
-                Vorschau bleiben; Gate, Timeout, Cache, Zählung, Snapshot und Blitzlicht empfohlen,
-                nicht umgesetzt
+                Vorschau bleiben (Risiko: unter Voting verworfene Antworten, Häufigkeit offen);
+                Gate, Timeout, Cache, Zählung, Snapshot und Blitzlicht empfohlen, nicht umgesetzt
               </p>
               <p style="margin: 0; padding-left: 18px; border-left: 6px solid var(--bernstein)">
                 <span class="etikett etikett-1b">1B</span> Topologie bleibt, Hebel am Inferenz-Host;
@@ -2175,8 +2184,8 @@
           </div>
         </div>
         <div class="folie-fuss">
-          24 / 26 · 1C-ergebnis.md, ADRs 1C-010 bis 1C-024 (Folgen) · 1B-ergebnis.md, Entscheidung ·
-          8e9d1317
+          24 / 26 · 1C-ergebnis.md, ADRs 1C-010 bis 1C-024 · 1C: def56700 Laptop, 9f230abc Laptop
+          und PC · 1B: 8e9d1317 ThinkPad P50
         </div>
       </section>
       <section
@@ -2258,7 +2267,10 @@
             </p>
           </div>
         </div>
-        <div class="folie-fuss">26 / 26 · 1B-ergebnis.md, 1C-ergebnis.md · 1A: Niklas</div>
+        <div class="folie-fuss">
+          26 / 26 · 1B-ergebnis.md, 1C-ergebnis.md · 1C: def56700 Laptop, 9f230abc Laptop und PC ·
+          1B: 8e9d1317 ThinkPad P50 · 1A: Niklas
+        </div>
       </section>
       <section
         class="folie"
@@ -2755,7 +2767,7 @@
           </div>
         </div>
         <div class="folie-fuss">
-          Reserve R7 · adr/README.md, Index · Messstände 9f230abc, def56700
+          Reserve R7 · adr/README.md, Index · Messstände 9f230abc (Laptop und PC), def56700 (Laptop)
         </div>
       </section>
       <section
@@ -3123,7 +3135,7 @@
                   <li style="margin: 0 0 10px">
                     <b style="font-weight: 600">Gate (<span class="nowrap">1C-018</span>):</b>
                     <span style="color: var(--text-2)"
-                      >Abnahmemessung; Risiko: lockere Schwelle zeigt Metaaussagen</span
+                      >Abnahmemessung nötig; Risiko: lockere Schwelle zeigt Metaaussagen</span
                     >
                   </li>
                   <li style="margin: 0 0 10px">
@@ -3135,7 +3147,8 @@
                   <li style="margin: 0 0 10px">
                     <b style="font-weight: 600">Cache (<span class="nowrap">1C-024</span>):</b>
                     <span style="color: var(--text-2)"
-                      >eine Zeile; Risiko: nur ein Slot und ein Auftragstyp gemessen</span
+                      >eine Zeile im Entry-Point; Risiko: nur ein Slot und ein Auftragstyp
+                      gemessen</span
                     >
                   </li>
                   <li style="margin: 0 0 10px">
@@ -3150,7 +3163,7 @@
                       <span class="nowrap">1C-016</span>):</b
                     >
                     <span style="color: var(--text-2)"
-                      >klein; Risiko: Fenster ohne Rundenlaufzeit</span
+                      >klein; Risiko: Fenster beschreibt die Rundenlaufzeit nicht mehr</span
                     >
                   </li>
                 </ul>
@@ -3190,8 +3203,8 @@
           </div>
         </div>
         <div class="folie-fuss">
-          Reserve R12 · 1C-ergebnis.md, ADRs 1C-010 bis 1C-024 (Folgen) · 1B-ergebnis.md,
-          Entscheidung · 8e9d1317
+          Reserve R12 · 1C-ergebnis.md, ADRs 1C-010 bis 1C-024 · 1C: def56700 Laptop, 9f230abc
+          Laptop und PC · 1B: 8e9d1317 ThinkPad P50
         </div>
       </section>
       <div class="weg-mini weg-wandernd" role="img" aria-label="Station des Auftrags" hidden>

@@ -529,7 +529,7 @@ export function folien(daten) {
             kasten(
               'Abweichungen und Grenzen',
               [
-                `${fw.laborCpus} statt ${fw.releaseCpus} CPUs, Timeout ${fw.laborTimeout1BS} s statt ${fw.releaseTimeoutS} s ab Werk v1.4.0 (I = ${fw.kalibrierung1BS} s)`,
+                `${fw.laborCpus} statt ${fw.releaseCpus} CPUs, Timeout ${fw.laborTimeout1BS} s statt ${fw.releaseTimeoutS} s ab Werk v1.4.0 (Kalibrierung I = ${fw.kalibrierung1BS} s)`,
                 `v1.3.0: ${fw.v13Cpus} CPUs, ${fw.v13SpeicherGiB} GiB, ${fw.v13TimeoutS} s; gemessen: aktueller Stand (Prüfer)`,
                 'Images selbst gebaut; Start ohne Wrapper (CPU-Override)',
                 'Summary-Schalter an; Hintergrunddienste von Hand aus',
@@ -597,7 +597,7 @@ export function folien(daten) {
         schritt(
           'B',
           'Ohne Modell geprüft',
-          `${etikett('1C')} Test-Runtime, Negativproben: Ein Fehler muss den Test rot machen`,
+          `${etikett('1C')} Test-Runtime, Negativproben: Ein absichtlicher Fehler muss den Test rot machen`,
           'var(--blau)',
         ) +
         schritt(
@@ -744,7 +744,7 @@ export function folien(daten) {
         `<div style="position:absolute;left:0;top:0;bottom:0;width:${qBreite}%;background:var(--petrol)"></div>` +
         `<span style="position:absolute;left:14px;top:4px;font-size:var(--s-min);font-weight:600;color:var(--grund)">echte Tokens</span>` +
         `<span style="position:absolute;right:14px;top:4px;font-size:var(--s-min);color:var(--text-2)">geschätzt = ganzes Budget; rund zwei Drittel bleiben ungenutzt</span></div>` +
-        `<p style="margin:22px 0 6px;font-size:var(--s-min);color:var(--gedaempft)">Zugleich meldet dieselbe Nutzlast, wörtlich:</p>` +
+        `<p style="margin:22px 0 6px;font-size:var(--s-min);color:var(--gedaempft)">Zugleich meldet dieselbe Nutzlast, wörtlich (umbrochen):</p>` +
         artefakt('budget', [nl.budgetZeile.replace(/,"/g, ',\n "')], 'var(--petrol)') +
         beleg(
           'ADR 1C-014 (empfohlen: genauere Zählung prüfen, nicht umgesetzt), Nachlauf N2, Issue #17',
@@ -800,7 +800,8 @@ export function folien(daten) {
         `<div class="mono">Klick&nbsp;&nbsp;&nbsp;${uhr(au.requestedAt)} UTC</div>` +
         `<div class="mono">Fertig&nbsp;&nbsp;${uhr(au.finishedAt)} UTC</div>` +
         `<div class="mono">Netz &lt; ${fw.netzAufloesungMs} ms · Inferenz ${z.auInfer} s</div>` +
-        `<div style="font-size:22px;line-height:1.3;margin-top:4px;color:var(--text-2)">Wartezeit am Client ${z.auWarte} s, T_job ${z.auJob} s</div></div>` +
+        `<div style="font-size:22px;line-height:1.3;margin-top:4px;color:var(--text-2)">Wartezeit am Client ${z.auWarte} s, T_job ${z.auJob} s</div>` +
+        `<div style="font-size:22px;line-height:1.3;margin-top:2px;color:var(--text-2)">Server ohne Inferenz ${fmt(au.serverOhneInferenzMs)} ms, Ausreißer wie Auftrag 3</div></div>` +
         `<p style="margin:14px 0 0;font-size:var(--s-min);color:var(--gedaempft)">Alle ${n}, Median: Netz ${z.netz} ms, Transport ${z.transport} ms</p>` +
         `</div></div>` +
         beleg('ADR 1B-006 (Methode), ADR 1B-011 (Zeitbegriffe), Laufprotokoll 1B'),
@@ -911,8 +912,8 @@ export function folien(daten) {
           liste(
             [
               `<b>Hash nach der Inferenz:</b> geänderte Daten verwerfen die Antwort (E7, E8)`,
-              `<b>Preis unter Voting:</b> jede Stimme während der Inferenz verwirft die Antwort (belegt); Häufigkeit nicht belastbar gemessen (M7)`,
-              `<b>Befund Blitzlicht:</b> Runde außer TEMPO, Hash hängt an der Uhrzeit (geprüft: YESNO, ${c.yesno.wert} ohne Datenänderung verworfen)`,
+              `<b>Preis unter Voting:</b> jede Stimme während der Inferenz verwirft die Antwort (belegt); Häufigkeit nicht belastbar gemessen (M7 verfehlt, Empfehlung zurückgehalten)`,
+              `<b>Befund Blitzlicht:</b> Runde außer TEMPO, Hash hängt an der Uhrzeit (geprüft: YESNO, ${c.yesno.wert} ohne Datenänderung verworfen; andere Typen laut Code)`,
             ],
             24,
           ),
@@ -944,15 +945,19 @@ export function folien(daten) {
   const gekuerzt = [aussagen[0], '[…]'];
   const nb = daten.nachbau;
   // Nachbau als Karte der App (Kopfzeile mit der Überschrift aus dem Template, Rundung und Schatten
-  // wie eine Material-Karte); der Clip ersetzt im Deck genau diesen Block.
+  // wie eine Material-Karte). Der Clip ersetzt im Deck genau diesen Block samt Vermerk „Nachbau,
+  // keine Bildschirmaufnahme“, damit eine echte Aufnahme nie so beschriftet wird (deck.mjs).
   const nachbau =
-    `<div data-nachbau="j13" style="flex:none;border:var(--linie-min) solid var(--linie);border-radius:14px;background:var(--grund);box-shadow:0 2px 4px rgb(22 32 44 / 0.12), 0 8px 24px rgb(22 32 44 / 0.10);overflow:hidden;font-size:22px;line-height:1.3">` +
+    `<div data-nachbau="j13" style="display:flex;flex-direction:column">` +
+    `<div style="flex:none;border:var(--linie-min) solid var(--linie);border-radius:14px;background:var(--grund);box-shadow:0 2px 4px rgb(22 32 44 / 0.12), 0 8px 24px rgb(22 32 44 / 0.10);overflow:hidden;font-size:22px;line-height:1.3">` +
     `<p style="margin:0;padding:12px 18px;background:var(--raster);font-weight:700;font-size:24px">${esc(nb.titel)}</p>` +
     `<div style="padding:12px 18px 14px">` +
     `<ul style="margin:0 0 10px;padding-left:24px">${nb.fragen.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>` +
     `<p style="margin:0 0 2px;font-weight:700">Hinweise</p>` +
     `<p style="margin:0;color:var(--text-2)">${esc(nb.hinweis)}</p>` +
-    `</div></div><!--/nachbau-->`;
+    `</div></div>` +
+    `<p style="margin:12px 0 0;font-size:var(--s-min);line-height:1.35;color:var(--gedaempft)"><span style="display:inline-block;padding:0 10px;margin-right:8px;border:var(--linie-min) solid var(--linie);border-radius:999px;color:var(--text-2);font-weight:600">Nachbau, keine Bildschirmaufnahme</span>Fragen nach der Fallback-Regel aus der echten Nutzlast (1C-Nachlauf), Überschrift und Hinweis wörtlich aus der App; den Grund erfährt die Lehrperson nicht.</p>` +
+    `</div><!--/nachbau-->`;
   F.push({
     id: 'J13',
     teil: 'jonas',
@@ -979,7 +984,6 @@ export function folien(daten) {
         `</div>` +
         `<figure data-clip="jonas-gate-clip.webm" style="margin:0;display:flex;flex-direction:column">` +
         nachbau +
-        `<figcaption style="margin-top:12px;font-size:var(--s-min);line-height:1.35;color:var(--gedaempft)"><span style="display:inline-block;padding:0 10px;margin-right:8px;border:var(--linie-min) solid var(--linie);border-radius:999px;color:var(--text-2);font-weight:600">Nachbau, keine Bildschirmaufnahme</span>Fragen aus der echten Nutzlast, Überschrift und Hinweis wörtlich aus der App; den Grund erfährt die Lehrperson nicht.</figcaption>` +
         `</figure></div>` +
         beleg(
           'ADR 1C-018 (empfohlen: Instruktion, Grammatik und Gate abstimmen, nicht umgesetzt; Issue #13), ADR 1C-019, Laufprotokoll 1B, Befund',
@@ -989,7 +993,7 @@ export function folien(daten) {
     zeitS: 75,
     kurzfassung: true,
     quelle: `${qAntwort}; Lauf 1B · ThinkPad P50 · ${H.hauptlauf.commit.slice(0, 8)}; Nachlauf · Laptop · def56700; ADR 1C-018 · 9f230abc; Nachbau: Nutzlast labor.quiet.runs[${nl.lauf}], Hinweis qaSummaryExtractive.ts`,
-    fuss: `${fLauf}, Auftrag ${a.auftrag} · ${fNachlauf} · Nachbau: qaSummaryExtractive.ts`,
+    fuss: `Lauf 1B, Auftrag ${a.auftrag} · ${haupt} · ${P50} · ${fNachlauf} · Nachbau: qaSummaryExtractive.ts`,
     station: 'gate',
   });
 
@@ -1012,13 +1016,19 @@ export function folien(daten) {
           'Bleibt (1C-010 bis 1C-013):',
           'wenig Zeit; Risiko: unter Voting verwirft jede Stimme während der Inferenz die Antwort, Häufigkeit offen (1C-017)',
         ),
-        folge('Gate (1C-018):', 'Abnahmemessung; Risiko: lockere Schwelle zeigt Metaaussagen'),
+        folge(
+          'Gate (1C-018):',
+          'Abnahmemessung nötig; Risiko: lockere Schwelle zeigt Metaaussagen',
+        ),
         folge('Timeout (1C-023):', 'eine Kalibrierung je Host; Slot länger belegt'),
-        folge('Cache (1C-024):', 'eine Zeile; Risiko: nur ein Slot und ein Auftragstyp gemessen'),
+        folge(
+          'Cache (1C-024):',
+          'eine Zeile im Entry-Point; Risiko: nur ein Slot und ein Auftragstyp gemessen',
+        ),
         folge('Zählung (1C-014):', 'Änderung am Packer; Risiko: Fenster läuft über'),
         folge(
           'Snapshot, Blitzlicht (1C-015, 1C-016):',
-          'klein; Risiko: Fenster ohne Rundenlaufzeit',
+          'klein; Risiko: Fenster beschreibt die Rundenlaufzeit nicht mehr',
         ),
       ],
     ) +
@@ -1036,7 +1046,7 @@ export function folien(daten) {
     titel: 'Entscheidung und Fragen',
     inhalt: flaeche(
       `<div style="display:grid;grid-template-columns:1fr;row-gap:12px;font-size:26px;line-height:1.35">` +
-        `<p style="margin:0;padding-left:18px;border-left:6px solid var(--petrol)">${etikett('1C')} Nachprüfung, Validierung, Entkopplung und Vorschau bleiben; Gate, Timeout, Cache, Zählung, Snapshot und Blitzlicht empfohlen, nicht umgesetzt</p>` +
+        `<p style="margin:0;padding-left:18px;border-left:6px solid var(--petrol)">${etikett('1C')} Nachprüfung, Validierung, Entkopplung und Vorschau bleiben (Risiko: unter Voting verworfene Antworten, Häufigkeit offen); Gate, Timeout, Cache, Zählung, Snapshot und Blitzlicht empfohlen, nicht umgesetzt</p>` +
         `<p style="margin:0;padding-left:18px;border-left:6px solid var(--bernstein)">${etikett('1B')} Topologie bleibt, Hebel am Inferenz-Host; Logs empfohlen, nicht umgesetzt; Aufwand der zweiten Rolle: Niklas</p>` +
         `<p style="margin:0;font-size:var(--s-min);color:var(--gedaempft)">Details: R12 (Kosten, Risiko und Betriebsfolge je Entscheidung)</p>` +
         `</div>` +
@@ -1052,7 +1062,7 @@ export function folien(daten) {
     zeitS: 50,
     kurzfassung: true,
     quelle: `1C-ergebnis.md, Abschnitt 5, ADRs 1C-010 bis 1C-024, Abschnitt Folgen (Laptop und PC · 9f230abc; Laptop · def56700); 1B-ergebnis.md, Entscheidung (${rechnerKurz(H.hauptlauf.rechner)} · ${H.hauptlauf.commit.slice(0, 8)})`,
-    fuss: `1C-ergebnis.md, ADRs 1C-010 bis 1C-024 (Folgen) · 1B-ergebnis.md, Entscheidung · ${haupt}`,
+    fuss: `1C-ergebnis.md, ADRs 1C-010 bis 1C-024 · 1C: def56700 Laptop, 9f230abc Laptop und PC · 1B: ${haupt} ${P50}`,
     station: null,
   });
 
@@ -1076,7 +1086,7 @@ export function folien(daten) {
     zeitS: 30,
     kurzfassung: false,
     quelle: '1B-ergebnis.md, 1C-ergebnis.md (Kurzantwort, Verlauf 9f230abc); 1A von Niklas',
-    fuss: '1B-ergebnis.md, 1C-ergebnis.md · 1A: Niklas',
+    fuss: `1B-ergebnis.md, 1C-ergebnis.md · 1C: def56700 Laptop, 9f230abc Laptop und PC · 1B: ${haupt} ${P50} · 1A: Niklas`,
     station: null,
   });
 
@@ -1283,7 +1293,7 @@ export function folien(daten) {
       beleg('adr/README.md, Index; 1C-ergebnis.md, Abschnitt 5'),
     'Die Zählung der Entscheidungen in 1C nach Status. Keine Empfehlung ist umgesetzt, das verlangt der Auftrag so: Ergebnis ist eine begründete Empfehlung, kein Patch.',
     'adr/README.md, Index · Messstände 9f230abc (Laptop und PC) und def56700 (Laptop)',
-    'adr/README.md, Index · Messstände 9f230abc, def56700',
+    'adr/README.md, Index · Messstände 9f230abc (Laptop und PC), def56700 (Laptop)',
   );
 
   const bz = (bereich, quelleFn, schema, pruefung) =>
@@ -1456,7 +1466,7 @@ export function folien(daten) {
       ),
     'Falls nach den Entscheidungen im Einzelnen gefragt wird: Für 1C bleiben Nachprüfung, Validierung, Entkopplung und Vorschau; das kostet wenig Zeit, das Risiko liegt beim Voting. Empfohlen, aber nicht umgesetzt sind Änderungen an Gate, Timeout, Cache, Zählung, Snapshot und Blitzlicht, je mit Kosten und Risiko. Für 1B bleibt die Topologie, der Hebel liegt am Inferenz-Host; die Logs empfehle ich zu erweitern.',
     `1C-ergebnis.md, Abschnitt 5, ADRs 1C-010 bis 1C-024, Abschnitt Folgen (Laptop und PC · 9f230abc; Laptop · def56700); 1B-ergebnis.md, Entscheidung (${rechnerKurz(H.hauptlauf.rechner)} · ${H.hauptlauf.commit.slice(0, 8)})`,
-    `1C-ergebnis.md, ADRs 1C-010 bis 1C-024 (Folgen) · 1B-ergebnis.md, Entscheidung · ${haupt}`,
+    `1C-ergebnis.md, ADRs 1C-010 bis 1C-024 · 1C: def56700 Laptop, 9f230abc Laptop und PC · 1B: ${haupt} ${P50}`,
   );
 
   return F;

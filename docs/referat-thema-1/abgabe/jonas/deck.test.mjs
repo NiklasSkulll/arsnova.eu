@@ -514,4 +514,13 @@ test('Clip wird als data-URI in J13 eingebettet', () => {
   const html = baueDeck(F, { niklas: { teil1: [], teil2: [] }, clip, eingebettet: true });
   assert.match(html, /<video[^>]+src="data:video\/webm;base64,GkXfowECAwQ="/);
   assert.doesNotMatch(html, /data-nachbau/);
+  // Der Vermerk gehört zum ersetzten Block: Mit Clip steht nirgends „keine Bildschirmaufnahme“
+  // (Schlussprüfung I1), dafür die Bildunterschrift des Clips; ohne Clip umgekehrt.
+  const j13 = (h) => h.match(/<section[^>]*data-id="J13"[\s\S]*?<\/section>/)[0];
+  assert.doesNotMatch(j13(html), /keine Bildschirmaufnahme/);
+  assert.doesNotMatch(j13(html), /Fallback-Regel/);
+  assert.match(j13(html), /Bildschirmaufnahme aus dem Labor, Entwicklungslauf/);
+  const ohne = baueDeck(F, { niklas: { teil1: [], teil2: [] }, eingebettet: true });
+  assert.match(j13(ohne), /Nachbau, keine Bildschirmaufnahme/);
+  assert.doesNotMatch(j13(ohne), /Bildschirmaufnahme aus dem Labor/);
 });
