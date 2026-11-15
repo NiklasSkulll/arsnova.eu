@@ -42,3 +42,27 @@ test('ffmpegFilter trimmt jedes Segment und hängt alle aneinander', () => {
   assert.match(f, /trim=start=7:end=156,setpts=\(PTS-STARTPTS\)\/37\.25\[s1\]/);
   assert.match(f, /\[s0\]\[s1\]\[s2\]concat=n=3:v=1:a=0\[v\]$/);
 });
+
+test('startMs schneidet das Laden vor der Lehrenden-Ansicht ab, ab dem Klick fehlt nichts', () => {
+  const p = schnittplan({
+    startMs: 6_000,
+    klickMs: 12_000,
+    ergebnisMs: 160_000,
+    gesamtMs: 170_000,
+    raffungS: 4,
+  });
+  assert.equal(p.segmente[0].vonS, 6);
+  assert.equal(p.segmente[0].bisS, 14);
+  assert.equal(p.dauerS, 8 + 4 + 11);
+  assert.throws(
+    () =>
+      schnittplan({
+        startMs: 13_000,
+        klickMs: 12_000,
+        ergebnisMs: 20_000,
+        gesamtMs: 30_000,
+        raffungS: 4,
+      }),
+    /Reihenfolge/,
+  );
+});

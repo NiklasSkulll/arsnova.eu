@@ -18,8 +18,8 @@ import { pathToFileURL } from 'node:url';
 
 // Segmente des Schnitts in Sekunden: bis 2 s nach dem Klick und ab 1 s vor dem Ergebnis in
 // Echtzeit, dazwischen auf raffungS gerafft. Kurze Wartezeiten bleiben ungeschnitten.
-export function schnittplan({ klickMs, ergebnisMs, gesamtMs, raffungS }) {
-  if (!(klickMs < ergebnisMs && ergebnisMs <= gesamtMs)) {
+export function schnittplan({ startMs = 0, klickMs, ergebnisMs, gesamtMs, raffungS }) {
+  if (!(startMs <= klickMs && klickMs < ergebnisMs && ergebnisMs <= gesamtMs)) {
     throw new Error('Zeiten in falscher Reihenfolge (Klick < Ergebnis <= Ende)');
   }
   const s = (ms) => Math.round(ms / 100) / 10;
@@ -27,14 +27,16 @@ export function schnittplan({ klickMs, ergebnisMs, gesamtMs, raffungS }) {
   const b = s(ergebnisMs) - 1;
   const ende = s(gesamtMs);
   if (b - a < raffungS * 1.5) {
-    return { segmente: [{ vonS: 0, bisS: ende, faktor: 1 }], dauerS: ende, gerafftS: 0 };
+    const vonS = s(startMs);
+    return { segmente: [{ vonS, bisS: ende, faktor: 1 }], dauerS: ende - vonS, gerafftS: 0 };
   }
+  const start = s(startMs);
   const segmente = [
-    { vonS: 0, bisS: a, faktor: 1 },
+    { vonS: start, bisS: a, faktor: 1 },
     { vonS: a, bisS: b, faktor: (b - a) / raffungS },
     { vonS: b, bisS: ende, faktor: 1 },
   ];
-  return { segmente, dauerS: a + raffungS + (ende - b), gerafftS: b - a };
+  return { segmente, dauerS: a - start + raffungS + (ende - b), gerafftS: b - a };
 }
 
 export function ffmpegFilter({ segmente }) {
@@ -54,7 +56,10 @@ async function zeigeHinweise(page, out) {
     await hinweise.evaluate((el) => el.scrollIntoView({ behavior: 'smooth', block: 'center' }));
   }
   await page.waitForTimeout(4_000);
-  await page.screenshot({ path: join(out, 'standbild.png') });
+  await page.screenshot({
+    path: join(out, 'standbild.png'),
+    clip: { x: 216, y: 0, width: 848, height: 800 },
+  });
 }
 
 async function oeffneHost({ zugang, url, out }) {
@@ -84,6 +89,8 @@ async function aufnehmen({ zugang, url, out, warteMaxS }) {
   const { page, context, browser } = await oeffneHost({ zugang, url, out });
   const kompass = page.getByTestId('host-moderation-compass');
   await kompass.waitFor({ timeout: 60_000 });
+  // Schnittbeginn: Lehrenden-Ansicht sichtbar (davor lädt die App die Startseite).
+  const startMs = Math.max(0, Date.now() - t0 - 500);
   await page.waitForTimeout(2_000);
   await kompass.click();
   const knopf = page.locator('.moderation-compass-dialog__summary-button');
@@ -112,6 +119,7 @@ async function aufnehmen({ zugang, url, out, warteMaxS }) {
   );
   renameSync(join(out, video), join(out, 'roh.webm'));
   return {
+    startMs,
     klickMs,
     ergebnisMs,
     gesamtMs,
@@ -148,13 +156,20 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     '-i',
     join(arg.out, 'roh.webm'),
     '-filter_complex',
-    ffmpegFilter(plan),
+    // Auf den Dialog zuschneiden (848 × 800 ab x = 216), damit er auf der Folie lesbar bleibt.
+    `${ffmpegFilter(plan)};[v]crop=848:800:216:0[c]`,
     '-map',
-    '[v]',
+    '[c]',
     '-c:v',
     'libvpx-vp9',
     '-b:v',
-    '600k',
+    '500k',
+    '-deadline',
+    'good',
+    '-cpu-used',
+    '4',
+    '-row-mt',
+    '1',
     '-an',
     join(arg.out, 'clip.webm'),
   ]);
