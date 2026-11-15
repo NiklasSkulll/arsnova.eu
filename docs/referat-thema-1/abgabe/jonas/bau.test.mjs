@@ -114,12 +114,15 @@ test('Manifest: SHA-256 aller Eingaben und Ausgaben, Seitenzahlen', () => {
   assert.doesNotMatch(JSON.stringify(m), /TEST-MATRIKEL|personen\.json/);
 });
 
-test('jonas-folien.pdf: genau J1–J15 plus Reserve, eine Seite je Folie, 1600 x 900', async () => {
+test('jonas-folien.pdf: genau J1–J16 plus Reserve, eine Seite je Folie, 1600 x 900', async () => {
   const { seiten } = await pdfInfo(join(platzhalter, 'jonas-folien.pdf'));
   assert.equal(seiten, JONAS_UND_RESERVE.length);
   const gemeinsam = await pdfInfo(join(platzhalter, 'gemeinsames-deck.pdf'));
-  // G0, Niklas-Platzhalter 1 + 1, J1–J15, G9 und Reserve.
-  assert.equal(gemeinsam.seiten, F.length + 2);
+  // G0, Niklas 1A (gemergte PDF unter abgabe/ oder eine Platzhalterfolie), Platzhalter 1B 3–4,
+  // Jonas, G9 und Reserve.
+  const pdf1A = join(ROOT, 'abgabe/1A-folien.pdf');
+  const seiten1A = existsSync(pdf1A) ? (await pdfInfo(pdf1A)).seiten : 1;
+  assert.equal(gemeinsam.seiten, F.length + seiten1A + 1);
   const roh = readFileSync(join(platzhalter, 'jonas-folien.pdf'), 'latin1');
   assert.match(roh, /\/MediaBox\s*\[\s*0\s+0\s+1200(\.\d+)?\s+675(\.\d+)?\s*\]/);
 });
