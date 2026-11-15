@@ -1,12 +1,11 @@
 // Literaturverzeichnis der Folien nach dem IU-Zitierleitfaden (ZL): dieselben Einträge und Jahresbuchstaben
 // wie das Handout in PaperLab (presentation-semester-7-cloud-computing-1b-1c_jonas/main.bib, dort am Volltext
 // und gegen Crossref geprüft). Schlüssel = bibkey dort; literatur.test.mjs gleicht beide ab.
-// Kurzbelege auf den Folien: kurzbeleg(schluessel, stelle) → „(Autor, Jahr, Stelle)“ (ZL S. 2–3, Anhang B).
+// Links zeigen auf main (Fork und Upstream): dort liegt das Material nach dem Merge (Wunsch des Autors,
+// 2026-11-15). Kurzbelege auf den Folien: kurzbeleg(schluessel, stelle) → „(Autor, Jahr, Stelle)“ (ZL S. 2–3, Anhang B).
 
 const GH_FORK = 'https://github.com/NiklasSkulll/arsnova.eu/tree';
-const GH_UP =
-  'https://github.com/kqc-real/arsnova.eu/blob/a19ca70ff37dcb5510a77ab2745c06b70ccc3565';
-const STAND_1B = 'bbc394c9170ae728798fe1dbec49f79501082d3b';
+const GH_UP = 'https://github.com/kqc-real/arsnova.eu/blob/main';
 
 /** Alphabetisch wie im Handout. `kurz` ist die Autor-Jahr-Angabe des Kurzbelegs. */
 export const LITERATUR = [
@@ -53,17 +52,17 @@ export const LITERATUR = [
   {
     schluessel: 'weirauch2026b',
     kurz: 'Weirauch, 2026a',
-    voll: `Weirauch, J. (2026a). <i>Auftrag 1B, Schritte 1–2: Zeitzerlegung auf zwei Hosts</i> [Eigene Messung mit Rohdaten]. GitHub. ${GH_FORK}/${STAND_1B}/docs/referat-thema-1/evidenz/1B`,
+    voll: `Weirauch, J. (2026a). <i>Auftrag 1B, Schritte 1–2: Zeitzerlegung auf zwei Hosts</i> [Eigene Messung mit Rohdaten]. GitHub. ${GH_FORK}/main/docs/referat-thema-1/evidenz/1B`,
   },
   {
     schluessel: 'weirauch2026d',
     kurz: 'Weirauch, 2026b',
-    voll: `Weirauch, J. (2026b). <i>Präsentation, Antwortausschnitt und Clip zu den Aufträgen 1B und 1C</i> [Eigene Messung und Folien]. GitHub. ${GH_FORK}/feature-praesentation-jonas/docs/referat-thema-1`,
+    voll: `Weirauch, J. (2026b). <i>Präsentation, Antwortausschnitt und Clip zu den Aufträgen 1B und 1C</i> [Eigene Messung und Folien]. GitHub. ${GH_FORK}/main/docs/referat-thema-1`,
   },
   {
     schluessel: 'weirauch2026c',
     kurz: 'Weirauch, 2026c',
-    voll: `Weirauch, J. (2026c). <i>Referat Thema 1, Aufträge 1B und 1C</i> [Unveröffentlichte Referatsausarbeitung: Entscheidungen, Berichte, Messdaten]. GitHub. ${GH_FORK}/${STAND_1B}/docs/referat-thema-1`,
+    voll: `Weirauch, J. (2026c). <i>Referat Thema 1, Aufträge 1B und 1C</i> [Unveröffentlichte Referatsausarbeitung: Entscheidungen, Berichte, Messdaten]. GitHub. ${GH_FORK}/main/docs/referat-thema-1`,
   },
   {
     schluessel: 'yang2025',

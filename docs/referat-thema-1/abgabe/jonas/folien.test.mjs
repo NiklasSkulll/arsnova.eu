@@ -677,7 +677,8 @@ test('J13: Clip-Angaben stimmen mit dem App-Hinweis überein, die Notiz nennt de
   assert.ok(daten.clip, 'medien/clip.json fehlt');
   assert.equal(daten.clip.hinweis.startsWith(daten.nachbau.hinweis.replace(/…$/, '').trim()), true);
   const j13 = folien(daten).find((f) => f.id === 'J13');
-  assert.match(j13.notiz, /Timeout/);
+  assert.equal(/Timeout/.test(j13.notiz), daten.clip.grund === 'timeout');
+  assert.doesNotMatch(`${j13.notiz} ${j13.fuss}`, /power-saver|balanced|Energieprofil/);
   assert.doesNotMatch(j13.notiz, /Rechts ein Nachbau/);
   assert.doesNotMatch(`${j13.fuss} ${j13.quelle}`, /Nachbau/);
   assert.match(j13.quelle, /Hinweis qaSummaryExtractive\.ts/);

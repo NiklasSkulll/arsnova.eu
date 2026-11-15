@@ -354,7 +354,12 @@ const ZITATE = {
   J8: [LAUF, ['ggml2026', 'Abschn. „Timings and context usage“'], ['papadopoulos2021', 'Kap. 2.3']],
   J9: [LAUF, ['kwon2023', 'Kap. 2.2']],
   J10: [LAUF, ['kwon2023', 'Kap. 2.2']],
-  J11: [DOKU, ['kwon2023', 'Kap. 3'], ['ulrich2016', 'Abschn. „Picking a deadline“']],
+  J11: [
+    DOKU,
+    ['ggml2026', 'Abschn. „Common params“'],
+    ['kwon2023', 'Kap. 3'],
+    ['ulrich2016', 'Abschn. „Picking a deadline“'],
+  ],
   J12: [['weirauch2026c', '1C-Nachlauf, Teil 2']],
   J13: [LAUF, ['weirauch2026d', 'Antwortausschnitt, Clip'], ['shankar2024', 'S. 1–2']],
   J15: [DOKU, ['ulrich2016', 'Abschn. „Load Shedding and Graceful Degradation“']],
@@ -935,13 +940,13 @@ export function folien(daten) {
           gross: 52,
         }) +
         `<p style="margin:0 0 10px;font-size:24px;line-height:1.35">Beide Grenzen ${fw.grenzeGesamtGiB} GiB: Labor ${fw.laborSpeicher1CGiB} GiB + ${fw.laborSpeicher1CGiB} GiB Swap, Produktion ${fw.prodSpeicherGiB} GiB + bis zu ${fw.prodSwapGiB} GiB <span class="nowrap" style="color:var(--gedaempft)">(Swap des Hosts unbekannt)</span></p>` +
-        `<p style="margin:0;font-size:24px;line-height:1.35">OOM-Kill: 9f230abc im ${c.oomAuftrag9f230abc.wert}. Auftrag (Laptop und PC), def56700 schon im <b>${c.oomAuftrag.wert}.</b> <span class="nowrap" style="color:var(--gedaempft)">Ursache nicht getrennt gemessen</span></p>` +
+        `<p style="margin:0;font-size:24px;line-height:1.35">OOM-Kill: 9f230abc im ${c.oomAuftrag9f230abc.wert}. Auftrag (Laptop und PC), def56700 schon im <b>${c.oomAuftrag.wert}.</b> <span class="nowrap" style="color:var(--gedaempft)">warum früher: nicht getrennt gemessen</span></p>` +
         `</div></div>` +
         beleg(
           'ADR 1C-021, 1C-023 und 1C-024: empfohlen (Timeout am Inferenz-Host kalibrieren, Cache begrenzen), nicht umgesetzt; Issues #16, #14',
         ),
     ),
-    notiz: `Zurück zu 1C, zum Betrieb. Erstens der Timeout: Ab Werk bricht die App in Version 1.4.0 nach ${fw.releaseTimeoutS} Sekunden ab. Am PC ergab die Kalibrierung eine Inferenzzeit von ${z.kalPc} Sekunden, am Laptop dauert die Inferenz im Median ${z.infer1C}, auf einem anderen Stand. Mit dem Timeout ab Werk von Version 1.4.0 wäre der Modellpfad auf beiden nicht nutzbar. Zweitens der Speicher: Bei wechselnden Prompts wächst die Runtime je Auftrag um ${z.delta} Gigabyte; die Ursache ist der Prompt-Cache, gezeigt am PC. Beide Laborgrenzen liegen bei ${fw.grenzeGesamtGiB} Gibibyte. Auf dem älteren Stand starb die Runtime im ${c.oomAuftrag9f230abc.wert}. Auftrag, auf dem neuen schon im ${c.oomAuftrag.wert}.; die Ursache habe ich nicht getrennt gemessen. Im 1B-Lauf mit gleichem Prompt blieb er bei ${z.speicher1B} Gigabyte, Ursache nicht getrennt gemessen. Ich empfehle, Timeout und Cache anzupassen; umgesetzt ist das nicht.`,
+    notiz: `Zurück zu 1C, zum Betrieb. Erstens der Timeout: Ab Werk bricht die App in Version 1.4.0 nach ${fw.releaseTimeoutS} Sekunden ab. Am PC ergab die Kalibrierung eine Inferenzzeit von ${z.kalPc} Sekunden, am Laptop dauert die Inferenz im Median ${z.infer1C}, auf einem anderen Stand. Mit dem Timeout ab Werk von Version 1.4.0 wäre der Modellpfad auf beiden nicht nutzbar. Zweitens der Speicher: Bei wechselnden Prompts wächst die Runtime je Auftrag um ${z.delta} Gigabyte; die Ursache ist der Prompt-Cache, gezeigt am PC. Beide Laborgrenzen liegen bei ${fw.grenzeGesamtGiB} Gibibyte. Auf dem älteren Stand starb die Runtime im ${c.oomAuftrag9f230abc.wert}. Auftrag, auf dem neuen schon im ${c.oomAuftrag.wert}.; warum früher, habe ich nicht getrennt gemessen. Im 1B-Lauf mit gleichem Prompt blieb er bei ${z.speicher1B} Gigabyte, Ursache nicht getrennt gemessen. Ich empfehle, Timeout und Cache anzupassen; umgesetzt ist das nicht.`,
     zeitS: 50,
     kurzfassung: true,
     quelle: `ADR 1C-020, 1C-024 · PC (i7-8700) · 9f230abc; Nachlauf N3, N6 · Laptop (ThinkPad P50) · def56700; 1B-Speicher: ${q1B}`,
@@ -1039,14 +1044,16 @@ export function folien(daten) {
           'ADR 1C-018 (empfohlen: Instruktion, Grammatik und Gate abstimmen, nicht umgesetzt; Issue #13), ADR 1C-019, Laufprotokoll 1B, Befund',
         ),
     ),
-    notiz: `Und jetzt das Gate. Hier scheitert unser Auftrag. Links steht die echte Antwort des Modells, gekürzt, im Original. Das Gate prüft vor allem die Form: mindestens zwei Aussagen, jede mit einem Stichwort vorn, getrennt durch Doppelpunkt oder Strich, verschiedene Stichwörter, ganze Sätze, keine Metasätze aus einer kurzen Liste. Ausgaben mit Status failed und unsichere ohne Aussagen lässt es durch, aber jede geprüfte Antwort hatte Aussagen. Sprache und Thema prüft es nicht. Diese Antwort scheitert an der Form; inhaltlich passt sie auch nicht, sie ist englisch und fasst Moderationszustände zusammen. Im 1B-Lauf wurden ${b.verworfen} von ${n} Antworten verworfen, im 1C-Nachlauf bestand keine von ${c.gateAntwortenGesamt.wert}. Das gilt für ein Modell und eine Fixture. Vor Version 1.4.0, mit älterer Instruktion und ohne Gate, endeten in 1C ${c.fullContextVorGate.wert} Aufträgen mit Modellzusammenfassung. Zwei Upstream-Commits haben Instruktion und Gate zugleich geändert; erst der zweite prüft auch unsichere Antworten, und die meisten geprüften Antworten waren unsicher. Welcher Teil wie viel bewirkt, ist nicht getrennt gemessen. ${
+    notiz: `Und jetzt das Gate. Hier scheitert unser Auftrag. Links steht die echte Antwort des Modells, gekürzt, im Original. Das Gate prüft vor allem die Form: mindestens zwei Aussagen, jede mit einem Stichwort vorn, getrennt durch Doppelpunkt oder Strich, verschiedene Stichwörter, ganze Sätze, keine Metasätze aus einer kurzen Liste. Ausgaben mit Status failed und unsichere ohne Aussagen lässt es durch, aber jede geprüfte Antwort hatte Aussagen. Sprache und Thema prüft es nicht. Diese Antwort scheitert an der Form; inhaltlich passt sie auch nicht, sie ist englisch und fasst Moderationszustände zusammen. Im 1B-Lauf wurden ${b.verworfen} von ${n} Antworten verworfen, im 1C-Nachlauf bestand keine von ${c.gateAntwortenGesamt.wert}. Das gilt für ein Modell und eine Fixture. Vor Version 1.4.0, mit älterer Instruktion und ohne Gate, endeten in 1C ${c.fullContextVorGate.wert} Aufträge mit Modellzusammenfassung. Zwei Upstream-Commits haben Instruktion und Gate zugleich geändert; erst der zweite prüft auch unsichere Antworten, und die meisten geprüften Antworten waren unsicher. Welcher Teil wie viel bewirkt, ist nicht getrennt gemessen. ${
       daten.clip
-        ? 'Rechts die Lehrenden-Sicht aus dem Labor, gerafft: Klick, Warten, Ersatzzusammenfassung mit Hinweis. Hier war es ein Timeout, nicht das Gate; die Lehrperson sieht dasselbe.'
+        ? daten.clip.grund === 'timeout'
+          ? 'Rechts die Lehrenden-Sicht aus dem Labor, gerafft: Klick, Warten, Ersatzzusammenfassung mit Hinweis. Hier war es ein Timeout, nicht das Gate; die Lehrperson sieht dasselbe.'
+          : 'Rechts die Lehrenden-Sicht aus dem Labor, gerafft: Klick, Warten, dann die Ersatzzusammenfassung mit dem allgemeinen Hinweis. Den Grund erfährt die Lehrperson nicht.'
         : 'Rechts ein Nachbau der Lehrenden-Sicht: die Fragen im Wortlaut und der allgemeine Hinweis aus dem App-Code, den Grund erfährt die Lehrperson nicht.'
     } Meine Empfehlung: Instruktion, Grammatik und Gate gemeinsam abstimmen. Umgesetzt ist das nicht.`,
     zeitS: 75,
     kurzfassung: true,
-    quelle: `${qAntwort}; Lauf 1B · ThinkPad P50 · ${H.hauptlauf.commit.slice(0, 8)}; Nachlauf · Laptop · def56700; ADR 1C-018 · 9f230abc; ${daten.clip ? `Clip: ${daten.clip.quelle}, ${daten.clip.datum}, ${daten.clip.profil}; Hinweis qaSummaryExtractive.ts` : `Nachbau: Nutzlast labor.quiet.runs[${nl.lauf}], Hinweis qaSummaryExtractive.ts`}`,
+    quelle: `${qAntwort}; Lauf 1B · ThinkPad P50 · ${H.hauptlauf.commit.slice(0, 8)}; Nachlauf · Laptop · def56700; ADR 1C-018 · 9f230abc; ${daten.clip ? `Clip: ${daten.clip.quelle}, ${daten.clip.datum}; Hinweis qaSummaryExtractive.ts` : `Nachbau: Nutzlast labor.quiet.runs[${nl.lauf}], Hinweis qaSummaryExtractive.ts`}`,
     fuss: `Lauf 1B, Auftrag ${a.auftrag} · ${haupt} · ${P50} · ${fNachlauf} · ${daten.clip ? `Clip ${daten.clip.datum}, Labor` : 'Nachbau: qaSummaryExtractive.ts'}`,
     station: 'gate',
   });

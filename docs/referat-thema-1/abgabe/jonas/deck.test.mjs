@@ -548,10 +548,10 @@ test('Clip wird als data-URI in J13 eingebettet', () => {
   writeFileSync(standbild, Buffer.from([0x89, 0x50, 0x4e, 0x47]));
   const clipInfo = {
     datum: '2026-11-15',
-    profil: 'power-saver',
-    wartezeitS: 301.2,
+    profil: 'balanced',
+    wartezeitS: 171.6,
     raffungS: 4,
-    grund: 'timeout',
+    grund: 'gate',
     timeoutMs: 300000,
     hinweis: 'Eine ausführliche Zusammenfassung war diesmal nicht möglich.',
   };
@@ -565,9 +565,20 @@ test('Clip wird als data-URI in J13 eingebettet', () => {
   assert.match(html, /<video[^>]+src="data:video\/webm;base64,GkXfowECAwQ="/);
   // Im PDF steht das Standbild statt des Videos (Druck-CSS der Vorlage).
   assert.match(html, /<img class="clip-standbild" src="data:image\/png;base64,iVBORw=="/);
-  assert.match(html, /Laboraufnahme 2026-11-15 \(power-saver\), Wartezeit 301 s, auf 4 s gerafft/);
+  const nurJ13 = (h) => h.match(/<section[^>]*data-id="J13"[\s\S]*?<\/section>/)[0];
+  assert.match(html, /Laboraufnahme 2026-11-15: Wartezeit 172 s, auf 4 s gerafft/);
+  // Das Energieprofil gehört ins Protokoll, nicht auf die Folie (Wunsch des Autors).
+  assert.doesNotMatch(nurJ13(html), /balanced|power-saver|Energieprofil/);
   // Grund dieses Laufs ehrlich nennen: Timeout, nicht das Gate; Hinweis wörtlich.
-  assert.match(html, /Abbruch nach 300 s \(Timeout\), nicht das Gate/);
+  assert.doesNotMatch(nurJ13(html).match(/<figcaption[\s\S]*?<\/figcaption>/)[0], /Timeout/);
+  const mitTimeout = baueDeck(F, {
+    niklas: { teil1: [], teil2: [] },
+    clip,
+    clipInfo: { ...clipInfo, grund: 'timeout' },
+    standbild,
+    eingebettet: true,
+  });
+  assert.match(mitTimeout, /Abbruch nach 300 s \(Timeout\), nicht das Gate/);
   assert.match(
     html,
     /Hinweis wie beim Gate: „Eine ausführliche Zusammenfassung war diesmal nicht möglich\.“/,
