@@ -217,7 +217,7 @@ function jonasFolie(f, nr, gesamt, clipUri) {
     // einem Leerzeichen („t 0“ statt t mit tiefgestellter 0).
     .replace(/<svg\b/g, '<!-- prettier-ignore --><svg');
   const eigenerWeg = inhalt.includes('class="auftrag"');
-  const fussNr = f.teil === 'reserve' ? `Reserve ${f.id}` : `${zwei(nr)} / ${gesamt}`;
+  const fussNr = f.teil === 'reserve' ? `Reserve ${f.id}` : `${nr} / ${gesamt}`;
   const attrs = [
     `class="folie"`,
     `data-id="${esc(f.id)}"`,
@@ -250,7 +250,7 @@ function niklasFolien(pngs, teil, kennung, titel) {
           `<h1 class="folie-titel">Teil Niklas</h1>` +
           `<div class="folie-flaeche"><p class="niklas-platzhalter">${esc(titel)}<br>` +
           `<span>Seiten aus Niklas' Folien-PDF folgen hier.</span></p></div>` +
-          `<div class="folie-fuss">${zwei(nr)} / ${gesamt} · Niklas, ${esc(teil)}</div></section>`,
+          `<div class="folie-fuss">${nr} / ${gesamt} · Niklas, ${esc(teil)}</div></section>`,
       },
     ];
   }

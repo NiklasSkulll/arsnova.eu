@@ -463,10 +463,10 @@ export function folien(daten) {
       entwurf +
         `<p style="margin:0 0 30px;font-size:30px;color:var(--text-2)">„Wie wirksam trennt die Architektur von Release 1.3 Anwendung, Kontextaufbau und private Inferenz unter realer Last, und welche Betriebsgrenzen ergeben sich für den Moderationskompass?“</p>` +
         // Systembild
-        `<div style="display:grid;grid-template-columns:250px 60px 470px 60px 470px;align-items:stretch;font-size:26px;margin-bottom:34px">` +
+        `<div style="display:grid;grid-template-columns:250px 60px 1fr 60px 1fr;align-items:stretch;font-size:26px;margin-bottom:34px">` +
         `<div style="border:var(--linie-min) solid var(--linie);border-radius:10px;padding:16px">Lehrperson<br><span style="color:var(--gedaempft);font-size:var(--s-min)">Browser</span></div>` +
         `<div style="align-self:center;text-align:center;color:var(--blau);font-weight:800">→</div>` +
-        `<div style="border:var(--linie-min) solid var(--blau);border-radius:10px;padding:16px;background:var(--raster)"><b>app-host</b><br>App, Kontextaufbau, Queue, Adapter<br><span style="font-size:var(--s-min)"><span class="etikett" style="background:var(--raster);color:var(--blau)">1A</span> ${etikett('1C')}</span></div>` +
+        `<div style="border:var(--linie-min) solid var(--blau);border-radius:10px;padding:16px;background:var(--raster)"><b>app-host</b><br>App, Kontextaufbau, Queue, Adapter<br><span style="font-size:var(--s-min)"><span class="etikett" style="background:var(--grund);color:var(--blau)">1A</span> ${etikett('1C')}</span></div>` +
         `<div style="align-self:center;text-align:center;color:var(--blau);font-weight:800">→</div>` +
         `<div style="border:var(--linie-min) solid var(--blau);border-radius:10px;padding:16px;background:var(--raster)"><b>llm-host</b><br>private Runtime mit Modell<br><span style="font-size:var(--s-min)">${etikett('1B')}</span></div>` +
         `</div>` +
@@ -530,8 +530,8 @@ export function folien(daten) {
               'Abweichungen und Grenzen',
               [
                 `${fw.laborCpus} statt ${fw.releaseCpus} CPUs, Timeout ${fw.laborTimeout1BS} s statt ${fw.releaseTimeoutS} s ab Werk v1.4.0 (I = ${fw.kalibrierung1BS} s)`,
-                `v1.3.0: ${fw.v13Cpus} CPUs, ${fw.v13SpeicherGiB} GiB, ${fw.v13TimeoutS} s; gemessen auf Wunsch des Prüfers der aktuelle Stand`,
-                'Images selbst gebaut; Start ohne Wrapper (reicht das CPU-Override nicht durch)',
+                `v1.3.0: ${fw.v13Cpus} CPUs, ${fw.v13SpeicherGiB} GiB, ${fw.v13TimeoutS} s; gemessen: aktueller Stand (Prüfer)`,
+                'Images selbst gebaut; Start ohne Wrapper (CPU-Override)',
                 'Summary-Schalter an; Hintergrunddienste von Hand aus',
               ],
               'var(--bernstein)',
@@ -578,7 +578,7 @@ export function folien(daten) {
   const schritt = (nr, titel, text, farbe) =>
     `<div style="border-top:6px solid ${farbe};padding-top:12px">` +
     `<div style="font-weight:700;font-size:28px;margin:0 0 6px"><span style="color:${farbe}">${nr}</span> ${titel}</div>` +
-    `<div style="font-size:22px;color:var(--text-2);line-height:1.35">${text}</div></div>`;
+    `<div style="font-size:24px;color:var(--text-2);line-height:1.35">${text}</div></div>`;
   const hzeile = (h, was, schwelle) =>
     `<tr style="border-top:var(--linie-min) solid var(--linie)"><td style="padding:8px 12px 8px 0;font-weight:600">${h}</td><td style="padding:8px 12px 8px 0">${was}</td><td style="padding:8px 0">${schwelle}</td></tr>`;
   F.push({
@@ -591,29 +591,29 @@ export function folien(daten) {
         schritt(
           'A',
           'Vorab festgelegt',
-          'Hypothesen und Schwellen vor den gewerteten Läufen. Ausnahmen: T3.1 exploratorisch, M7b/c ohne vorherige Freigabe, 1B-Leitfrage nach dem Lauf bestätigt',
+          'Vor den gewerteten Läufen. Ausnahmen: T3.1 exploratorisch, M7b/c ohne vorherige Freigabe, <span class="nowrap">1B-Leitfrage</span> nach dem Lauf bestätigt',
           'var(--blau)',
         ) +
         schritt(
           'B',
           'Ohne Modell geprüft',
-          `${etikett('1C')} Test-Runtime und Negativproben: Ein eingebauter Fehler muss den Test rot machen`,
-          'var(--petrol)',
+          `${etikett('1C')} Test-Runtime, Negativproben: Ein Fehler muss den Test rot machen`,
+          'var(--blau)',
         ) +
         schritt(
           'C',
           'Im Labor gemessen',
-          `${etikett('1C')} Nachlauf mit echter Runtime<br>${etikett('1B')} gewerteter Lauf über zwei Hosts, <span class="nowrap">n = ${n}</span>`,
-          'var(--bernstein)',
+          `${etikett('1C')} Nachlauf, echte Runtime<br>${etikett('1B')} Lauf über zwei Hosts, <span class="nowrap">n = ${n}</span>`,
+          'var(--blau)',
         ) +
         `</div>` +
         `<div style="display:grid;grid-template-columns:1fr 1fr;column-gap:40px;align-items:start">` +
         kasten(
           `${etikett('1C')} Abweichungen und Grenzen im Labor`,
           [
-            'ein Rechner, Runtime über Loopback, kein zweiter Host; Image lokal gebaut, Messproxy',
-            `Laborlimits ${fw.laborCpus1C} CPUs, ${fw.laborSpeicher1CGiB} GiB (ab Werk v1.4.0: ${fw.releaseCpus} CPUs, ${fw.prodSpeicherGiB} GiB; v1.3.0: ${fw.v13Cpus} CPUs, ${fw.v13SpeicherGiB} GiB)`,
-            `Timeout ${fw.laborTimeoutS} s statt ${fw.releaseTimeoutS} s (Kalibrierung am Laptop ${fw.kalibrierungLaptopS} s); Nebenlast im Nachlauf`,
+            'ein Rechner, Loopback, kein zweiter Host',
+            `${fw.laborCpus1C} CPUs, ${fw.laborSpeicher1CGiB} GiB statt ${fw.releaseCpus} CPUs, ${fw.prodSpeicherGiB} GiB ab Werk v1.4.0`,
+            `Timeout ${fw.laborTimeoutS} s statt ${fw.releaseTimeoutS} s; Image lokal, Messproxy, Nebenlast`,
           ],
           'var(--petrol)',
         ) +
@@ -630,7 +630,7 @@ export function folien(daten) {
         `</table></div></div>` +
         beleg('ADR 1C-002, 1C-003, 1C-020, 1C-021, 1B-008; Nachlauf, Umgebung und Abweichungen'),
     ),
-    notiz: `Wie komme ich zu belastbaren Aussagen? Mit einer festen Reihenfolge. Erstens standen Hypothesen und Schwellen vor den gewerteten Läufen fest. Für 1B: Das Netz darf im Median höchstens ${fw.schwelleNetzMs} Millisekunden kosten, der Adapter höchstens ${fw.schwelleAdapterS} Sekunden, und die Inferenz muss mindestens ${fw.schwelleInferenzProzent} Prozent ausmachen. Die Ausnahmen nenne ich offen: Den Blitzlicht-Befund habe ich explorativ gefunden, zwei Messungen liefen ohne meine vorherige Freigabe, und die Leitfrage zu 1B habe ich erst nach dem Lauf bestätigt. Zweitens habe ich in 1C zuerst ohne Modell getestet, mit Negativproben: Ein absichtlicher Fehler muss den Test rot machen. Drittens das Labor. Für 1C heißt das: ein Rechner, die Runtime über Loopback, kleinere Limits als ab Werk in Version 1.4.0 und ein Timeout von ${fw.laborTimeoutS} Sekunden. Einen zweiten Host hatte 1C nicht; den liefert erst 1B.`,
+    notiz: `Belastbare Aussagen brauchen eine feste Reihenfolge. Erstens standen Hypothesen und Schwellen vor den gewerteten Läufen fest. Für 1B: Das Netz darf im Median höchstens ${fw.schwelleNetzMs} Millisekunden kosten, der Adapter höchstens ${fw.schwelleAdapterS} Sekunden, und die Inferenz muss mindestens ${fw.schwelleInferenzProzent} Prozent ausmachen. Die Ausnahmen nenne ich offen: Den Blitzlicht-Befund habe ich explorativ gefunden, zwei Messungen liefen ohne meine vorherige Freigabe, und die Leitfrage zu 1B habe ich erst nach dem Lauf bestätigt. Zweitens habe ich in 1C zuerst ohne Modell getestet, mit Negativproben: Ein absichtlicher Fehler muss den Test rot machen. Drittens das Labor. Für 1C heißt das: ein Rechner, die Runtime über Loopback, ${fw.laborCpus1C} CPUs und ${fw.laborSpeicher1CGiB} GiB wie in Version 1.3.0, und ein Timeout von ${fw.laborTimeoutS} Sekunden, weil die Kalibrierung am Laptop ${fw.kalibrierungLaptopS} Sekunden dauerte. Einen zweiten Host hatte 1C nicht.`,
     zeitS: 50,
     kurzfassung: false,
     quelle: `adr/1B-008-kernaussagen-und-schwellen.md; adr/1C-003-teststrategie-modellfrei.md; ${q1B}; Nachlauf 1C (Umgebung, Abweichungen): Laptop (ThinkPad P50) · def56700; ADR 1C-021 (Produktionslimits)`,
@@ -910,9 +910,9 @@ export function folien(daten) {
         zweiSpalten(
           liste(
             [
-              `<b>Hash nach der Inferenz verglichen:</b> Stimme oder gelöschte Quelle verwirft die Antwort, ${mono('source_changed')} (E7, E8)`,
-              `<b>Preis unter Voting:</b> Jede Stimme zwischen Aufbau und Nachprüfung verwirft die Antwort (belegt). Wie oft, ist nicht belastbar gemessen (M7 verfehlt, Empfehlung zurückgehalten, 1C-017)`,
-              `<b>Befund Blitzlicht:</b> Runde läuft, Typ außer ${mono('TEMPO')}: Hash hängt an der Uhrzeit, ${mono('YESNO')} ${c.yesno.wert} ${mono('source_changed')} ohne Datenänderung (geprüft: YESNO; andere Typen laut Code)`,
+              `<b>Hash nach der Inferenz:</b> geänderte Daten verwerfen die Antwort (E7, E8)`,
+              `<b>Preis unter Voting:</b> jede Stimme während der Inferenz verwirft die Antwort (belegt); Häufigkeit nicht belastbar gemessen (M7)`,
+              `<b>Befund Blitzlicht:</b> Runde außer TEMPO, Hash hängt an der Uhrzeit (geprüft: YESNO, ${c.yesno.wert} ohne Datenänderung verworfen)`,
             ],
             24,
           ),
@@ -931,7 +931,7 @@ export function folien(daten) {
           'ADR 1C-010 (bleibt), ADR 1C-017 (Voting), ADR 1C-016 (Blitzlicht: empfohlen, nicht umgesetzt; Issue #18), Nachlauf N3, N5; Teil 2 E7, E8',
         ),
     ),
-    notiz: `Nächste Station, nach der Inferenz. Was passiert, wenn sich die Daten ändern, während das Modell rechnet? Der Kontext wird danach noch einmal gebaut und sein Hash verglichen. Ändert sich eine Stimme oder wird eine Quelle gelöscht, wird die Antwort verworfen; das zeigen E7 und E8. Zeitlich kostet das ${z.nachpr} Prozent eines Auftrags. Der eigentliche Preis liegt woanders: Unter laufendem Voting verwirft jede Stimme während der Inferenz die Antwort. Wie oft das in einer Vorlesung passiert, weiß ich nicht belastbar; mein Modell dafür hat sein Kriterium verfehlt, deshalb halte ich die Empfehlung zurück. Die Nachprüfung bleibt trotzdem, weil sonst veraltete Ergebnisse als gültig gälten. Dazu ein Befund: Bei laufender Blitzlicht-Runde außer TEMPO hängt der Hash von der Uhrzeit ab; geprüft habe ich YESNO. Empfohlen, nicht umgesetzt.`,
+    notiz: `Nächste Station, nach der Inferenz. Was passiert, wenn sich die Daten ändern, während das Modell rechnet? Der Kontext wird danach noch einmal gebaut und sein Hash verglichen. Ändert sich eine Stimme oder wird eine Quelle gelöscht, wird die Antwort mit source_changed verworfen; das zeigen E7 und E8. Zeitlich kostet das ${z.nachpr} Prozent eines Auftrags. Der eigentliche Preis liegt woanders: Unter laufendem Voting verwirft jede Stimme während der Inferenz die Antwort. Wie oft das in einer Vorlesung passiert, weiß ich nicht belastbar; mein Modell dafür hat sein Kriterium verfehlt, deshalb halte ich die Empfehlung zurück. Die Nachprüfung bleibt trotzdem, weil sonst veraltete Ergebnisse als gültig gälten. Dazu ein Befund: Bei laufender Blitzlicht-Runde außer TEMPO hängt der Hash von der Uhrzeit ab; geprüft habe ich YESNO, die anderen Typen folgen aus dem Code. Empfohlen, nicht umgesetzt.`,
     zeitS: 50,
     kurzfassung: false,
     quelle: `Nachlauf N3, N5 · Laptop (ThinkPad P50) · def56700; ADR 1C-017 · Laptop und PC · 9f230abc; E7, E8: evidenz/1C/2026-10-24-teil2.md · Laptop · 248029dc (Test-Runtime)`,
@@ -974,7 +974,8 @@ export function folien(daten) {
         `<p style="margin:0 0 2px;font-size:28px;font-weight:600;color:var(--tinte)">bestehen das Gate</p>` +
         `<p style="margin:0">${etikett('1B')} ${b.verworfen} von ${n} verworfen (${mono('a19ca70f')})</p>` +
         `<p style="margin:4px 0 0">${etikett('1C')} ${c.gateAntworten.wert} bestehen (${mono('def56700')})</p></div></div>` +
-        `<p style="margin:12px 0 0;font-size:22px;line-height:1.35">Geltung: ein Modell, eine Fixture, Code nach v1.4.0. <b>Vor v1.4.0</b> (${mono('9f230abc')}, Instruktion v2, ohne Gate): ${c.fullContextVorGate.wert} mit Modellzusammenfassung; ${mono('12f1d8e4')} und ${mono('a998ada0')} änderten beides; erst ${mono('a998ada0')} prüft auch ${mono('uncertain')}.</p>` +
+        // Geltung als Sekundärtext unter der Kennzahl: bleibt sichtbar, konkurriert aber nicht mit 0 / 38.
+        `<p style="margin:16px 0 0;font-size:var(--s-min);line-height:1.4;color:var(--gedaempft)">Geltung: ein Modell, eine Fixture, Code nach v1.4.0. Vor v1.4.0 (9f230abc, Instruktion v2, ohne Gate): ${c.fullContextVorGate.wert} mit Modellzusammenfassung. 12f1d8e4 und a998ada0 änderten Instruktion und Gate zugleich; erst a998ada0 prüft auch uncertain.</p>` +
         `</div>` +
         `<figure data-clip="jonas-gate-clip.webm" style="margin:0;display:flex;flex-direction:column">` +
         nachbau +
@@ -1287,14 +1288,14 @@ export function folien(daten) {
 
   const bz = (bereich, quelleFn, schema, pruefung) =>
     `<tr style="border-top:var(--linie-min) solid var(--linie)"><td style="padding:6px 12px 6px 0;font-weight:600">${bereich}</td>` +
-    `<td style="padding:6px 12px 6px 0">${quelleFn}</td><td style="padding:6px 12px 6px 0">${schema}</td><td style="padding:6px 0">${pruefung}</td></tr>`;
+    `<td style="padding:6px 16px 6px 0">${quelleFn}</td><td style="padding:6px 22px 6px 0">${schema}</td><td style="padding:6px 0">${pruefung}</td></tr>`;
   reserve(
     'R8',
     '1C',
     'Reserve: 1C Schritt 1, Autorisierung',
     // Lange Bezeichner in Plex Mono etwas enger (.eng), damit die vier Spalten in die Breite passen.
     `<table class="eng" style="border-collapse:collapse;font-size:22px;line-height:1.25;width:100%">` +
-      `<tr style="color:var(--gedaempft);text-align:left"><th style="padding:0 12px 6px 0">Bereich (#456)</th><th>Quelle, Funktion</th><th>Schemafassung</th><th>Rechteprüfung</th></tr>` +
+      `<tr style="color:var(--gedaempft);text-align:left"><th style="padding:0 12px 6px 0;width:190px">Bereich (#456)</th><th>Quelle, Funktion</th><th>Schemafassung</th><th>Rechteprüfung</th></tr>` +
       bz(
         'Q&amp;A-Fragen, Stimmen',
         `PostgreSQL, ${mono('collectQaContextCandidates')}`,
@@ -1332,7 +1333,7 @@ export function folien(daten) {
         mono('assertHostSessionAccessFromContext'),
       ) +
       `</table>` +
-      `<p style="margin:12px 0 0;font-size:22px">Je Kontextaufbau acht Rechteprüfungen; ohne gültiges Host-Token weder Vorschau noch Auftrag; kein Token im Draht-Body (E2).</p>` +
+      `<p style="margin:20px 0 0;font-size:22px">Je Kontextaufbau acht Rechteprüfungen; ohne gültiges Host-Token weder Vorschau noch Auftrag; kein Token im Draht-Body (E2).</p>` +
       beleg(
         '1C-diagrams.md, #456-Bereiche (Stand def56700) und Belege je Station; apps/backend/src/routers/qa.ts',
       ),

@@ -150,9 +150,9 @@ export function zeitzerlegungSvg(b1, { kalt = true } = {}) {
     const x = r2(logX(ms, ACHSE));
     teile.push(
       `<line x1="${x}" y1="${oben}" x2="${x}" y2="${unten}" stroke="${FARBEN.linie}" stroke-width="2"/>`,
-      text(x, unten + 34, label, {
+      text(x, unten + 36, label, {
         mono: true,
-        groesse: 22,
+        groesse: 24,
         farbe: FARBEN.gedaempft,
         anker: 'middle',
       }),
@@ -175,9 +175,9 @@ export function zeitzerlegungSvg(b1, { kalt = true } = {}) {
     const breite = r2(xEnde - ACHSE.x0);
     teile.push(
       text(226, cy + 4, esc(z.name), { groesse: 30, gewicht: z.haupt ? 700 : 400, anker: 'end' }),
-      text(226, cy + 32, esc(z.gruppe), {
+      text(226, cy + 34, esc(z.gruppe), {
         mono: true,
-        groesse: 22,
+        groesse: 24,
         farbe: FARBEN.gedaempft,
         anker: 'end',
       }),
@@ -218,12 +218,12 @@ export function zeitzerlegungSvg(b1, { kalt = true } = {}) {
     if (z.haupt) {
       // H_B3 ist ein Anteil, keine Zeit: als Text im Balken, rechtsbündig.
       const ok = b1.inferAnteil >= SCHWELLE.inferAnteil;
-      const label = `Anteil ${fmt(b1.inferAnteil * 100, 2)} % (${alle}) · Schwelle mind. 95 %`;
+      const label = `Anteil ${fmt(b1.inferAnteil * 100, 2)} % (${alle}) · Schwelle ≥ 95 %`;
       const xr = xEnde - 44;
       teile.push(
-        text(xr, cy + 8, esc(label), {
+        text(xr, cy + 9, esc(label), {
           mono: true,
-          groesse: 22,
+          groesse: 24,
           gewicht: 600,
           farbe: FARBEN.weiss,
           anker: 'end',
@@ -493,13 +493,11 @@ export function wegSvg({ aktiv = null, b1, c1, auftrag }) {
       etikett(lx + 30, inf.y - 42, '1B') +
       text(lx + 76, inf.y - 16, 'Inferenz', { groesse: 30, gewicht: 700 }) +
       text(lx, inf.y + 22, `Kreis: Auftrag ${au.nr} (warm), 1B`, {
-        mono: true,
         groesse: 22,
         farbe: FARBEN.text2,
       }) +
       // Anteil dieses Auftrags (inferMs / jobMs), nicht der Median aller Aufträge
       text(lx, inf.y + 54, `Anteil ${fmt((au.inferMs / au.jobMs) * 100, 2)} %, langsame CPU`, {
-        mono: true,
         groesse: 22,
         farbe: FARBEN.text2,
       }) +
@@ -718,15 +716,43 @@ export function fussballfeldSvg(b1, { zoom = 0 } = {}) {
 
   // --- Rahmen und Kennzahlen (fest, unabhängig vom Zoom) ---
   const t = [];
+  // Kopfzeile je Zoom: erst der Maßstab des ganzen Felds, im Endbild (auch PDF) der Ausschnitt mit
+  // Maßstabsbalken, damit das letzte Bild nicht als ganzes Feld gelesen wird.
+  const imZoom = ([von, bis], inhalt) =>
+    `<g data-zoom-von="${von}" data-zoom-bis="${bis}" opacity="${rund6(zoomDeckkraft(zoom, von, bis))}">${inhalt}</g>`;
+  const massstab = `105 m = ${esc(fmt(b1.jobWarmMs / 1000, 1))} s`;
+  const AUSSCHNITT = [0.96, 1];
+  const balkenMm = 0.1;
+  const balkenPx = r2((balkenMm * FENSTER.w) / KAMERA.W1);
   t.push(
-    text(FLAECHE.breite, 28, `Maßstab: 105 m = ${esc(fmt(b1.jobWarmMs / 1000, 1))} s`, {
-      mono: true,
-      groesse: 22,
-      farbe: FARBEN.gedaempft,
-      anker: 'end',
-    }),
+    imZoom(
+      [0, 0.9],
+      text(FLAECHE.breite, 28, `Maßstab: ganzes Feld ${massstab}`, {
+        groesse: 22,
+        farbe: FARBEN.gedaempft,
+        anker: 'end',
+      }),
+    ),
+    imZoom(
+      AUSSCHNITT,
+      text(
+        FLAECHE.breite,
+        28,
+        `Ausschnitt: ${esc(fmt(KAMERA.W1, 1))} mm an der Torlinie, die Inferenz liegt links außerhalb · ganzes Feld ${massstab}`,
+        { groesse: 22, farbe: FARBEN.gedaempft, anker: 'end' },
+      ),
+    ),
     kamera,
     `<rect x="${FENSTER.x + 1}" y="${FENSTER.y + 1}" width="${FENSTER.w - 2}" height="${FENSTER.h - 2}" fill="none" stroke="${FARBEN.rasenRand}" stroke-width="2"/>`,
+    imZoom(
+      AUSSCHNITT,
+      `<path d="M24,${FENSTER.y + 30}v14M24,${FENSTER.y + 37}h${balkenPx}M${r2(24 + balkenPx)},${FENSTER.y + 30}v14" fill="none" stroke="${FARBEN.weiss}" stroke-width="3"/>` +
+        text(r2(24 + balkenPx + 14), FENSTER.y + 45, `${esc(fmt(balkenMm, 1))} mm`, {
+          groesse: 22,
+          gewicht: 600,
+          farbe: FARBEN.weiss,
+        }),
+    ),
   );
   // Kennzahlen unter dem Feld: jede erscheint, sobald der Zoom ihre Strecke lesbar zeigt, und bleibt
   // dann stehen (Bereich bis 1). Das Deck setzt opacity je Bild wie bei den Feldbeschriftungen;
@@ -774,7 +800,7 @@ export function fussballfeldSvg(b1, { zoom = 0 } = {}) {
       0,
       544,
       `105 m = T_job, Median warm, n = ${nWarm} · Netz, Transport, Anteil: Median, alle ${b1.anzahl} · langsame CPU`,
-      { mono: true, groesse: 22, farbe: FARBEN.gedaempft },
+      { groesse: 22, farbe: FARBEN.gedaempft },
     ),
   );
 

@@ -186,7 +186,7 @@ export function baueHandout(daten, personen, { basis } = {}) {
     `<tr><td><b>${h}</b></td><td>${groesse}</td><td>${schwelle}</td><td class="ja">${wert}</td></tr>`;
   const seite3 =
     `<h2>3 Auftrag 1B, Schritte 1–2: Wo steckt die Zeit? (Jonas)</h2>` +
-    `<p><b>Aufbau (Schritt 1).</b> Nach ADR-0035 [2] und Runbook [3] zwei KVM-VMs auf einem Laptop: app-host mit App samt App-Adapter, PostgreSQL, Redis (Encoder ab Werk aus); llm-host mit dem LLM-Server ${code('llama-server')}, Qwen3-4B Q4_K_M; Firewall und Token; Manifest mit Commit, lokal gebauten Image-Digests, GGUF-SHA-256 und Startflags [7]. ` +
+    `<p><b>Aufbau (Schritt 1).</b> Nach ADR-0035 [2] und Runbook [3] zwei KVM-VMs auf einem Laptop: app-host mit App samt App-Adapter, PostgreSQL, Redis (Encoder ab Werk aus); llm-host mit dem LLM-Server ${code('llama-server')}, Qwen3-4B Q4_K_M; Firewall und Token; Manifest mit Commit, lokal gebauten Image-Digests, <span style="white-space:nowrap">GGUF-SHA-256</span> und Startflags [7]. ` +
     `Abgleich mit ADR-0035 [7]: Lücke bei ${code('--n-predict')} (ADR „Richtung ${fw.nPredictAdr}“, ausgeliefert ${fw.nPredictRelease}).</p>` +
     `<p><b>Messung (Schritt 2).</b> ${n} echte Aufträge über die App; Mitschnitt auf beiden Hosts (t<sub>0</sub>–t<sub>3</sub>), Inferenz aus ${code('timings')} [4], ohne Änderung am Produktionscode (ADR 1B-006, Begriffe [6]).</p>` +
     `<figure>${zeitzerlegungSvg(b)}` +

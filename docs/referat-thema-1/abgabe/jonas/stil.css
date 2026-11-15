@@ -152,6 +152,7 @@
 }
 .beleg {
   flex: none;
+  text-wrap: balance;
   margin: auto 0 0;
   padding-top: 14px;
   color: var(--gedaempft);
@@ -219,4 +220,13 @@
 }
 .ablehnung {
   color: var(--rot);
+}
+
+/* Keine Einzelwort-Zeilen in Listen und Absätzen der Folien. */
+.folie li,
+.folie p {
+  text-wrap: pretty;
+}
+.folie .beleg {
+  text-wrap: balance;
 }

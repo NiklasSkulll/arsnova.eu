@@ -157,8 +157,9 @@ test('Fußzeile zeigt Seitenzahl im Vortrag und Quelle', async () => {
     ),
   );
   const gesamt = RAHMEN.length + 2 + JONAS.length;
-  assert.match(fuss.G0, new RegExp(`^01 / ${gesamt} · `));
-  assert.match(fuss.J1, new RegExp(`^03 / ${gesamt} · `));
+  // ohne führende Null wie bei Niklas („2 / 9“)
+  assert.match(fuss.G0, new RegExp(`^1 / ${gesamt} · `));
+  assert.match(fuss.J1, new RegExp(`^3 / ${gesamt} · `));
   assert.match(fuss.R1, /^Reserve R1 · /);
   await context.close();
 });
