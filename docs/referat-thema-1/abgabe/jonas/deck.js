@@ -66,6 +66,17 @@
       const o = zoomDeckkraft(z, Number(g.dataset.zoomVon), Number(g.dataset.zoomBis));
       g.setAttribute('opacity', String(r6(o)));
     }
+    // Übersichtskarte: Lupenrahmen wie lupeRahmen() in grafik.mjs (mindestens 4 % der Kartenbreite)
+    const lupe = folie.querySelector('[data-lupe]');
+    if (lupe) {
+      const ganz = kameraViewBox(kamera, 0);
+      const lw = Math.max(vb.w, ganz.w * 0.04);
+      const lh = (lw * ganz.h) / ganz.w;
+      lupe.setAttribute('x', String(r6(vb.x + vb.w / 2 - lw / 2)));
+      lupe.setAttribute('y', String(r6(vb.y + vb.h / 2 - lh / 2)));
+      lupe.setAttribute('width', String(r6(lw)));
+      lupe.setAttribute('height', String(r6(lh)));
+    }
     folie.dataset.zoomIst = String(z);
   }
   const stufenVon = (folie) => JSON.parse(folie.dataset.zoomStufen);
@@ -154,10 +165,12 @@
     if (folie.dataset.zoomStufen) {
       zoomStufe(folie, richtung < 0 ? stufenVon(folie).length - 1 : 0);
     }
+    // Clips starten nie von selbst: der nächste Tastendruck (vor) spielt sie ab.
     for (const v of folie.querySelectorAll('video')) {
+      v.pause();
       v.currentTime = 0;
+      delete v.dataset.gestartet;
       if (ruhig()) v.controls = true;
-      else v.play().catch(() => {});
     }
     setzeMarker(folie);
     live.textContent = folie.getAttribute('aria-label') || '';
@@ -168,8 +181,17 @@
     if (liste === haupt) hauptIndex = index;
     zeige(liste[index], richtung);
   }
+  /** Startet den Clip der aktuellen Folie, falls er noch nicht lief; true, wenn gestartet. */
+  function clipSchritt() {
+    const v = aktuell && aktuell.querySelector('video');
+    if (!v || v.dataset.gestartet !== undefined) return false;
+    v.dataset.gestartet = '';
+    v.play().catch(() => {});
+    return true;
+  }
   function vor() {
-    if (!zoomSchritt(+1) && index < liste.length - 1) gehe(index + 1, +1);
+    if (clipSchritt() || zoomSchritt(+1)) return;
+    if (index < liste.length - 1) gehe(index + 1, +1);
   }
   function zurueck() {
     if (!zoomSchritt(-1) && index > 0) gehe(index - 1, -1);

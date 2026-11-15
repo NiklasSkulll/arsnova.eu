@@ -1003,7 +1003,7 @@ export function folien(daten) {
   // wie eine Material-Karte). Der Clip ersetzt im Deck genau diesen Block samt Vermerk „Nachbau,
   // keine Bildschirmaufnahme“, damit eine echte Aufnahme nie so beschriftet wird (deck.mjs).
   const nachbau =
-    `<div data-nachbau="j13" style="display:flex;flex-direction:column">` +
+    `<div data-nachbau="j13" style="display:flex;flex-direction:column;width:600px">` +
     `<div style="flex:none;border:var(--linie-min) solid var(--linie);border-radius:14px;background:var(--grund);box-shadow:0 2px 4px rgb(22 32 44 / 0.12), 0 8px 24px rgb(22 32 44 / 0.10);overflow:hidden;font-size:22px;line-height:1.3">` +
     `<p style="margin:0;padding:12px 18px;background:var(--raster);font-weight:700;font-size:24px">${esc(nb.titel)}</p>` +
     `<div style="padding:12px 18px 14px">` +
@@ -1019,7 +1019,7 @@ export function folien(daten) {
     auftrag: 'beide',
     titel: `${daten.abgeleitet.gateBeobachtet} geprüfte Antworten, keine besteht das Gate`,
     inhalt: flaeche(
-      `<div style="display:grid;grid-template-columns:770px 1fr;column-gap:50px">` +
+      `<div style="display:grid;grid-template-columns:1fr auto;column-gap:56px">` +
         `<div>` +
         `<p style="margin:0 0 8px;font-size:var(--s-min);color:var(--gedaempft)">Echte Antwort des Modells auf Auftrag ${a.auftrag}, gekürzt, im Original</p>` +
         `<blockquote data-artefakt="antwort" lang="en" style="margin:0 0 12px;padding:10px 20px;border-left:6px solid var(--bernstein);background:var(--bernstein-hell);font-size:22px;line-height:1.3">` +

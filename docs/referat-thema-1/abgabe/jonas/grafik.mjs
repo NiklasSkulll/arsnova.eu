@@ -585,6 +585,25 @@ export function zoomDeckkraft(zoom, von, bis) {
   return Math.min(ein, aus);
 }
 
+/**
+ * Lupenrahmen der Übersichtskarte (J10): der Ausschnitt kameraViewBox(zoom) in Weltkoordinaten, aber nie
+ * schmaler als 4 % des ganzen Fensters (sonst wäre er beim tiefen Zoom unsichtbar), zentriert auf den
+ * Ausschnitt. deck.js rechnet dasselbe je Bild (deck.test.mjs vergleicht beide).
+ */
+export const LUPE_MIN = 0.04;
+export function lupeRahmen(zoom) {
+  const v = kameraViewBox(zoom);
+  const ganz = kameraViewBox(0);
+  const w = Math.max(v.w, ganz.w * LUPE_MIN);
+  const h = (w * ganz.h) / ganz.w;
+  return {
+    x: rund6(v.x + v.w / 2 - w / 2),
+    y: rund6(v.y + v.h / 2 - h / 2),
+    w: rund6(w),
+    h: rund6(h),
+  };
+}
+
 /** Millimeter pro Bildschirmpixel bei gegebenem Zoom. */
 const mmProPx = (zoom) => (KAMERA.W0 * (KAMERA.W1 / KAMERA.W0) ** zoom) / FENSTER.w;
 
@@ -747,6 +766,33 @@ export function fussballfeldSvg(b1, { zoom = 0 } = {}) {
     ),
     kamera,
     `<rect x="${FENSTER.x + 1}" y="${FENSTER.y + 1}" width="${FENSTER.w - 2}" height="${FENSTER.h - 2}" fill="none" stroke="${FARBEN.rasenRand}" stroke-width="2"/>`,
+    // Übersichtskarte oben rechts: ganzes Feld klein, der Lupenrahmen zeigt den Ausschnitt. Erst ab der
+    // ersten Zoomstufe sichtbar, damit beim Hineinzoomen der Bezug zum Feld bleibt.
+    (() => {
+      const g0 = kameraViewBox(0);
+      const mw = 320;
+      const mh = r2((mw * g0.h) / g0.w);
+      const mx = FENSTER.x + FENSTER.w - mw - 18;
+      const my = FENSTER.y + 50;
+      const l = lupeRahmen(zoom);
+      const lw = `fill="none" stroke="${FARBEN.weiss}" stroke-width="2" stroke-opacity="0.85" ${ns}`;
+      return (
+        `<g data-uebersicht data-zoom-von="0.05" data-zoom-bis="1" opacity="${rund6(zoomDeckkraft(zoom, 0.05, 1))}">` +
+        `<rect x="${mx - 8}" y="${my - 38}" width="${mw + 16}" height="${r2(mh + 46)}" rx="6" fill="${FARBEN.tinte}" fill-opacity="0.72"/>` +
+        text(mx, my - 10, 'Übersicht: ganzes Feld', {
+          groesse: 22,
+          gewicht: 600,
+          farbe: FARBEN.weiss,
+        }) +
+        `<svg x="${mx}" y="${my}" width="${mw}" height="${mh}" viewBox="${g0.x} ${g0.y} ${g0.w} ${g0.h}">` +
+        `<rect x="${-FELD_MM}" y="${-FELD_HALB_H}" width="${FELD_MM}" height="${2 * FELD_HALB_H}" fill="${FARBEN.rasen}"/>` +
+        `<rect x="${-FELD_MM}" y="${-FELD_HALB_H}" width="${FELD_MM}" height="${2 * FELD_HALB_H}" ${lw}/>` +
+        `<line x1="${-FELD_MM / 2}" y1="${-FELD_HALB_H}" x2="${-FELD_MM / 2}" y2="${FELD_HALB_H}" ${lw}/>` +
+        `<line x1="${-FELD_MM}" y1="${REIHE_Y}" x2="${rund6(-FELD_MM + infMm)}" y2="${REIHE_Y}" stroke="${FARBEN.bernstein}" stroke-width="3" ${ns}/>` +
+        `<rect data-lupe x="${l.x}" y="${l.y}" width="${l.w}" height="${l.h}" fill="${FARBEN.weiss}" fill-opacity="0.18" stroke="${FARBEN.weiss}" stroke-width="2" ${ns}/>` +
+        `</svg></g>`
+      );
+    })(),
     imZoom(
       AUSSCHNITT,
       `<path d="M24,${FENSTER.y + 30}v14M24,${FENSTER.y + 37}h${balkenPx}M${r2(24 + balkenPx)},${FENSTER.y + 30}v14" fill="none" stroke="${FARBEN.weiss}" stroke-width="3"/>` +

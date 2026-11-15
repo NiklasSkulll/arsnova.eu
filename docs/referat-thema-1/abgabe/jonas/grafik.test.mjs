@@ -240,3 +240,29 @@ test('fussballfeldSvg: Kennzahlen unter dem Feld erscheinen mit ihrer Zoomstufe'
   assert.match(svg1, /<g data-spalte="transport" data-zoom-von="0\.58" data-zoom-bis="1"/);
   assert.match(svg1, /<g data-spalte="netz" data-zoom-von="0\.92" data-zoom-bis="1"/);
 });
+
+test('lupeRahmen: Übersichtskarte zeigt den Ausschnitt, nie kleiner als ein gut sichtbarer Rahmen', async () => {
+  const { lupeRahmen, kameraViewBox: vb } = await import('./grafik.mjs');
+  const ganz = vb(0);
+  // Ganzes Feld: Rahmen = Fenster
+  assert.deepEqual(lupeRahmen(0), ganz);
+  // Tiefster Zoom: Mindestgröße 4 % der Kartenbreite, zentriert auf den Ausschnitt
+  const r = lupeRahmen(1);
+  const v = vb(1);
+  assert.ok(Math.abs(r.w - ganz.w * 0.04) < 1e-6);
+  assert.ok(Math.abs(r.x + r.w / 2 - (v.x + v.w / 2)) < 1e-6);
+  assert.ok(Math.abs(r.y + r.h / 2 - (v.y + v.h / 2)) < 1e-6);
+  assert.ok(Math.abs(r.h / r.w - ganz.h / ganz.w) < 1e-9);
+});
+
+test('fussballfeldSvg: Übersichtskarte mit Lupenrahmen, erst ab der ersten Zoomstufe sichtbar', async () => {
+  const { fussballfeldSvg } = await import('./grafik.mjs');
+  const daten = ladeFolienDaten(resolve(dirname(fileURLToPath(import.meta.url)), '../..'));
+  const svg = fussballfeldSvg(daten.b1, { zoom: 0 });
+  assert.match(svg, /<g data-uebersicht data-zoom-von="0\.05" data-zoom-bis="1" opacity="0"/);
+  assert.match(svg, /<rect data-lupe /);
+  assert.match(
+    fussballfeldSvg(daten.b1, { zoom: 1 }),
+    /<g data-uebersicht data-zoom-von="0\.05" data-zoom-bis="1" opacity="1"/,
+  );
+});

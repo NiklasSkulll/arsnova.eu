@@ -208,16 +208,16 @@ function jonasFolie(f, nr, gesamt, clipDaten) {
       (_, figure) =>
         `${figure}<video class="clip" src="${uri}" muted playsinline preload="auto" ` +
         `aria-label="Clip: Lehrenden-Sicht, Klick, Warten, Ersatzzusammenfassung" ` +
-        `style="display:block;width:100%;height:350px;object-fit:contain;background:var(--tinte);border-radius:8px"></video>` +
+        `style="display:block;width:380px;aspect-ratio:848/800;object-fit:cover;border-radius:10px;box-shadow:0 2px 6px rgb(22 32 44 / 0.14), 0 12px 32px rgb(22 32 44 / 0.12)"></video>` +
         // Im PDF (Druck-CSS der Vorlage) steht das Standbild an der Stelle des Videos.
         `<img class="clip-standbild" src="${standbild}" alt="Standbild: Ergebnis mit Hinweis" ` +
-        `style="width:100%;height:350px;object-fit:contain;background:var(--tinte);border-radius:8px">` +
-        `<figcaption style="margin-top:12px;font-size:var(--s-min);line-height:1.35;color:var(--gedaempft)">` +
-        `Laboraufnahme ${esc(info.datum)}: Wartezeit ${Math.round(info.wartezeitS)} s, auf ${info.raffungS} s gerafft. ` +
+        `style="width:380px;aspect-ratio:848/800;object-fit:cover;border-radius:10px">` +
+        `<figcaption style="width:380px;margin-top:12px;font-size:var(--s-min);line-height:1.35;color:var(--gedaempft)">` +
+        `Laboraufnahme ${esc(info.datum)}: ${Math.round(info.wartezeitS)} s Wartezeit, auf ${info.raffungS} s gerafft. ` +
         (info.grund === 'timeout'
-          ? `Hier Abbruch nach ${Math.round(info.timeoutMs / 1000)} s (Timeout), nicht das Gate; `
+          ? `Hier Abbruch nach ${Math.round(info.timeoutMs / 1000)} s (Timeout), nicht das Gate, gleicher Hinweis. `
           : '') +
-        `Hinweis wie beim Gate: „${esc(info.hinweis.split('. ')[0].replace(/\.$/, ''))}.“ Illustration, kein Nachweis.</figcaption>`,
+        `Illustration, kein Nachweis.</figcaption>`,
     );
     if (inhalt === vorher && f.inhalt.includes('data-clip')) {
       throw new Error(`${f.id}: Nachbau für den Clip nicht gefunden`);

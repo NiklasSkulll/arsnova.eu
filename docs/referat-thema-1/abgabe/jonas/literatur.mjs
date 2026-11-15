@@ -62,7 +62,7 @@ export const LITERATUR = [
   {
     schluessel: 'weirauch2026c',
     kurz: 'Weirauch, 2026c',
-    voll: `Weirauch, J. (2026c). <i>Referat Thema 1, Aufträge 1B und 1C</i> [Unveröffentlichte Referatsausarbeitung: Entscheidungen, Berichte, Messdaten]. GitHub. ${GH_FORK}/main/docs/referat-thema-1`,
+    voll: `Weirauch, J. (2026c). <i>Referat Thema 1, Aufträge 1B und 1C</i> [Referatsausarbeitung: Entscheidungen, Berichte, Messdaten]. GitHub. ${GH_FORK}/main/docs/referat-thema-1`,
   },
   {
     schluessel: 'yang2025',

@@ -12,7 +12,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { baueDeck } from './deck.mjs';
 import { folien, ladeFolienDaten } from './folien.mjs';
-import { kameraViewBox, zoomDeckkraft } from './grafik.mjs';
+import { kameraViewBox, lupeRahmen, zoomDeckkraft } from './grafik.mjs';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HIER, '../..');
@@ -207,6 +207,35 @@ test('Markerfahrt läuft als Übergang, mit reduzierter Bewegung gibt es keine A
   await ruhig.context.close();
 });
 
+test('J13: der Clip startet erst auf Tastendruck, der nächste Druck geht weiter', async () => {
+  const medien = join(HIER, 'medien');
+  const pfad = join(ordner, 'clip-klick.html');
+  writeFileSync(
+    pfad,
+    baueDeck(F, {
+      niklas: { teil1: [], teil2: [] },
+      clip: join(medien, 'clip.webm'),
+      clipInfo: JSON.parse(readFileSync(join(medien, 'clip.json'), 'utf8')),
+      standbild: join(medien, 'clip-standbild.png'),
+      eingebettet: true,
+    }),
+  );
+  const { page, context } = await oeffne(pfad);
+  await geheZu(page, 'J12');
+  await page.keyboard.press('ArrowRight');
+  assert.equal(await aktuelleId(page), 'J13');
+  await page.waitForTimeout(400);
+  const laeuft = () =>
+    page.evaluate(() => !document.querySelector('.folie[data-id="J13"] video').paused);
+  assert.equal(await laeuft(), false, 'kein Autoplay');
+  await page.keyboard.press('ArrowRight');
+  assert.equal(await aktuelleId(page), 'J13', 'erster Druck startet den Clip');
+  await page.waitForFunction(() => !document.querySelector('.folie[data-id="J13"] video').paused);
+  await page.keyboard.press('ArrowRight');
+  assert.equal(await aktuelleId(page), 'J15');
+  await context.close();
+});
+
 test('J10 zoomt in drei Schritten über kameraViewBox, Beschriftungen über zoomDeckkraft', async () => {
   for (const reducedMotion of ['no-preference', 'reduce']) {
     const { page, context, fehler } = await oeffne(deckOhneNiklas, { reducedMotion });
@@ -239,6 +268,18 @@ test('J10 zoomt in drei Schritten über kameraViewBox, Beschriftungen über zoom
         return { x, y, w, h, deckkraft, spalten };
       });
       const soll = kameraViewBox(stufen[i]);
+      // Übersichtskarte: Lupenrahmen folgt dem Ausschnitt (gleiche Formel wie lupeRahmen)
+      const lupe = await page.evaluate(() => {
+        const r = document.querySelector('.folie[data-id="J10"] [data-lupe]');
+        return ['x', 'y', 'width', 'height'].map((a) => Number(r.getAttribute(a)));
+      });
+      const lSoll = lupeRahmen(stufen[i]);
+      [lSoll.x, lSoll.y, lSoll.w, lSoll.h].forEach((v, j) =>
+        assert.ok(
+          Math.abs(lupe[j] - v) <= 1e-4 * lSoll.w,
+          `Stufe ${i} Lupe ${j}: ${lupe[j]} statt ${v}`,
+        ),
+      );
       for (const k of ['x', 'y', 'w', 'h']) {
         assert.ok(
           Math.abs(ist[k] - soll[k]) <= 1e-4 * soll.w,
@@ -566,7 +607,7 @@ test('Clip wird als data-URI in J13 eingebettet', () => {
   // Im PDF steht das Standbild statt des Videos (Druck-CSS der Vorlage).
   assert.match(html, /<img class="clip-standbild" src="data:image\/png;base64,iVBORw=="/);
   const nurJ13 = (h) => h.match(/<section[^>]*data-id="J13"[\s\S]*?<\/section>/)[0];
-  assert.match(html, /Laboraufnahme 2026-11-15: Wartezeit 172 s, auf 4 s gerafft/);
+  assert.match(html, /Laboraufnahme 2026-11-15: 172 s Wartezeit, auf 4 s gerafft/);
   // Das Energieprofil gehört ins Protokoll, nicht auf die Folie (Wunsch des Autors).
   assert.doesNotMatch(nurJ13(html), /balanced|power-saver|Energieprofil/);
   // Grund dieses Laufs ehrlich nennen: Timeout, nicht das Gate; Hinweis wörtlich.
@@ -578,11 +619,7 @@ test('Clip wird als data-URI in J13 eingebettet', () => {
     standbild,
     eingebettet: true,
   });
-  assert.match(mitTimeout, /Abbruch nach 300 s \(Timeout\), nicht das Gate/);
-  assert.match(
-    html,
-    /Hinweis wie beim Gate: „Eine ausführliche Zusammenfassung war diesmal nicht möglich\.“/,
-  );
+  assert.match(mitTimeout, /Abbruch nach 300 s \(Timeout\), nicht das Gate, gleicher Hinweis/);
   assert.throws(
     () => baueDeck(F, { niklas: { teil1: [], teil2: [] }, clip, eingebettet: true }),
     /clipInfo/,
