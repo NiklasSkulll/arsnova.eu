@@ -265,3 +265,8 @@ Beleg: [1B-Eigenanteil, Gemeinsame Artefakte](../../1B-eigenanteil.md#gemeinsame
 
 _(neu)_ Weil ein echter Auftrag beide Teile durchläuft: vom Klick über den Kontextpfad (1C) über den zweiten Host (1B) bis zur Ersatzzusammenfassung, jede Station mit ihrem Auftrag etikettiert. So gibt es nur zwei Sprecherwechsel, Niklas vor und nach mir. Die Reihenfolge ist mein Vorschlag und mit Niklas noch abzustimmen.
 Beleg: [Präsentations-Design 3](../../specs/2026-11-15-praesentation-jonas-design.md#3-reihenfolge-der-gruppe), [Aufteilung](../../01-aufteilung.md#gemeinsame-präsentation-empfehlung-offen)
+
+### F48. Der Clip auf J13 wartet über 300 s und endet mit einem Timeout. Widerspricht das nicht Ihrem Befund zum Gate?
+
+_(neu)_ Nein, der Clip ist Illustration, kein Nachweis. Er lief am 15.11. im Energiesparprofil; die Inferenz dauerte länger als das Labor-Timeout von 300 s, laut App-Log `fallbackReason: 'timeout'`. Genau das zeigt den Punkt der Folie: Ob Gate oder Timeout, die Lehrperson sieht dieselbe Ersatzzusammenfassung mit demselben allgemeinen Hinweis und erfährt den Grund nicht. Die Gate-Zahlen stammen aus dem gewerteten Lauf im Profil `performance`.
+Beleg: [Clip-Protokoll](../../evidenz/1B/2026-11-15-clip.md#ergebnis), [Laufprotokoll 1B](../../evidenz/1B/2026-11-13-lauf.md)
