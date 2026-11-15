@@ -9,6 +9,7 @@
 //   2. Zugangsdatei auf den Rechner holen, SSH-Tunnel 3000-3002 auf 127.0.0.1 (ADR 1B-003)
 //   3. node clip.mjs --zugang <datei> --out ~/labor-1b/clip
 // Ausgabe nur im Laborordner: roh.webm, clip.webm, standbild.png, zeiten.json (ohne Token).
+/* global console, localStorage, process, sessionStorage -- Node-Skript, addInitScript läuft im Browser */
 import { mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
@@ -38,13 +39,25 @@ export function schnittplan({ klickMs, ergebnisMs, gesamtMs, raffungS }) {
 
 export function ffmpegFilter({ segmente }) {
   const teile = segmente.map(
-    (g, i) => `[0:v]trim=start=${g.vonS}:end=${g.bisS},setpts=(PTS-STARTPTS)/${g.faktor}[s${i}]`,
+    (g, i) =>
+      `[0:v]trim=start=${g.vonS}:end=${g.bisS},setpts=(PTS-STARTPTS)/${Math.round(g.faktor * 1000) / 1000}[s${i}]`,
   );
   const namen = segmente.map((_, i) => `[s${i}]`).join('');
   return `${teile.join(';')};${namen}concat=n=${segmente.length}:v=1:a=0[v]`;
 }
 
-async function aufnehmen({ zugang, url, out, warteMaxS }) {
+// Scrollt im Dialog zu den Hinweisen (dort steht der allgemeine Hinweis der Ersatzzusammenfassung)
+// und hält das Bild als Standbild fest.
+async function zeigeHinweise(page, out) {
+  const hinweise = page.locator('.moderation-compass-dialog__summary-limitations');
+  if (await hinweise.count()) {
+    await hinweise.evaluate((el) => el.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+  }
+  await page.waitForTimeout(4_000);
+  await page.screenshot({ path: join(out, 'standbild.png') });
+}
+
+async function oeffneHost({ zugang, url, out }) {
   const { chromium } = await import('playwright');
   const { code, hostToken, hostBrowserCapability } = zugang;
   const browser = await chromium.launch();
@@ -54,7 +67,6 @@ async function aufnehmen({ zugang, url, out, warteMaxS }) {
     locale: 'de-DE',
     recordVideo: { dir: out, size: groesse },
   });
-  const t0 = Date.now();
   await context.addInitScript(
     ([c, t, cap]) => {
       sessionStorage.setItem(`arsnova-host-token:${c}`, t);
@@ -64,6 +76,12 @@ async function aufnehmen({ zugang, url, out, warteMaxS }) {
   );
   const page = await context.newPage();
   await page.goto(`${url}/de/session/${code}/host?tab=qa`);
+  return { page, context, browser };
+}
+
+async function aufnehmen({ zugang, url, out, warteMaxS }) {
+  const t0 = Date.now();
+  const { page, context, browser } = await oeffneHost({ zugang, url, out });
   const kompass = page.getByTestId('host-moderation-compass');
   await kompass.waitFor({ timeout: 60_000 });
   await page.waitForTimeout(2_000);
@@ -77,8 +95,8 @@ async function aufnehmen({ zugang, url, out, warteMaxS }) {
   await fortschritt.waitFor({ timeout: 10_000 });
   await fortschritt.waitFor({ state: 'detached', timeout: warteMaxS * 1000 });
   const ergebnisMs = Date.now() - t0;
-  await page.waitForTimeout(5_000);
-  await page.screenshot({ path: join(out, 'standbild.png') });
+  await page.waitForTimeout(3_000);
+  await zeigeHinweise(page, out);
   const aussagen = await page
     .locator('.moderation-compass-dialog__summary-statements li')
     .allInnerTexts();
