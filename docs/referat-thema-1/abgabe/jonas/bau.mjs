@@ -1,21 +1,17 @@
 #!/usr/bin/env node
-// Bauskript für Jonas' Abgabe: gemeinsames Deck, Folien-PDF, Handout, Sprechnotizen, Manifest.
+// Bauskript für Jonas' Abgabe: gemeinsames Deck, Folien-PDF, Sprechnotizen, Manifest.
 //
-//   node bau.mjs [--abgabe] [--niklas1 <pdf>] [--niklas2 <pdf>] [--niklas1-stand <text>]
+//   node bau.mjs [--niklas1 <pdf>] [--niklas2 <pdf>] [--niklas1-stand <text>]
 //                [--niklas2-stand <text>] [--ausgabe <ordner>]
 //
-// Ohne --abgabe stehen im Handout Platzhalter für Name und Matrikelnummer. Mit --abgabe liest das
-// Skript ~/.config/referat-thema-1/personen.json ([{ name, matrikel }], Jonas zuerst) und schreibt
-// die personalisierten PDFs nach ~/referat-abgabe/, nie ins Repo.
+// Das Handout entsteht seit 2026-11-15 in PaperLab (Typ referat, IU-Format nach RL und ZL); Zahlen und
+// Abbildungen dafür liefert handout-latex.mjs. Name und Matrikelnummer stehen nur dort (author.ini).
 /* global console, document */
 import { createHash } from 'node:crypto';
 import {
-  chmodSync,
-  copyFileSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
-  realpathSync,
   readdirSync,
   readFileSync,
   rmSync,
@@ -23,15 +19,14 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { createRequire } from 'node:module';
-import { homedir, tmpdir } from 'node:os';
-import { basename, dirname, join, relative, resolve, sep } from 'node:path';
+import { tmpdir } from 'node:os';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import process from 'node:process';
 import { parseArgs } from 'node:util';
 
 import { baueDeck } from './deck.mjs';
 import { FESTWERTE, folien, ladeFolienDaten } from './folien.mjs';
-import { baueHandout, rendereHandout } from './handout.mjs';
 import { niklasSeiten } from './niklas-seiten.mjs';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
@@ -41,8 +36,6 @@ const requireRepo = createRequire(resolve(REPO, 'package.json'));
 
 const STANDARD_AUSGABE = join(HIER, 'ausgabe');
 const NIKLAS_1A_STANDARD = join(ROOT, 'abgabe/1A-folien.pdf');
-const PERSONEN = () => join(homedir(), '.config/referat-thema-1/personen.json');
-const ZIEL_ABGABE = () => join(homedir(), 'referat-abgabe');
 
 /** Ergebnis-JSONs, Antwort-Ausschnitt und Belege, aus denen folien.mjs/zahlen.mjs lesen (relativ zu ROOT). */
 const DATEN = [
@@ -80,24 +73,6 @@ function pruefePdf(pfad, flag) {
   }
 }
 
-/** realpath des nächsten existierenden Vorfahren plus der noch nicht vorhandene Rest. */
-function echterPfad(pfad) {
-  let rest = '';
-  let aktuell = resolve(pfad);
-  while (!existsSync(aktuell)) {
-    rest = join(basename(aktuell), rest);
-    aktuell = dirname(aktuell);
-  }
-  return join(realpathSync(aktuell), rest);
-}
-
-/** Liegt der Pfad nach Auflösung aller Symlinks im Repo? */
-function imRepo(pfad) {
-  const repo = realpathSync(REPO);
-  const echt = echterPfad(pfad);
-  return echt === repo || echt.startsWith(repo + sep);
-}
-
 /** Lädt eine Repo-Abhängigkeit mit klarer Fehlermeldung statt rohem Stacktrace. */
 function ladeAbhaengigkeit(name) {
   try {
@@ -108,43 +83,6 @@ function ladeAbhaengigkeit(name) {
         'Im Repo „npm ci“ ausführen, für Playwright außerdem „npx playwright install chromium“.',
     );
   }
-}
-
-/** Liest und prüft personen.json; Fehler vor jedem Bau, damit nichts halb geschrieben wird. */
-function lesePersonen() {
-  const pfad = PERSONEN();
-  if (!existsSync(pfad)) {
-    fehler(
-      `${pfad} fehlt. --abgabe braucht diese Datei außerhalb des Repos: ` +
-        '[{ "name": "…", "matrikel": "…" }, { "name": "…", "matrikel": "…" }] (Jonas zuerst, dann Niklas).',
-    );
-  }
-  let personen;
-  try {
-    personen = JSON.parse(readFileSync(pfad, 'utf8'));
-  } catch (e) {
-    fehler(`${pfad} ist kein gültiges JSON (${e.message}).`);
-  }
-  const gueltig =
-    Array.isArray(personen) &&
-    personen.length === 2 &&
-    personen.every(
-      (p) =>
-        typeof p?.name === 'string' &&
-        p.name.trim() &&
-        typeof p?.matrikel === 'string' &&
-        p.matrikel.trim(),
-    );
-  if (!gueltig) {
-    fehler(`${pfad} muss genau zwei Einträge { "name", "matrikel" } enthalten (Jonas, Niklas).`);
-  }
-  const ziel = ZIEL_ABGABE();
-  if (imRepo(ziel)) {
-    fehler(
-      `Zielordner ${ziel} liegt (auch über Symlinks) im Repo; die Matrikel darf nie ins Repo.`,
-    );
-  }
-  return personen;
 }
 
 /**
@@ -256,7 +194,6 @@ function alleDateien(ordner) {
 async function main() {
   const { values: o } = parseArgs({
     options: {
-      abgabe: { type: 'boolean', default: false },
       niklas1: { type: 'string' },
       niklas2: { type: 'string' },
       'niklas1-stand': { type: 'string' },
@@ -264,7 +201,6 @@ async function main() {
       ausgabe: { type: 'string' },
     },
   });
-  const personen = o.abgabe ? lesePersonen() : undefined;
   const ausgabe = resolve(o.ausgabe ?? STANDARD_AUSGABE);
   const { chromium } = ladeAbhaengigkeit('playwright');
   ladeAbhaengigkeit('pdf-parse');
@@ -344,9 +280,6 @@ async function main() {
       await browser.close();
     }
 
-    const handoutPfad = join(ausgabe, 'jonas-handout.pdf');
-    await rendereHandout(baueHandout(daten), handoutPfad);
-
     writeFileSync(
       join(ausgabe, 'sprechnotizen.md'),
       await format(baueSprechnotizen(alle), { ...formatierung, parser: 'markdown' }),
@@ -366,13 +299,11 @@ async function main() {
         sha256: sha256(readFileSync(p)),
       };
     };
-    let handoutWoerter = 0;
     const ausgaben = [];
     for (const datei of [
       'jonas-deck.html',
       'gemeinsames-deck.pdf',
       'jonas-folien.pdf',
-      'jonas-handout.pdf',
       'sprechnotizen.md',
     ]) {
       const p = join(ausgabe, datei);
@@ -381,13 +312,6 @@ async function main() {
       if (datei.endsWith('.pdf')) {
         const info = await pdfInfo(p);
         e.seiten = info.seiten;
-        if (datei === 'jonas-handout.pdf') {
-          // Wie handout.test.mjs: Seitentrenner von pdf-parse und reine Satzzeichen (·, –, =) zählen nicht.
-          handoutWoerter = info.text
-            .replace(/-- \d+ of \d+ --/g, ' ')
-            .split(/\s+/)
-            .filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
-        }
       }
       ausgaben.push(e);
     }
@@ -407,7 +331,6 @@ async function main() {
         gemeinsamesDeck: alle.filter((f) => f.teil !== 'reserve').length,
         jonasUndReserve: alle.filter((f) => f.teil === 'jonas' || f.teil === 'reserve').length,
       },
-      handoutWoerter,
       eingaben: eingaben.map(eingabeEintrag),
       ausgaben,
     };
@@ -416,26 +339,12 @@ async function main() {
       await format(JSON.stringify(manifest), { ...formatierung, parser: 'json' }),
     );
 
-    // Personalisierte PDFs: nur ins Home, nie ins Repo oder in den Bauordner.
-    if (personen) {
-      const ziel = ZIEL_ABGABE();
-      mkdirSync(ziel, { recursive: true, mode: 0o700 });
-      chmodSync(ziel, 0o700);
-      const personalisiert = join(ziel, 'jonas-handout.pdf');
-      await rendereHandout(baueHandout(daten, personen), personalisiert);
-      chmodSync(personalisiert, 0o600);
-      for (const datei of ['jonas-folien.pdf', 'gemeinsames-deck.pdf']) {
-        copyFileSync(join(ausgabe, datei), join(ziel, datei));
-        chmodSync(join(ziel, datei), 0o600);
-      }
-      console.log(`Personalisierte PDFs: ${ziel}`);
-    }
     for (const a of ausgaben) {
       console.log(
         `${a.datei}: ${(a.bytes / 1024).toFixed(0)} KiB${a.seiten ? `, ${a.seiten} Seiten` : ''}`,
       );
     }
-    console.log(`Handout: ${handoutWoerter} Wörter; Ausgabe: ${ausgabe}`);
+    console.log(`Ausgabe: ${ausgabe}; Handout: PaperLab (./paperlab check|final)`);
   } finally {
     rmSync(arbeit, { recursive: true, force: true });
   }

@@ -6,25 +6,21 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
-  readdirSync,
   readFileSync,
   rmSync,
   statSync,
-  symlinkSync,
   writeFileSync,
 } from 'node:fs';
 import fs from 'node:fs';
 import { createRequire, syncBuiltinESMExports } from 'node:module';
 import process from 'node:process';
 import { tmpdir } from 'node:os';
-import { clearInterval, setInterval } from 'node:timers';
 import { dirname, join, resolve } from 'node:path';
 import { after, before, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { baueDeck } from './deck.mjs';
 import { folien, ladeFolienDaten } from './folien.mjs';
-import { baueHandout, rendereHandout } from './handout.mjs';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HIER, '../..');
@@ -33,23 +29,16 @@ const requireRepo = createRequire(resolve(ROOT, '../../package.json'));
 
 const daten0 = ladeFolienDaten(ROOT);
 const F = folien(daten0);
-const PERSONEN_LISTE = [
-  { name: 'Testname Jonas', matrikel: 'TEST-MATRIKEL-1' },
-  { name: 'Testname Niklas', matrikel: 'TEST-MATRIKEL-2' },
-];
 const JONAS_UND_RESERVE = F.filter((f) => f.teil === 'jonas' || f.teil === 'reserve');
 const AUSGABEN = [
   'jonas-deck.html',
   'gemeinsames-deck.pdf',
   'jonas-folien.pdf',
-  'jonas-handout.pdf',
   'sprechnotizen.md',
 ];
-const MATRIKEL = ['TEST-MATRIKEL-1', 'TEST-MATRIKEL-2'];
 
 let wurzel;
 let platzhalter; // Bau ohne --abgabe
-let abgabe; // Bau mit --abgabe
 let home;
 
 function bau(args, env = {}) {
@@ -70,29 +59,13 @@ async function pdfInfo(pfad) {
   }
 }
 
-function dateien(ordner) {
-  return readdirSync(ordner, { recursive: true, withFileTypes: true })
-    .filter((e) => e.isFile())
-    .map((e) => join(e.parentPath, e.name));
-}
-
 before(() => {
   wurzel = mkdtempSync(join(tmpdir(), 'bau-test-'));
   home = join(wurzel, 'home');
-  mkdirSync(join(home, '.config/referat-thema-1'), { recursive: true });
-  writeFileSync(
-    join(home, '.config/referat-thema-1/personen.json'),
-    JSON.stringify([
-      { name: 'Testname Jonas', matrikel: MATRIKEL[0] },
-      { name: 'Testname Niklas', matrikel: MATRIKEL[1] },
-    ]),
-  );
+  mkdirSync(home, { recursive: true });
   platzhalter = join(wurzel, 'ohne');
-  abgabe = join(wurzel, 'mit');
   const a = bau(['--ausgabe', platzhalter], { HOME: home });
   assert.equal(a.status, 0, a.stderr);
-  const b = bau(['--abgabe', '--ausgabe', abgabe], { HOME: home });
-  assert.equal(b.status, 0, b.stderr);
 });
 
 after(() => rmSync(wurzel, { recursive: true, force: true }));
@@ -105,7 +78,7 @@ test('alle Ausgaben und das Manifest existieren und sind nicht leer', () => {
   }
 });
 
-test('Manifest: SHA-256 aller Eingaben und Ausgaben, Seitenzahlen und Wortzahl', () => {
+test('Manifest: SHA-256 aller Eingaben und Ausgaben, Seitenzahlen', () => {
   const m = JSON.parse(readFileSync(join(platzhalter, 'manifest.json'), 'utf8'));
   const sha = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
   assert.ok(m.eingaben.length > 20);
@@ -137,8 +110,6 @@ test('Manifest: SHA-256 aller Eingaben und Ausgaben, Seitenzahlen und Wortzahl',
   }
   const seiten = (n) => m.ausgaben.find((a) => a.datei === n).seiten;
   assert.equal(seiten('jonas-folien.pdf'), JONAS_UND_RESERVE.length);
-  assert.equal(seiten('jonas-handout.pdf'), 5);
-  assert.ok(m.handoutWoerter >= 350 && m.handoutWoerter <= 1800, String(m.handoutWoerter));
   assert.ok(m.niklas.teil1.quelle && m.niklas.teil2.quelle, 'Herkunft von Niklas im Manifest');
   assert.doesNotMatch(JSON.stringify(m), /TEST-MATRIKEL|personen\.json/);
 });
@@ -154,7 +125,11 @@ test('jonas-folien.pdf: genau J1–J15 plus Reserve, eine Seite je Folie, 1600 x
 });
 
 test('jonas-deck.html ist selbstständig (kein http(s), kein externes Skript)', () => {
-  const h = readFileSync(join(platzhalter, 'jonas-deck.html'), 'utf8');
+  // URLs nur als Text im Literaturverzeichnis (J16, zwischen den Quellen-Marken), keine externen Ressourcen.
+  const h = readFileSync(join(platzhalter, 'jonas-deck.html'), 'utf8').replace(
+    /<!--quellen-->[\s\S]*?<!--\/quellen-->/g,
+    '',
+  );
   assert.doesNotMatch(h, /https?:\/\//);
   assert.doesNotMatch(h, /<script[^>]+src=/);
 });
@@ -182,55 +157,6 @@ test('sprechnotizen.md: Summen und Folien stimmen mit folien.mjs überein', () =
   }
 });
 
-test('ohne --abgabe: nur Platzhalter, keine Matrikel und kein Zielordner im Home', async () => {
-  const { text } = await pdfInfo(join(platzhalter, 'jonas-handout.pdf'));
-  assert.match(text, /lokal eintragen/);
-});
-
-test('--abgabe: personalisierte PDFs nur unter ~/referat-abgabe, Matrikel nirgends im Repo oder Bauordner', async () => {
-  const ziel = join(home, 'referat-abgabe');
-  const pdf = join(ziel, 'jonas-handout.pdf');
-  assert.ok(existsSync(pdf));
-  const { text, seiten } = await pdfInfo(pdf);
-  assert.ok(seiten <= 5);
-  for (const m of MATRIKEL) assert.ok(text.includes(m), m);
-  assert.ok(existsSync(join(ziel, 'jonas-folien.pdf')));
-  // Nirgends sonst: Bauordner (beide), Repo-Ordner abgabe/ und Spiegel in manifest.json.
-  for (const ordner of [platzhalter, abgabe, join(HIER, '..')]) {
-    for (const datei of dateien(ordner)) {
-      if (datei.endsWith('.test.mjs')) continue; // Testquellen nennen die erfundenen Werte
-      if (statSync(datei).size > 30e6) continue;
-      const inhalt = readFileSync(datei).toString('latin1');
-      for (const m of MATRIKEL) assert.ok(!inhalt.includes(m), `${m} in ${datei}`);
-    }
-  }
-  for (const datei of [...dateien(abgabe), ...dateien(join(HIER, '..'))].filter((d) =>
-    d.endsWith('.pdf'),
-  )) {
-    const { text: t } = await pdfInfo(datei);
-    for (const m of MATRIKEL) assert.ok(!t.includes(m), `${m} im Text von ${datei}`);
-  }
-  assert.equal(statSync(ziel).mode & 0o077, 0, 'Zielordner nur für den Besitzer');
-});
-
-test('--abgabe ohne personen.json: klarer Fehler, nichts geschrieben', () => {
-  const leer = join(wurzel, 'leer-home');
-  mkdirSync(leer);
-  const r = bau(['--abgabe', '--ausgabe', join(wurzel, 'fehler')], { HOME: leer });
-  assert.notEqual(r.status, 0);
-  assert.match(r.stderr, /personen\.json/);
-  assert.ok(!existsSync(join(leer, 'referat-abgabe')));
-});
-
-test('--abgabe mit unvollständiger personen.json: Fehler', () => {
-  const h = join(wurzel, 'schief-home');
-  mkdirSync(join(h, '.config/referat-thema-1'), { recursive: true });
-  writeFileSync(join(h, '.config/referat-thema-1/personen.json'), '[{"name":"Nur Einer"}]');
-  const r = bau(['--abgabe', '--ausgabe', join(wurzel, 'fehler2')], { HOME: h });
-  assert.notEqual(r.status, 0);
-  assert.match(r.stderr, /personen\.json/);
-});
-
 test('generierte Textausgaben sind Prettier-formatiert (Pre-commit würde sie sonst ändern)', async () => {
   const { check, resolveConfig } = requireRepo('prettier');
   const konfig = (await resolveConfig(resolve(ROOT, '../../package.json'))) ?? {};
@@ -243,99 +169,15 @@ test('generierte Textausgaben sind Prettier-formatiert (Pre-commit würde sie so
   }
 });
 
-const PERSONEN_JSON = JSON.stringify([
-  { name: 'Testname Jonas', matrikel: MATRIKEL[0] },
-  { name: 'Testname Niklas', matrikel: MATRIKEL[1] },
-]);
-
-function homeMit(basis) {
-  const h = join(basis, 'home');
-  mkdirSync(join(h, '.config/referat-thema-1'), { recursive: true });
-  writeFileSync(join(h, '.config/referat-thema-1/personen.json'), PERSONEN_JSON);
-  return h;
-}
-
-test('Repo-Schutz: ~/referat-abgabe als Symlink ins Repo wird abgelehnt', () => {
-  const imRepo = mkdtempSync(join(REPO, '.bau-test-'));
-  try {
-    const h = homeMit(join(wurzel, 'symlink'));
-    symlinkSync(imRepo, join(h, 'referat-abgabe'));
-    const r = bau(['--abgabe', '--ausgabe', join(wurzel, 'sym-aus')], { HOME: h });
-    assert.notEqual(r.status, 0);
-    assert.match(r.stderr, /Repo/);
-    assert.deepEqual(readdirSync(imRepo), []);
-  } finally {
-    rmSync(imRepo, { recursive: true, force: true });
-  }
-});
-
-test('Repo-Schutz: HOME im Repo und HOME als Symlink ins Repo werden abgelehnt', () => {
-  const imRepo = mkdtempSync(join(REPO, '.bau-test-'));
-  try {
-    // HOME selbst liegt im Repo
-    const homeImRepo = homeMit(imRepo);
-    const a = bau(['--abgabe', '--ausgabe', join(wurzel, 'repo-aus')], { HOME: homeImRepo });
-    assert.notEqual(a.status, 0);
-    assert.ok(!existsSync(join(homeImRepo, 'referat-abgabe')));
-    // HOME ist ein Symlink ins Repo, personen.json liegt dort
-    const link = join(wurzel, 'home-link');
-    symlinkSync(homeImRepo, link);
-    const b = bau(['--abgabe', '--ausgabe', join(wurzel, 'repo-aus2')], { HOME: link });
-    assert.notEqual(b.status, 0);
-    assert.match(b.stderr, /Repo/);
-    assert.ok(!existsSync(join(homeImRepo, 'referat-abgabe')));
-  } finally {
-    rmSync(imRepo, { recursive: true, force: true });
-  }
-});
-
-test('personalisiertes Handout-HTML: Temp-Ordner 0700, Datei 0600, danach entfernt', async () => {
-  const tmp = mkdtempSync(join(wurzel, 'tmp-'));
-  const alt = process.env.TMPDIR;
-  process.env.TMPDIR = tmp;
-  const beobachtet = [];
-  const takt = setInterval(() => {
-    for (const n of readdirSync(tmp).filter((x) => x.startsWith('handout-'))) {
-      try {
-        const d = join(tmp, n);
-        const modus = statSync(d).mode & 0o777;
-        const dateien_ = statSync(d).isDirectory() ? readdirSync(d) : [];
-        beobachtet.push({
-          ordner: statSync(d).isDirectory() ? modus : null,
-          datei: dateien_.length ? statSync(join(d, dateien_[0])).mode & 0o777 : null,
-          roh: statSync(d).isDirectory() ? null : modus,
-        });
-      } catch {
-        // Eintrag verschwand zwischen readdir und stat
-      }
-    }
-  }, 5);
-  try {
-    await rendereHandout(baueHandout(daten0, PERSONEN_LISTE), join(tmp, 'aus.pdf'));
-  } finally {
-    clearInterval(takt);
-    if (alt === undefined) delete process.env.TMPDIR;
-    else process.env.TMPDIR = alt;
-  }
-  assert.ok(beobachtet.length > 0, 'temporäre HTML-Datei nicht beobachtet');
-  assert.ok(
-    beobachtet.every((b) => b.roh === null),
-    'HTML liegt lose im Temp-Ordner',
-  );
-  assert.ok(
-    beobachtet.every((b) => b.ordner === 0o700),
-    JSON.stringify(beobachtet),
-  );
-  assert.ok(beobachtet.filter((b) => b.datei !== null).every((b) => b.datei === 0o600));
-  assert.deepEqual(
-    readdirSync(tmp).filter((x) => x.startsWith('handout-')),
-    [],
-  );
+test('--abgabe gibt es nicht mehr: das Handout mit Matrikel entsteht in PaperLab', () => {
+  const r = bau(['--abgabe', '--ausgabe', join(wurzel, 'abgabe')], { HOME: home });
+  assert.notEqual(r.status, 0);
+  assert.ok(!existsSync(join(wurzel, 'abgabe')), 'nichts geschrieben');
 });
 
 test('fehlgeschlagener Bau hinterlässt kein altes Manifest', () => {
   const aus = join(wurzel, 'stale');
-  mkdirSync(join(aus, 'jonas-handout.pdf'), { recursive: true }); // Schreiben schlägt fehl
+  mkdirSync(join(aus, 'sprechnotizen.md'), { recursive: true }); // Schreiben schlägt fehl
   writeFileSync(join(aus, 'manifest.json'), '{"alt":true}');
   const r = bau(['--ausgabe', aus], { HOME: home });
   assert.notEqual(r.status, 0);
@@ -372,7 +214,6 @@ test('Manifest führt jede Datei auf, die die Module beim Bau lesen', () => {
     const d = ladeFolienDaten(ROOT);
     const alle = folien(d);
     baueDeck(alle, { niklas: { teil1: [], teil2: [] }, eingebettet: true });
-    baueHandout(d);
   } finally {
     fs.readFileSync = original;
     syncBuiltinESMExports();
