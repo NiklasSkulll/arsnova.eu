@@ -628,6 +628,8 @@ export function fussballfeldSvg(b1, { zoom = 0 } = {}) {
   const tInf = laenge(infMm / 1000);
   const tTrans = laenge(transMm / 1000);
   const tNetz = laenge(netzMm / 1000);
+  const restMm = FELD_MM - infMm - transMm;
+  const tRest = laenge(restMm / 1000);
   const ns = 'vector-effect="non-scaling-stroke"';
 
   // --- Welt (mm) ---
@@ -658,6 +660,8 @@ export function fussballfeldSvg(b1, { zoom = 0 } = {}) {
     `<line x1="${rund6(x1)}" y1="${REIHE_Y}" x2="${rund6(x2)}" y2="${REIHE_Y}" stroke="${farbe}" stroke-width="14" ${ns}/>`;
   w.push(
     strecke(-FELD_MM, -FELD_MM + infMm, FARBEN.bernstein),
+    // Rest der Jobzeit zwischen Inferenzende und Transport (App, Adapter): schließt die Linie bis zur Torlinie.
+    `<g data-strecke="rest">${strecke(-FELD_MM + infMm, -transMm, FARBEN.gedaempft)}</g>`,
     strecke(-transMm, 0, FARBEN.tinte),
     strecke(-netzMm, 0, FARBEN.blauHell),
   );
@@ -683,8 +687,28 @@ export function fussballfeldSvg(b1, { zoom = 0 } = {}) {
   const kZ0 = mmProPx(0);
   const kTrans = mmProPx(0.67); // Bildbreite ≈ 4 cm: Transport gut sichtbar
   const kNetz = mmProPx(0.97); // bei Zoom 1 rund 1,4-fach groß
-  const BEREICH = { inferenz: [0, 0.12], transport: [0.58, 0.76], netz: [0.92, 1] };
+  const BEREICH = {
+    inferenz: [0, 0.12],
+    meter: [0.32, 0.52],
+    transport: [0.58, 0.76],
+    netz: [0.92, 1],
+  };
+  const kMeter = mmProPx(0.421); // Bildbreite 1 m (Stufe 1 in deck.mjs)
   w.push(
+    imFeld(
+      -FELD_MM + infMm,
+      REIHE_Y,
+      kMeter,
+      BEREICH.meter,
+      feldText(-14, -26, 'Inferenz endet hier', { anker: 'end' }) + strich(0),
+    ),
+    imFeld(
+      -transMm,
+      REIHE_Y,
+      kMeter,
+      BEREICH.meter,
+      feldText(-8, 52, `übrige Jobzeit · ${esc(tRest)}`, { anker: 'end', groesse: 24 }),
+    ),
     imFeld(
       -FELD_MM + 18_000,
       REIHE_Y,

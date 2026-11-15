@@ -266,3 +266,13 @@ test('fussballfeldSvg: Übersichtskarte mit Lupenrahmen, erst ab der ersten Zoom
     /<g data-uebersicht data-zoom-von="0\.05" data-zoom-bis="1" opacity="1"/,
   );
 });
+
+test('fussballfeldSvg: Linie bis zur Torlinie geschlossen, Rest der Jobzeit beschriftet (Stufe 1)', async () => {
+  const { fussballfeldSvg } = await import('./grafik.mjs');
+  const svg = fussballfeldSvg(b1, { zoom: 0.421 });
+  // Abschnitt zwischen Inferenzende und Transportbeginn (übrige Jobzeit, App und Adapter)
+  assert.match(svg, /data-strecke="rest"/);
+  const rest = 105 - 105 * b1.inferAnteil - (b1.transportMs * 105) / b1.jobWarmMs;
+  assert.match(svg, new RegExp(`übrige Jobzeit · ${fmt(rest * 100, 1)} cm`));
+  assert.match(svg, /Inferenz endet hier/);
+});
