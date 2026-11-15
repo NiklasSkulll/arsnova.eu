@@ -277,3 +277,61 @@ test('Schreibregeln: kein Gedankenstrich-Einschub, kein „nicht X, sondern Y“
     );
   }
 });
+
+// ---------------------------------------------------------------- Nachbesserungen aus dem Review
+
+test('J2 nennt den Commit des Aufbaus von null aus dessen Bericht', () => {
+  const bericht = readFileSync(
+    resolve(ROOT, 'evidenz/1B/messung/2026-11-13-aufbau-von-null.txt'),
+    'utf8',
+  );
+  const commit = bericht.match(/^Repo: ([0-9a-f]{40})$/m)[1].slice(0, 8);
+  const j2 = nach('J2');
+  assert.ok(j2.quelle.includes(commit), `J2 quelle ohne ${commit}`);
+  assert.ok(!j2.quelle.includes('747c8f7e'), 'J2 quelle nennt den Bericht vom 2026-11-12');
+});
+
+test('J2 legt die CPU-Abweichung offen und behauptet keine Limits wie im Release', () => {
+  const j2 = nach('J2');
+  const s = sichtbar(j2.inhalt);
+  assert.ok(!/Limits wie im Release/.test(s), 'Limits wie im Release');
+  assert.match(s, /4 statt 8 CPUs/);
+  assert.match(s, /Speicherlimits wie im Release/);
+  assert.match(j2.notiz, /4 statt 8/);
+});
+
+test('J1 nennt die Zeit des verfolgten Auftrags, gerundet aus lauf.json', () => {
+  const lauf = JSON.parse(
+    readFileSync(resolve(ROOT, 'evidenz/1B/messung/2026-11-13-lauf.json'), 'utf8'),
+  );
+  const nr = daten.antwort.auftrag;
+  const sek = fmt(Math.round(lauf.zerlegung.auftraege[nr - 1].jobMs / 1000));
+  const j1 = nach('J1');
+  assert.ok(j1.titel.includes(`${sek} Sekunden`), `Titel ohne ${sek} Sekunden: ${j1.titel}`);
+  assert.ok(!j1.titel.includes(fmt(daten.b1.jobWarmMs / 1000, 1)), 'Median im Titel');
+  assert.match(j1.notiz, /dieser Auftrag/i);
+  assert.match(j1.notiz, /Median/);
+  assert.match(sichtbar(j1.inhalt), /Median warm, n = 9/);
+});
+
+test('Mediane auf J3, J9, J10 tragen die Gruppe warm, n = 9; Notizen trennen Auftrag und Median', () => {
+  for (const id of ['J3', 'J9', 'J10']) {
+    assert.match(decode(nach(id).inhalt.replace(/<[^>]+>/g, '')), /warm, n = 9/, id);
+    assert.match(nach(id).notiz, /Median/, `${id} notiz`);
+  }
+});
+
+test('J12 nennt die Bedingung aus ADR 1C-016: nur Runden außer TEMPO', () => {
+  const j12 = nach('J12');
+  assert.match(sichtbar(j12.inhalt), /TEMPO/);
+  assert.match(j12.notiz, /TEMPO/);
+  assert.ok(!/Dann endet jeder Auftrag/.test(j12.notiz));
+});
+
+test('Jede Jonas-Folie zeigt ihr Auftragsetikett im Inhalt', () => {
+  const hat = (html, a) => html.includes(`etikett-${a.toLowerCase()}`) || html.includes(`>${a}<`);
+  for (const f of jonas) {
+    const noetig = f.auftrag === 'beide' ? ['1C', '1B'] : [f.auftrag];
+    for (const a of noetig) assert.ok(hat(f.inhalt, a), `${f.id}: Etikett ${a} fehlt`);
+  }
+});

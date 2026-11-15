@@ -62,11 +62,24 @@ export const FESTWERTE = {
     quelle: 'evidenz/1B/2026-11-13-lauf.md',
     beleg: 'H_B0: alle `unavailable`, Median ≤ 2 s',
   },
+  releaseCpus: {
+    wert: 8,
+    text: 'CPUs und Threads der Runtime im Release',
+    quelle: 'adr/1B-005-abweichungen-vom-release.md',
+    beleg: 'Runtime mit 4 statt 8 CPUs und Threads per Override',
+  },
+  laborCpus: {
+    wert: 4,
+    text: 'CPUs und Threads der Runtime im Labor',
+    quelle: 'adr/1B-005-abweichungen-vom-release.md',
+    beleg: 'Runtime mit 4 statt 8 CPUs und Threads per Override',
+  },
 };
 
 const ANTWORT = 'evidenz/1B/messung/2026-11-15-abgelehnte-antwort.json';
 const LAUF_1B = 'evidenz/1B/messung/2026-11-13-lauf.json';
 const NACHLAUF_1C = 'evidenz/1C/messung/2026-11-09-labor-nachlauf.json.gz';
+const AUFBAU_VON_NULL = 'evidenz/1B/messung/2026-11-13-aufbau-von-null.txt';
 
 const json = (pfad) => JSON.parse(readFileSync(pfad, 'utf8'));
 
@@ -127,7 +140,13 @@ export function ladeFolienDaten(root) {
     inferMs: zer.inferMs,
     jobMs: zer.jobMs,
   };
-  return { ...z, antwort, auftrag, nutzlast: ladeNutzlast(root) };
+  // Commit des Aufbaus von null steht in dessen Bericht (Zeile „Repo: <sha>“).
+  const repo = readFileSync(resolve(root, AUFBAU_VON_NULL), 'utf8').match(
+    /^Repo: ([0-9a-f]{40})$/m,
+  );
+  if (!repo) throw new Error(`${AUFBAU_VON_NULL}: Zeile „Repo:“ fehlt`);
+  const aufbau = { datei: AUFBAU_VON_NULL, commit: repo[1].slice(0, 8) };
+  return { ...z, antwort, auftrag, aufbau, nutzlast: ladeNutzlast(root) };
 }
 
 // ---------------------------------------------------------------- Bausteine
@@ -135,6 +154,10 @@ export function ladeFolienDaten(root) {
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 const etikett = (a) => `<span class="etikett etikett-${a.toLowerCase()}">${a}</span>`;
+
+/** Etikett links oben über einer Grafik aus grafik.mjs (die Grafik bleibt direktes Kind der Fläche). */
+const etikettOben = (a) =>
+  `<span class="etikett etikett-${a.toLowerCase()}" style="position:absolute;left:0;top:0">${a}</span>`;
 
 const flaeche = (inhalt) =>
   `<div style="position:relative;width:1380px;height:560px;box-sizing:border-box">${inhalt}</div>`;
@@ -222,6 +245,7 @@ export function folien(daten) {
     auNetz: fmt(au.netzMs, 2),
     auInfer: fmt(au.inferMs / 1000, 1),
     auJob: fmt(au.jobMs / 1000, 1),
+    auS: fmt(Math.round(au.jobMs / 1000)),
   };
   const fw = Object.fromEntries(Object.entries(FESTWERTE).map(([k, v]) => [k, fmt(v.wert)]));
   const n = b.anzahl;
@@ -282,17 +306,17 @@ export function folien(daten) {
     id: 'J1',
     teil: 'jonas',
     auftrag: 'beide',
-    titel: `Ein Klick. ${z.jobWarm} s. Keine Modellantwort.`,
+    titel: `Ein Klick. ${z.auS} Sekunden. Keine Modellantwort.`,
     inhalt: flaeche(
       `<p style="margin:0 0 40px;font-size:30px;color:var(--text-2)">Ein echter Auftrag der Q&amp;A-Zusammenfassung, verfolgt vom Klick der Lehrperson bis zum Ergebnis.</p>` +
         `<div style="display:grid;grid-template-columns:1fr 1fr;column-gap:60px;font-size:32px;line-height:1.35">` +
         `<div style="border-left:6px solid var(--petrol);padding-left:24px">${etikett('1C')}<p style="margin:14px 0 0">Hält der Kontextpfad seine Zusagen zu Vertrag, Konsistenz und Entkopplung ein?</p></div>` +
         `<div style="border-left:6px solid var(--bernstein);padding-left:24px">${etikett('1B')} <span style="font-size:var(--s-min);color:var(--gedaempft)">Schritte 1–2</span><p style="margin:14px 0 0">Wo steckt die Zeit, wenn die Inferenz auf einem zweiten Host läuft?</p></div>` +
         `</div>` +
-        `<p class="mono" style="position:absolute;left:0;bottom:40px;margin:0;font-size:var(--s-min);color:var(--gedaempft)">${z.jobWarm} s = T_job, Median warm, n = ${nWarm} (gewerteter 1B-Lauf)</p>` +
+        `<p class="mono" style="position:absolute;left:0;bottom:40px;margin:0;font-size:var(--s-min);color:var(--gedaempft)">Dieser Auftrag (Nr. ${au.nr}): T_job ${z.auJob} s · zum Vergleich Median warm, n = ${nWarm}: ${z.jobWarm} s</p>` +
         `<p style="position:absolute;left:0;bottom:0;margin:0;font-size:26px;font-weight:600">Jonas Weirauch</p>`,
     ),
-    notiz: `Ein Klick der Lehrperson, ${z.jobWarm} Sekunden Wartezeit, und am Ende steht keine Modellantwort auf dem Bildschirm. Diesen einen Auftrag verfolge ich heute vom Klick bis zum Ergebnis. Dabei beantworte ich zwei Fragen. Für Auftrag 1C: Hält der Kontextpfad seine Zusagen zu Vertrag, Konsistenz und Entkopplung ein? Für Auftrag 1B, die ersten beiden Schritte: Wo steckt die Zeit, wenn die Inferenz auf einem zweiten Host läuft? Die Farbe zeigt immer, welcher Auftrag gerade spricht: Petrol ist 1C, Bernstein ist 1B.`,
+    notiz: `Ein Klick der Lehrperson, ${z.auS} Sekunden Arbeit im Hintergrund, und am Ende steht keine Modellantwort auf dem Bildschirm. Dieser Auftrag ist echt, die Nummer ${au.nr} aus meinem gewerteten Lauf, und ich verfolge ihn heute vom Klick bis zum Ergebnis. Zum Vergleich: Im Median brauchen warme Aufträge ${z.jobWarm} Sekunden. Dabei beantworte ich zwei Fragen. Für Auftrag 1C: Hält der Kontextpfad seine Zusagen zu Vertrag, Konsistenz und Entkopplung ein? Für Auftrag 1B, die ersten beiden Schritte: Wo steckt die Zeit, wenn die Inferenz auf einem zweiten Host läuft? Die Farbe zeigt immer, welcher Auftrag gerade spricht: Petrol ist 1C, Bernstein ist 1B.`,
     zeitS: 40,
     kurzfassung: true,
     quelle: `${q1B}; Leitfragen: Prüfungsdokument 4.3, ADR 1B-011`,
@@ -315,8 +339,8 @@ export function folien(daten) {
           liste([
             `Aufbau von null: ${mono('labor.sh up')}, danach alle automatischen Prüfungen grün`,
             'Privates Netz, Firewall lässt die Runtime nur vom app-host zu, dazu ein Token',
-            'Limits wie im Release, Modell per SHA-256 gepinnt',
-            '<b>Offengelegt:</b> Release-Images sind nicht öffentlich, daher selbst gebaut und per lokalem Digest gestartet; zwei VMs teilen sich einen Laptop',
+            'Speicherlimits wie im Release, Modell per SHA-256 gepinnt',
+            `<b>Offengelegt:</b> Runtime mit ${fw.laborCpus} statt ${fw.releaseCpus} CPUs und Threads; Release-Images nicht öffentlich, daher selbst gebaut; zwei VMs teilen sich einen Laptop`,
           ]),
           host('app-host', '192.168.150.10', 'App, PostgreSQL, Redis') +
             `<div style="text-align:center;font-size:24px;color:var(--bernstein-text);margin:-6px 0 12px">privates Netz, nur app-host → llm-host</div>` +
@@ -326,10 +350,10 @@ export function folien(daten) {
         beleg('Aufbauprotokoll 1B; ADR 1B-002, 1B-005, 1B-010; Abgleich mit ADR-0035'),
     ),
     notiz:
-      'Bevor man misst, muss das System stehen. Der erste Schritt von 1B verlangt, das Zwei-Host-Deployment von Release 1.3 nachzubauen. Ich habe das als zwei virtuelle Maschinen auf meinem Laptop aufgebaut: der app-host mit App, Datenbank und Redis, der llm-host mit der Runtime und dem gepinnten Modell. Dazwischen liegt ein privates Netz; die Firewall lässt die Runtime nur vom app-host aus zu, dazu kommt ein Token. Der ganze Aufbau läuft mit einem Befehl, von null bis zu den automatischen Prüfungen. Wichtig sind mir die Abweichungen, und die stehen offen im Protokoll. Die Release-Images sind nicht öffentlich, also habe ich sie selbst gebaut und per lokalem Digest gestartet. Und zwei VMs auf einem Rechner sind kein Rechenzentrum. Das begrenzt, was die Zahlen später aussagen.',
+      'Bevor man misst, muss das System stehen. Der erste Schritt von 1B verlangt, das Zwei-Host-Deployment von Release 1.3 nachzubauen. Ich habe das als zwei virtuelle Maschinen auf meinem Laptop aufgebaut: der app-host mit App, Datenbank und Redis, der llm-host mit der Runtime und dem gepinnten Modell. Dazwischen liegt ein privates Netz; die Firewall lässt die Runtime nur vom app-host aus zu, dazu kommt ein Token. Der ganze Aufbau läuft mit einem Befehl, von null bis zu den automatischen Prüfungen. Wichtig sind mir die Abweichungen, und die stehen offen im Protokoll. Die Speicherlimits sind wie im Release, aber die Runtime läuft mit 4 statt 8 CPUs und Threads, weil der Laptop nicht mehr hat. Die Release-Images sind nicht öffentlich, also habe ich sie selbst gebaut und per lokalem Digest gestartet. Und zwei VMs auf einem Rechner sind kein Rechenzentrum. Das begrenzt, was die Zahlen später aussagen.',
     zeitS: 60,
     kurzfassung: false,
-    quelle: `evidenz/1B/2026-11-12-aufbau.md und messung/2026-11-13-aufbau-von-null.txt · ${rechnerKurz(H.hauptlauf.rechner)} · Prüfbericht am Stand 747c8f7e`,
+    quelle: `${daten.aufbau.datei} · ${rechnerKurz(H.hauptlauf.rechner)} · ${daten.aufbau.commit}; Abweichungen: evidenz/1B/2026-11-12-aufbau.md, ADR 1B-005`,
     station: null,
   });
 
@@ -572,7 +596,7 @@ export function folien(daten) {
     teil: 'jonas',
     auftrag: '1B',
     titel: 'Die Zeit steckt in der Inferenz',
-    inhalt: zeitzerlegungSvg(b),
+    inhalt: zeitzerlegungSvg(b) + etikettOben('1B'),
     notiz: `So sieht die ganze Zerlegung aus. Die Achse ist logarithmisch, jeder Strich ist zehnmal mehr. Das Netz kostet im Median ${z.netz} Millisekunden, die Schwelle lag bei ${fw.schwelleNetzMs}. Der Transport mit dem Serveranteil kostet ${z.transport} Millisekunden, der Adapter in der App ${z.adapter} Millisekunden, bei einer Schwelle von ${fw.schwelleAdapterS} Sekunden. Und dann die Inferenz: ${z.inferWarm} Sekunden im warmen Median über ${nWarm} Aufträge, ein Anteil von ${z.anteil} Prozent. Kalt, mit frisch gestarteter Runtime, dauert ein Auftrag im Median ${z.kaltMedian} Sekunden. Alle drei Hypothesen sind erfüllt. Die zweite Serverrolle kostet also keine relevante Zeit.`,
     zeitS: 50,
     kurzfassung: true,
@@ -586,9 +610,9 @@ export function folien(daten) {
     teil: 'jonas',
     auftrag: '1B',
     titel: 'Wäre der Auftrag ein Fußballfeld …',
-    inhalt: fussballfeldSvg(b, { zoom: 1 }),
+    inhalt: fussballfeldSvg(b, { zoom: 1 }) + etikettOben('1B'),
     notiz:
-      'Damit man sich das vorstellen kann: Wäre ein warmer Auftrag so lang wie ein Fußballfeld, dann nähme die Inferenz praktisch das ganze Feld ein. Der Transport wäre gut ein Zentimeter. Und das Netz wäre ein Drittel Millimeter, dünner als die Kreidelinie am Tor. Am Netz zu optimieren lohnt sich also nicht.',
+      'Damit man sich das vorstellen kann: Wäre der Median eines warmen Auftrags so lang wie ein Fußballfeld, dann nähme die Inferenz praktisch das ganze Feld ein. Der Transport wäre gut ein Zentimeter. Und das Netz wäre ein Drittel Millimeter, dünner als die Kreidelinie am Tor. Am Netz zu optimieren lohnt sich also nicht.',
     zeitS: 25,
     kurzfassung: true,
     quelle: `${q1B}; Maßstab: T_job warm (n = ${nWarm}), Netz und Transport Median über alle ${n}`,
@@ -655,7 +679,7 @@ export function folien(daten) {
             [
               'Nach der Inferenz wird der Kontext noch einmal gebaut und sein Hash verglichen',
               `Hash anders: Antwort verworfen, Endstatus ${mono('source_changed')}`,
-              `<b>Befund:</b> Läuft eine Blitzlicht-Runde, hängt der Hash von der Uhrzeit ab. Im Labor endete ${mono('YESNO')} ${c.yesno.wert} als ${mono('source_changed')}, ohne jede Datenänderung.`,
+              `<b>Befund:</b> Läuft eine Blitzlicht-Runde eines anderen Typs als ${mono('TEMPO')}, hängt der Hash von der Uhrzeit ab. Im Labor endete ${mono('YESNO')} ${c.yesno.wert} als ${mono('source_changed')} ohne Datenänderung, ${mono('TEMPO')} nicht.`,
             ],
             26,
           ),
@@ -673,7 +697,7 @@ export function folien(daten) {
           'ADR 1C-010 (Nachprüfung bleibt), ADR 1C-016 (Blitzlicht: empfohlen, nicht umgesetzt; Issue #18), Nachlauf N3, N5',
         ),
     ),
-    notiz: `Nächste Station, nach der Inferenz. Die Frage: Was passiert, wenn sich die Daten ändern, während das Modell rechnet? Der Kontext wird nach der Inferenz noch einmal gebaut und sein Hash mit dem vom Anfang verglichen. Weicht er ab, wird die Antwort als source_changed verworfen. Das kostet am Laptop ${z.nachpr} Prozent eines Auftrags, also fast nichts. Deshalb bleibt die Nachprüfung. Dazu ein Befund: Läuft gerade eine Blitzlicht-Runde, hängt der Hash von der Uhrzeit ab. Dann endet jeder Auftrag als source_changed, im Labor ${c.yesno.wert}, ohne dass sich irgendeine Date geändert hat. Ich empfehle, das zu beheben. Umgesetzt ist es nicht.`,
+    notiz: `Nächste Station, nach der Inferenz. Die Frage: Was passiert, wenn sich die Daten ändern, während das Modell rechnet? Der Kontext wird nach der Inferenz noch einmal gebaut und sein Hash mit dem vom Anfang verglichen. Weicht er ab, wird die Antwort als source_changed verworfen. Das kostet am Laptop ${z.nachpr} Prozent eines Auftrags, also fast nichts. Deshalb bleibt die Nachprüfung. Dazu ein Befund: Läuft gerade eine Blitzlicht-Runde, und zwar eines anderen Typs als TEMPO, hängt der Hash von der Uhrzeit ab. Dann wird jede Modellantwort während dieser Runde verworfen. Im Labor endete der Typ YESNO ${c.yesno.wert} als source_changed, ohne dass sich Daten geändert haben; bei TEMPO passierte das nicht. Ich empfehle, das zu beheben. Umgesetzt ist es nicht.`,
     zeitS: 50,
     kurzfassung: false,
     quelle: q1C('nachpruefungAnteilProzent', 'yesno'),
