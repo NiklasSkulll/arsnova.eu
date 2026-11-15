@@ -486,6 +486,22 @@ test('Layout: je Folie keine Überlappung von Titel, Frage, Fläche und Fußzeil
   assert.deepEqual(await layoutBefunde(deckOhneNiklas), []);
 });
 
+test('Layout mit dem echten Clip (medien/): J13 mit Video, Standbild und Bildunterschrift passt', async () => {
+  const medien = join(HIER, 'medien');
+  const pfad = join(ordner, 'mit-clip.html');
+  writeFileSync(
+    pfad,
+    baueDeck(F, {
+      niklas: { teil1: [], teil2: [] },
+      clip: join(medien, 'clip.webm'),
+      clipInfo: JSON.parse(readFileSync(join(medien, 'clip.json'), 'utf8')),
+      standbild: join(medien, 'clip-standbild.png'),
+      eingebettet: true,
+    }),
+  );
+  assert.deepEqual(await layoutBefunde(pfad), []);
+});
+
 test('Layout-Gegenprobe: zweizeiliger Titel und überlappender Beleg werden gemeldet', async () => {
   const kaputt = F.map((f) => {
     if (f.id === 'J12') return { ...f, titel: `${f.titel}, ${f.titel}, ${f.titel}` };
@@ -532,11 +548,13 @@ test('Clip wird als data-URI in J13 eingebettet', () => {
   assert.match(html, /<video[^>]+src="data:video\/webm;base64,GkXfowECAwQ="/);
   // Im PDF steht das Standbild statt des Videos (Druck-CSS der Vorlage).
   assert.match(html, /<img class="clip-standbild" src="data:image\/png;base64,iVBORw=="/);
-  assert.match(html, /Wartezeit 301 s, im Clip auf 4 s gerafft/);
-  assert.match(html, /2026-11-15, Energieprofil power-saver/);
+  assert.match(html, /Laboraufnahme 2026-11-15 \(power-saver\), Wartezeit 301 s, auf 4 s gerafft/);
   // Grund dieses Laufs ehrlich nennen: Timeout, nicht das Gate; Hinweis wörtlich.
   assert.match(html, /Abbruch nach 300 s \(Timeout\), nicht das Gate/);
-  assert.match(html, /„Eine ausführliche Zusammenfassung war diesmal nicht möglich\.“/);
+  assert.match(
+    html,
+    /Hinweis wie beim Gate: „Eine ausführliche Zusammenfassung war diesmal nicht möglich\.“/,
+  );
   assert.throws(
     () => baueDeck(F, { niklas: { teil1: [], teil2: [] }, clip, eingebettet: true }),
     /clipInfo/,
@@ -547,8 +565,8 @@ test('Clip wird als data-URI in J13 eingebettet', () => {
   const j13 = (h) => h.match(/<section[^>]*data-id="J13"[\s\S]*?<\/section>/)[0];
   assert.doesNotMatch(j13(html), /keine Bildschirmaufnahme/);
   assert.doesNotMatch(j13(html), /Fallback-Regel/);
-  assert.match(j13(html), /Bildschirmaufnahme aus dem Labor, Entwicklungslauf/);
+  assert.match(j13(html), /Laboraufnahme 2026-11-15/);
   const ohne = baueDeck(F, { niklas: { teil1: [], teil2: [] }, eingebettet: true });
   assert.match(j13(ohne), /Nachbau, keine Bildschirmaufnahme/);
-  assert.doesNotMatch(j13(ohne), /Bildschirmaufnahme aus dem Labor/);
+  assert.doesNotMatch(j13(ohne), /Laboraufnahme/);
 });

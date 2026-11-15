@@ -659,7 +659,10 @@ test('R5: Gate-Wechsel mit a998ada0, Validierung am Stand 248029dc, Nutzlastpfad
   assert.match(sichtbar(j13.inhalt), /uncertain/);
   assert.match(j13.notiz, /[Zz]wei Upstream-Commits|a998ada0/);
   assert.match(nach('J6').notiz, /nur auf dem älteren Stand/);
-  for (const id of ['J6', 'J7', 'J13']) assert.match(nach(id).quelle, /labor\.quiet\.runs\[/, id);
+  for (const id of ['J6', 'J7']) assert.match(nach(id).quelle, /labor\.quiet\.runs\[/, id);
+  // J13 nennt die Nutzlast nur mit dem Nachbau (ohne Clip).
+  const j13OhneClip = folien({ ...daten, clip: null }).find((f) => f.id === 'J13');
+  assert.match(j13OhneClip.quelle, /labor\.quiet\.runs\[/);
   assert.match(
     sichtbar(nach('G9').inhalt),
     new RegExp(`1B ${daten.b1.verworfen}, 1C ${daten.c1.gateAntwortenGesamt.wert}`),
@@ -673,6 +676,9 @@ test('J13: Clip-Angaben stimmen mit dem App-Hinweis überein, die Notiz nennt de
   const j13 = folien(daten).find((f) => f.id === 'J13');
   assert.match(j13.notiz, /Timeout/);
   assert.doesNotMatch(j13.notiz, /Rechts ein Nachbau/);
+  assert.doesNotMatch(`${j13.fuss} ${j13.quelle}`, /Nachbau/);
+  assert.match(j13.quelle, /Hinweis qaSummaryExtractive\.ts/);
+  assert.match(j13.quelle, /evidenz\/1B\/2026-11-15-clip\.md/);
   const ohne = folien({ ...daten, clip: null }).find((f) => f.id === 'J13');
   assert.match(ohne.notiz, /Rechts ein Nachbau/);
 });

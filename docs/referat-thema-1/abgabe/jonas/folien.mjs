@@ -1004,8 +1004,8 @@ export function folien(daten) {
     } Meine Empfehlung: Instruktion, Grammatik und Gate gemeinsam abstimmen. Umgesetzt ist das nicht.`,
     zeitS: 75,
     kurzfassung: true,
-    quelle: `${qAntwort}; Lauf 1B · ThinkPad P50 · ${H.hauptlauf.commit.slice(0, 8)}; Nachlauf · Laptop · def56700; ADR 1C-018 · 9f230abc; Nachbau: Nutzlast labor.quiet.runs[${nl.lauf}], Hinweis qaSummaryExtractive.ts`,
-    fuss: `Lauf 1B, Auftrag ${a.auftrag} · ${haupt} · ${P50} · ${fNachlauf} · Nachbau: qaSummaryExtractive.ts`,
+    quelle: `${qAntwort}; Lauf 1B · ThinkPad P50 · ${H.hauptlauf.commit.slice(0, 8)}; Nachlauf · Laptop · def56700; ADR 1C-018 · 9f230abc; ${daten.clip ? `Clip: ${daten.clip.quelle}, ${daten.clip.datum}, ${daten.clip.profil}; Hinweis qaSummaryExtractive.ts` : `Nachbau: Nutzlast labor.quiet.runs[${nl.lauf}], Hinweis qaSummaryExtractive.ts`}`,
+    fuss: `Lauf 1B, Auftrag ${a.auftrag} · ${haupt} · ${P50} · ${fNachlauf} · ${daten.clip ? `Clip ${daten.clip.datum}, Labor` : 'Nachbau: qaSummaryExtractive.ts'}`,
     station: 'gate',
   });
 

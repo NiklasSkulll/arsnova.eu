@@ -208,17 +208,16 @@ function jonasFolie(f, nr, gesamt, clipDaten) {
       (_, figure) =>
         `${figure}<video class="clip" src="${uri}" muted playsinline preload="auto" ` +
         `aria-label="Clip: Lehrenden-Sicht, Klick, Warten, Ersatzzusammenfassung" ` +
-        `style="display:block;width:100%;height:520px;object-fit:contain;background:var(--tinte);border-radius:8px"></video>` +
+        `style="display:block;width:100%;height:400px;object-fit:contain;background:var(--tinte);border-radius:8px"></video>` +
         // Im PDF (Druck-CSS der Vorlage) steht das Standbild an der Stelle des Videos.
         `<img class="clip-standbild" src="${standbild}" alt="Standbild: Ergebnis mit Hinweis" ` +
-        `style="width:100%;height:520px;object-fit:contain;background:var(--tinte);border-radius:8px">` +
+        `style="width:100%;height:400px;object-fit:contain;background:var(--tinte);border-radius:8px">` +
         `<figcaption style="margin-top:12px;font-size:var(--s-min);line-height:1.35;color:var(--gedaempft)">` +
-        `Bildschirmaufnahme aus dem Labor, Entwicklungslauf ${esc(info.datum)}, Energieprofil ${esc(info.profil)}: ` +
-        `Wartezeit ${Math.round(info.wartezeitS)} s, im Clip auf ${info.raffungS} s gerafft. ` +
+        `Laboraufnahme ${esc(info.datum)} (${esc(info.profil)}), Wartezeit ${Math.round(info.wartezeitS)} s, auf ${info.raffungS} s gerafft. ` +
         (info.grund === 'timeout'
           ? `Hier Abbruch nach ${Math.round(info.timeoutMs / 1000)} s (Timeout), nicht das Gate; `
           : '') +
-        `die Lehrperson sieht denselben Hinweis „${esc(info.hinweis)}“ und erfährt den Grund nicht. Illustration, kein Nachweis.</figcaption>`,
+        `Hinweis wie beim Gate: „${esc(info.hinweis.split('. ')[0].replace(/\.$/, ''))}.“ Illustration, kein Nachweis.</figcaption>`,
     );
     if (inhalt === vorher && f.inhalt.includes('data-clip')) {
       throw new Error(`${f.id}: Nachbau für den Clip nicht gefunden`);
