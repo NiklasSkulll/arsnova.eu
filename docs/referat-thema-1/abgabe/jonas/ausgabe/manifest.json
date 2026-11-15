@@ -113,19 +113,19 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/deck.js",
-      "sha256": "664b3fbd47bf45147df231a096e9d437da43838b22baf329bc287f6bc76c8a6b"
+      "sha256": "8e6961f30562fce4cd1db751544dd5b4372ac359824836397934ff025d36f875"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/deck.mjs",
-      "sha256": "1ee25a76224e2347c9e3eb73aaebcb8e768631471ca6c84bbf3bed3438f8b387"
+      "sha256": "86728f506993ad63618c1d53829f5b0a7f905a46eba83b81979c1c8c7ac25379"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/folien.mjs",
-      "sha256": "46afa297311167c5fbc93a3816336d3508f3bb7f55809dadd8c6660129d460b2"
+      "sha256": "67fd482f563e5ae140e3b990e54eafd10025aa38de524a7011db6d9b14a8ccaa"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/grafik.mjs",
-      "sha256": "c11aa1297bce24f6f08f9b81bed2123ad3cfa600cd762a3c054ec9745ba87173"
+      "sha256": "b7c4cad3c02f0097a52dcc7a329b315dcb5fd4f3c13e656e485fdaccc32ea50b"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/handout-latex.mjs",
@@ -141,7 +141,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/literatur.mjs",
-      "sha256": "22f5f5f3584206b04f37b9a9301c509b23f038f39afcf92cd502afdeedc6f39a"
+      "sha256": "56942f081deb020ce02f045ff62ba335a4e39a12825d0a17579a15f56823bf4d"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/niklas-seiten.mjs",
@@ -207,19 +207,19 @@
   "ausgaben": [
     {
       "datei": "jonas-deck.html",
-      "bytes": 5502111,
-      "sha256": "0361f84e9dd3bb3cb051d123503dbe17aa882fa34d3295ee2a5c01d8299dad6c"
+      "bytes": 5504402,
+      "sha256": "0597153f47c4648576b1a5e034c06f5caa898be86af20c794260ab07f7170d3c"
     },
     {
       "datei": "gemeinsames-deck.pdf",
-      "bytes": 1762515,
-      "sha256": "7a3e73216dcd26de5dbd5049a34c5fc1dc0cafbc2b02ff92a56d4879466bcf12",
+      "bytes": 1763629,
+      "sha256": "6c4071e101207d5923c83be3f8a2e80ba9662e63a768798b6ad505177226572d",
       "seiten": 39
     },
     {
       "datei": "jonas-folien.pdf",
-      "bytes": 746202,
-      "sha256": "951d23682b545c655ec730d08ae836b42ee681699da449ad074c55c273c35576",
+      "bytes": 747347,
+      "sha256": "5d18606226dea6b976f2449c7620710f65c255ae155f8ebe084606456d635913",
       "seiten": 27
     },
     {
