@@ -486,6 +486,23 @@ test('Layout: je Folie keine Überlappung von Titel, Frage, Fläche und Fußzeil
   assert.deepEqual(await layoutBefunde(deckOhneNiklas), []);
 });
 
+test('ZL: Quellenzeilen in der Fußzeile werden nie abgeschnitten (höchstens zwei Zeilen)', async () => {
+  const { page, context } = await oeffne(deckOhneNiklas);
+  await page.emulateMedia({ media: 'print' });
+  const befunde = await page.evaluate(() =>
+    [...document.querySelectorAll('.folie-fuss')].flatMap((el) => {
+      const zeile = parseFloat(getComputedStyle(el).lineHeight);
+      const fehler = [];
+      if (el.scrollWidth > el.clientWidth + 1) fehler.push('abgeschnitten');
+      if (getComputedStyle(el).textOverflow === 'ellipsis') fehler.push('Ellipse');
+      if (el.clientHeight - 12 > zeile * 2 + 2) fehler.push('mehr als zwei Zeilen');
+      return fehler.map((f) => `${el.closest('.folie').dataset.id}: ${f}`);
+    }),
+  );
+  await context.close();
+  assert.deepEqual(befunde, []);
+});
+
 test('Layout mit dem echten Clip (medien/): J13 mit Video, Standbild und Bildunterschrift passt', async () => {
   const medien = join(HIER, 'medien');
   const pfad = join(ordner, 'mit-clip.html');

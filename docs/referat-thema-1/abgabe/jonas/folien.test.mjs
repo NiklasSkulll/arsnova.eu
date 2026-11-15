@@ -35,6 +35,7 @@ const PLAN = {
   J12: 50,
   J13: 75,
   J15: 50,
+  J16: 5,
 };
 
 const decode = (s) =>
@@ -157,7 +158,8 @@ test('Pflichtfelder: quelle mit Rechner und Commit, notiz, auftrag, station', ()
     assert.ok(f.inhalt?.trim(), `${f.id} inhalt`);
     assert.ok(stationen.has(f.station), `${f.id} station ${f.station}`);
     assert.equal(typeof f.kurzfassung, 'boolean', f.id);
-    if (f.teil === 'rahmen') continue;
+    // J16 ist das Literaturverzeichnis ohne eigene Messwerte (literatur.test.mjs prüft die Einträge).
+    if (f.teil === 'rahmen' || f.id === 'J16') continue;
     assert.ok(f.quelle?.trim(), `${f.id} quelle`);
     assert.ok(f.notiz?.trim(), `${f.id} notiz`);
     assert.match(f.quelle, /\b[0-9a-f]{8}\b/, `${f.id}: Commit in der quelle`);
@@ -255,7 +257,8 @@ test('Festwerte (Schwellen, Release-Timeout) stehen wörtlich in ihrer Quelle', 
 
 test('Keine Zahl auf einer Folie, die nicht aus den Daten stammt', () => {
   const w = whitelist();
-  for (const f of F) {
+  // J16: Jahreszahlen, Seiten und DOIs des Literaturverzeichnisses prüft literatur.test.mjs.
+  for (const f of F.filter((x) => x.id !== 'J16')) {
     for (const [feld, wert] of [
       ['titel', f.titel],
       ['inhalt', f.inhalt],
@@ -358,7 +361,7 @@ test('J12 nennt die Bedingung aus ADR 1C-016: nur Runden außer TEMPO', () => {
 
 test('Jede Jonas-Folie zeigt ihr Auftragsetikett im Inhalt', () => {
   const hat = (html, a) => html.includes(`etikett-${a.toLowerCase()}`) || html.includes(`>${a}<`);
-  for (const f of jonas) {
+  for (const f of jonas.filter((x) => x.id !== 'J16')) {
     const noetig = f.auftrag === 'beide' ? ['1C', '1B'] : [f.auftrag];
     for (const a of noetig) assert.ok(hat(f.inhalt, a), `${f.id}: Etikett ${a} fehlt`);
   }
@@ -681,4 +684,39 @@ test('J13: Clip-Angaben stimmen mit dem App-Hinweis überein, die Notiz nennt de
   assert.match(j13.quelle, /evidenz\/1B\/2026-11-15-clip\.md/);
   const ohne = folien({ ...daten, clip: null }).find((f) => f.id === 'J13');
   assert.match(ohne.notiz, /Rechts ein Nachbau/);
+});
+
+// ZL S. 2–3 und Anhang B: Kurzbelege auf jeder Folie, vollständiges Literaturverzeichnis am Ende.
+test('ZL: jede Folie von Jonas, Rahmen und Reserve trägt eine Quellenzeile mit Kurzbeleg', async () => {
+  const { LITERATUR } = await import('./literatur.mjs');
+  const kurz = LITERATUR.map((e) => e.kurz);
+  for (const f of F.filter((x) => x.id !== 'J16')) {
+    assert.match(f.fuss, /^Quelle: /, `${f.id}: Fußzeile ohne „Quelle:“`);
+    assert.ok(
+      kurz.some((k) => f.fuss.includes(k)),
+      `${f.id}: kein Kurzbeleg aus dem Literaturverzeichnis in „${f.fuss}“`,
+    );
+  }
+});
+
+test('ZL: J16 zeigt das vollständige Literaturverzeichnis, jede Quelle ist auf einer Folie zitiert', async () => {
+  const { LITERATUR } = await import('./literatur.mjs');
+  const j16 = nach('J16');
+  assert.ok(j16, 'J16 fehlt');
+  assert.equal(j16.teil, 'jonas');
+  assert.equal(
+    F.filter((f) => f.teil === 'jonas').at(-1).id,
+    'J16',
+    'J16 ist die letzte Folie von Jonas',
+  );
+  const norm = (h) => decode(h.replace(/<[^>]+>/g, '')).replace(/\s+/g, ' ');
+  const text = norm(j16.inhalt);
+  for (const e of LITERATUR) {
+    assert.ok(text.includes(norm(e.voll)), `${e.schluessel} fehlt auf J16`);
+    assert.ok(
+      F.some((f) => f.id !== 'J16' && f.fuss.includes(e.kurz)),
+      `${e.schluessel} auf keiner Folie zitiert`,
+    );
+  }
+  assert.match(j16.titel, /Literaturverzeichnis/);
 });

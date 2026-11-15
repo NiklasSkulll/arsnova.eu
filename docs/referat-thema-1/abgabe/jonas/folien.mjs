@@ -11,6 +11,7 @@ import { resolve } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 
 import { fussballfeldSvg, wegSvg, zeitzerlegungSvg } from './grafik.mjs';
+import { LITERATUR, kurzbeleg } from './literatur.mjs';
 import { fmt, ladeZahlen } from './zahlen.mjs';
 
 /** Vorab festgelegte Schwellen und Konfigurationswerte; quelle relativ zu docs/referat-thema-1/. */
@@ -331,6 +332,47 @@ const etikett = (a) => `<span class="etikett etikett-${a.toLowerCase()}">${a}</s
 const grafikBox = (svg) => `<div class="grafik-box">${svg}</div>`;
 
 /** Inhalt der Fläche als Spalte im Fluss (stil.css .flaeche-inhalt); der Beleg sitzt unten. */
+// Kurzbelege je Folie: [Schlüssel aus literatur.mjs, Stelle]. Eigene Arbeit: Weirauch (2026a = 1B-Messung,
+// 2026b = Präsentation und Clip, 2026c = Entscheidungen, Berichte, 1C-Messdaten).
+const LAUF = ['weirauch2026b', 'Laufprotokoll'];
+const DOKU = ['weirauch2026c'];
+const ZITATE = {
+  G0: [['arsnova2026pruefung', 'Abschn. 4.3']],
+  J1: [['arsnova2026pruefung', 'Abschn. 4.3'], LAUF, ['weirauch2026c', 'ADR 1B-011']],
+  J2: [
+    ['weirauch2026b', 'Aufbauprotokoll'],
+    ['arsnova2026adr0035'],
+    ['dean2013', 'S. 74'],
+    ['yang2025', 'S. 3'],
+    ['ggml2026'],
+  ],
+  J3: [LAUF, ['weirauch2026c', '1C-Nachlauf']],
+  J4: [DOKU, LAUF],
+  J5: [DOKU, LAUF],
+  J6: [['weirauch2026c', '1C-Nachlauf, Teil 2']],
+  J7: [['weirauch2026c', '1C-Nachlauf']],
+  J8: [LAUF, ['ggml2026', 'Abschn. „Timings and context usage“'], ['papadopoulos2021', 'Kap. 2.3']],
+  J9: [LAUF, ['kwon2023', 'Kap. 2.2']],
+  J10: [LAUF, ['kwon2023', 'Kap. 2.2']],
+  J11: [DOKU, ['kwon2023', 'Kap. 3'], ['ulrich2016', 'Abschn. „Picking a deadline“']],
+  J12: [['weirauch2026c', '1C-Nachlauf, Teil 2']],
+  J13: [LAUF, ['weirauch2026d', 'Antwortausschnitt, Clip'], ['shankar2024', 'S. 1–2']],
+  J15: [DOKU, ['ulrich2016', 'Abschn. „Load Shedding and Graceful Degradation“']],
+  G9: [DOKU],
+  R1: [DOKU, LAUF],
+  R2: [['weirauch2026b', 'Nachtrag M2']],
+  R3: [['weirauch2026b', 'Nachtrag M3']],
+  R4: [['weirauch2026b', 'Nachtrag M4']],
+  R5: [DOKU, LAUF],
+  R6: [['weirauch2026c', 'Eigenanteil']],
+  R7: [['weirauch2026c', 'ADR-Index']],
+  R8: [['weirauch2026c', '1C-diagrams.md']],
+  R9: [['weirauch2026c', '1C-ergebnis.md, Abschn. 3']],
+  R10: [['weirauch2026b', 'Aufbauprotokoll'], ['arsnova2026adr0035']],
+  R11: [LAUF],
+  R12: [['weirauch2026c', '1C-ergebnis.md, Abschn. 5']],
+};
+
 const flaeche = (inhalt) => `<div class="flaeche-inhalt">${inhalt}</div>`;
 
 const frage = (text, auftrag) =>
@@ -341,7 +383,7 @@ const liste = (punkte, groesse = 28) =>
   punkte.map((p) => `<li style="margin:0 0 12px">${p}</li>`).join('') +
   '</ul>';
 
-const beleg = (text) => `<p class="beleg">Beleg: ${text}</p>`;
+const beleg = (text) => `<p class="beleg">Belegstellen in Weirauch (2026c): ${text}</p>`;
 
 /** Große Zahl (Inter, Tabellenziffern) mit Bezeichnung und Gruppe (Rechner, Stand, n). */
 function zahl({
@@ -1078,6 +1120,29 @@ export function folien(daten) {
     station: null,
   });
 
+  // ------------------------------------------------------------ J16 Literaturverzeichnis (ZL S. 2–3)
+  F.push({
+    id: 'J16',
+    teil: 'jonas',
+    auftrag: 'beide',
+    titel: 'Literaturverzeichnis',
+    inhalt: flaeche(
+      `<!--quellen--><ul data-literatur style="margin:0;padding:0;list-style:none;columns:2;column-gap:56px;font-size:17px;line-height:1.3">` +
+        LITERATUR.map(
+          (e) =>
+            `<li style="break-inside:avoid;margin:0 0 9px;padding-left:28px;text-indent:-28px;overflow-wrap:anywhere">${e.voll}</li>`,
+        ).join('') +
+        `</ul><!--/quellen-->`,
+    ),
+    notiz:
+      'Das vollständige Literaturverzeichnis nach dem IU-Zitierleitfaden; dieselben Einträge wie im Handout.',
+    zeitS: 5,
+    kurzfassung: false,
+    quelle: 'literatur.mjs, abgeglichen mit main.bib des Handouts (PaperLab)',
+    fuss: 'Kurzbelege auf den Folien nach IU-Zitierleitfaden; Einträge wie im Handout',
+    station: null,
+  });
+
   // ------------------------------------------------------------ G9 Rahmen (Entwurf)
   F.push({
     id: 'G9',
@@ -1481,5 +1546,13 @@ export function folien(daten) {
     `1C-ergebnis.md, ADRs 1C-010 bis 1C-024 · 1C: def56700 Laptop, 9f230abc Laptop und PC · 1B: ${haupt} ${P50}`,
   );
 
+  // Kurzbelege je Folie (ZL Anhang B: „Quelle: …“ in der Fußzeile); Rechner und Commit bleiben dahinter.
+  for (const f of F) {
+    if (f.id === 'J16') continue;
+    const z = ZITATE[f.id];
+    if (!z) throw new Error(`${f.id}: keine Kurzbelege in ZITATE`);
+    const liste = z.map(([k, stelle]) => kurzbeleg(k, stelle).slice(1, -1)).join('; ');
+    f.fuss = `Quelle: ${liste} · ${f.fuss}`;
+  }
   return F;
 }
