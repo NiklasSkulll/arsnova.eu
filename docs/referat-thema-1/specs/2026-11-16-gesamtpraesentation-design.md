@@ -29,3 +29,11 @@ Niklas' 1A-Folien und das 1A-Handout hat sein Codex ohne Auftrag erzeugt; Niklas
 ## Offen für den Bauenden
 
 Folienfolge, Grafiken und Animationen für 1A; Gliederung von Niklas' Handout innerhalb der IU-Vorgaben; Form der Sprechnotizen-Ausgabe.
+
+## Umsetzung Niklas' Teil (_Ergänzt 2026-11-16_)
+
+- Reihenfolge im Deck: G0 (Jonas eröffnet), J1–J15 (Übergabe auf J15: „Und was verträgt der App-Host selbst neben der Live-Last?“), N1–N10 (1A), M1–M4 (1B 3–4), G9 (gemeinsames Fazit, spricht Niklas), Anhang (J16, NL), Reserve (Jonas R1–R14, Niklas RN1–RN2).
+- 1A: zehn Behauptungsfolien, 9:30 min, Heldenzahlenkette 40.000 → 80 → 11 → 4 → 3 in etwa 10 s → keine Freigabe; Stufen nur auf N6 (drei) und N7 (zwei, nachträglich ausgewertet und so markiert). Jede Zahl aus `abgabe/niklas/daten-1a.mjs`, Tests rechnen die Auswertung aus den Rohdaten nach.
+- 1B 3–4: Gerüst M1–M4 (je 45 s), füllt sich aus Niklas' Ergebnis-JSONs; bis dahin Platzhalter, die `abgabe-lokal.mjs` meldet.
+- Zeitkonflikt, offen für Niklas: 1A 9:30 + 1B 3–4 3:00 + G9 0:40 = 13:10 min gegen etwa 10:30. Die Kurzfassung (Marke in `sprechnotizen-niklas.md`: N1, N3, N5, N6, N8, N9, N10 und M1–M4) dauert 9:45, mit G9 10:25.
+- Sprechnotizen beider Personen: Stichpunkte vor dem Fließtext, sobald eine Folie `stichpunkte` hat (`bau.mjs/baueSprechnotizen`).
