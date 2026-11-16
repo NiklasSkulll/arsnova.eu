@@ -1,6 +1,6 @@
 # Fragenkatalog für die Diskussion (Jonas: 1C und 1B Schritte 1–2)
 
-- **Stand:** 2026-11-15, Entwurf der KI · Prüfung durch den Autor: offen
+- **Stand:** 2026-11-15, ergänzt 2026-11-16 (F49–F58), Entwurf der KI · Prüfung durch den Autor: offen
 - **Zweck:** nur zum Üben, nicht Teil der Abgabe. Die Diskussion zählt 40 % der Note ([Prüfungsdokument 2](../../../didaktik/CLOUD-COMPUTING-REFERAT-PRUEFUNG.md#2-ziel-und-drei-verpflichtende-leistungsbestandteile)); Fragen dürfen über den Vortrag hinausgehen, aber nicht über das Thema ([Prüfungsdokument 5](../../../didaktik/CLOUD-COMPUTING-REFERAT-PRUEFUNG.md#5-vortrag-diskussion-und-gruppenreferat)).
 - **Grundlage:** die Diskussionstabellen im [1B-Gerüst](../../1B-praesentation-geruest.md#diskussion-vorbereitete-antworten) und im [1C-Gerüst](../../1C-praesentation-geruest.md#diskussionskern-konsistenz-verträge-und-entkopplung), dazu neue Fragen aus Ergebnisberichten, ADRs, Protokollen, Eigenanteil und den Bewertungskriterien ([Prüfungsdokument 6](../../../didaktik/CLOUD-COMPUTING-REFERAT-PRUEFUNG.md#6-bewertung), [7](../../../didaktik/CLOUD-COMPUTING-REFERAT-PRUEFUNG.md#ki-agenten-eigenständigkeit-und-offenlegung)).
 - **Regeln:** Jede Antwort hat höchstens drei Sätze und einen Beleg. Jede Zahl trägt Rechner und Commit oder verweist auf die Stelle, wo beides steht. Was die Quellen nicht hergeben, sage ich als offen, nicht als Ergebnis.
@@ -270,3 +270,57 @@ Beleg: [Präsentations-Design 3](../../specs/2026-11-15-praesentation-jonas-desi
 
 _(neu)_ Nein, der Clip ist Illustration, kein Nachweis. Er lief am 15.11. im Energiesparprofil; die Inferenz dauerte länger als das Labor-Timeout von 300 s, laut App-Log `fallbackReason: 'timeout'`. Genau das zeigt den Punkt der Folie: Ob Gate oder Timeout, die Lehrperson sieht dieselbe Ersatzzusammenfassung mit demselben allgemeinen Hinweis und erfährt den Grund nicht. Die Gate-Zahlen stammen aus dem gewerteten Lauf im Profil `performance`.
 Beleg: [Clip-Protokoll](../../evidenz/1B/2026-11-15-clip.md#ergebnis), [Laufprotokoll 1B](../../evidenz/1B/2026-11-13-lauf.md)
+
+## Kursbezug Cloud Computing _(neu, 2026-11-16)_
+
+Diese Fragen kommen aus einem Prüfer-Kreuzverhör vom 2026-11-16: Der Kursbezug (NIST, Elastizität, SLO, Mandanten) fehlte bisher. Kapazitäten sind aus dem Code gerechnet, nicht gemessen; das sage ich so.
+
+### F49. Ihre Leitfrage sagt „unter realer Last“. Was passiert, wenn 100 Sessions gleichzeitig zusammenfassen?
+
+Der Client lässt nur einen Aufruf zugleich zu, ein zweiter bekommt `busy`; die Queue arbeitet einen Auftrag nach dem anderen ab und nimmt standardmäßig höchstens 8 an, danach `queue_full` mit extraktivem Ersatz. Bei rund 150 s je Auftrag am Laptop schafft ein Slot etwa 24 Zusammenfassungen pro Stunde, von 100 Sessions bekäme die große Mehrheit den Ersatz. Das ist eine Rechnung aus dem Code, gemessen habe ich nur sequentiell (E11 zeigt `queue_full` mit Limit 2 im Test).
+Beleg: [`openWeightLlmClient.ts`, `inFlight`](../../../../apps/backend/src/lib/openWeightLlmClient.ts), [`qaSummaryConfig.ts`](../../../../apps/backend/src/lib/qaSummaryConfig.ts), [`qaSummaryQueue.ts`, `queue_full`](../../../../apps/backend/src/lib/qaSummaryQueue.ts), [E11](../../evidenz/1C/2026-10-24-teil3.md#e11--volle-queue-queue_full)
+
+### F50. Wo ist hier Cloud Computing? Ordnen Sie das nach NIST ein.
+
+App und Inferenz laufen auf fest bereitgestellten Maschinen, also IaaS-Betrieb ohne Selbstbedienung zur Laufzeit. Ressourcenbündelung und Netzzugang sind gegeben, schnelle Elastizität fehlt: Die Inferenz skaliert nur vertikal und von Hand, ein Slot bleibt ein Slot. Die zweite Rolle ist ein Bulkhead, ein getrennter Fehler- und Ressourcenbereich, keine elastische Ressource.
+Beleg: NIST SP 800-145 (Definition, nicht im Literaturverzeichnis), [ADR-0035, 2.1–2.2](../../../architecture/decisions/0035-self-hosted-llm-runtime-llama-cpp-over-ollama.md), Dean und Barroso 2013, S. 74
+
+### F51. Formulieren Sie ein SLO für den Kompass. Ist ein Fallback, der immer greift, ein Erfolg?
+
+Ich würde zwei Ziele trennen: Verfügbarkeit, etwa „95 % der Aufträge haben nach 300 s einen Endstatus“, und Nutzen, etwa „ein festgelegter Anteil endet `full-context`“. Das erste erfüllt der Pfad im Labor dank Fallback, das zweite liegt bei 0 von 20. Graceful Degradation tauscht Qualität gegen Verfügbarkeit; ohne Nutzenziel sieht ein solcher Dienst gesund aus und liefert nichts.
+Beleg: [ADR 1C-018](../../adr/1C-018-quality-gate-verwirft-echte-antworten.md), [ADR 1C-019](../../adr/1C-019-endstatus-echter-pfad-beibehalten.md), Ulrich 2016, Abschn. „Load Shedding and Graceful Degradation“
+
+### F52. Alle Lehrenden teilen sich einen Slot und einen Prompt-Cache. Wie steht es um die Isolation zwischen Mandanten?
+
+Es gibt keinen Fair-Share: Eine Session belegt den Slot, die anderen bekommen `busy` oder `queue_full`, und ein OOM durch den Cache trifft alle. Geteilt wird im Cache nur das gemeinsame System-Präfix (135–137 Tokens), Inhalte anderer Sessions sehe ich darin nicht; geprüft habe ich das nicht. Für mehrere Mandanten bräuchte es Kontingente je Session oder mehrere Slots.
+Beleg: [ADR 1C-024](../../adr/1C-024-prompt-cache-ram-begrenzen.md), [ADR-0035, 2.2](../../../architecture/decisions/0035-self-hosted-llm-runtime-llama-cpp-over-ollama.md)
+
+### F53. Ihr Laptop ist x86, Produktion ein anderer Host. Was überträgt sich?
+
+Die Zerlegung überträgt sich, die Inferenzzeit nicht: andere CPU, andere Kernzahl, bei Cloud-vCPUs zusätzlich Störungen durch Nachbarn. Upstream meldet für den Produktionshost 56,9 s (v2, historisch), dort hätten 90 s gereicht; für v5 verlangt upstream selbst eine neue Messung. Netz im Rechenzentrum liegt ebenfalls weit unter den 50 ms der Schwelle, gemessen habe ich das nicht.
+Beleg: [ADR 1C-023](../../adr/1C-023-release-timeout-90-s-zu-kurz.md), [ADR 1C-022](../../adr/1C-022-codestand-eingefroren-9f230abc.md)
+
+### F54. Wofür private Inferenz, wenn das Netz unverschlüsselt ist?
+
+Der Gewinn ist, dass Fragen der Teilnehmenden, die personenbezogen sein können, den eigenen Betrieb nicht verlassen; das ist ein Datenschutz- und kein Leistungsargument. Ein privates Netz beim Hoster ist aber nicht verschlüsselt, der Token läuft im Klartext. Ich würde WireGuard oder mTLS zwischen den Hosts empfehlen; den Aufwand hat Niklas' Teil.
+Beleg: [Laufprotokoll 1B, Grenzen](../../evidenz/1B/2026-11-13-lauf.md), [1B-Ergebnis](../../1B-ergebnis.md)
+
+### F55. H_B3 mit 95 % – konnte die überhaupt scheitern?
+
+Kaum: Bei bekannter Inferenz um 200 s hätten Netz und Adapter über 10 s kosten müssen. Deshalb nenne ich H_B3 eine Konsistenzprüfung; prüfbar sind H_B1 und H_B2 gegen die Alternative doppelter Kontextaufbau oder zwei Anfragen. Die Hauptzahl ist 0,43 ms Netz, nicht der Prozentanteil.
+Beleg: [ADR 1B-008](../../adr/1B-008-kernaussagen-und-schwellen.md)
+
+### F56. n = 10, neun davon mit identischem Prompt: Sind das unabhängige Wiederholungen? Wo sind die Konfidenzintervalle?
+
+Nein, es ist ein Lauf mit zehn Aufträgen; die warmen wiederholen denselben Zustand (Spanne 148,1–158,3 s). Deshalb gibt es fünf Kaltläufe mit frischer Runtime. Für das Urteil reicht der Abstand zur Schwelle (Faktor über 100), für die Zahl selbst fehlt ein Intervall; das sage ich im Handout offen.
+Beleg: [Laufprotokoll 1B](../../evidenz/1B/2026-11-13-lauf.md), Papadopoulos et al. 2021, Kap. 2.3
+
+### F57. Vorher 19 von 20 Modellzusammenfassungen. Vielleicht verwirft das Gate zu Recht?
+
+Teils ja: Offline auf die aufgezeichneten Antworten angewandt, hätte das Gate auch alle 59 alten Antworten verworfen, und 26 davon nannten interne Status wie „als PINNED markiert“. Die neuen Antworten scheitern nur an der Form, sind aber zu 22 von 28 englisch, was das Gate gar nicht prüft. Instruktion und Gate wirken zusammen, deshalb bleibt die Empfehlung, beides gemeinsam am Modell abzustimmen.
+Beleg: [Gate-Ablation](../../evidenz/1C/2026-11-16-gate-ablation.md), [ADR 1C-018](../../adr/1C-018-quality-gate-verwirft-echte-antworten.md)
+
+### F58. Erklären Sie ohne Folie: Warum ist der Blitzlicht-Hash zeitabhängig, und wie rechnen Sie die Netzzeit?
+
+Bei einer laufenden Blitzlicht-Runde (außer `TEMPO`) endet das Zeitfenster der Quelle beim Zeitpunkt des Kontextaufbaus (`observedAt`); die Nachprüfung baut nach der Inferenz neu, das Fensterende und damit der Hash weichen ab, und die Antwort wird als `source_changed` verworfen. Netzzeit: am app-host die Zeit vom Senden bis zur Antwort (t0 bis t3), minus am llm-host die Zeit vom Empfang bis zum Senden (t1 bis t2); jede Dauer misst eine Uhr. Beides übe ich an der Tafel.
+Beleg: [ADR 1C-016](../../adr/1C-016-zeitabhaengiger-hash-blitzlicht.md), [Befund T3.1](../../evidenz/1C/2026-10-24-teil3.md#befund-t31--zeitabhängige-sourcerevision-bei-aktiver-blitzlicht-runde), [ADR 1B-011](../../adr/1B-011-zeitbegriffe-und-leitfrage.md)
