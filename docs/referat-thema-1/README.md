@@ -33,6 +33,7 @@ gehört **nicht** in die PR an kqc-real.
 | [1B-praesentation-geruest.md](./1B-praesentation-geruest.md)                                       | Gerüst für Folien, Handout und Diskussion zu 1B Schritte 1–2                                                                                                                                                                                                                                                                      |
 | [specs/2026-11-15-praesentation-jonas-design.md](./specs/2026-11-15-praesentation-jonas-design.md) | Design der Folien und des Handouts von Jonas (1C und 1B 1–2): Reihenfolge der Gruppe, gemeinsames Deck, Folienplan, Gestaltung, mit [Plan](./specs/2026-11-15-praesentation-jonas-plan.md)                                                                                                                                        |
 | [abgabe/jonas/](./abgabe/jonas/)                                                                   | Abgabe Jonas: [Folien](./abgabe/jonas/folien.mjs), [Handout](./abgabe/jonas/handout.mjs), [Deck](./abgabe/jonas/deck.mjs), [Bau](./abgabe/jonas/bau.mjs) (PDFs und Browser-Deck aus den belegten Zahlen in [`zahlen.mjs`](./abgabe/jonas/zahlen.mjs)), [Sprechnotizen](./abgabe/jonas/ausgabe/sprechnotizen.md) (vom Bau erzeugt) |
+| [nachweisumfang.md](./nachweisumfang.md)                                                           | Nachweisumfang: gewertete Laborzeit, Tests, ADRs und vorab festgelegte Hypothesen, nachgerechnet von [`nachweisumfang.mjs`](./abgabe/jonas/nachweisumfang.mjs)                                                                                                                                                                    |
 | [abgabe/niklas/](./abgabe/niklas/README.md)                                                        | Entwurf von Jonas zur Abstimmung: Niklas' 1A als native Folien im Deck-Stil, Vorlage für 1B 3–4, [Befunde zu 1A](./abgabe/niklas/BEFUNDE-1A.md)                                                                                                                                                                                   |
 | [abgabe/jonas/fragenkatalog.md](./abgabe/jonas/fragenkatalog.md)                                   | Fragenkatalog für die Diskussion (1C und 1B 1–2): Fragen beider Gerüste und neue, je Antwort mit Beleg, fünf wahrscheinlichste markiert                                                                                                                                                                                           |
 | [abgabe/niklas/fragenkatalog-1a.md](./abgabe/niklas/fragenkatalog-1a.md)                           | Fragenkatalog für die Diskussion (1A und 1B 3–4): Vorab-Festlegung, Regel und Kontrolle, Ursache V3/Block 5, Containergrenzen, Reserve, Störreihen; fünf wahrscheinlichste markiert                                                                                                                                               |
@@ -167,6 +168,14 @@ die Aufnahme der Suiten in `.github/workflows/ci.yml` und
 `git diff --name-only main..HEAD`
 ([ADR 1C-004](./adr/1C-004-empfehlung-statt-patch.md#belege),
 [ADR 1C-003](./adr/1C-003-teststrategie-modellfrei.md)).
+
+## Nachweisumfang
+
+Wie viel Belegmaterial im Repo liegt (gewertete Laborzeit aus den
+Zeitstempeln der Rohdaten, statisch gezählte Tests, ADRs, vorab festgelegte
+Hypothesen), steht mit Zählweise und Quelle je Zahl in
+[nachweisumfang.md](./nachweisumfang.md). Wer sie auf Folien oder im Handout
+nennt, übernimmt sie von dort.
 
 ## Arbeitsweise im Fork
 
