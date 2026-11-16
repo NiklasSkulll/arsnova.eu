@@ -8,7 +8,7 @@ import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { gunzipSync } from 'node:zlib';
 
-import { FESTWERTE, folien, ladeFolienDaten } from './folien.mjs';
+import { FESTWERTE, TEILE, folien, ladeFolienDaten, teilVon } from './folien.mjs';
 import { fussballfeldSvg, wegSvg, zeitzerlegungSvg } from './grafik.mjs';
 import { fmt } from './zahlen.mjs';
 
@@ -66,6 +66,7 @@ function grafiken() {
       ),
       zeitzerlegungSvg(b1),
       zeitzerlegungSvg(b1, { kalt: false }),
+      zeitzerlegungSvg(b1, { stufen: true }),
       ...[0, 1].map((zoom) => fussballfeldSvg(b1, { zoom })),
     ];
   }
@@ -146,8 +147,60 @@ test('Jonas-Folien in Reihenfolge mit den geplanten Zeiten, mit Rahmen etwa 10:3
   assert.equal(F.find((f) => f.id === 'G9').sprecher, 'niklas');
 });
 
-test('Kurzfassung: nur Jonas-Folien, Summe 340–400 s', () => {
-  const k = F.filter((f) => f.kurzfassung);
+test('Stichpunkte: jede Jonas-Folie (außer J16) und Reserve 3–6, [Weiter] je Aufbaustufe', () => {
+  for (const f of F.filter((x) => x.sprecher !== 'niklas' && x.id !== 'J16')) {
+    assert.ok(f.stichpunkte?.length >= 3 && f.stichpunkte.length <= 6, `${f.id}: Stichpunkte`);
+    for (const p of f.stichpunkte) assert.ok(p.length <= 130, `${f.id}: Stichpunkt zu lang: ${p}`);
+    const stufen = f.aufbau ?? 0;
+    assert.equal((f.notiz.match(/\[Weiter\]/g) ?? []).length, stufen, `${f.id}: [Weiter] in notiz`);
+    assert.equal(
+      f.stichpunkte.filter((p) => p.startsWith('[Weiter]')).length,
+      stufen,
+      `${f.id}: [Weiter] in Stichpunkten`,
+    );
+  }
+  // Erster und letzter Satz wörtlich (Leitfaden F27)
+  const erster = F.find((f) => f.id === 'G0');
+  assert.ok(erster.notiz.startsWith(erster.stichpunkte[0].replace(/^„|“$/g, '')));
+  const letzter = F.find((f) => f.id === 'J15');
+  assert.ok(
+    letzter.notiz.trim().endsWith(letzter.stichpunkte.at(-1).replace(/^\[Weiter\] „|“$/g, '')),
+  );
+});
+
+test('Aufbau: nur J9 und J15 bei Jonas, je Stufe ein data-ab', () => {
+  const mit = F.filter((f) => f.aufbau && f.sprecher !== 'niklas').map((f) => f.id);
+  assert.deepEqual(mit, ['J9', 'J15']);
+  for (const id of mit) {
+    const f = nach(id);
+    const ab = [...f.inhalt.matchAll(/data-ab="(\d+)"/g)].map((m) => Number(m[1]));
+    assert.deepEqual([...new Set(ab)].sort(), [1, 2], id);
+  }
+});
+
+test('Teile: Fahrplan auf G0 in Vortragsreihenfolge, teilVon ordnet jede Hauptfolie zu', () => {
+  const g0 = nach('G0').inhalt;
+  let pos = 0;
+  for (const t of TEILE) {
+    const i = g0.indexOf(t.was, pos);
+    assert.ok(i > pos, `G0 Fahrplan: ${t.id}`);
+    pos = i;
+  }
+  assert.equal(teilVon(nach('G0')), null);
+  assert.equal(teilVon(nach('J5')), 'jonas');
+  assert.equal(teilVon(nach('G9')), 'fazit');
+  assert.equal(teilVon(nach('J16')), null);
+  assert.equal(teilVon(nach('R1')), null);
+  assert.equal(teilVon({ teil: 'niklas', auftrag: '1A', id: 'N1' }), '1a');
+  assert.equal(teilVon({ teil: 'niklas', auftrag: '1B', id: 'M1' }), '1b34');
+  // G9 nimmt die Leitfrage von G0 wörtlich auf (Klammer Anfang–Ende)
+  const leitfrage = g0.match(/„Wie wirksam[^“]+“/)[0];
+  assert.ok(nach('G9').inhalt.includes(leitfrage));
+});
+
+test('Kurzfassung: nur Jonas-Folien, Summe 340–400 s; G9 gehört zu Niklas’ Kurzfassung', () => {
+  assert.equal(F.find((f) => f.id === 'G9').kurzfassung, true);
+  const k = F.filter((f) => f.kurzfassung && f.sprecher !== 'niklas');
   assert.ok(
     k.every((f) => f.teil === 'jonas'),
     'nur Jonas-Folien',

@@ -262,3 +262,30 @@
     transition: none !important;
   }
 }
+
+/* Teilleiste oben rechts (deck.mjs, Leitfaden E24): Fahrplan von G0 im Kleinen, aktueller Teil in
+   Tinte mit blauer Unterlinie, die übrigen gedämpft. Kein Übergang, druckfest. */
+.teilleiste {
+  position: absolute;
+  right: var(--rand);
+  top: 24px;
+  display: flex;
+  gap: 22px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--f-mono);
+  font-size: var(--s-min);
+  line-height: 1.2;
+  color: var(--gedaempft);
+  white-space: nowrap;
+}
+.teilleiste li {
+  padding-bottom: 4px;
+  border-bottom: 4px solid transparent;
+}
+.teilleiste li[data-aktiv] {
+  color: var(--tinte);
+  font-weight: 600;
+  border-bottom-color: var(--blau);
+}

@@ -415,7 +415,7 @@ export function folien1A(d) {
           `Für neue Versuche: Budget ${fmt(k.spacy.V2.cpu)}&nbsp;CPU, ${fmt(k.spacy.V2.speicherGiB)}&nbsp;GiB, ${fmt(k.spacy.V2.pids)}&nbsp;PIDs`,
           `${fmt(k.spacy.V3.cpu, 2)}&nbsp;CPU ist keine gleichwertige Einsparung`,
         ]) +
-        spalte('Begründung', 'var(--petrol)', [
+        spalte('Begründung', 'var(--tinte)', [
           `Regel verfehlt (${mitSpacyFehl} von ${mitSpacyGesamt}), Beweislast bei der Option`,
           'Deutlich schadet spaCy nur bei knapper CPU (V3)',
           'Nutzen nicht gemessen, Betrieb kostet Pflege',

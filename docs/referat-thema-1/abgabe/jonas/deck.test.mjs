@@ -266,7 +266,8 @@ test('J10 zoomt in drei Schritten über kameraViewBox, Beschriftungen über zoom
   for (const reducedMotion of ['no-preference', 'reduce']) {
     const { page, context, fehler } = await oeffne(deckOhneNiklas, { reducedMotion });
     await geheZu(page, 'J9');
-    await page.keyboard.press('ArrowRight');
+    // J9 baut sich in zwei Stufen auf; der dritte Druck wechselt auf J10.
+    for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowRight');
     assert.equal(await aktuelleId(page), 'J10');
     const stufen = await page.evaluate(() =>
       JSON.parse(document.querySelector('.folie[data-id="J10"]').dataset.zoomStufen),
@@ -350,6 +351,82 @@ test('J10 zoomt in drei Schritten über kameraViewBox, Beschriftungen über zoom
     assert.deepEqual(fehler, []);
     await context.close();
   }
+});
+
+test('J9 und J15 bauen sich auf Tastendruck in zwei Stufen auf; reduziert ohne Übergang, Druck im Endbild', async () => {
+  const stand = (page, id) =>
+    page.evaluate((i) => {
+      const f = document.querySelector(`.folie[data-id="${i}"]`);
+      const els = [...f.querySelectorAll('[data-ab]')];
+      return {
+        stufe: f.dataset.aufbauStufe,
+        an: els.filter((e) => e.hasAttribute('data-an')).length,
+        alle: els.length,
+        sichtbar: els.filter((e) => getComputedStyle(e).opacity === '1').length,
+        dauer: [...new Set(els.map((e) => getComputedStyle(e).transitionDuration))],
+      };
+    }, id);
+  for (const reducedMotion of ['no-preference', 'reduce']) {
+    const { page, context, fehler } = await oeffne(deckOhneNiklas, { reducedMotion });
+    for (const [id, naechste] of [
+      ['J9', 'J10'],
+      ['J15', 'N1'], // ohne Niklas' Teile: Platzhalter N1
+    ]) {
+      await geheZu(page, id);
+      let s = await stand(page, id);
+      assert.equal(s.stufe, '0', id);
+      assert.equal(s.an, 0, `${id}: Stufe 0 zeigt nichts von Stufe 1–2`);
+      if (reducedMotion === 'reduce') assert.deepEqual(s.dauer, ['0s'], id);
+      await page.keyboard.press('ArrowRight');
+      assert.equal(await aktuelleId(page), id);
+      await page.keyboard.press('ArrowRight');
+      s = await stand(page, id);
+      assert.equal(s.an, s.alle, `${id}: Stufe 2 zeigt alles`);
+      // zurück baut ab, statt die Folie zu verlassen
+      await page.keyboard.press('ArrowLeft');
+      assert.equal((await stand(page, id)).stufe, '1');
+      await page.keyboard.press('ArrowRight');
+      await page.keyboard.press('ArrowRight');
+      assert.equal(await aktuelleId(page), naechste);
+      // rückwärts betreten: Endbild
+      await page.keyboard.press('ArrowLeft');
+      assert.equal((await stand(page, id)).an, s.alle, `${id}: rückwärts im Endbild`);
+      await page.keyboard.press('ArrowRight');
+    }
+    assert.deepEqual(fehler, []);
+    await context.close();
+  }
+  // Druck: alle Stufen sichtbar, auch auf der aktuellen Folie in Stufe 0
+  const { page, context } = await oeffne(deckOhneNiklas);
+  await geheZu(page, 'J9');
+  await page.emulateMedia({ media: 'print' });
+  // Das change-Ereignis von matchMedia('print') kommt asynchron.
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll('.folie [data-ab]')].every((e) => e.hasAttribute('data-an')),
+  );
+  for (const id of ['J9', 'J15']) {
+    const s = await stand(page, id);
+    assert.equal(s.sichtbar, s.alle, `${id}: Druck zeigt alle Stufen`);
+  }
+  await context.close();
+});
+
+test('Teilleiste oben rechts: aktueller Teil markiert, nicht auf G0, Anhang und Reserve', async () => {
+  const { page, context } = await oeffne(deckOhneNiklas);
+  const leisten = await page.evaluate(() =>
+    Object.fromEntries(
+      [...document.querySelectorAll('.folie')].map((f) => [
+        f.dataset.id,
+        f.querySelector('.teilleiste li[data-aktiv]')?.textContent ?? null,
+      ]),
+    ),
+  );
+  assert.equal(leisten.G0, null);
+  assert.equal(leisten.J16, null);
+  assert.equal(leisten.R1, null);
+  for (const f of JONAS.filter((x) => !x.anhang)) assert.equal(leisten[f.id], '1C, 1B 1–2', f.id);
+  assert.equal(leisten.G9, 'Fazit');
+  await context.close();
 });
 
 test('Tasten: Home, End, Bild ab/auf, Leertaste; Reserve-Übersicht mit r', async () => {

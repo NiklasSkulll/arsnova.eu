@@ -118,7 +118,14 @@ const STRICHE = [
  * Aufträge, Inferenz der Median warm (Auftrag 1 ist kalt, ADR 1B-011). Der kalte Auftrag (Median der
  * Läufe mit frischer Runtime) ist kein Teil der Zerlegung: Er steht als senkrechte Bezugsmarke.
  */
-export function zeitzerlegungSvg(b1, { kalt = true } = {}) {
+export function zeitzerlegungSvg(b1, { kalt = true, stufen = false } = {}) {
+  // stufen (J9 im Deck): Aufbau auf Tastendruck, Vorhersage vor Beleg. Stufe 0 Achse, Zeilen und
+  // Schwellen; 1 Netz, Transport, Adapter mit Haken; 2 Inferenz, Anteil und Kaltmarke. Ohne stufen
+  // (Handout) unverändert.
+  const stufe = (k, html) => {
+    if (typeof html !== 'string') throw new Error('stufe: genau ein HTML-Text');
+    return stufen ? `<g data-ab="${k}">${html}</g>` : html;
+  };
   const alle = `Median, alle ${b1.anzahl}`;
   const nWarm = b1.anzahl - 1; // Auftrag 1 kalt, 2…n warm (ADR 1B-011)
   const zeilen = [
@@ -173,20 +180,23 @@ export function zeitzerlegungSvg(b1, { kalt = true } = {}) {
   if (kalt) {
     const xk = r2(logX(b1.kaltMedianS * 1000, ACHSE));
     teile.push(
-      `<line data-bezug="kalt" x1="${xk}" y1="${oben - 24}" x2="${xk}" y2="${unten}" stroke="${FARBEN.bernstein}" stroke-width="3" stroke-dasharray="10 7"/>`,
-      text(xk + 12, 26, esc(`T_job kalt ${fmt(b1.kaltMedianS, 1)} s`), {
-        mono: true,
-        groesse: 24,
-        gewicht: 600,
-        farbe: FARBEN.bernsteinText,
-        anker: 'end',
-      }),
-      text(xk + 12, 52, esc(`Median, n = ${b1.nKaltLaeufe}`), {
-        mono: true,
-        groesse: 22,
-        farbe: FARBEN.gedaempft,
-        anker: 'end',
-      }),
+      stufe(
+        2,
+        `<line data-bezug="kalt" x1="${xk}" y1="${oben - 24}" x2="${xk}" y2="${unten}" stroke="${FARBEN.bernstein}" stroke-width="3" stroke-dasharray="10 7"/>` +
+          text(xk + 12, 26, esc(`T_job kalt ${fmt(b1.kaltMedianS, 1)} s`), {
+            mono: true,
+            groesse: 24,
+            gewicht: 600,
+            farbe: FARBEN.bernsteinText,
+            anker: 'end',
+          }) +
+          text(xk + 12, 52, esc(`Median, n = ${b1.nKaltLaeufe}`), {
+            mono: true,
+            groesse: 22,
+            farbe: FARBEN.gedaempft,
+            anker: 'end',
+          }),
+      ),
     );
   }
 
@@ -195,7 +205,7 @@ export function zeitzerlegungSvg(b1, { kalt = true } = {}) {
     return (
       `<line x1="${xs}" y1="${r2(cy - 26)}" x2="${xs}" y2="${r2(cy + 26)}" stroke="${FARBEN.tinte}" stroke-width="3" stroke-dasharray="8 6"/>` +
       // Haken vor dem Text: sein Abstand hängt so nicht von der gemessenen Textbreite ab.
-      (ok ? haken : kreuz)(x + 14, cy + 4, ok ? FARBEN.tinte : FARBEN.rot) +
+      stufe(1, (ok ? haken : kreuz)(x + 14, cy + 4, ok ? FARBEN.tinte : FARBEN.rot)) +
       text(x + 44, cy + 8, esc(label), { mono: true, groesse: 22, halo: FARBEN.weiss })
     );
   };
@@ -229,13 +239,13 @@ export function zeitzerlegungSvg(b1, { kalt = true } = {}) {
         ),
       );
     }
-    teile.push(
+    const punkt = [
       `<circle data-punkt="${esc(z.name)}" cx="${x}" cy="${cy}" r="${z.haupt ? 14 : 11}" fill="${z.haupt ? FARBEN.bernstein : FARBEN.bernsteinMittel}" stroke="${FARBEN.bernstein}" stroke-width="3"/>`,
-    );
+    ];
     if (z.haupt) {
       // Wert links vom Punkt (rechts liegt die Kaltmarke), darüber der Anteil; H_B3 ist ein Anteil, keine Zeit.
       const ok = b1.inferAnteil >= SCHWELLE.inferAnteil;
-      teile.push(
+      punkt.push(
         text(x - 28, cy + 9, esc(z.wert), {
           mono: true,
           groesse: 28,
@@ -256,7 +266,7 @@ export function zeitzerlegungSvg(b1, { kalt = true } = {}) {
         (ok ? haken : kreuz)(x - 4, cy - 38, ok ? FARBEN.tinte : FARBEN.rot),
       );
     } else {
-      teile.push(
+      punkt.push(
         text(x + 22, cy - 14, esc(z.wert), {
           mono: true,
           groesse: 26,
@@ -265,11 +275,12 @@ export function zeitzerlegungSvg(b1, { kalt = true } = {}) {
         }),
       );
       if (z.zusatz) {
-        teile.push(
+        punkt.push(
           aufWeiss(x + 22, cy + 34, `(${z.zusatz})`, { groesse: 22, farbe: FARBEN.text2 }),
         );
       }
     }
+    teile.push(stufe(z.haupt ? 2 : 1, punkt.join('')));
   });
 
   teile.push(
@@ -277,7 +288,9 @@ export function zeitzerlegungSvg(b1, { kalt = true } = {}) {
     text(
       0,
       542,
-      'Log-Achse, je Strich ×10. Schwellen vorab (ADR 1B-008). Anteil für diese langsame CPU, am schnelleren PC ebenfalls über 99 %.',
+      stufen
+        ? 'Log-Achse, je Strich ×10 · Schwellen vorab (ADR 1B-008) · Anteil: langsame CPU, am PC ebenfalls über 99 %'
+        : 'Log-Achse, je Strich ×10. Schwellen vorab (ADR 1B-008). Anteil für diese langsame CPU, am schnelleren PC ebenfalls über 99 %.',
       { groesse: 24, farbe: FARBEN.text2 },
     ),
   );

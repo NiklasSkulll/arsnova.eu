@@ -14,6 +14,45 @@ import { fussballMasse, fussballfeldSvg, wegSvg, zeitzerlegungSvg } from './graf
 import { LITERATUR, kurzbeleg } from './literatur.mjs';
 import { fmt, ladeZahlen } from './zahlen.mjs';
 
+/**
+ * Teile des gemeinsamen Vortrags in Reihenfolge: Fahrplan auf G0 und Teilleiste oben rechts auf jeder
+ * Hauptfolie (deck.mjs). etiketten: [Auftrag, Zusatz]; Farben über die Etiketten (1C Petrol, 1B
+ * Bernstein, 1A Blau).
+ */
+export const TEILE = [
+  {
+    id: 'jonas',
+    kurz: '1C, 1B 1–2',
+    wer: 'Jonas',
+    etiketten: [['1C'], ['1B', 'Schritte 1–2']],
+    was: 'Kontextpfad und Zeit am zweiten Host',
+  },
+  {
+    id: '1a',
+    kurz: '1A',
+    wer: 'Niklas',
+    etiketten: [['1A']],
+    was: 'Reserve des App-Hosts neben der Live-Last',
+  },
+  {
+    id: '1b34',
+    kurz: '1B 3–4',
+    wer: 'Niklas',
+    etiketten: [['1B', 'Schritte 3–4']],
+    was: 'Störung und Aufwand des zweiten Hosts',
+  },
+  { id: 'fazit', kurz: 'Fazit', wer: 'Gemeinsam', etiketten: [], was: 'Antwort auf die Leitfrage' },
+];
+
+/** Teil einer Folie für die Teilleiste; null für G0, Anhang und Reserve. */
+export function teilVon(f) {
+  if (f.teil === 'reserve' || f.anhang || f.id === 'G0') return null;
+  if (f.id === 'G9') return 'fazit';
+  if (f.teil === 'jonas') return 'jonas';
+  if (f.teil === 'niklas') return f.auftrag === '1A' ? '1a' : '1b34';
+  return null;
+}
+
 /** Vorab festgelegte Schwellen und Konfigurationswerte; quelle relativ zu docs/referat-thema-1/. */
 export const FESTWERTE = {
   releaseTimeoutS: {
@@ -474,9 +513,9 @@ const zweiSpalten = (links, rechts, breite = 800) =>
   `<div style="display:grid;grid-template-columns:${breite}px 1fr;column-gap:70px">` +
   `<div>${links}</div><div>${rechts}</div></div>`;
 
-/** Kleiner Vermerk oben rechts im Folienrand über dem Titel (bleibt, bis Niklas zustimmt). */
+/** Kleiner Vermerk oben links im Folienrand über dem Titel (bleibt, bis Niklas zustimmt); rechts steht die Teilleiste. */
 const entwurf =
-  `<p style="position:absolute;right:0;top:-150px;margin:0;padding:0 10px;border:var(--linie-min) dashed var(--linie);` +
+  `<p style="position:absolute;left:0;top:-150px;margin:0;padding:0 10px;border:var(--linie-min) dashed var(--linie);` +
   `border-radius:6px;color:var(--gedaempft);font-size:var(--s-min);font-weight:600">Entwurf, mit Niklas abzustimmen</p>`;
 
 const mono = (s) => `<span class="mono">${s}</span>`;
@@ -570,31 +609,39 @@ export function folien(daten) {
   const F = [];
 
   // ------------------------------------------------------------ G0 Rahmen (Jonas eröffnet)
+  // Leitfrage wörtlich (Prüfungsdokument 4.3); G9 nimmt sie wieder auf (Klammer Anfang–Ende).
+  const LEITFRAGE =
+    '„Wie wirksam trennt die Architektur von Release 1.3 Anwendung, Kontextaufbau und private Inferenz unter realer Last, und welche Betriebsgrenzen ergeben sich für den Moderationskompass?“';
   F.push({
     id: 'G0',
     teil: 'rahmen',
     auftrag: null,
     titel: 'Thema 1: KI-Inferenz im Moderationskompass',
     inhalt: flaeche(
-      `<p style="margin:0 0 30px;font-size:30px;color:var(--text-2)">„Wie wirksam trennt die Architektur von Release 1.3 Anwendung, Kontextaufbau und private Inferenz unter realer Last, und welche Betriebsgrenzen ergeben sich für den Moderationskompass?“</p>` +
+      `<p style="margin:0 0 30px;font-size:30px;color:var(--text-2)">${LEITFRAGE}</p>` +
         // Systembild
         `<div style="display:grid;grid-template-columns:250px 60px 1fr 60px 1fr;align-items:stretch;font-size:26px;margin-bottom:34px">` +
         `<div style="border:var(--linie-min) solid var(--linie);border-radius:10px;padding:16px">Lehrperson<br><span style="color:var(--gedaempft);font-size:var(--s-min)">Browser</span></div>` +
         `<div style="align-self:center;text-align:center;color:var(--blau);font-weight:800">→</div>` +
-        `<div style="border:var(--linie-min) solid var(--blau);border-radius:10px;padding:16px;background:var(--raster)"><b>app-host</b><br>App, Kontextaufbau, Queue, Adapter<br><span style="font-size:var(--s-min)"><span class="etikett" style="background:var(--grund);color:var(--blau)">1A</span> ${etikett('1C')}</span></div>` +
+        `<div style="border:var(--linie-min) solid var(--blau);border-radius:10px;padding:16px;background:var(--raster)"><b>app-host</b><br>App, Kontextaufbau, Queue, Adapter<br><span style="font-size:var(--s-min)">${etikett('1C')} ${etikett('1A')}</span></div>` +
         `<div style="align-self:center;text-align:center;color:var(--blau);font-weight:800">→</div>` +
         `<div style="border:var(--linie-min) solid var(--blau);border-radius:10px;padding:16px;background:var(--raster)"><b>llm-host</b><br>private Runtime mit Modell<br><span style="font-size:var(--s-min)">${etikett('1B')}</span></div>` +
         `</div>` +
-        // wer macht was
-        `<div style="display:grid;grid-template-columns:repeat(3,1fr);column-gap:40px;font-size:26px">` +
-        `<div><b>1C · Jonas</b><br>Kontext und Adapterpfad</div>` +
-        `<div><b>1B · Jonas, dann Niklas</b><br>Zweiter Host: Aufbau und Zeit (Jonas), Störung und Aufwand (Niklas)</div>` +
-        `<div><b>1A · Niklas</b><br>Ressourcen auf dem App-Host</div>` +
-        `</div>`,
+        // Fahrplan in Vortragsreihenfolge; dieselben Teile stehen klein oben rechts auf jeder Folie
+        // (Teilleiste, deck.mjs), Leitfaden E24.
+        `<ol data-fahrplan style="display:grid;grid-template-columns:repeat(${TEILE.length},1fr);column-gap:32px;margin:0;padding:0;list-style:none;font-size:24px;line-height:1.35">` +
+        TEILE.map(
+          (t, i) =>
+            `<li style="border-top:6px solid var(--linie);padding-top:12px">` +
+            `<p style="margin:0 0 6px;font-weight:700;font-size:26px"><span class="mono" style="color:var(--gedaempft);font-weight:400">${i + 1}</span> ${t.wer}</p>` +
+            `<p style="margin:0 0 6px">${t.etiketten.map(([a, zusatz]) => `${etikett(a)}${zusatz ? ` <span style="font-size:var(--s-min);color:var(--gedaempft)">${zusatz}</span>` : ''}`).join(' ')}</p>` +
+            `<p style="margin:0;color:var(--text-2)">${t.was}</p></li>`,
+        ).join('') +
+        `</ol>`,
     ),
     notiz:
-      'Unser Thema ist die KI-Inferenz für den Moderationskompass. Die Leitfrage: Wie wirksam trennt die Architektur von Release 1.3 Anwendung, Kontextaufbau und private Inferenz unter realer Last? Reale Last haben wir nur als Labormodell, meine Läufe sind sequenziell; das ist eine Grenze. Ich verfolge zuerst einen echten Auftrag über beide Hosts. Danach prüft Niklas, wie viel Zusatzarbeit der App-Host selbst verträgt und was passiert, wenn der zweite Host gestört ist.',
-    zeitS: 30,
+      'Unser Thema ist die KI-Inferenz für den Moderationskompass. Die Leitfrage: Wie wirksam trennt die Architektur von Release 1.3 Anwendung, Kontextaufbau und private Inferenz unter realer Last? Reale Last haben wir nur als Labormodell, meine Läufe sind sequenziell; das ist eine Grenze. Ich verfolge zuerst einen echten Auftrag über beide Hosts. Danach prüft Niklas, wie viel Zusatzarbeit der App-Host selbst verträgt und was passiert, wenn der zweite Host gestört ist; am Ende steht unser gemeinsames Fazit. Diesen Fahrplan sehen Sie oben rechts auf jeder Folie. Ich beginne mit einem einzigen Klick.',
+    zeitS: 35,
     kurzfassung: false,
     quelle:
       'Prüfungsdokument Abschnitt 4.3 (Thema 1, Aufträge 1A–1C); 01-aufteilung.md; Design Abschnitt 3',
@@ -928,11 +975,14 @@ export function folien(daten) {
     auftrag: '1B',
     titel: 'Die Zeit steckt in der Inferenz',
     inhalt: flaeche(
-      frage('Wie verteilt sich die Zeit eines Auftrags?', '1B') + grafikBox(zeitzerlegungSvg(b)),
+      frage('Wie verteilt sich die Zeit eines Auftrags?', '1B') +
+        grafikBox(zeitzerlegungSvg(b, { stufen: true })),
     ),
-    notiz: `Die ganze Zerlegung als Punkte auf logarithmischer Achse; Balken würden hier das Verhältnis verschleiern. Das Netz kostet im Median ${z.netz} Millisekunden, Schwelle ${fw.schwelleNetzMs}. Der Transport, also Netz plus Server ohne Inferenz, ${z.transport} Millisekunden, der Adapter ${z.adapter}, Schwelle ${fw.schwelleAdapterS} Sekunden. Diese beiden sind die eigentlichen Prüfungen. Die Inferenz dauert warm im Median ${z.inferWarm} Sekunden. Warm heißt: identischer Snapshot, Prompt aus dem Cache; die gestrichelte Marke ist der kalte Auftrag, ${z.kaltMedian} Sekunden. Der Anteil von ${z.anteil} Prozent hängt an dieser langsamen CPU, läge aber auch mit der PC-Kalibrierung über ${daten.abgeleitet.anteilPcMin} Prozent. Netz und Adapter zählten erst, wenn die Inferenz nur Sekunden dauerte.`,
+    notiz: `Die ganze Zerlegung als Punkte auf logarithmischer Achse; Balken würden hier das Verhältnis verschleiern. Vorab standen zwei Schwellen fest: Netz im Median höchstens ${fw.schwelleNetzMs} Millisekunden, Adapter höchstens ${fw.schwelleAdapterS} Sekunden. [Weiter] Das Netz kostet im Median ${z.netz} Millisekunden, der Transport, also Netz plus Server ohne Inferenz, ${z.transport} Millisekunden, der Adapter ${z.adapter}. Beide Prüfungen sind bestanden. [Weiter] Und die Inferenz: warm im Median ${z.inferWarm} Sekunden. Warm heißt: identischer Snapshot, Prompt aus dem Cache; die gestrichelte Marke ist der kalte Auftrag, ${z.kaltMedian} Sekunden. Der Anteil von ${z.anteil} Prozent hängt an dieser langsamen CPU, läge aber auch mit der PC-Kalibrierung über ${daten.abgeleitet.anteilPcMin} Prozent. Netz und Adapter zählten erst, wenn die Inferenz nur Sekunden dauerte.`,
     zeitS: 45,
     kurzfassung: true,
+    // Vorhersage, dann Beleg (Leitfaden D18–D20): Schwellen, dann kleine Werte, dann die Inferenz.
+    aufbau: 2,
     quelle: `${q1B}; Kalt: ${q1BN}`,
     station: 'inferenz',
   });
@@ -1120,12 +1170,14 @@ export function folien(daten) {
         ]) +
         `</div>` +
         `<p style="margin:14px 0 0;font-size:var(--s-min);color:var(--gedaempft)">Details: R12 (Kosten, Risiko und Betriebsfolge je Entscheidung)</p>` +
-        `<p style="margin:auto 0 0;padding:16px 24px;border-left:6px solid var(--blau);background:var(--raster);font-size:30px;line-height:1.35"><b style="color:var(--blau)">Zur Diskussion:</b> Prüft das Gate das Richtige, wenn die Antworten auch inhaltlich verfehlt sind?</p>` +
-        `<p style="margin:26px 0 0;font-size:28px;font-weight:700">Und was verträgt der App-Host selbst neben der Live-Last? <span style="color:var(--blau)">→ Niklas</span></p>`,
+        `<p data-ab="1" style="margin:auto 0 0;padding:16px 24px;border-left:6px solid var(--blau);background:var(--raster);font-size:30px;line-height:1.35"><b style="color:var(--blau)">Zur Diskussion:</b> Prüft das Gate das Richtige, wenn die Antworten auch inhaltlich verfehlt sind?</p>` +
+        `<p data-ab="2" style="margin:26px 0 0;font-size:28px;font-weight:700">Und was verträgt der App-Host selbst neben der Live-Last? <span style="color:var(--blau)">→ Niklas ${etikett('1A')}</span></p>`,
     ),
-    notiz: `Was bleibt: die Entkopplung über die Queue, die Nachprüfung, die Validierung und die Gleichheit von Vorschau und Nutzlast; in 1B die Topologie, sie kostet keine relevante Zeit. Empfohlen, nicht umgesetzt: Instruktion und Gate gemeinsam abstimmen, den Timeout je Inferenz-Host kalibrieren, den Cache begrenzen. Offen ist, wie oft eine Stimme unter Voting die Antwort verwirft. Meine Frage an Sie: Prüft das Gate das Richtige? Und damit an Niklas: Was verträgt der App-Host selbst neben der Live-Last?`,
+    notiz: `Was bleibt: die Entkopplung über die Queue, die Nachprüfung, die Validierung und die Gleichheit von Vorschau und Nutzlast; in 1B die Topologie, sie kostet keine relevante Zeit. Empfohlen, nicht umgesetzt: Instruktion und Gate gemeinsam abstimmen, den Timeout je Inferenz-Host kalibrieren, den Cache begrenzen. Offen ist, wie oft eine Stimme unter Voting die Antwort verwirft. [Weiter] Meine Frage an Sie: Prüft das Gate das Richtige? [Weiter] Und damit an Niklas: Was verträgt der App-Host selbst neben der Live-Last?`,
     zeitS: 40,
     kurzfassung: true,
+    // Erst die Entscheidungen, dann die Diskussionsfrage, zuletzt die Übergabe an Niklas.
+    aufbau: 2,
     quelle: `1C-ergebnis.md, Abschnitt 5, ADRs 1C-010 bis 1C-024, Abschnitt Folgen (Laptop und PC · 9f230abc; Laptop · def56700); 1B-ergebnis.md, Entscheidung (${rechnerKurz(H.hauptlauf.rechner)} · ${H.hauptlauf.commit.slice(0, 8)})`,
     station: null,
   });
@@ -1145,6 +1197,7 @@ export function folien(daten) {
     titel: 'Trennung wirkt, Grenze ist die Inferenz',
     inhalt: flaeche(
       entwurf +
+        `<p data-leitfrage style="margin:0 0 26px;font-size:var(--s-min);line-height:1.35;color:var(--gedaempft)"><b style="color:var(--text-2)">Leitfrage:</b> ${LEITFRAGE}</p>` +
         `<div style="display:grid;grid-template-columns:1fr 1fr;column-gap:56px;font-size:24px;line-height:1.38">` +
         person('Jonas · 1C und 1B, Schritte 1–2', 'var(--petrol)', [
           `${etikett('1C')} Vertrag, Konsistenz und Entkopplung halten, mit benannten Ausnahmen (T2.3, T3.1). Nach v1.4.0 besteht keine der ${daten.abgeleitet.gateBeobachtet} geprüften Modellantworten das Gate (1B ${b.verworfen}, 1C ${c.gateAntwortenGesamt.wert}; ein Modell, eine Fixture); davor (${mono('9f230abc')}, Instruktion v2, ohne Gate) ${c.fullContextVorGate.wert}.`,
@@ -1167,7 +1220,8 @@ export function folien(daten) {
       'Wir freuen uns auf Ihre Fragen',
     ],
     zeitS: 40,
-    kurzfassung: false,
+    // Gehört zu Niklas' Kurzfassung: das Fazit fällt nie weg (Sprungplan Niklas).
+    kurzfassung: true,
     sprecher: 'niklas',
     quelle:
       '1B-ergebnis.md, 1C-ergebnis.md (Kurzantwort, Verlauf 9f230abc); 1A: abgabe/niklas/folien-1a.mjs (N1, N10); 1B Schritte 3–4: offen',
@@ -1635,6 +1689,186 @@ export function folien(daten) {
     `Falls nach dem Kursbezug gefragt wird. Nach den NIST-Merkmalen ist das IaaS-Betrieb ohne Selbstbedienung zur Laufzeit: Netzzugang und Ressourcenbündelung sind gegeben, schnelle Elastizität fehlt, die Inferenz skaliert nur vertikal und von Hand. Der zweite Host ist ein Bulkhead, ein getrennter Fehler- und Ressourcenbereich; den Nutzen habe ich nicht gemessen. Kapazität, gerechnet aus dem Code und nicht gemessen: ein Aufruf zugleich, die Queue nimmt höchstens ${fw.queueLimit} an, danach queue_full mit Ersatz. Bei ${z.jobWarm} Sekunden je Auftrag sind das rund ${daten.abgeleitet.auftraegeProStunde} Zusammenfassungen pro Stunde. Als SLO würde ich Verfügbarkeit und Nutzen trennen: Endstatus nach ${fw.laborTimeoutS} Sekunden erfüllt der Fallback, der Nutzen lag bei ${daten.abgeleitet.fullContext1B} von ${n}.`,
     `Code a19ca70f (gleich HEAD): apps/backend/src/lib/openWeightLlmClient.ts Z. 141 (inFlight), Z. 497 (busy); qaSummaryConfig.ts Z. 26 (QUEUE_LIMIT_DEFAULT = 8), Z. 29 (CONCURRENCY_DEFAULT = 1); qaSummaryQueue.ts Z. 510 (queue_full); Durchsatz aus T_job warm: ${q1B}; NIST SP 800-145, S. 2 (Mell & Grance, 2011); ADR-0035 Abschn. 2.1, 2.2; SLO-Vorschlag: fragenkatalog.md F51; full-context: ${q1B}`,
   );
+
+  // Stichpunkte zum freien Vortrag (Leitfaden F26–F27): 3–6 je Folie, Zahlen mit Einheit, je
+  // Aufbaustufe ein „[Weiter]“. Der Fließtext in `notiz` bleibt die ausformulierte Fassung zum Üben.
+  // Erster Satz (G0) und letzter Satz (J15) stehen wörtlich in Anführungszeichen.
+  const ab = daten.abgeleitet;
+  const STICHPUNKTE = {
+    G0: [
+      '„Unser Thema ist die KI-Inferenz für den Moderationskompass.“',
+      'Leitfrage: Trennt Release 1.3 App, Kontextaufbau und private Inferenz unter realer Last?',
+      'Grenze vorweg: reale Last nur als Labormodell, meine Läufe sequenziell',
+      'Fahrplan unten: Jonas 1C und 1B 1–2 → Niklas 1A → Niklas 1B 3–4 → Fazit',
+      'Übergang: Ich beginne mit einem einzigen Klick',
+    ],
+    J1: [
+      `Ein Klick, ${z.auS} s Warten, keine Modellantwort`,
+      `Echter Auftrag Nr. ${au.nr}, Laptop-CPU: Job ${z.auJob} s, warm im Median ${z.jobWarm} s`,
+      'Architektur Release 1.3, gemessen Code nach v1.4.0 (wichtig beim Gate)',
+      '1C (Petrol): Hält der Kontextpfad seine Zusagen?',
+      '1B Schritte 1–2 (Bernstein): Wo steckt die Zeit auf dem zweiten Host?',
+    ],
+    J2: [
+      '1B Schritt 1: Zwei-Host-Deployment aus ADR-0035 nachgebaut',
+      'Stand nach v1.4.0 statt Tag 1.3, auf Wunsch des Prüfers',
+      'app-host: App, Adapter, DB, Redis · llm-host: LLM-Server, nur vom app-host, mit Token',
+      `Abweichungen: ${fw.laborCpus} statt ${fw.releaseCpus} CPUs; Timeout ${fw.laborTimeout1BS} statt ${fw.releaseTimeoutS} s (Kalibrierung ${fw.kalibrierung1BS} s)`,
+    ],
+    J3: [
+      'Karte für den Rest: oben app-host, unten llm-host',
+      'Weg: Klick → Kontext → Netz → Inferenz → Nachprüfung → Gate',
+      `Auftrag ${au.nr}: Host frei nach ${z.auHost} ms, Inferenz ${z.auInferRund} s`,
+      'Kontext und Nachprüfung: Werte aus 1C, ein Rechner (klein vermerkt)',
+      'Der Punkt wandert ab jetzt mit',
+    ],
+    J4: [
+      'Hypothesen und Schwellen vor den gewerteten Läufen, Ausnahmen offengelegt',
+      `1B prüft: Netz ≤ ${fw.schwelleNetzMs} ms, Adapter ≤ ${fw.schwelleAdapterS} s; Anteil nur Konsistenz`,
+      '1C zuerst ohne Modell getestet, mit Negativproben',
+      '1C-Labor: ein Rechner, Loopback; nach Papadopoulos, ohne Konfidenzintervalle',
+    ],
+    J5: [
+      'Station Klick · 1C: Blockiert ein langsames Modell die Lehrperson?',
+      'Queue: Kontext bauen, Auftrag ablegen, sofort pending',
+      `Host-Aufruf ${z.request} ms gegen Inferenz ${z.infer1C} s (1C-Nachlauf)`,
+      'Grenze: Auf den Kontextaufbau wartet der Host doch (E5, N3)',
+    ],
+    J6: [
+      'Station Kontext: Kommt an, was die Vorschau zeigt?',
+      'Schemas geprüft, gepackt; Host-Token, 8 Rechteprüfungen je Aufbau',
+      'Echter Ausschnitt der Nutzlast: gleicher Hash, byte-gleich mit der Vorschau',
+      `Validierung ${z.valMs} ms = ${z.valP} % (älterer Stand, Test-Runtime) → bleibt`,
+      'Herkunft der Bereiche: Reserve R8',
+    ],
+    J7: [
+      'Budget zählt 1 Byte = 1 Token: sichere Obergrenze, kein Überlauf',
+      `Echte Tokens im Median nur das ${z.q}-fache der Schätzung`,
+      'Rund zwei Drittel ungenutzt, trotzdem eine Frage weggelassen',
+      'Empfehlung: genauere Zählung prüfen, nicht umgesetzt',
+    ],
+    J8: [
+      'Netz trennen ohne Produktionscode: Mitschnitt auf beiden Hosts',
+      'app-host t0 und t3, llm-host t1 und t2; je Dauer eine Uhr, etwa 1 ms Unsicherheit',
+      `Netz = app-host minus llm-host: Auftrag ${au.nr} unter 1 ms, Median ${z.netz} ms (n = ${n})`,
+      `Server ohne Inferenz ${fmt(au.serverOhneInferenzMs)} ms, Ursache offen`,
+    ],
+    J9: [
+      `Punkte auf Log-Achse; vorab: Netz ≤ ${fw.schwelleNetzMs} ms, Adapter ≤ ${fw.schwelleAdapterS} s`,
+      `[Weiter] Netz ${z.netz} ms, Transport ${z.transport} ms, Adapter ${z.adapter} ms: beide bestanden`,
+      `[Weiter] Inferenz warm ${z.inferWarm} s, kalt ${z.kaltMedian} s (gestrichelt)`,
+      `Anteil ${z.anteil} %, mit PC-Kalibrierung über ${ab.anteilPcMin} %`,
+      'Netz und Adapter zählten erst bei Inferenz in Sekunden',
+    ],
+    J10: [
+      `Warmer Auftrag = Fußballfeld, ${fmt(ab.feldM)} m`,
+      'Inferenz: praktisch das ganze Feld',
+      `Transport gut 1 cm, Netz ${fmt(ab.feldNetzMm, 1)} mm: dünner als die Kreidelinie`,
+      'Netz optimieren lohnt nicht, jedenfalls auf dieser CPU',
+    ],
+    J12: [
+      'Station Nachprüfung: Was, wenn sich Daten während der Inferenz ändern?',
+      'Kontext neu bauen, Hash vergleichen; sonst source_changed (E7, E8)',
+      `Kostet ${z.nachpr} % eines Auftrags`,
+      'Preis: Unter Voting verwirft jede Stimme die Antwort; Häufigkeit offen, Empfehlung zurückgehalten',
+      'Blitzlicht außer TEMPO: Hash hängt an der Uhrzeit (YESNO geprüft); empfohlen, nicht umgesetzt',
+    ],
+    J13: [
+      'Station Gate: Hier scheitert unser Auftrag (links die echte Antwort)',
+      'Gate prüft die Form: ≥ 2 Aussagen, Stichwort vorn, ganze Sätze, keine Metasätze; Sprache und Thema nicht',
+      `0 von ${ab.gateBeobachtet}: 1B ${b.verworfen} von ${n} verworfen, 1C keine von ${c.gateAntwortenGesamt.wert}; ein Modell, eine Fixture`,
+      `Vor v1.4.0 ohne Gate ${c.fullContextVorGate.wert}; Ablation: neu nur Form (${c.ablationNeuEnglisch.wert} englisch), alt ${c.ablationAltMeta.wert} mit internen Status`,
+      '[Taste: Clip] Lehrperson sieht Ersatz mit allgemeinem Hinweis, keinen Grund',
+      'Empfehlung: Instruktion, Grammatik und Gate gemeinsam abstimmen; nicht umgesetzt',
+    ],
+    J15: [
+      'Bleibt: Queue, Nachprüfung, Validierung, Vorschau = Nutzlast; 1B-Topologie kostet keine Zeit',
+      'Empfohlen, nicht umgesetzt: Instruktion und Gate abstimmen, Timeout je Host, Cache begrenzen',
+      'Offen: Wie oft verwirft eine Stimme unter Voting die Antwort?',
+      '[Weiter] Frage an Sie: Prüft das Gate das Richtige?',
+      '[Weiter] „Und damit an Niklas: Was verträgt der App-Host selbst neben der Live-Last?“',
+    ],
+    R1: [
+      `Laptop-Kalibrierung 1C ${fw.kalibrierungLaptopS} s > ${fw.releaseTimeoutS} s → Labor ${fw.laborTimeoutS} s, offen als Abweichung`,
+      `PC ${z.kalPc} s: schneller, aber ebenfalls über ${fw.releaseTimeoutS} s`,
+      `1B: Kalibrierung ${fw.kalibrierung1BS} s → ebenfalls ${fw.laborTimeout1BS} s`,
+    ],
+    R2: [
+      'C0: dieselbe kurze Anfrage über die Strecke und lokal',
+      `Differenz der Mediane ${z.c0} ms, Streuung je Seite > ${fw.schwelleC0Ms} ms: nicht nachweisbar`,
+      `Heißt nicht „kostenlos“: Drahtmessung ${z.netz} ms im Median`,
+    ],
+    R3: [
+      `Runtime gestoppt: Ersatz ohne Wartezeit, Median ${z.b0} ms`,
+      'Langsamer oder hängender Host damit nicht gemessen',
+      'Das untersucht Niklas in 1B, Schritte 3–4',
+    ],
+    R4: [
+      'Kalt und warm sind getrennte Gruppen',
+      `Kalt (frische Runtime) ${z.kaltMedian} s, warm ${z.jobWarm} s`,
+      `Warm-Spanne ${z.warmMin}–${z.warmMax} s, ein Lauf; Anteil in beiden über der Schwelle`,
+    ],
+    R5: [
+      'Laborrechner, ein Modell, synthetische Fixture, keine parallele Last',
+      `Warm = gleicher Snapshot, Prompt aus dem Cache; sonst eher kalt ${z.kaltMedian} s`,
+      'Inferenzzeiten nicht auf den Produktionshost übertragbar',
+      'Privates Netz ist noch kein Datenschutz',
+    ],
+    R6: [
+      'KI entwarf Skripte, Tests, Auswertungen und Texte',
+      'Ich: Hypothesen und Schwellen vorab freigegeben, Läufe gesteuert, Ergebnisse geprüft',
+      'Ausnahmen: zwei 1C-Messungen ohne Freigabe; 1B-Leitfrage nach dem Lauf bestätigt',
+      'Details je Artefakt: Eigenanteil-Dateien',
+    ],
+    R7: [
+      'Entscheidungen in 1C nach Status gezählt',
+      'Keine Empfehlung umgesetzt',
+      'Auftrag verlangt eine begründete Empfehlung, keinen Patch',
+    ],
+    R8: [
+      'Jeder Bereich aus #456: Datenquelle, Funktion, Schemafassung, Rechteprüfung',
+      'Erst Host-Token, dann Rechte je Kontextaufbau erneut',
+      'Tabelle mit Zeilennummern: Diagrammdoku 1C',
+    ],
+    R9: [
+      'Inkompatible Version, fehlender Bereich: kontrolliertes Ende mit Grund',
+      'Stiller Feldverlust: fremde Snapshot-Version, aus Budgetgründen leere Bereiche',
+      'Änderung nach dem Auftrag: Nachprüfung; Stimme im Aufbau: CONFLICT',
+    ],
+    R10: [
+      'Adapter in der App (app-host), Encoder ab Werk aus, LLM-Server allein auf dem llm-host',
+      'Aufbau Punkt für Punkt gegen ADR-0035 und Runbook abgeglichen',
+      'Lücke: ADR-0035 nennt kürzere Ausgabegrenze → Antworten abgeschnitten',
+    ],
+    R11: [
+      'Log: nur Gesamtzeit eines Auftrags',
+      'Inferenz, Netz, Adapter nur per Mitschnitt; Gate-Grund nur invalid_response',
+      'Empfehlung: Zeiten und Fallback-Grund ohne Prompt loggen (#19, #20); nicht umgesetzt',
+    ],
+    R12: [
+      '1C bleibt: Nachprüfung, Validierung, Entkopplung, Vorschau; Risiko beim Voting',
+      'Empfohlen, nicht umgesetzt: Gate, Timeout, Cache, Zählung, Snapshot, Blitzlicht',
+      '1B: Topologie bleibt, Hebel am Inferenz-Host; Logs erweitern',
+    ],
+    R13: [
+      `Timeout ab Werk ${fw.releaseTimeoutS} s; PC ${z.kalPc} s, Laptop Median ${z.inferRuhig} s → zu kurz`,
+      `Speicher: +${z.delta} GB je Auftrag bei wechselnden Prompts (Prompt-Cache, PC); Grenze ${fw.grenzeGesamtGiB} GiB`,
+      `OOM im ${c.oomAuftrag9f230abc.wert}. (alt) bzw. ${c.oomAuftrag.wert}. Auftrag (neu); 1B gleicher Prompt: ${z.speicher1B} GB`,
+      `Empfehlung: Timeout je Host, --cache-ram (Ausgabe ${fw.cacheAusAusgabeProzent} % langsamer, nicht zuzuordnen); nicht umgesetzt`,
+    ],
+    R14: [
+      'NIST: IaaS ohne Selbstbedienung zur Laufzeit; keine schnelle Elastizität, nur vertikal von Hand',
+      'Zweiter Host = Bulkhead; Nutzen nicht gemessen',
+      `Kapazität aus dem Code: 1 Aufruf, Queue ≤ ${fw.queueLimit}, rund ${ab.auftraegeProStunde} Zusammenfassungen pro Stunde`,
+      `SLO trennen: Verfügbarkeit (Fallback hält) und Nutzen (${ab.fullContext1B} von ${n})`,
+    ],
+  };
+  for (const f of F) {
+    if (f.sprecher === 'niklas' || f.id === 'J16') continue;
+    const s = STICHPUNKTE[f.id];
+    if (!s) throw new Error(`${f.id}: keine Stichpunkte`);
+    f.stichpunkte = s;
+  }
 
   // Kurzbelege je Folie (ZL Anhang B: „Quelle: …“ in der Fußzeile), eine Zeile; Rechner und Commit
   // stehen in `quelle` (Sprechnotizen) und im Manifest, nicht auf der Folie.

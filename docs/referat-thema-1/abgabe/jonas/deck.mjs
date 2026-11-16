@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { TEILE, teilVon } from './folien.mjs';
 import { KAMERA, WEG_STATIONEN } from './grafik.mjs';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
@@ -199,6 +200,23 @@ function ohneUmbruchInKennungen(html) {
 /** Breite des J13-Clips in px (Höhe aus dem Zuschnitt 848 × 800); vorher 380 px, im Audit zu klein. */
 const CLIP_BREITE = 480;
 
+/**
+ * Teilleiste oben rechts (Leitfaden E24, roter Faden): die Teile des Vortrags wie im Fahrplan auf G0,
+ * der aktuelle Teil hervorgehoben. Nur auf Hauptfolien (nicht G0, Anhang, Reserve).
+ */
+function teilleiste(f) {
+  const aktiv = teilVon(f);
+  if (!aktiv) return '';
+  const name = TEILE.find((t) => t.id === aktiv);
+  return (
+    `<ol class="teilleiste" aria-label="Teil des Vortrags: ${esc(`${name.kurz}, ${name.wer}`)}">` +
+    TEILE.map(
+      (t) => `<li${t.id === aktiv ? ' data-aktiv aria-current="step"' : ''}>${esc(t.kurz)}</li>`,
+    ).join('') +
+    '</ol>'
+  );
+}
+
 function jonasFolie(f, nr, gesamt, clipDaten) {
   let inhalt = f.inhalt.replaceAll(' xmlns="http://www.w3.org/2000/svg"', '');
   if (clipDaten) {
@@ -248,6 +266,7 @@ function jonasFolie(f, nr, gesamt, clipDaten) {
   const html =
     `<section ${attrs}>` +
     (f.station && !eigenerWeg ? wegMini({ aktiv: f.station }) : '') +
+    teilleiste(f) +
     (f.exkurs ? `<p class="weg-exkurs">${esc(f.exkurs)}</p>` : '') +
     `<h1 class="folie-titel">${f.titel}</h1>` +
     `<div class="folie-flaeche">${inhalt}</div>` +
