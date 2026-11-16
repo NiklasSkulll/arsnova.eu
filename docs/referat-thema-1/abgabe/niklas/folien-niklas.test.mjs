@@ -70,15 +70,19 @@ test('1A: acht Folien im Vortrag (N3 und N8 als Reserve), Literatur NL im Anhang
   assert.ok(haupt1A.every((f) => f.auftrag === '1A' && f.station === null));
 });
 
-test('Zeit: Niklas höchstens 9:00 min samt 1B 3–4 und G9; N2, N4, N7 im Vortrag; Kurzfassung', () => {
+test('Zeit: Niklas höchstens 10:30 min samt Rahmen (Titel, Fahrplan, Fazit, Dank); N2, N4, N7; Kurzfassung', () => {
   const s = summe(haupt1A);
   assert.ok(s >= 380 && s <= 420, `1A ${s} s`);
-  // G9 spricht Niklas (gemeinsames Fazit); 1B 3–4 höchstens zwei Folien, höchstens 90 s
-  const g9 = alle.find((f) => f.id === 'G9');
-  assert.equal(g9.sprecher, 'niklas');
+  // Alle Rahmenfolien spricht Niklas (Absprache 2026-11-16); 1B 3–4 höchstens zwei Folien, höchstens 90 s
+  const rahmen = alle.filter((f) => f.teil === 'rahmen');
+  assert.deepEqual(
+    rahmen.map((f) => f.id),
+    ['GT', 'G0', 'G9', 'GD'],
+  );
+  for (const f of rahmen) assert.equal(f.sprecher, 'niklas', f.id);
   assert.ok(n1b.length <= 2 && summe(n1b) <= 90, `1B 3–4 ${summe(n1b)} s`);
-  const gesamt = s + summe(n1b) + g9.zeitS;
-  assert.ok(gesamt <= 540, `Niklas ${gesamt} s`);
+  const gesamt = s + summe(n1b) + summe(rahmen);
+  assert.ok(gesamt <= 630, `Niklas ${gesamt} s`);
   // Prüfungsschritt 1 (N2), Vorab-Festlegung (N4), Diskussionskern Ursache (N7): je 30–50 s
   for (const id of ['N2', 'N4', 'N7']) {
     const f = haupt1A.find((x) => x.id === id);
@@ -124,11 +128,23 @@ test('Sprechnotizen: Fließtext etwa 130 Wörter je Minute, 3–6 Stichpunkte, [
   assert.doesNotMatch(md, /## NL /, 'Literatur ohne Redezeit nicht in den Notizen');
 });
 
-test('Erzählbogen: N10 schlägt die Brücke zu 1B, N1 nimmt Jonas’ Übergabe auf', () => {
-  assert.match(haupt1A[0].notiz, /^Danke, Jonas\./);
-  assert.match(ohneTags(haupt1A.at(-1).inhalt), /zweite Host.*ausfällt/);
+test('Erzählbogen: G0 eröffnet, N10 übergibt an Jonas, J15 zurück an Niklas, M1 nimmt die Frage auf', () => {
+  // Design 2026-11-15, Abschnitt 3: zwei Sprecherwechsel mit den abgestimmten Übergangssätzen
+  assert.match(alle.find((f) => f.id === 'G0').notiz, /Ich beginne mit 1A auf dem App-Host/);
+  assert.match(haupt1A[0].notiz, /^Ich beginne auf dem App-Host/);
+  assert.match(
+    ohneTags(haupt1A.at(-1).inhalt),
+    /Was, wenn wir die schwere Arbeit auslagern\?.*Jonas/,
+  );
+  const j1 = alle.find((f) => f.id === 'J1');
+  assert.match(j1.notiz, /^Danke, Niklas\./);
   const j15 = alle.find((f) => f.id === 'J15');
-  assert.match(ohneTags(j15.inhalt), /App-Host selbst.*Niklas/);
+  assert.match(
+    ohneTags(j15.inhalt),
+    /Und wenn der zweite Host langsam ist oder ausfällt\?.*Niklas/,
+  );
+  assert.match(n1b[0].notiz, /^Danke, Jonas\. .*zweite Host langsam ist oder ausfällt/);
+  assert.match(alle.find((f) => f.id === 'GD').notiz, /Fragen/);
 });
 
 test('Schreibregeln: kein Geviertstrich, kein „sondern“, keine Hex-Farbe im HTML, keine Nebenlast', () => {
@@ -353,12 +369,12 @@ test('1B 3–4 füllt sich aus Ergebnis-JSONs (Median selbst gerechnet, p95 gepo
 
 // ---------------------------------------------------------------- im Browser
 
-test('Layout: Niklas-Folien und G9 ohne Überlappung, einzeilige Titel, alles in der Bühne', async () => {
-  const befunde = (await layoutBefunde(browser, deck)).filter((b) => /^(N|M|RN|G9)/.test(b));
+test('Layout: Niklas-Folien und Rahmen ohne Überlappung, Vermerke einzeilig, kein Inhalt oben klebend', async () => {
+  const befunde = (await layoutBefunde(browser, deck)).filter((b) => /^(N|M|RN|G)/.test(b));
   assert.deepEqual(befunde, []);
 });
 
-test('Reihenfolge: G0, Jonas, Niklas 1A und 1B 3–4, G9, Anhang, Reserve', async () => {
+test('Reihenfolge: GT, G0, Niklas 1A, Jonas, Niklas 1B 3–4, G9, GD, Anhang, Reserve', async () => {
   const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
   await page.goto(pathToFileURL(deck).href);
   const ids = await page.evaluate(() =>
@@ -366,11 +382,17 @@ test('Reihenfolge: G0, Jonas, Niklas 1A und 1B 3–4, G9, Anhang, Reserve', asyn
   );
   await page.close();
   const pos = (id) => ids.findIndex(([x]) => x === id);
-  assert.equal(ids[0][0], 'G0');
-  assert.ok(pos('J15') < pos('N1') && pos('N10') < pos('M1') && pos('M2') < pos('G9'));
   assert.deepEqual(
-    ids.slice(pos('G9') + 1, pos('G9') + 3).map(([x]) => x),
-    ['J16', 'NL'],
+    ids.slice(0, 3).map(([x]) => x),
+    ['GT', 'G0', 'N1'],
+  );
+  // Niklas 1A → Jonas → Niklas 1B 3–4 → Fazit (Design 2026-11-15, Abschnitt 3)
+  assert.equal(pos('J1'), pos('N10') + 1, 'Jonas folgt direkt auf N10');
+  assert.equal(pos('M1'), pos('J15') + 1, '1B 3–4 folgt direkt auf J15');
+  assert.ok(pos('M2') < pos('G9'));
+  assert.deepEqual(
+    ids.slice(pos('G9') + 1, pos('G9') + 4).map(([x]) => x),
+    ['GD', 'J16', 'NL'],
   );
   assert.ok(pos('RN1') > pos('NL'));
   assert.equal(ids.find(([x]) => x === 'RN1')[1], 'reserve');
@@ -391,13 +413,16 @@ async function druckAuszug(art) {
 }
 
 test('Druck ?druck=niklas: genau Niklas’ Folien samt Literatur und Reserve; Jonas ohne RN', async () => {
+  // Titelfolie (beide Namen, lokal mit Matrikelnummern) steht in jedem Einzel-PDF.
   assert.deepEqual(await druckAuszug('niklas'), [
+    'GT',
     ...haupt1A.map((f) => f.id),
     ...n1b.map((f) => f.id),
     'NL',
     ...reserve1A.map((f) => f.id),
   ]);
   const jonas = await druckAuszug('jonas');
+  assert.equal(jonas[0], 'GT');
   assert.ok(!jonas.some((id) => /^(N|M|RN)/.test(id)), 'keine Niklas-Folie im Jonas-PDF');
 });
 

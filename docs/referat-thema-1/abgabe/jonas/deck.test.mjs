@@ -136,10 +136,11 @@ test('Anzahl Folien = Rahmen + Niklas + Jonas, Reserve getrennt', async () => {
       JONAS.map((f) => f.id),
     );
     assert.equal(z.reserve, RESERVE.length);
-    assert.equal(z.nachG9, 'J16', 'Literaturverzeichnis nach G9');
-    // Reihenfolge: G0, Jonas, Niklas 1A und 1B 3–4, G9, Anhang (J16), Reserve
+    assert.equal(z.nachG9, 'GD', 'Dank direkt nach dem Fazit');
+    // Reihenfolge (Design 2026-11-15, Abschnitt 3): GT und G0, Niklas 1A, Jonas, Niklas 1B 3–4,
+    // G9 und GD, Anhang (J16), Reserve
     const block = z.reihenfolge.filter((t, i, a) => i === 0 || a[i - 1] !== t);
-    assert.deepEqual(block, ['rahmen', 'jonas', 'niklas', 'rahmen', 'jonas', 'reserve']);
+    assert.deepEqual(block, ['rahmen', 'niklas', 'jonas', 'niklas', 'rahmen', 'jonas', 'reserve']);
     if (niklas === 2) {
       assert.deepEqual(z.platzhalter, ['Teil Niklas', 'Teil Niklas']);
     } else {
@@ -160,9 +161,10 @@ test('Fußzeile zeigt Seitenzahl im Vortrag und Quelle', async () => {
     ),
   );
   const gesamt = RAHMEN.length + 2 + JONAS.length;
-  // ohne führende Null wie bei Niklas („2 / 9“)
-  assert.match(fuss.G0, new RegExp(`^1 / ${gesamt} · `));
-  assert.match(fuss.J1, new RegExp(`^2 / ${gesamt} · `));
+  // ohne führende Null wie bei Niklas („2 / 9“); vor J1 stehen GT, G0 und Niklas' 1A (Platzhalter)
+  assert.match(fuss.GT, new RegExp(`^1 / ${gesamt} · `));
+  assert.match(fuss.G0, new RegExp(`^2 / ${gesamt} · `));
+  assert.match(fuss.J1, new RegExp(`^4 / ${gesamt} · `));
   assert.match(fuss.R1, /^Reserve R1 · /);
   assert.match(fuss.J16, new RegExp(`^${gesamt} / ${gesamt} · `));
   await context.close();
@@ -370,7 +372,7 @@ test('J9 und J15 bauen sich auf Tastendruck in zwei Stufen auf; reduziert ohne �
     const { page, context, fehler } = await oeffne(deckOhneNiklas, { reducedMotion });
     for (const [id, naechste] of [
       ['J9', 'J10'],
-      ['J15', 'N1'], // ohne Niklas' Teile: Platzhalter N1
+      ['J15', 'N2'], // ohne Niklas' Teile: Platzhalter N2 (1B 3–4) folgt auf J15
     ]) {
       await geheZu(page, id);
       let s = await stand(page, id);
@@ -411,7 +413,7 @@ test('J9 und J15 bauen sich auf Tastendruck in zwei Stufen auf; reduziert ohne �
   await context.close();
 });
 
-test('Teilleiste oben rechts: aktueller Teil markiert, nicht auf G0, Anhang und Reserve', async () => {
+test('Teilleiste oben rechts: aktueller Teil markiert, nicht auf Titel, Fahrplan, Dank, Anhang und Reserve', async () => {
   const { page, context } = await oeffne(deckOhneNiklas);
   const leisten = await page.evaluate(() =>
     Object.fromEntries(
@@ -421,7 +423,12 @@ test('Teilleiste oben rechts: aktueller Teil markiert, nicht auf G0, Anhang und 
       ]),
     ),
   );
-  assert.equal(leisten.G0, null);
+  for (const id of ['GT', 'G0', 'GD']) assert.equal(leisten[id], null, id);
+  // Reihenfolge der Teile in der Leiste wie im Fahrplan: 1A zuerst
+  const reihe = await page.evaluate(() =>
+    [...document.querySelectorAll('.folie[data-id="J1"] .teilleiste li')].map((l) => l.textContent),
+  );
+  assert.deepEqual(reihe, ['1A', '1C, 1B 1–2', '1B 3–4', 'Fazit']);
   assert.equal(leisten.J16, null);
   assert.equal(leisten.R1, null);
   for (const f of JONAS.filter((x) => !x.anhang)) assert.equal(leisten[f.id], '1C, 1B 1–2', f.id);
@@ -434,9 +441,13 @@ test('Tasten: Home, End, Bild ab/auf, Leertaste; Reserve-Übersicht mit r', asyn
   await page.keyboard.press('End');
   assert.equal(await aktuelleId(page), 'J16');
   await page.keyboard.press('Home');
+  assert.equal(await aktuelleId(page), 'GT');
+  await page.keyboard.press('PageDown');
   assert.equal(await aktuelleId(page), 'G0');
   await page.keyboard.press('PageDown');
-  assert.equal(await aktuelleId(page), 'J1', 'Jonas folgt direkt auf G0');
+  assert.equal(await aktuelleId(page), 'N1', 'Niklas beginnt mit 1A (Platzhalter)');
+  await page.keyboard.press('PageDown');
+  assert.equal(await aktuelleId(page), 'J1', 'Jonas folgt auf Niklas’ 1A');
   await page.keyboard.press('Space');
   assert.equal(await aktuelleId(page), 'J2');
   await page.keyboard.press('PageUp');
@@ -551,7 +562,8 @@ test('Druck: jede Folie eine Seite 1600 × 900, J10 im Endzustand, Marker an der
   await nurJonas.page.evaluate(() => (document.documentElement.dataset.druck = 'jonas'));
   await nurJonas.page.emulateMedia({ media: 'print' });
   const pdf2 = await nurJonas.page.pdf({ preferCSSPageSize: true, printBackground: true });
-  assert.equal(seiten(pdf2), JONAS.length + RESERVE.length);
+  // plus Titelfolie GT mit beiden Namen
+  assert.equal(seiten(pdf2), 1 + JONAS.length + RESERVE.length);
   await nurJonas.context.close();
 });
 
@@ -592,7 +604,7 @@ test('Layout mit dem echten Clip (medien/): J13 mit Video, Standbild und Bildunt
   assert.deepEqual(await layoutBefunde(browser, pfad), []);
 });
 
-test('Layout-Gegenprobe: zweizeiliger Titel und überlappender Beleg werden gemeldet', async () => {
+test('Layout-Gegenprobe: zweizeiliger Titel, überlappender Beleg, große oder mehrzeilige Vermerke und oben klebender Inhalt werden gemeldet', async () => {
   const kaputt = F.map((f) => {
     if (f.id === 'J12') return { ...f, titel: `${f.titel}, ${f.titel}, ${f.titel}` };
     if (f.id === 'J7')
@@ -604,6 +616,25 @@ test('Layout-Gegenprobe: zweizeiliger Titel und überlappender Beleg werden geme
         ),
       };
     if (f.id === 'R8') return { ...f, inhalt: f.inhalt.replace('width:100%', 'width:1700px') };
+    // Designregeln T und V: mehrzeiliger und zu großer Vermerk, Inhalt oben ohne Zentrierung
+    if (f.id === 'J1')
+      return { ...f, inhalt: f.inhalt.replace(/(<p class="beleg">)([^<]*)/, '$1$2 $2 $2') };
+    if (f.id === 'J15')
+      return {
+        ...f,
+        inhalt: f.inhalt.replace(
+          '<p class="vermerk">',
+          '<p class="vermerk" style="font-size:28px">',
+        ),
+      };
+    if (f.id === 'R7')
+      return {
+        ...f,
+        inhalt: f.inhalt.replace(
+          '<div class="flaeche-inhalt">',
+          '<div class="flaeche-inhalt" style="display:block">',
+        ),
+      };
     return f;
   });
   const pfad = join(ordner, 'kaputt.html');
@@ -612,6 +643,9 @@ test('Layout-Gegenprobe: zweizeiliger Titel und überlappender Beleg werden geme
   assert.match(befunde, /J12: Titel zweizeilig/);
   assert.match(befunde, /J7: pre\.mono.* trifft /);
   assert.match(befunde, /R8: .*(außerhalb der Bühne|ragt aus der Fläche)/);
+  assert.match(befunde, /J1: p\.beleg.* Vermerk mehrzeilig/);
+  assert.match(befunde, /J15: p\.vermerk.* Vermerk 28 px, zu groß/);
+  assert.match(befunde, /R7: Inhalt klebt oben/);
 });
 
 test('Clip wird als data-URI in J13 eingebettet', () => {
@@ -639,7 +673,8 @@ test('Clip wird als data-URI in J13 eingebettet', () => {
   // Im PDF steht das Standbild statt des Videos (Druck-CSS der Vorlage).
   assert.match(html, /<img class="clip-standbild" src="data:image\/png;base64,iVBORw=="/);
   const nurJ13 = (h) => h.match(/<section[^>]*data-id="J13"[\s\S]*?<\/section>/)[0];
-  assert.match(html, /Laboraufnahme 2026-11-15: 172 s Wartezeit, auf 4 s gerafft/);
+  assert.match(html, /Laboraufnahme 2026-11-15, 172 s auf 4 s gerafft/);
+  assert.match(html, /Illustration, kein Nachweis/);
   // Das Energieprofil gehört ins Protokoll, nicht auf die Folie (Wunsch des Autors).
   assert.doesNotMatch(nurJ13(html), /balanced|power-saver|Energieprofil/);
   // Grund dieses Laufs ehrlich nennen: Timeout, nicht das Gate; Hinweis wörtlich.
@@ -651,7 +686,7 @@ test('Clip wird als data-URI in J13 eingebettet', () => {
     standbild,
     eingebettet: true,
   });
-  assert.match(mitTimeout, /Abbruch nach 300 s \(Timeout\), nicht das Gate, gleicher Hinweis/);
+  assert.match(mitTimeout, /Abbruch nach 300 s \(Timeout\), nicht das Gate/);
   assert.throws(
     () => baueDeck(F, { niklas: { teil1: [], teil2: [] }, clip, eingebettet: true }),
     /clipInfo/,

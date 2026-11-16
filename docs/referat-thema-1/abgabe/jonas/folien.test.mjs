@@ -8,7 +8,17 @@ import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { gunzipSync } from 'node:zlib';
 
-import { FESTWERTE, TEILE, folien, ladeFolienDaten, teilVon } from './folien.mjs';
+import {
+  FESTWERTE,
+  MATRIKEL_VERMERK,
+  REPO_URL,
+  TEILE,
+  TITEL,
+  folien,
+  ladeFolienDaten,
+  qrSvg,
+  teilVon,
+} from './folien.mjs';
 import { fussballfeldSvg, wegSvg, zeitzerlegungSvg } from './grafik.mjs';
 import { fmt } from './zahlen.mjs';
 
@@ -20,12 +30,15 @@ const jonas = F.filter((f) => f.teil === 'jonas');
 const summe = (liste) => liste.reduce((s, f) => s + f.zeitS, 0);
 
 /**
- * Zeiten nach dem zweiten Audit 2026-11-16: G0 bis J16 höchstens 9:00 min (Kursvorschlag 9 + 6, Sprungplan =
+ * Reihenfolge seit 2026-11-16 wie im Design (Abschnitt 3): Niklas eröffnet (GT, G0, 1A), Jonas spricht J1–J15
+ * und J16, Niklas schließt (1B 3–4, G9, GD). J1 nimmt die Übergabe von N10 auf (45 s). Budget je Person
+ * höchstens etwa 10:30 min samt Rahmenanteil (Absprache 2026-11-16).
+ * Davor: Zeiten nach dem zweiten Audit 2026-11-16: G0 bis J16 höchstens 9:00 min (Kursvorschlag 9 + 6, Sprungplan =
  * Plan); J2, J4–J9 und J13 gekürzt. Davor: G0 bis J16 etwa 10:30 min. J11 (Betrieb) ist Reserve R13, J16 steht als
  * Anhang nach G9; J2, J4, J8 und J15 gekürzt. Früher: J14 in die Reserve (R11, fachliche Prüfung 2).
  */
 const PLAN = {
-  J1: 40,
+  J1: 45,
   J2: 30,
   J3: 40,
   J4: 30,
@@ -82,6 +95,9 @@ const KENNUNGEN = [
   /#\d+/g, // Issues
   /\b(?=[0-9a-f]*[a-f])(?=[0-9a-f]*\d)[0-9a-f]{8,}\b/g, // Commits
   /\bThema 1\b/g,
+  /\bDSCC\d{4}\b/g, // Modulnummer (Titelfolie)
+  /\b\d{2}\.\d{2}\.\d{4}\b/g, // Prüfungstermin (Titelfolie, TITEL.datum)
+  /\breferat-thema-1\b/g, // Ordner im Belegrepository (Dankfolie)
   /\b(?:Release |Version |v)?1\.[34](?:\.0)?\b/g, // Release- und Versionsnummern
   /\bSchritte? \d(?:–\d)?\b/g,
   /\b[1][ABC]\b/g, // Aufträge
@@ -134,18 +150,23 @@ function whitelist() {
   return w;
 }
 
-test('Jonas-Folien in Reihenfolge mit den geplanten Zeiten, mit Rahmen höchstens 9:00 min', () => {
+test('Jonas-Folien in Reihenfolge mit den geplanten Zeiten, höchstens 10:30 min; Rahmen spricht Niklas', () => {
   assert.deepEqual(
     jonas.map((f) => f.id),
     Object.keys(PLAN),
   );
   for (const f of jonas) assert.equal(f.zeitS, PLAN[f.id], f.id);
   const s = summe(jonas);
-  assert.ok(s >= 480 && s <= 520, `Summe ${s}`);
-  // G0 eröffnet Jonas; G9 (gemeinsames Fazit) spricht Niklas und zählt zu seiner Zeit.
-  const rahmen = summe(F.filter((f) => f.teil === 'rahmen' && f.sprecher !== 'niklas'));
-  assert.ok(s + rahmen >= 520 && s + rahmen <= 540, `mit G0 ${s + rahmen} s`);
-  assert.equal(F.find((f) => f.id === 'G9').sprecher, 'niklas');
+  assert.ok(s >= 480 && s <= 630, `Summe ${s}`);
+  // Alle Rahmenfolien (Titel, Fahrplan, Fazit, Dank) spricht Niklas; sie zählen zu seiner Zeit.
+  const rahmen = F.filter((f) => f.teil === 'rahmen');
+  assert.deepEqual(
+    rahmen.map((f) => f.id),
+    ['GT', 'G0', 'G9', 'GD'],
+  );
+  for (const f of rahmen) assert.equal(f.sprecher, 'niklas', f.id);
+  // Titel, Fahrplan und Dank zusammen kurz (etwa 20 s plus Leitfrage auf G0)
+  assert.ok(summe(rahmen.filter((f) => f.id !== 'G9')) <= 60);
 });
 
 test('Stichpunkte: jede Jonas-Folie (außer J16) und Reserve 3–6, [Weiter] je Aufbaustufe', () => {
@@ -160,8 +181,8 @@ test('Stichpunkte: jede Jonas-Folie (außer J16) und Reserve 3–6, [Weiter] je 
       `${f.id}: [Weiter] in Stichpunkten`,
     );
   }
-  // Erster und letzter Satz wörtlich (Leitfaden F27)
-  const erster = F.find((f) => f.id === 'G0');
+  // Erster und letzter Satz wörtlich (Leitfaden F27): Jonas beginnt auf J1 mit der Übernahme von Niklas
+  const erster = F.find((f) => f.id === 'J1');
   assert.ok(erster.notiz.startsWith(erster.stichpunkte[0].replace(/^„|“$/g, '')));
   const letzter = F.find((f) => f.id === 'J15');
   assert.ok(
@@ -187,7 +208,12 @@ test('Teile: Fahrplan auf G0 in Vortragsreihenfolge, teilVon ordnet jede Hauptfo
     assert.ok(i > pos, `G0 Fahrplan: ${t.id}`);
     pos = i;
   }
-  assert.equal(teilVon(nach('G0')), null);
+  for (const id of ['GT', 'G0', 'GD']) assert.equal(teilVon(nach(id)), null, id);
+  // Vortragsreihenfolge (Design 2026-11-15, Abschnitt 3): Niklas 1A, Jonas, Niklas 1B 3–4, Fazit
+  assert.deepEqual(
+    TEILE.map((t) => `${t.id}:${t.wer}`),
+    ['1a:Niklas', 'jonas:Jonas', '1b34:Niklas', 'fazit:Gemeinsam'],
+  );
   assert.equal(teilVon(nach('J5')), 'jonas');
   assert.equal(teilVon(nach('G9')), 'fazit');
   assert.equal(teilVon(nach('J16')), null);
@@ -239,18 +265,56 @@ test('Sprechnotizen passen zur Folienzeit (etwa 130 Wörter je Minute)', () => {
   }
 });
 
-test('Rahmen: G0 und G9 ohne Entwurfsvermerk und Platzhalter; G9 zitiert Niklas', () => {
-  for (const id of ['G0', 'G9']) assert.equal(nach(id)?.teil, 'rahmen', id);
-  for (const id of ['G0', 'G9']) {
+test('Rahmen: GT, G0, G9, GD ohne Entwurfsvermerk und Platzhalter; G9 zitiert Niklas', () => {
+  for (const id of ['GT', 'G0', 'G9', 'GD']) assert.equal(nach(id)?.teil, 'rahmen', id);
+  for (const id of ['GT', 'G0', 'G9', 'GD']) {
     assert.doesNotMatch(sichtbar(nach(id).inhalt) + nach(id).notiz, /Entwurf|\[Niklas|\[Satz/, id);
   }
   assert.match(nach('G9').fuss, /Schneider, 2026/);
-  assert.equal(F[0].id, 'G0');
+  assert.deepEqual(
+    F.slice(0, 2).map((f) => f.id),
+    ['GT', 'G0'],
+  );
   assert.equal(F.at(-1).teil, 'reserve');
-  // J16 (Literaturverzeichnis) folgt als Anhang direkt auf G9, nicht zwischen J15 und Niklas.
+  // J16 (Literaturverzeichnis) folgt als Anhang nach Fazit und Dank, nicht zwischen J15 und Niklas.
   const haupt = F.filter((f) => f.teil !== 'reserve').map((f) => f.id);
-  assert.deepEqual(haupt.slice(-3), ['J15', 'G9', 'J16']);
+  assert.deepEqual(haupt.slice(-4), ['J15', 'G9', 'GD', 'J16']);
   assert.equal(nach('J16').anhang, true);
+});
+
+test('Titelfolie: beide Namen, Kurs, Hochschule, Prüfer, Datum; Platz für Matrikelnummern ohne Ziffern', () => {
+  const gt = nach('GT');
+  const text = sichtbar(gt.inhalt);
+  for (const w of ['Niklas Schneider', 'Jonas Weirauch', TITEL.kurs, TITEL.modul, TITEL.hochschule])
+    assert.ok(text.includes(w), w);
+  assert.ok(text.includes(TITEL.pruefer) && text.includes(TITEL.datum));
+  assert.equal(TITEL.hochschule, 'IU Internationale Hochschule');
+  assert.equal(TITEL.pruefer, 'Prof. Dr. Klaus Quibeldey-Cirkel');
+  assert.equal(TITEL.datum, '24.11.2026');
+  const plaetze = [...gt.inhalt.matchAll(/data-matrikel="([^"]+)"[^>]*>([^<]*)</g)];
+  assert.deepEqual(
+    plaetze.map((m) => m[1]),
+    ['Niklas Schneider', 'Jonas Weirauch'],
+  );
+  for (const m of plaetze) {
+    assert.equal(m[2], MATRIKEL_VERMERK);
+    assert.doesNotMatch(m[2], /\d/, 'keine Ziffer im Repo');
+  }
+});
+
+test('Dankfolie: Einladung zu Fragen, Link und offline erzeugter QR-Code zum Belegrepository', async () => {
+  const { LITERATUR } = await import('./literatur.mjs');
+  const gd = nach('GD');
+  assert.match(gd.titel, /Danke/);
+  assert.match(gd.titel, /Fragen/);
+  assert.ok(gd.inhalt.includes(`href="${REPO_URL}"`));
+  assert.match(gd.inhalt, /<svg[^>]+aria-label="QR-Code zum Belegrepository"/);
+  assert.equal(gd.quellenverzeichnis, true, 'URL nur zwischen Quellen-Marken');
+  // Gleiche Adresse wie der Eintrag der eigenen Arbeit im Literaturverzeichnis
+  assert.ok(LITERATUR.some((e) => e.voll.includes(REPO_URL)));
+  // QR-Code deterministisch und mit Ruhezone
+  assert.equal(qrSvg(REPO_URL), qrSvg(REPO_URL));
+  assert.match(qrSvg('x', 100), /viewBox="0 0 29 29"/);
 });
 
 test('Reservefolien R1–R14 (J14 als R11, Entscheidungen R12, J11 als R13, Einordnung R14)', () => {
