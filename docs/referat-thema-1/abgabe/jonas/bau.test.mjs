@@ -268,7 +268,7 @@ test('Sprechnotizen: Sprungplan zu J13 und J15 bei Abbruch (Prüfung 3, I5)', as
   assert.match(md, /Sprungplan/);
   assert.match(md, /J13/);
   assert.match(md, /J15/);
-  assert.match(md, /10:30/);
+  assert.match(md, /15:00/);
 });
 
 test('sprechnotizen-niklas.md: Stichpunkte und Fließtext je Folie, Rahmen und Reserve, ohne Literatur', () => {
@@ -288,19 +288,19 @@ test('sprechnotizen-niklas.md: Stichpunkte und Fließtext je Folie, Rahmen und R
   // Sprungplan für Niklas: N10, 1B 3–4, G9 und GD müssen gesprochen sein; Budgethinweis bei Überlänge.
   assert.match(md, /## Sprungplan/);
   assert.match(md, /N10 bis GD/);
-  assert.match(md, /10:30/);
+  assert.match(md, /15:00/);
   assert.match(md, /Uhr für den Sprungplan läuft nur während der eigenen Folien/);
   const haupt = [...NIKLAS_ALLE.filter((x) => x.teil !== 'reserve' && !x.anhang), ...rahmen];
   const gesamt = haupt.reduce((s, f) => s + f.zeitS, 0);
-  assert.equal(/\*\*Zeitbudget:\*\*/.test(md), gesamt > 630);
-  // Absprache 2026-11-16: höchstens etwa 10:30 min samt Rahmen
-  assert.ok(gesamt <= 630, `Niklas geplant ${gesamt} s`);
+  assert.equal(/\*\*Zeitbudget:\*\*/.test(md), gesamt > 900);
+  // Entscheidung der Autoren 2026-11-16: 15 min Redezeit je Person samt Rahmen (vorher 10:30 min)
+  assert.ok(gesamt >= 840 && gesamt <= 900, `Niklas geplant ${gesamt} s`);
 });
 
 test('Sprechnotizen: Jonas’ Sprungplan zählt ab J1; jede Folie mit Stichpunkten vor dem Fließtext', () => {
   const md = readFileSync(join(platzhalter, 'sprechnotizen.md'), 'utf8');
   assert.match(md, /ab der ersten Folie \(J1\) gezählt\. J13 beginnt im Plan/);
-  assert.doesNotMatch(md, /\*\*Zeitbudget:\*\*/, 'Jonas bleibt im Budget von 10:30 min');
+  assert.doesNotMatch(md, /\*\*Zeitbudget:\*\*/, 'Jonas bleibt im Budget von 15:00 min');
   for (const f of F.filter((x) => x.sprecher !== 'niklas' && x.id !== 'J16')) {
     const abschnitt = md.split(`## ${f.id} `)[1].split('\n## ')[0];
     assert.ok(abschnitt.indexOf('**Stichpunkte**') < abschnitt.indexOf('**Fließtext**'), f.id);

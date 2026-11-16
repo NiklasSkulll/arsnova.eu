@@ -5,8 +5,8 @@ Niklas' Folien-PDF und seine Sprechnotizen baut [`jonas/bau.mjs`](../jonas/READM
 `jonas/ausgabe/` (`niklas-folien.pdf`, `sprechnotizen-niklas.md`); der Rückfallweg mit eingebetteten
 PDF-Seiten bleibt `--niklas1 <pdf>`.
 
-- **1A (N1, N2, N4–N7, N9, N10; Literatur NL im Anhang; Reserve RN1–RN4, darin Versuchsaufbau RN3 und
-  Ressourcen RN4):** [`folien-1a.mjs`](folien-1a.mjs). Jede Zahl liest
+- **1A (N1–N10 mit N6b; seit 2026-11-16 sind Versuchsaufbau N3, Regelempfindlichkeit N6b und Ressourcen N8
+  aus der Reserve im Vortrag; Literatur NL im Anhang; Reserve RN2):** [`folien-1a.mjs`](folien-1a.mjs). Jede Zahl liest
   [`daten-1a.mjs`](daten-1a.mjs) aus der committeten Reihe vom 15.11.2026 (Auswertung, Laufdateien,
   Ressourcenstichproben, Plan, Vertrag; Datum der Vorab-Festlegung aus Git). Nachträgliche Auswertungen
   stehen unter `explorativ` und tragen auf den Folien das Etikett „nachträglich ausgewertet“. Diagramme in
@@ -19,10 +19,12 @@ PDF-Seiten bleibt `--niklas1 <pdf>`.
   eine Platzhalterfolie, die `abgabe-lokal.mjs` vor der Abgabe meldet.
 - **Reihenfolge und Zeit (_Ergänzt 2026-11-16_):** Niklas eröffnet (GT Titel, G0 Fahrplan, N1–N10),
   übergibt auf N10 an Jonas („Was, wenn wir die schwere Arbeit auslagern?“), übernimmt nach J15 mit M1–M2
-  und spricht G9 und GD. Budget je Person höchstens etwa 10:30 min samt Rahmen; Niklas plant 9:55 min.
+  und spricht G9 und GD. Seit 2026-11-16 (Entscheidung der Autoren) 15 min Redezeit je Person samt Rahmen,
+  Fragen kommen hinzu; Niklas plant 14:10 min, darin GK (Systembild „Was ist arsnova?“) nach G0.
 - **Diskussion:** [`fragenkatalog-1a.md`](fragenkatalog-1a.md) (Übung, nicht Teil der Abgabe).
 - **Sprechnotizen:** je Folie `notiz` (Fließtext) und `stichpunkte` (zum freien Vortrag); `[Weiter]` markiert
-  jeden Tastendruck einer Aufbaustufe (N6: drei, Stufe 0 zeigt nur Umrisse; N7: zwei).
+  jeden Tastendruck einer Aufbaustufe (GK: drei; N6: drei, Stufe 0 zeigt nur Umrisse; N7: zwei; M1: drei,
+  je Störung eine Stufe).
 - **Handout (PaperLab):** [`handout-latex-1a.mjs`](handout-latex-1a.mjs) schreibt `zahlen.tex` und
   `abb-vergleiche.pdf` aus denselben Daten wie die Folien (`node … <PaperLab-Projekt>/generated`).
 - **Befunde zum früheren Entwurf:** [`BEFUNDE-1A.md`](BEFUNDE-1A.md).

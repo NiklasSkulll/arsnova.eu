@@ -14,9 +14,10 @@ node docs/referat-thema-1/abgabe/jonas/bau.mjs [--niklas1 <pdf>] [--niklas2 <pdf
 
 Ohne Argumente landen die Ausgaben in `ausgabe/` neben dieser Datei. Niklas' Teile (1A, 1B 3–4) kommen
 standardmäßig nativ aus [`../niklas/`](../niklas/README.md); dazu entstehen `niklas-folien.pdf` und
-`sprechnotizen-niklas.md`. Reihenfolge im Deck (Design 2026-11-15, Abschnitt 3): GT (Titel) und G0 (Fahrplan), Niklas 1A
-(N1–N10), Jonas J1–J15, Niklas 1B 3–4 (M1–M2), G9 (gemeinsames Fazit) und GD (Dank, Fragen), Literatur
-(J16, NL), Reserve. Alle Rahmenfolien spricht Niklas. `--niklas1`/`--niklas2` ersetzen einen
+`sprechnotizen-niklas.md`. Reihenfolge im Deck (Design 2026-11-15, Abschnitt 3; ergänzt 2026-11-16): GT (Titel),
+G0 (Fahrplan), GK (Systembild „Was ist arsnova?“), Niklas 1A (N1–N10 mit N6b), Jonas J1–J15 (mit J5b, J8b, J10a,
+J10b, J11, J13b), Niklas 1B 3–4 (M1–M2), G9 (gemeinsames Fazit) und GD (Dank, Fragen, Nachweisumfang), Literatur
+(J16, NL), Reserve (R1, R5–R7, R9–R12, R15–R16 mit Abb. 1 und 2 aus `1C-diagrams.md`; RN2). Alle Rahmenfolien spricht Niklas. `--niklas1`/`--niklas2` ersetzen einen
 Teil durch die Seiten eines PDFs (Rückfallweg); die `--niklasN-stand`-Texte landen dann im Manifest.
 
 Tests: `node --test docs/referat-thema-1/abgabe/jonas/*.test.mjs`.
@@ -63,11 +64,16 @@ er läuft springt auf das letzte Bild (`deck.js`, `clipSchritt`).
 ## Sprechnotizen, Sprungplan, roter Faden
 
 - Jede Folie hat zwei Fassungen: `stichpunkte` (3–6, zum freien Vortrag, Zahlen mit Einheit) und `notiz`
-  (Fließtext zum Üben). `[Weiter]` markiert jeden Tastendruck einer Aufbaustufe (J9, J15; bei Niklas N6, N7).
+  (Fließtext zum Üben). `[Weiter]` markiert jeden Tastendruck einer Aufbaustufe (GK, J7, J9, J12, J13, J15; bei
+  Niklas N6, N7, M1). Auf J13 kommen erst die Stufen, dann der Clip.
 - Der Sprungplan steht oben in den Sprechnotizen jeder Person, gezählt nur über die eigene Redezeit ab der
-  ersten eigenen Folie: Jonas muss J13 und J15 bis 10:30 min erreichen, Niklas N10, 1B 3–4, G9 und GD (seine
+  ersten eigenen Folie: Jonas muss J13 und J15 bis 15:00 min erreichen, Niklas N10, 1B 3–4, G9 und GD (seine
   Uhr steht, während Jonas spricht; Notizen und Sprechkarten markieren die Übergabe nach N10). Überschreitet
-  die Langfassung 10:30 min, steht dort ein Budgethinweis.
+  die Langfassung 15:00 min, steht dort ein Budgethinweis (Entscheidung der Autoren 2026-11-16: 15 min Redezeit
+  je Person, Fragen kommen hinzu; vorher 10:30 min).
+- Ortsmarken ohne Bewegung oben links (`deck.mjs`, `ortsmarke`): auf N1, J1 und M1 der Ausschnitt des Systembilds
+  von GK mit dem eigenen Teil, auf N2–N9 die Karte des App-Hosts (Live-Pfad, Nebenzweig spaCy, Frist und
+  Ersatz); auf Jonas' Stationsfolien wandert weiter der Punkt auf dem Weg des Auftrags.
 - G0 zeigt Leitfrage und Fahrplan der vier Teile in Vortragsreihenfolge (`TEILE` in `folien.mjs`: Niklas 1A,
   Jonas 1C und 1B 1–2, Niklas 1B 3–4, Fazit); dieselben Teile stehen klein oben rechts auf jeder Hauptfolie
   (Teilleiste, `deck.mjs`), der aktuelle Teil unterstrichen. G9 nimmt die Leitfrage von G0 wörtlich wieder

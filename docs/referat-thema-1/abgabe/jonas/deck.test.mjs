@@ -164,7 +164,8 @@ test('Fußzeile zeigt Seitenzahl im Vortrag und Quelle', async () => {
   // ohne führende Null wie bei Niklas („2 / 9“); vor J1 stehen GT, G0 und Niklas' 1A (Platzhalter)
   assert.match(fuss.GT, new RegExp(`^1 / ${gesamt} · `));
   assert.match(fuss.G0, new RegExp(`^2 / ${gesamt} · `));
-  assert.match(fuss.J1, new RegExp(`^4 / ${gesamt} · `));
+  assert.match(fuss.GK, new RegExp(`^3 / ${gesamt} · `));
+  assert.match(fuss.J1, new RegExp(`^5 / ${gesamt} · `));
   assert.match(fuss.R1, /^Reserve R1 · /);
   assert.match(fuss.J16, new RegExp(`^${gesamt} / ${gesamt} · `));
   await context.close();
@@ -228,14 +229,26 @@ test('J13: der Clip startet erst auf Tastendruck, der nächste Druck geht weiter
   );
   const { page, context } = await oeffne(pfad);
   await geheZu(page, 'J12');
-  await page.keyboard.press('ArrowRight');
+  // J12 hat zwei Aufbaustufen (Stimme, Verwurf); der dritte Druck wechselt auf J13.
+  for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowRight');
   assert.equal(await aktuelleId(page), 'J13');
   await page.waitForTimeout(400);
   const laeuft = () =>
     page.evaluate(() => !document.querySelector('.folie[data-id="J13"] video').paused);
   assert.equal(await laeuft(), false, 'kein Autoplay');
+  // Seit 2026-11-16 erst die zwei Aufbaustufen (Raster rot, Ablation), dann der Clip (deck.js: Aufbau vor Clip)
+  for (let i = 1; i <= 2; i++) {
+    await page.keyboard.press('ArrowRight');
+    assert.equal(
+      await page.evaluate(
+        () => document.querySelector('.folie[data-id="J13"]').dataset.aufbauStufe,
+      ),
+      String(i),
+    );
+    assert.equal(await laeuft(), false, `Stufe ${i} startet den Clip nicht`);
+  }
   await page.keyboard.press('ArrowRight');
-  assert.equal(await aktuelleId(page), 'J13', 'erster Druck startet den Clip');
+  assert.equal(await aktuelleId(page), 'J13', 'erster Druck nach den Stufen startet den Clip');
   await page.waitForFunction(() => !document.querySelector('.folie[data-id="J13"] video').paused);
   // Druck während des Clips: ans Ende springen (Ergebnisbild), auf der Folie bleiben
   await page.keyboard.press('ArrowRight');
@@ -246,7 +259,7 @@ test('J13: der Clip startet erst auf Tastendruck, der nächste Druck geht weiter
   });
   assert.equal(amEnde, true, 'Clip steht auf dem letzten Bild');
   await page.keyboard.press('ArrowRight');
-  assert.equal(await aktuelleId(page), 'J15');
+  assert.equal(await aktuelleId(page), 'J13b');
   // Zurück: Clip wieder am Anfang, wartet auf den Tastendruck
   await page.keyboard.press('ArrowLeft');
   assert.equal(await aktuelleId(page), 'J13');
@@ -337,7 +350,7 @@ test('J10 zoomt in drei Schritten über kameraViewBox, Beschriftungen über zoom
       );
     }
     await page.keyboard.press('ArrowRight');
-    assert.equal(await aktuelleId(page), 'J12');
+    assert.equal(await aktuelleId(page), 'J10a');
     // zurück: J10 im Endzustand, dann schrittweise heraus
     await page.keyboard.press('ArrowLeft');
     assert.equal(await aktuelleId(page), 'J10');
@@ -445,6 +458,11 @@ test('Tasten: Home, End, Bild ab/auf, Leertaste; Reserve-Übersicht mit r', asyn
   await page.keyboard.press('PageDown');
   assert.equal(await aktuelleId(page), 'G0');
   await page.keyboard.press('PageDown');
+  assert.equal(await aktuelleId(page), 'GK', 'Systembild nach dem Fahrplan');
+  // GK baut sich in drei Stufen auf; der vierte Druck wechselt zu Niklas.
+  for (let i = 0; i < 3; i++) await page.keyboard.press('PageDown');
+  assert.equal(await aktuelleId(page), 'GK');
+  await page.keyboard.press('PageDown');
   assert.equal(await aktuelleId(page), 'N1', 'Niklas beginnt mit 1A (Platzhalter)');
   await page.keyboard.press('PageDown');
   assert.equal(await aktuelleId(page), 'J1', 'Jonas folgt auf Niklas’ 1A');
@@ -487,7 +505,7 @@ test('Sprungmarke im Adressfeld öffnet die Folie', async () => {
   const { page, context } = await oeffne(deckOhneNiklas, { hash: '#J8' });
   assert.equal(await aktuelleId(page), 'J8');
   await page.keyboard.press('ArrowRight');
-  assert.equal(await page.evaluate(() => location.hash), '#J9');
+  assert.equal(await page.evaluate(() => location.hash), '#J8b');
   await context.close();
 });
 
@@ -615,7 +633,7 @@ test('Layout-Gegenprobe: zweizeiliger Titel, überlappender Beleg, große oder m
           '<pre data-artefakt="budget" class="mono" style="position:relative;top:120px;',
         ),
       };
-    if (f.id === 'R8') return { ...f, inhalt: f.inhalt.replace('width:100%', 'width:1700px') };
+    if (f.id === 'J5b') return { ...f, inhalt: f.inhalt.replace('width:100%', 'width:1700px') };
     // Designregeln T und V: mehrzeiliger und zu großer Vermerk, Inhalt oben ohne Zentrierung
     if (f.id === 'J1')
       return { ...f, inhalt: f.inhalt.replace(/(<p class="beleg">)([^<]*)/, '$1$2 $2 $2') };
@@ -642,7 +660,7 @@ test('Layout-Gegenprobe: zweizeiliger Titel, überlappender Beleg, große oder m
   const befunde = (await layoutBefunde(browser, pfad)).join('\n');
   assert.match(befunde, /J12: Titel zweizeilig/);
   assert.match(befunde, /J7: pre\.mono.* trifft /);
-  assert.match(befunde, /R8: .*(außerhalb der Bühne|ragt aus der Fläche)/);
+  assert.match(befunde, /J5b: .*(außerhalb der Bühne|ragt aus der Fläche)/);
   assert.match(befunde, /J1: p\.beleg.* Vermerk mehrzeilig/);
   assert.match(befunde, /J15: p\.vermerk.* Vermerk 28 px, zu groß/);
   assert.match(befunde, /R7: Inhalt klebt oben/);

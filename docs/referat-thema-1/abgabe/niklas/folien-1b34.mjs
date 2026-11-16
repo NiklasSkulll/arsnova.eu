@@ -35,6 +35,9 @@ const AKTIONEN = [
   ['blitzlicht', 'Tempo'],
 ];
 
+/** Aufbaustufe je Störung auf M1 (0 = von Anfang an sichtbar). */
+export const STUFE_1B34 = { normal: 0, f1: 1, busy: 1, f2: 2, l3: 3 };
+
 const dauer = (ms) => (ms < 1000 ? `${fmt(ms)} ms` : `${fmt(ms / 1000, 1)} s`);
 
 /** Ersatzzeit je Auftrag auf Log-Achse (10 ms bis 1000 s), Frist als Linie; Normalbetrieb grau. */
@@ -91,6 +94,9 @@ export function ersatzSvg(d) {
   zeilen.forEach(([v, name, was, farbe], zi) => {
     const l = d.finde(v);
     const y = y0 + zi * zeileH;
+    // Stufen (data-ab) in der Reihenfolge des Vortrags: schnelle Fehler, DROP, zu spät; Normalbetrieb steht.
+    const stufe = STUFE_1B34[v] ?? 0;
+    if (stufe) t.push(`<g data-ab="${stufe}" data-stoerung="${v}">`);
     t.push(text(0, y + 2, esc(name), { groesse: 26, gewicht: 700 }));
     t.push(text(0, y + 28, esc(was), { groesse: 22, farbe: FARBEN.gedaempft }));
     for (const ms of l.jobsMs) {
@@ -110,6 +116,7 @@ export function ersatzSvg(d) {
         ...(passtRechts ? {} : { anker: 'end' }),
       }),
     );
+    if (stufe) t.push('</g>');
   });
   t.push(
     text(x0, H - 4, 'Zeit bis zum Ersatz je Auftrag (Job-Zeit) · Log-Achse, je Strich × 10', {
@@ -162,6 +169,8 @@ export function folien1B34(
   const l3 = d.finde('l3');
   const busy = d.finde('busy');
   const faktor = f2 ? f2.jobMedianMs / f1.jobMedianMs : null;
+  // Maßstab zum Mitnehmen: Dauerte der Stopp eine Sekunde, wie lange wartete DROP? (Verhältnis der Mediane)
+  const dropMinuten = faktor ? Math.round(faktor / 60) : null;
   const fristS = f1.timeoutMs / 1000;
   const alleErsatzImBudget = laeufe
     .filter((l) => l.variante !== 'normal')
@@ -175,17 +184,24 @@ export function folien1B34(
     inhalt: flaeche(
       frage('Wie schnell liefert die App den Ersatz, wenn die Inferenz gestört ist?', '1B') +
         grafikBox(ersatzSvg(d)) +
+        (dropMinuten
+          ? `<p data-ab="2" class="sekundaer" style="margin:6px 0 0">Im Maßstab: Dauerte der Stopp eine Sekunde, wartete DROP rund ${fmt(dropMinuten)} Minuten (Verhältnis der Mediane).</p>`
+          : '') +
         `<p class="beleg">Vorab festgelegt (${mono(sw.commit)}${swDatum ? `, ${swDatum}` : ''}): Ersatz ≤ Frist + ${fmt(sw.fallbackPufferMs / 1000)} s, Stopp im Median ≤ ${fmt(sw.f1MedianMaxMs / 1000)} s, DROP > ${fmt(sw.f2ZuF1Min)} × Stopp; alle drei erfüllt</p>`,
     ),
-    notiz: `Danke, Jonas. Er hat gefragt: Was passiert, wenn der zweite Host langsam ist oder ausfällt? Ich habe die Runtime im Labor gezielt gestört, jeweils unter derselben Beitrittswelle wie in 1A. Ist der Container gestoppt, wird die Verbindung sofort abgewiesen, und die App liefert die extraktive Zusammenfassung nach ${fmt(f1.jobMedianMs)} Millisekunden im Median; bei belegtem Slot nach ${fmt(busy?.jobMedianMs ?? 0)} Millisekunden. Verwirft die Firewall die Pakete, merkt die App das erst nach rund ${fmt((f2?.jobMedianMs ?? 0) / 1000)} Sekunden, und antwortet die Runtime erst nach der Frist, wartet sie die vollen ${fmt(fristS)} Sekunden. Alle Kriterien standen vor der ersten Reihe fest und sind erfüllt${faktor ? `; DROP dauert etwa ${fmt(Math.round(faktor / 100) * 100)}-mal so lang wie Stopp` : ''}. Ein stummer Host ist also teurer als ein toter.`,
+    notiz: `Danke, Jonas. Er hat gefragt: Was passiert, wenn der zweite Host langsam ist oder ausfällt? Oben links ist dieser zweite Host im Systembild markiert. Ich habe die Runtime im Labor gezielt gestört, jeweils unter derselben Beitrittswelle wie in 1A. Die Achse zeigt die Zeit bis zum Ersatz je Auftrag, logarithmisch; rechts steht die Frist von ${fmt(fristS)} Sekunden. Grau ist der Normalbetrieb: Die Inferenz läuft, und die Antwort verwirft das Gate, wie bei Jonas. [Weiter] Ist der Container gestoppt, wird die Verbindung sofort abgewiesen, und die App liefert die extraktive Zusammenfassung nach ${fmt(f1.jobMedianMs)} Millisekunden im Median; bei belegtem Slot nach ${fmt(busy?.jobMedianMs ?? 0)} Millisekunden. [Weiter] Verwirft die Firewall die Pakete, merkt die App das erst nach rund ${fmt((f2?.jobMedianMs ?? 0) / 1000)} Sekunden.${dropMinuten ? ` Im Maßstab: Dauerte der Stopp eine Sekunde, wartete DROP rund ${fmt(dropMinuten)} Minuten.` : ''} [Weiter] Antwortet die Runtime erst nach der Frist, wartet die App die vollen ${fmt(fristS)} Sekunden. Alle Kriterien standen vor der ersten Reihe fest und sind erfüllt. Ein stummer Host ist also teurer als ein toter.`,
     stichpunkte: [
       '„Danke, Jonas.“ Seine Frage: Was, wenn der zweite Host langsam ist oder ausfällt?',
-      `Stopp: Ersatz nach ${dauer(f1.jobMedianMs)}, Slot belegt ${dauer(busy?.jobMedianMs ?? 0)} (Median)`,
-      `DROP: ${dauer(f2?.jobMedianMs ?? 0)}, Antwort nach der Frist: ${dauer(l3?.jobMedianMs ?? 0)}`,
-      `Kriterien vorab (${sw.commit}) alle erfüllt${alleErsatzImBudget ? ', jeder Ersatz innerhalb der Frist' : ''}`,
-      'Stumm ist teurer als tot',
+      `Achse: Zeit bis zum Ersatz, log; Frist ${fmt(fristS)} s; grau = Normalbetrieb`,
+      `[Weiter] Stopp: Ersatz nach ${dauer(f1.jobMedianMs)}, Slot belegt ${dauer(busy?.jobMedianMs ?? 0)} (Median)`,
+      `[Weiter] DROP: ${dauer(f2?.jobMedianMs ?? 0)}${dropMinuten ? `; Bild: Stopp 1 s → DROP rund ${fmt(dropMinuten)} min` : ''}`,
+      `[Weiter] Antwort nach der Frist: ${dauer(l3?.jobMedianMs ?? 0)}`,
+      `Kriterien vorab (${sw.commit}) alle erfüllt${alleErsatzImBudget ? ', jeder Ersatz in der Frist' : ''}; stumm ist teurer als tot`,
     ],
-    zeitS: 45,
+    zeitS: 75,
+    aufbau: 3,
+    // Ausschnitt im Systembild von GK oben links: der zweite Host (deck.mjs ortsmarke)
+    systemTeil: '1b34',
     quelle,
     fuss,
   };
@@ -242,7 +258,7 @@ export function folien1B34(
       'Schritt 4: zweite Rolle bleibt (ADR-0035); Gewinn gemessen, Aufwand nicht in Stunden',
       'Risiko: stummer Host bindet Aufträge bis zur Frist',
     ],
-    zeitS: 45,
+    zeitS: 60,
     quelle: `${quelle}; p95 gepoolt über alle Fenster (fasseLaufzeitenZusammen), Referenz B0 = F1; F2, L3 und Slot belegt auf Commit 2b39b9df, F1 auf 5e758d0a (versionsübergreifend, Produktionscode unverändert laut Versionsnachtrag; automatischer Vergleich meldet MANIFEST_MISSING_OR_DIFFERENT); App-CPU/RSS aus treiber.auftraege[].measurement.resources (RSS-Summe zählt geteilte Seiten ggf. mehrfach); Kosten Schritt 4 aus evidenz/1B/runbook.md (Aufbau, Abschnitt 2), nicht gemessen`,
     fuss,
   };

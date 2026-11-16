@@ -53,10 +53,10 @@ after(async () => {
 
 // ---------------------------------------------------------------- Aufbau und Zeit
 
-test('1A: acht Folien im Vortrag (N3 und N8 als Reserve), Literatur NL im Anhang', () => {
+test('1A: elf Folien im Vortrag (N3, N6b, N8 seit 2026-11-16 aus der Reserve), Literatur NL im Anhang', () => {
   assert.deepEqual(
     haupt1A.map((f) => f.id),
-    ['N1', 'N2', 'N4', 'N5', 'N6', 'N7', 'N9', 'N10'],
+    ['N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'N6b', 'N7', 'N8', 'N9', 'N10'],
   );
   assert.deepEqual(
     n1a.filter((f) => f.anhang).map((f) => f.id),
@@ -64,25 +64,26 @@ test('1A: acht Folien im Vortrag (N3 und N8 als Reserve), Literatur NL im Anhang
   );
   assert.deepEqual(
     reserve1A.map((f) => f.id),
-    ['RN1', 'RN2', 'RN3', 'RN4'],
+    ['RN2'],
   );
   assert.ok(reserve1A.every((f) => f.autor === 'niklas' && f.zeitS === 0));
   assert.ok(haupt1A.every((f) => f.auftrag === '1A' && f.station === null));
 });
 
-test('Zeit: Niklas höchstens 10:30 min samt Rahmen (Titel, Fahrplan, Fazit, Dank); N2, N4, N7; Kurzfassung', () => {
+test('Zeit: Niklas 14:00–15:00 min samt Rahmen (Titel, Fahrplan, Systembild, Fazit, Dank); N2, N4, N7; Kurzfassung', () => {
   const s = summe(haupt1A);
-  assert.ok(s >= 380 && s <= 420, `1A ${s} s`);
-  // Alle Rahmenfolien spricht Niklas (Absprache 2026-11-16); 1B 3–4 höchstens zwei Folien, höchstens 90 s
+  assert.ok(s >= 540 && s <= 580, `1A ${s} s`);
+  // Alle Rahmenfolien spricht Niklas (Absprache 2026-11-16); 1B 3–4 zwei Folien, höchstens 150 s
   const rahmen = alle.filter((f) => f.teil === 'rahmen');
   assert.deepEqual(
     rahmen.map((f) => f.id),
-    ['GT', 'G0', 'G9', 'GD'],
+    ['GT', 'G0', 'GK', 'G9', 'GD'],
   );
   for (const f of rahmen) assert.equal(f.sprecher, 'niklas', f.id);
-  assert.ok(n1b.length <= 2 && summe(n1b) <= 90, `1B 3–4 ${summe(n1b)} s`);
+  assert.ok(n1b.length <= 2 && summe(n1b) <= 150, `1B 3–4 ${summe(n1b)} s`);
   const gesamt = s + summe(n1b) + summe(rahmen);
-  assert.ok(gesamt <= 630, `Niklas ${gesamt} s`);
+  // Entscheidung der Autoren 2026-11-16: 15 min Redezeit je Person (ersetzt höchstens 10:30 min)
+  assert.ok(gesamt >= 840 && gesamt <= 900, `Niklas ${gesamt} s`);
   // Prüfungsschritt 1 (N2), Vorab-Festlegung (N4), Diskussionskern Ursache (N7): je 30–50 s
   for (const id of ['N2', 'N4', 'N7']) {
     const f = haupt1A.find((x) => x.id === id);
@@ -124,7 +125,7 @@ test('Sprechnotizen: Fließtext etwa 130 Wörter je Minute, 3–6 Stichpunkte, [
   assert.match(md, /\*\*Stichpunkte\*\*/);
   assert.match(md, /\*\*Fließtext\*\*/);
   assert.match(md, /## G9 /);
-  assert.match(md, /## RN1 /);
+  assert.match(md, /## RN2 /);
   assert.doesNotMatch(md, /## NL /, 'Literatur ohne Redezeit nicht in den Notizen');
 });
 
@@ -188,6 +189,8 @@ function erlaubt() {
   const takt = d.konfig.profil.durationMs / 1000 / (d.analyseGeplantJeVariante / d.konfig.hosts);
   zahl(takt);
   zahl(takt * d.konfig.hosts);
+  // abgeleitet (N7, Maßstab des Ausreißers): gesamtes Messfenster aller Läufe in Minuten
+  zahl((d.live.laeufe * d.konfig.profil.durationMs) / 60000);
   for (let i = 0; i <= 5; i++) w.add(String(i)); // Blöcke, Varianten, Stufen
   return w;
 }
@@ -197,6 +200,8 @@ const FESTWERTE_NIKLAS = {
   8: 'ADR-0035 „8 vCPU“',
   '0,1': 'Achsenmarke 0,1 s',
   '2,5': '1B-ergebnis.md „im Median 148,6 s“',
+  // N8, Bild zur Drosselung: Standardtakt von cpu.max (Kernel-Doku cgroup v2, „max 100000“ µs = 100 ms)
+  100: 'Kernel-Doku cgroup v2, cpu.max „max 100000“',
 };
 
 test('Keine Zahl auf den 1A-Folien, die nicht aus den Daten kommt', () => {
@@ -374,7 +379,7 @@ test('Layout: Niklas-Folien und Rahmen ohne Überlappung, Vermerke einzeilig, ke
   assert.deepEqual(befunde, []);
 });
 
-test('Reihenfolge: GT, G0, Niklas 1A, Jonas, Niklas 1B 3–4, G9, GD, Anhang, Reserve', async () => {
+test('Reihenfolge: GT, G0, GK, Niklas 1A, Jonas, Niklas 1B 3–4, G9, GD, Anhang, Reserve', async () => {
   const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
   await page.goto(pathToFileURL(deck).href);
   const ids = await page.evaluate(() =>
@@ -383,8 +388,8 @@ test('Reihenfolge: GT, G0, Niklas 1A, Jonas, Niklas 1B 3–4, G9, GD, Anhang, Re
   await page.close();
   const pos = (id) => ids.findIndex(([x]) => x === id);
   assert.deepEqual(
-    ids.slice(0, 3).map(([x]) => x),
-    ['GT', 'G0', 'N1'],
+    ids.slice(0, 4).map(([x]) => x),
+    ['GT', 'G0', 'GK', 'N1'],
   );
   // Niklas 1A → Jonas → Niklas 1B 3–4 → Fazit (Design 2026-11-15, Abschnitt 3)
   assert.equal(pos('J1'), pos('N10') + 1, 'Jonas folgt direkt auf N10');
@@ -394,8 +399,8 @@ test('Reihenfolge: GT, G0, Niklas 1A, Jonas, Niklas 1B 3–4, G9, GD, Anhang, Re
     ids.slice(pos('G9') + 1, pos('G9') + 4).map(([x]) => x),
     ['GD', 'J16', 'NL'],
   );
-  assert.ok(pos('RN1') > pos('NL'));
-  assert.equal(ids.find(([x]) => x === 'RN1')[1], 'reserve');
+  assert.ok(pos('RN2') > pos('NL'));
+  assert.equal(ids.find(([x]) => x === 'RN2')[1], 'reserve');
 });
 
 /** Sichtbare Folien im Druck mit ?druck=… */
@@ -481,7 +486,7 @@ test('N6 baut in drei Stufen auf: 4, dann 7, dann 11 Treffer; rückwärts ins En
   const { verlauf, uebergang } = await ablauf('N6', 3, 'no-preference');
   // je Stufe: Treffer-Zellen plus genau eine Erklärzeile
   // Stufe 0: nur Umrisse und Erklärzeile; ab Stufe 1 zusätzlich die graue Füllung samt Legende „hält“
-  assert.deepEqual(verlauf, ['N6:0:1', 'N6:1:6', 'N6:2:9', 'N6:3:13', 'N7:0:0', 'N6:3:13']);
+  assert.deepEqual(verlauf, ['N6:0:1', 'N6:1:6', 'N6:2:9', 'N6:3:13', 'N6b:-:0', 'N6:3:13']);
   const ms = parseFloat(uebergang.split(',')[0]) * 1000;
   assert.ok(ms >= 150 && ms <= 300, `Übergang ${uebergang}`);
 });
@@ -489,7 +494,7 @@ test('N6 baut in drei Stufen auf: 4, dann 7, dann 11 Treffer; rückwärts ins En
 test('N7 baut in zwei Stufen auf (Latenz, dann Analyse, dann CPU); reduzierte Bewegung ohne Übergang', async () => {
   const normal = await ablauf('N7', 2, 'no-preference');
   // Stufe 0: nichts mit data-ab; 1: Band und Analyse; 2: zusätzlich CPU
-  assert.deepEqual(normal.verlauf, ['N7:0:0', 'N7:1:2', 'N7:2:3', 'N9:-:0', 'N7:2:3']);
+  assert.deepEqual(normal.verlauf, ['N7:0:0', 'N7:1:2', 'N7:2:3', 'N8:-:0', 'N7:2:3']);
   const reduziert = await ablauf('N7', 2, 'reduce');
   assert.deepEqual(reduziert.verlauf, normal.verlauf);
   assert.equal(reduziert.uebergang, '0s');
@@ -514,4 +519,47 @@ test('Druck: N6 und N7 stehen im Endbild', async () => {
   );
   await page.close();
   assert.deepEqual(sichtbar, [13, 3]);
+});
+
+// ---------------------------------------------------------------- Ergänzt 2026-11-16: Ortsmarken, M1 in Stufen
+
+test('Ortsmarken: N1 Ausschnitt 1A im Systembild, N2–N9 Ort auf dem App-Host, M1 der zweite Host', async () => {
+  const { ORT_1A } = await import('./grafik-1a.mjs');
+  assert.equal(haupt1A[0].systemTeil, '1a');
+  const orte = Object.fromEntries(haupt1A.map((f) => [f.id, f.ort1A]));
+  assert.deepEqual(orte, {
+    N1: undefined,
+    N2: 'host',
+    N3: 'spacy',
+    N4: 'live',
+    N5: 'live',
+    N6: 'live',
+    N6b: 'live',
+    N7: 'live',
+    N8: 'spacy',
+    N9: 'ersatz',
+    N10: undefined,
+  });
+  for (const o of Object.values(orte)) if (o) assert.ok(ORT_1A[o], o);
+  assert.equal(n1b[0].systemTeil, '1b34');
+  // Im Deck: Ortsmarke ohne Bewegung, auch im Druck sichtbar
+  assert.match(html, /data-ort="system-1a"/);
+  assert.match(html, /data-ort="1a-spacy"/);
+  assert.match(html, /data-ort="system-1b34"/);
+});
+
+test('M1: Störungen als Stufen (Stopp und Slot, DROP, zu spät) und Maßstab aus dem Verhältnis der Mediane', () => {
+  const d1b = ladeDaten1B34(ROOT);
+  const m1 = n1b.find((f) => f.id === 'M1');
+  assert.equal(m1.aufbau, 3);
+  const stufen = Object.fromEntries(
+    [...m1.inhalt.matchAll(/data-ab="(\d)" data-stoerung="([a-z0-9]+)"/g)].map((m) => [
+      m[2],
+      Number(m[1]),
+    ]),
+  );
+  assert.deepEqual(stufen, { f1: 1, busy: 1, f2: 2, l3: 3 });
+  assert.equal((m1.notiz.match(/\[Weiter\]/g) ?? []).length, 3);
+  const minuten = Math.round(d1b.finde('f2').jobMedianMs / d1b.finde('f1').jobMedianMs / 60);
+  assert.match(ohneTags(m1.inhalt), new RegExp(`wartete DROP rund ${minuten} Minuten`));
 });

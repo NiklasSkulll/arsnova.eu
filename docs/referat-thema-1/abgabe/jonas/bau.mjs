@@ -29,7 +29,7 @@ import process from 'node:process';
 import { parseArgs } from 'node:util';
 
 import { baueDeck } from './deck.mjs';
-import { FESTWERTE, folien, ladeFolienDaten } from './folien.mjs';
+import { DIAGRAMME, FESTWERTE, folien, ladeFolienDaten } from './folien.mjs';
 import { niklasSeiten } from './niklas-seiten.mjs';
 import { eingabenNiklas, niklasTeile } from '../niklas/teile.mjs';
 
@@ -89,17 +89,17 @@ function ladeAbhaengigkeit(name) {
 }
 
 /**
- * Redebudget je Person = Abbruchgrenze. Seit 2026-11-16 (Absprache der Gruppe) darf jede Person etwas über
- * 9:00 min sprechen, höchstens etwa 10:30 min samt ihrem Anteil an den Rahmenfolien; der Rest der 15 min
- * bleibt für die Diskussion.
+ * Redebudget je Person = Abbruchgrenze. Seit 2026-11-16 (Entscheidung der Autoren, ersetzt die Absprache vom
+ * selben Tag mit 10:30 min) plant jede Person 15 min Redezeit samt ihrem Anteil an den Rahmenfolien; die
+ * Fragen kommen hinzu.
  */
-const ABBRUCH_S = 10 * 60 + 30;
+const ABBRUCH_S = 15 * 60;
 const BUDGET_S = ABBRUCH_S;
 
 /**
- * Sprungplan für einen Abbruch nach etwa 10:30 min: Die Zielfolien (Jonas J13 und J15, Niklas N10, 1B 3–4,
+ * Sprungplan für einen Abbruch nach 15:00 min: Die Zielfolien (Jonas J13 und J15, Niklas N10, 1B 3–4,
  * G9 und GD) müssen gesprochen sein. Gezählt wird nur die eigene Redezeit ab der ersten eigenen Folie
- * (Stoppuhr beim ersten Satz, angehalten, solange die andere Person spricht); spätester Sprung = 10:30 minus
+ * (Stoppuhr beim ersten Satz, angehalten, solange die andere Person spricht); spätester Sprung = 15:00 minus
  * die Zeit der Zielfolien.
  * @param {object[]} haupt eigene Hauptfolien in Vortragsreihenfolge
  * @param {string[]} ziele Kennungen, die gesprochen sein müssen (in Reihenfolge)
@@ -315,7 +315,7 @@ export function folienNiklas(alle, niklas) {
     (f) => typeof f === 'object' && !f.anhang,
   );
   const rahmen = alle.filter((f) => f.sprecher === 'niklas');
-  const vorn = rahmen.filter((f) => ['GT', 'G0'].includes(f.id));
+  const vorn = rahmen.filter((f) => ['GT', 'G0', 'GK'].includes(f.id));
   const hinten = rahmen.filter((f) => !vorn.includes(f));
   return [
     ...vorn,
@@ -400,6 +400,8 @@ async function main() {
   const mitClip = existsSync(clip);
   const festeEingaben = [
     ...DATEN.map((p) => join(ROOT, p)),
+    // Abb. 1 und 2 aus 1C-diagrams.md (R15, R16)
+    ...Object.values(DIAGRAMME).map(([p]) => join(ROOT, p)),
     ...[...new Set(Object.values(FESTWERTE).map((f) => f.quelle))]
       .map((p) => join(ROOT, p))
       .filter((p) => existsSync(p)),

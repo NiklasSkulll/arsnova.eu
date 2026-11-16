@@ -65,3 +65,26 @@ Dazu wünschte der Autor Titel-, Fahrplan- und Dankfolie und einen Designdurchga
 - Aufbaustufen bei Jonas nur auf J9 (Vorhersage, dann Beleg: Schwellen → Netz, Transport, Adapter → Inferenz) und J15 (Entscheidungen → Diskussionsfrage → Übergabe).
 - Farben: Etiketten 1C Petrol, 1B Bernstein, 1A Blau auch auf G0; auf N10 ist „Begründung“ neutral statt Petrol (Petrol steht für 1C).
 - Zeit: Jonas 10:05 min mit G0 (G0 jetzt 35 s). Niklas 13:10 min Langfassung bleibt offen; seine Kurzfassung mit G9 dauert 10:25 min und gilt laut Sprechnotizen als Vortragsplan, bis er kürzt. Sprungplan beider Personen ab der ersten eigenen Folie.
+
+## 15 Minuten Redezeit je Person, Kontextfolie, Visualisierungen (_Ergänzt 2026-11-16_)
+
+Anlass: Die Autoren planen mit 15 Minuten **Redezeit** je Person; die Fragen kommen hinzu. Das ersetzt die
+Grenze von etwa 10:30 min (Abschnitt oben). Mehr Tiefe statt Füllstoff: starke Reservefolien kommen dorthin
+zurück, wo sie das Argument tragen.
+
+- **Reihenfolge:** GT, G0, **GK** (neu, „Was ist arsnova?“, Systembild in drei Stufen, spricht Niklas), N1–N10
+  mit **N3** (Varianten, bis dahin RN3), **N6b** (Regelempfindlichkeit, RN1) und **N8** (spaCy-Budget, RN4), J1–J15
+  mit **J5b** (Autorisierung, R8), **J8b** (Kontrolle C0, R2), **J10a** (Kaltläufe, R4), **J10b** (Ausfall B0, R3),
+  **J11** (Timeout und Speicher, R13) und **J13b** (Einordnung Cloud Computing, R14), M1–M2, G9, GD, Anhang,
+  Reserve (Jonas R1, R5–R7, R9–R12, neu R15 und R16 mit Abb. 1 und 2 aus `1C-diagrams.md`; Niklas RN2).
+- **Zeit:** Jonas 14:35 min (J1–J16), Niklas 14:10 min (GT, G0, GK, 1A, 1B 3–4, G9, GD). Sprungplan, Budget und
+  Sprechkarten zählen gegen 15:00 min (`bau.mjs`, `ABBRUCH_S`); Tests verlangen je Person 14:00–15:00 min.
+- **Ortsmarken:** Systembild von GK klein oben links auf N1, J1 und M1 (eigener Teil gefüllt), Karte des App-Hosts
+  auf N2–N9 (Live-Pfad, Nebenzweig spaCy, Frist und Ersatz); Jonas' wandernder Punkt bleibt.
+- **Aufbaustufen neu:** GK (drei), J7 (Budget, dann echte Tokens), J12 (Zeitleiste: Stimme, dann Verwurf),
+  J13 (Raster der 38 Antworten rot, dann Ablation; der Clip erst danach), M1 (je Störung eine Stufe). Analogien aus
+  den Daten: M1 „Stopp 1 s → DROP rund 47 min“, Notizen N7 und N8. Urteile zu allen Ideen:
+  Arbeitsnotiz `visualisierung.md` des Teams (nicht im Repo).
+- **Nachweisumfang:** [`nachweisumfang.md`](../nachweisumfang.md), auf GD als ein ruhiger Satz.
+- **Codeprüfung:** J13 korrigiert (`12f1d8e4` änderte Instruktion und Gate, `a998ada0` nur das Gate); 1A nennt
+  `a19ca70f` „nach v1.4.0“ statt v1.4.0.
