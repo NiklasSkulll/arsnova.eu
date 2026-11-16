@@ -73,3 +73,13 @@ die Herkunft von Niklas' Teilen.
 | `jonas-folien.pdf`     | Nur Jonas' Folien (J1–J10, J12, J13, J15, J16) und Reserve, einzeln zuordenbar  |
 | `sprechnotizen.md`     | Notizen je Folie mit Sekunden, kumulierter Zeit und Kürzung auf die Kurzfassung |
 | `manifest.json`        | SHA-256 aller Ein- und Ausgaben, Seitenzahlen                                   |
+
+## Abgabe mit Matrikelnummern (nur lokal)
+
+Die Prüfung verlangt Name und Matrikelnummer aller Gruppenmitglieder auf jeder Einreichung, das Repo darf keine Matrikelnummer enthalten. Deshalb setzt ein eigener Schritt die Nummern erst nach dem Bauen auf Seite 1 der Folien-PDFs:
+
+1. `abgabe-lokal.beispiel.json` nach `abgabe-lokal.json` kopieren und ausfüllen (von Git ignoriert, siehe `.gitignore` hier).
+2. `node docs/referat-thema-1/abgabe/jonas/bau.mjs …` wie oben.
+3. `node docs/referat-thema-1/abgabe/jonas/abgabe-lokal.mjs` schreibt `abgabe-lokal/jonas-folien.pdf` und `abgabe-lokal/gemeinsames-deck.pdf` (ebenfalls ignoriert).
+
+Das Skript bricht ab, wenn Eingabe oder Ausgabe nicht ignoriert sind oder eine PDF noch Entwurfsmarker oder Platzhalter („Entwurf“, „[Niklas]“, „[Satz …]“, „[Titel]“) trägt.
