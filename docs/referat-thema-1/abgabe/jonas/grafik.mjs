@@ -277,7 +277,7 @@ export function zeitzerlegungSvg(b1, { kalt = true } = {}) {
     text(
       0,
       542,
-      'Log-Achse, je Strich ×10. Schwellen vorab (ADR 1B-008). Der Anteil gilt für diese langsame CPU.',
+      'Log-Achse, je Strich ×10. Schwellen vorab (ADR 1B-008). Anteil für diese langsame CPU, am schnelleren PC ebenfalls über 99 %.',
       { groesse: 24, farbe: FARBEN.text2 },
     ),
   );
