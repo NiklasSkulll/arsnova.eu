@@ -63,6 +63,16 @@ test('zeitzerlegungSvg: Werte, Schwellen und Gruppen der Mediane', () => {
   assert.ok(svg.includes('T_job kalt') && svg.includes('Median, n = 5'));
   assert.ok(svg.includes('langsame CPU')); // ADR 1B-008: Anteil nur mit Hinweis
   assert.ok(!zeitzerlegungSvg(b1, { kalt: false }).includes('200,5 s'));
+  // Audit 2026-11-16: Punkte statt Balken (Log-Achse), kalter Auftrag als Bezugsmarke, nicht als Teil
+  // Rechtecke nur weiß: Hintergrund und Felder hinter Beschriftungen, keine Balken
+  assert.equal(
+    anzahl(svg.replace(/<rect [^>]*fill="#ffffff"[^>]*\/>/g, ''), /<rect /g),
+    0,
+    'keine Balken',
+  );
+  assert.equal(anzahl(svg, /data-punkt="/g), 4);
+  assert.equal(anzahl(svg, /data-bezug="kalt"/g), 1);
+  assert.ok(svg.includes('Netz + Server ohne Inferenz'));
 });
 
 test('wegSvg: genau ein aktiver Marker, Stationen, Etiketten, Hosts, Messpunkte', () => {

@@ -112,16 +112,24 @@ const STRICHE = [
 ];
 
 /**
- * Zeitzerlegung eines Auftrags auf Log-Achse (J9). Netz, Transport und Adapter sind Mediane über
- * alle Aufträge, Inferenz der Median warm (Auftrag 1 ist kalt, ADR 1B-011), kalt der Median der
- * Läufe mit frischer Runtime. Jede Zeile nennt ihre Gruppe.
+ * Zeitzerlegung eines Auftrags auf Log-Achse (J9) als Punktdiagramm: Auf einer Log-Achse täuschen
+ * Balkenlängen über das Verhältnis (99,9 % Inferenz sähe aus wie „etwas länger als der Adapter“), deshalb
+ * nur Punkte an ihrer Position, ohne Balken. Netz, Transport und Adapter sind Mediane über alle
+ * Aufträge, Inferenz der Median warm (Auftrag 1 ist kalt, ADR 1B-011). Der kalte Auftrag (Median der
+ * Läufe mit frischer Runtime) ist kein Teil der Zerlegung: Er steht als senkrechte Bezugsmarke.
  */
 export function zeitzerlegungSvg(b1, { kalt = true } = {}) {
   const alle = `Median, alle ${b1.anzahl}`;
   const nWarm = b1.anzahl - 1; // Auftrag 1 kalt, 2…n warm (ADR 1B-011)
   const zeilen = [
     { name: 'Netz', gruppe: alle, ms: b1.netzMs, wert: `${fmt(b1.netzMs, 2)} ms` },
-    { name: 'Transport', gruppe: alle, ms: b1.transportMs, wert: `${fmt(b1.transportMs, 1)} ms` },
+    {
+      name: 'Transport',
+      gruppe: alle,
+      ms: b1.transportMs,
+      wert: `${fmt(b1.transportMs, 1)} ms`,
+      zusatz: 'Netz + Server ohne Inferenz',
+    },
     { name: 'Adapter', gruppe: alle, ms: b1.adapterMs, wert: `${fmt(b1.adapterMs, 0)} ms` },
     {
       name: 'Inferenz',
@@ -131,27 +139,27 @@ export function zeitzerlegungSvg(b1, { kalt = true } = {}) {
       haupt: true,
     },
   ];
-  if (kalt) {
-    zeilen.push({
-      name: 'T_job kalt',
-      gruppe: `Median, n = ${b1.nKaltLaeufe}`,
-      ms: b1.kaltMedianS * 1000,
-      wert: `${fmt(b1.kaltMedianS, 1)} s`,
-      kalt: true,
-    });
-  }
 
-  const oben = 30;
+  const oben = 84;
   const unten = 450;
+  // Mono-Text auf weißem Feld statt Halo (ein Halo erscheint im PDF-Text doppelt, Handout-Wortzahl).
+  const MONO_BREITE = 0.6;
+  const aufWeiss = (x, y, inhalt, o) => {
+    const breite = r2(inhalt.length * MONO_BREITE * o.groesse + 12);
+    const links = o.anker === 'end' ? x - breite + 6 : x - 6;
+    return (
+      `<rect x="${r2(links)}" y="${r2(y - o.groesse * 0.9)}" width="${breite}" height="${r2(o.groesse * 1.2)}" fill="${FARBEN.weiss}"/>` +
+      text(x, y, esc(inhalt), { mono: true, ...o })
+    );
+  };
   const takt = (unten - oben) / zeilen.length;
-  const balkenH = 40;
   const teile = [];
 
   // Raster: nur Dekaden (je Strich ×10); Zwischenstriche machten die Fläche bei 960 px unruhig.
   for (const [ms, label] of STRICHE) {
     const x = r2(logX(ms, ACHSE));
     teile.push(
-      `<line x1="${x}" y1="${oben}" x2="${x}" y2="${unten}" stroke="${FARBEN.linie}" stroke-width="2"/>`,
+      `<line x1="${x}" y1="${oben - 24}" x2="${x}" y2="${unten}" stroke="${FARBEN.linie}" stroke-width="2"/>`,
       text(x, unten + 36, label, {
         mono: true,
         groesse: 24,
@@ -161,10 +169,31 @@ export function zeitzerlegungSvg(b1, { kalt = true } = {}) {
     );
   }
 
+  // Bezugsmarke: kalter Auftrag (eigene Gruppe, Nachtrag M4), über alle Zeilen, beschriftet oben.
+  if (kalt) {
+    const xk = r2(logX(b1.kaltMedianS * 1000, ACHSE));
+    teile.push(
+      `<line data-bezug="kalt" x1="${xk}" y1="${oben - 24}" x2="${xk}" y2="${unten}" stroke="${FARBEN.bernstein}" stroke-width="3" stroke-dasharray="10 7"/>`,
+      text(xk + 12, 26, esc(`T_job kalt ${fmt(b1.kaltMedianS, 1)} s`), {
+        mono: true,
+        groesse: 24,
+        gewicht: 600,
+        farbe: FARBEN.bernsteinText,
+        anker: 'end',
+      }),
+      text(xk + 12, 52, esc(`Median, n = ${b1.nKaltLaeufe}`), {
+        mono: true,
+        groesse: 22,
+        farbe: FARBEN.gedaempft,
+        anker: 'end',
+      }),
+    );
+  }
+
   const schwelle = (x, cy, label, ok) => {
     const xs = r2(x);
     return (
-      `<line x1="${xs}" y1="${r2(cy - 30)}" x2="${xs}" y2="${r2(cy + 30)}" stroke="${FARBEN.tinte}" stroke-width="3" stroke-dasharray="8 6"/>` +
+      `<line x1="${xs}" y1="${r2(cy - 26)}" x2="${xs}" y2="${r2(cy + 26)}" stroke="${FARBEN.tinte}" stroke-width="3" stroke-dasharray="8 6"/>` +
       // Haken vor dem Text: sein Abstand hängt so nicht von der gemessenen Textbreite ab.
       (ok ? haken : kreuz)(x + 14, cy + 4, ok ? FARBEN.tinte : FARBEN.rot) +
       text(x + 44, cy + 8, esc(label), { mono: true, groesse: 22, halo: FARBEN.weiss })
@@ -172,35 +201,18 @@ export function zeitzerlegungSvg(b1, { kalt = true } = {}) {
   };
 
   zeilen.forEach((z, i) => {
-    const cy = oben + takt * (i + 0.5);
-    const xEnde = logX(z.ms, ACHSE);
-    const breite = r2(xEnde - ACHSE.x0);
+    const cy = r2(oben + takt * (i + 0.5));
+    const x = r2(logX(z.ms, ACHSE));
     teile.push(
       text(226, cy + 4, esc(z.name), { groesse: 30, gewicht: z.haupt ? 700 : 400, anker: 'end' }),
       text(226, cy + 34, esc(z.gruppe), {
         mono: true,
-        groesse: 24,
+        groesse: z.name === 'Transport' ? 22 : 24,
         farbe: FARBEN.gedaempft,
         anker: 'end',
       }),
-    );
-    const y = r2(cy - balkenH / 2);
-    if (z.kalt) {
-      teile.push(
-        `<rect x="${ACHSE.x0 + 1.5}" y="${r2(y + 1.5)}" width="${r2(breite - 3)}" height="${balkenH - 3}" fill="${FARBEN.bernsteinHell}" stroke="${FARBEN.bernstein}" stroke-width="3"/>`,
-      );
-    } else {
-      teile.push(
-        `<rect x="${ACHSE.x0}" y="${y}" width="${breite}" height="${balkenH}" fill="${z.haupt ? FARBEN.bernstein : FARBEN.bernsteinMittel}"/>`,
-      );
-    }
-    teile.push(
-      text(xEnde + 16, cy + 9, esc(z.wert), {
-        mono: true,
-        groesse: 26,
-        gewicht: 600,
-        halo: FARBEN.weiss,
-      }),
+      // Zeilenlinie über die ganze Achse: führt das Auge, codiert aber keine Länge.
+      `<line x1="${ACHSE.x0}" y1="${cy}" x2="${ACHSE.x1}" y2="${cy}" stroke="${FARBEN.raster}" stroke-width="2"/>`,
     );
     if (z.name === 'Netz') {
       teile.push(
@@ -217,21 +229,46 @@ export function zeitzerlegungSvg(b1, { kalt = true } = {}) {
         ),
       );
     }
+    teile.push(
+      `<circle data-punkt="${esc(z.name)}" cx="${x}" cy="${cy}" r="${z.haupt ? 14 : 11}" fill="${z.haupt ? FARBEN.bernstein : FARBEN.bernsteinMittel}" stroke="${FARBEN.bernstein}" stroke-width="3"/>`,
+    );
     if (z.haupt) {
-      // H_B3 ist ein Anteil, keine Zeit: als Text im Balken, rechtsbündig.
+      // Wert links vom Punkt (rechts liegt die Kaltmarke), darüber der Anteil; H_B3 ist ein Anteil, keine Zeit.
       const ok = b1.inferAnteil >= SCHWELLE.inferAnteil;
-      const label = `Anteil ${fmt(b1.inferAnteil * 100, 2)} % (${alle}) · Schwelle ≥ 95 %`;
-      const xr = xEnde - 54;
       teile.push(
-        text(xr, cy + 9, esc(label), {
+        text(x - 28, cy + 9, esc(z.wert), {
           mono: true,
-          groesse: 24,
-          gewicht: 600,
-          farbe: FARBEN.weiss,
+          groesse: 28,
+          gewicht: 700,
           anker: 'end',
+          halo: FARBEN.weiss,
         }),
-        (ok ? haken : kreuz)(xr + 12, cy + 4, FARBEN.weiss),
+        aufWeiss(
+          x - 28,
+          cy - 34,
+          `Anteil ${fmt(b1.inferAnteil * 100, 2)} % (${alle}) · Schwelle ≥ 95 %`,
+          {
+            groesse: 22,
+            farbe: FARBEN.text2,
+            anker: 'end',
+          },
+        ),
+        (ok ? haken : kreuz)(x - 4, cy - 38, ok ? FARBEN.tinte : FARBEN.rot),
       );
+    } else {
+      teile.push(
+        text(x + 22, cy - 14, esc(z.wert), {
+          mono: true,
+          groesse: 26,
+          gewicht: 600,
+          halo: FARBEN.weiss,
+        }),
+      );
+      if (z.zusatz) {
+        teile.push(
+          aufWeiss(x + 22, cy + 34, `(${z.zusatz})`, { groesse: 22, farbe: FARBEN.text2 }),
+        );
+      }
     }
   });
 
@@ -246,11 +283,11 @@ export function zeitzerlegungSvg(b1, { kalt = true } = {}) {
   );
 
   const label =
-    `Zeitzerlegung eines Summary-Auftrags auf logarithmischer Achse: Netz ${fmt(b1.netzMs, 2)} ms, ` +
-    `Transport ${fmt(b1.transportMs, 1)} ms, Adapter ${fmt(b1.adapterMs, 0)} ms (Mediane über alle ${b1.anzahl} Aufträge), ` +
+    `Zeitzerlegung eines Summary-Auftrags als Punkte auf logarithmischer Achse: Netz ${fmt(b1.netzMs, 2)} ms, ` +
+    `Transport (Netz plus Server ohne Inferenz) ${fmt(b1.transportMs, 1)} ms, Adapter ${fmt(b1.adapterMs, 0)} ms (Mediane über alle ${b1.anzahl} Aufträge), ` +
     `Inferenz ${fmt(b1.inferWarmMs / 1000, 1)} s (Median warm, n = ${nWarm})` +
     (kalt
-      ? `, Auftrag kalt ${fmt(b1.kaltMedianS, 1)} s (Median aus ${b1.nKaltLaeufe} Läufen mit frischer Runtime, Nachtrag)`
+      ? `; Bezugsmarke: Auftrag kalt ${fmt(b1.kaltMedianS, 1)} s (Median aus ${b1.nKaltLaeufe} Läufen mit frischer Runtime, Nachtrag)`
       : '') +
     `. Inferenzanteil ${fmt(b1.inferAnteil * 100, 2)} %. Alle drei Schwellen erfüllt.`;
   return svgHuelle(label, teile.join(''));
@@ -363,7 +400,7 @@ function rasterBox(y, h, label, rechts, rechtsFarbe = FARBEN.gedaempft) {
  * Werte stehen an Klick und Inferenz. Die 1C-Werte an Kontext und Nachprüfung stammen aus anderen
  * Aufbauten (ein Rechner über Loopback) und tragen ihre Herkunft unter dem Wert.
  */
-export function wegSvg({ aktiv = null, b1, c1, auftrag }) {
+export function wegSvg({ aktiv = null, c1, auftrag }) {
   if (aktiv !== null && !WEG_STATIONEN[aktiv]) throw new Error(`Unbekannte Station: ${aktiv}`);
   if (!auftrag) throw new Error('wegSvg braucht den verfolgten Auftrag');
   const S = WEG_STATIONEN;
@@ -614,6 +651,16 @@ function laenge(m) {
   return `${fmt(m * 1000, 1)} mm`;
 }
 
+/** Maße des Fußballfelds aus den Daten (für den Titel von J10): Feldlänge in m, Netz und Transport in mm. */
+export function fussballMasse(b1) {
+  const mmJeMs = FELD_MM / b1.jobWarmMs;
+  return {
+    feldM: FELD_MM / 1000,
+    netzMm: b1.netzMs * mmJeMs,
+    transportMm: b1.transportMs * mmJeMs,
+  };
+}
+
 /**
  * Fußballfeld (J10): 105 m ≙ T_job warm (Median, n = 9). Inferenz = Anteil am Auftrag,
  * Transport und Netz = Mediane über alle Aufträge, umgerechnet mit demselben Maßstab.
@@ -717,11 +764,12 @@ export function fussballfeldSvg(b1, { zoom = 0 } = {}) {
       feldText(16, -24, `Inferenz · ${esc(tInf)}`),
     ),
     imFeld(
-      -transMm / 2,
+      -transMm,
       REIHE_Y,
       kTrans,
       BEREICH.transport,
-      feldText(0, -26, `Transport · ${esc(tTrans)}`, { anker: 'middle' }),
+      // links am Anfang der Strecke, damit rechts Abstand zur Torlinie bleibt (Audit: berührte sie)
+      feldText(12, -26, `Transport ${esc(tTrans)}`, { groesse: 24 }),
     ),
     imFeld(-transMm, REIHE_Y, kTrans, BEREICH.transport, strich(0)),
     imFeld(-netzMm, REIHE_Y, kNetz, BEREICH.netz, strich(0)),
@@ -730,7 +778,7 @@ export function fussballfeldSvg(b1, { zoom = 0 } = {}) {
       REIHE_Y,
       kNetz,
       BEREICH.netz,
-      feldText(-12, -30, `davon Netz · ${esc(tNetz)}`, { anker: 'end', groesse: 28 }),
+      feldText(-26, -30, `davon Netz · ${esc(tNetz)}`, { anker: 'end', groesse: 28 }),
     ),
     // Letztes Bild (auch im PDF): jede Strecke an ihrem Ende beschriftet, der dunkle Rand erklärt.
     imFeld(
@@ -875,7 +923,7 @@ export function fussballfeldSvg(b1, { zoom = 0 } = {}) {
     text(
       0,
       544,
-      `105 m = T_job, Median warm, n = ${nWarm} · Netz, Transport, Anteil: Median, alle ${b1.anzahl} · langsame CPU`,
+      `105 m = T_job, Median warm, n = ${nWarm} (Spanne ${fmt(b1.jobWarmSpanneS[0], 1)}–${fmt(b1.jobWarmSpanneS[1], 1)} s, ein Lauf) · sonst Median, alle ${b1.anzahl} · langsame CPU`,
       { groesse: 22, farbe: FARBEN.gedaempft },
     ),
   );

@@ -30,9 +30,26 @@ PaperLab (`./paperlab check|final`); Name und Matrikelnummer stehen nur dort, ni
 
 ## Belege und Literatur
 
-Jede Folie trägt in der Fußzeile eine Quellenzeile mit Kurzbelegen nach dem IU-Zitierleitfaden, dahinter
-Rechner und Commit. J16 zeigt das vollständige Literaturverzeichnis. Die Einträge stehen in
+Jede Folie trägt in der Fußzeile eine Quellenzeile mit Kurzbelegen nach dem IU-Zitierleitfaden, in einer
+Zeile; Rechner und Commit stehen in `quelle` (Sprechnotizen) und im Manifest. J16 zeigt das vollständige
+Literaturverzeichnis als Anhang nach G9. Die Einträge stehen in
 `literatur.mjs`; sie gleichen denen im Handout (`literatur.test.mjs` prüft das gegen dessen `main.bib`).
+
+## Clip für J13 (`medien/`)
+
+`medien/clip.webm` ist die Laboraufnahme aus [`evidenz/1B/2026-11-15-clip.md`](../../evidenz/1B/2026-11-15-clip.md)
+(Lauf 4, auf den Dialog zugeschnitten, 848 × 800). Die letzte knappe Sekunde der Aufnahme (ab Bild 448) zeigte das
+Schließen des Browserfensters: Der Dialog schrumpfte in einen grauen Rand, und das Endbild, auf das der Vortragende
+per Taste springt, war abgeschnitten. Neu geschnitten am 2026-11-16 aus der bisherigen Datei, nur am Ende gekürzt
+(erste 448 Bilder bei 25 fps, 17,92 s), sonst unverändert:
+
+```sh
+ffmpeg -i clip-vorher.webm -frames:v 448 -an -c:v libvpx-vp9 -b:v 0 -crf 30 -row-mt 1 \
+  -deadline good -cpu-used 2 clip.webm
+```
+
+Das letzte Bild entspricht `clip-standbild.png` (Druckfassung). Der Clip startet nur auf Tastendruck; ein Druck während
+er läuft springt auf das letzte Bild (`deck.js`, `clipSchritt`).
 
 ## Voraussetzungen
 
@@ -53,6 +70,6 @@ die Herkunft von Niklas' Teilen.
 | ---------------------- | ------------------------------------------------------------------------------- |
 | `jonas-deck.html`      | Gemeinsames Deck zum Vortragen, selbstständig (Schriften, Bilder, Clip)         |
 | `gemeinsames-deck.pdf` | Druck des gemeinsamen Decks, eine Seite je Folie                                |
-| `jonas-folien.pdf`     | Nur Jonas' Folien (J1–J13, J15, J16) und Reserve, einzeln zuordenbar            |
+| `jonas-folien.pdf`     | Nur Jonas' Folien (J1–J10, J12, J13, J15, J16) und Reserve, einzeln zuordenbar  |
 | `sprechnotizen.md`     | Notizen je Folie mit Sekunden, kumulierter Zeit und Kürzung auf die Kurzfassung |
 | `manifest.json`        | SHA-256 aller Ein- und Ausgaben, Seitenzahlen                                   |
