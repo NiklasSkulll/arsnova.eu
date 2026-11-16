@@ -1,6 +1,12 @@
 # Sprechnotizen Niklas
 
-Gesamt 13:10 min, Kurzfassung 9:45 min (Folien mit der Marke „Kurzfassung“). Erzeugt aus `abgabe/niklas/folien-1a.mjs`, `folien-1b34.mjs` und G9 in `folien.mjs` (`notiz` = Fließtext, `stichpunkte`, `zeitS`, `kurzfassung`); nicht von Hand ändern. Vorgetragen wird aus den Stichpunkten; der Fließtext ist die ausformulierte Fassung zum Üben.
+Gesamt 13:10 min, Kurzfassung 10:25 min (Folien mit der Marke „Kurzfassung“). Erzeugt aus `abgabe/niklas/folien-1a.mjs`, `folien-1b34.mjs` und G9 in `folien.mjs` (`notiz` = Fließtext, `stichpunkte`, `zeitS`, `kurzfassung`); nicht von Hand ändern. Vorgetragen wird aus den Stichpunkten; der Fließtext ist die ausformulierte Fassung zum Üben.
+
+## Sprungplan
+
+Ab der ersten Folie (N1) gezählt beginnt N10 in der Langfassung bei 8:10 min. N10 bis G9 brauchen zusammen 5:00 min. Damit sie bis 9:00 min gesprochen sind: Wer bei 4:00 min noch vor N10 steht, blättert mit Pfeil rechts ohne Kommentar bis N10 und spricht ab dort weiter. Bei Zeitdruck von Anfang an nur die Folien mit der Marke „Kurzfassung“ (10:25 min); sie enthält N10 bis G9.
+
+**Zeitbudget:** Die Langfassung dauert 13:10 min und liegt über dem Budget von etwa 10:30 min. Bis gekürzt ist, gilt die Kurzfassung (10:25 min) als Vortragsplan.
 
 ## N1 Keine Freigabe für die spaCy-Glättung (45 s, kumuliert 0:45, **Kurzfassung** 0:45)
 
@@ -207,7 +213,7 @@ _Quelle:_ [Niklas: Ergebnis-JSONs evidenz/1B/messung/<Datum>-lauf-<variante>-<au
 
 _Quelle:_ [Niklas: Ergebnis-JSONs evidenz/1B/messung/<Datum>-lauf-<variante>-<auftrag>.json mit Rechner und Commit]
 
-## G9 Trennung wirkt, Grenze ist die Inferenz (40 s, kumuliert 13:10)
+## G9 Trennung wirkt, Grenze ist die Inferenz (40 s, kumuliert 13:10, **Kurzfassung** 10:25)
 
 **Stichpunkte**
 

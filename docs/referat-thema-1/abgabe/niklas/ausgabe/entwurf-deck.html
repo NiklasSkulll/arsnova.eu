@@ -276,6 +276,33 @@
           transition: none !important;
         }
       }
+
+      /* Teilleiste oben rechts (deck.mjs, Leitfaden E24): Fahrplan von G0 im Kleinen, aktueller Teil in
+   Tinte mit blauer Unterlinie, die übrigen gedämpft. Kein Übergang, druckfest. */
+      .teilleiste {
+        position: absolute;
+        right: var(--rand);
+        top: 24px;
+        display: flex;
+        gap: 22px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        font-family: var(--f-mono);
+        font-size: var(--s-min);
+        line-height: 1.2;
+        color: var(--gedaempft);
+        white-space: nowrap;
+      }
+      .teilleiste li {
+        padding-bottom: 4px;
+        border-bottom: 4px solid transparent;
+      }
+      .teilleiste li[data-aktiv] {
+        color: var(--tinte);
+        font-weight: 600;
+        border-bottom-color: var(--blau);
+      }
     </style>
     <style>
       /* Bühne: 1600 × 900, auf das Fenster skaliert, mit Rand in Bühnenfarbe. */
@@ -595,10 +622,8 @@
               >
                 <b>app-host</b><br />App, Kontextaufbau, Queue, Adapter<br /><span
                   style="font-size: var(--s-min)"
-                  ><span class="etikett" style="background: var(--grund); color: var(--blau)"
-                    >1A</span
-                  >
-                  <span class="etikett etikett-1c">1C</span></span
+                  ><span class="etikett etikett-1c">1C</span>
+                  <span class="etikett etikett-1a">1A</span></span
                 >
               </div>
               <div
@@ -620,21 +645,61 @@
                 >
               </div>
             </div>
-            <div
+            <ol
+              data-fahrplan
               style="
                 display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                column-gap: 40px;
-                font-size: 26px;
+                grid-template-columns: repeat(4, 1fr);
+                column-gap: 32px;
+                margin: 0;
+                padding: 0;
+                list-style: none;
+                font-size: 24px;
+                line-height: 1.35;
               "
             >
-              <div><b>1C · Jonas</b><br />Kontext und Adapterpfad</div>
-              <div>
-                <b>1B · Jonas, dann Niklas</b><br />Zweiter Host: Aufbau und Zeit (Jonas), Störung
-                und Aufwand (Niklas)
-              </div>
-              <div><b>1A · Niklas</b><br />Ressourcen auf dem App-Host</div>
-            </div>
+              <li style="border-top: 6px solid var(--linie); padding-top: 12px">
+                <p style="margin: 0 0 6px; font-weight: 700; font-size: 26px">
+                  <span class="mono" style="color: var(--gedaempft); font-weight: 400">1</span>
+                  Jonas
+                </p>
+                <p style="margin: 0 0 6px">
+                  <span class="etikett etikett-1c">1C</span>
+                  <span class="etikett etikett-1b">1B</span>
+                  <span style="font-size: var(--s-min); color: var(--gedaempft)">Schritte 1–2</span>
+                </p>
+                <p style="margin: 0; color: var(--text-2)">Kontextpfad und Zeit am zweiten Host</p>
+              </li>
+              <li style="border-top: 6px solid var(--linie); padding-top: 12px">
+                <p style="margin: 0 0 6px; font-weight: 700; font-size: 26px">
+                  <span class="mono" style="color: var(--gedaempft); font-weight: 400">2</span>
+                  Niklas
+                </p>
+                <p style="margin: 0 0 6px"><span class="etikett etikett-1a">1A</span></p>
+                <p style="margin: 0; color: var(--text-2)">
+                  Reserve des App-Hosts neben der Live-Last
+                </p>
+              </li>
+              <li style="border-top: 6px solid var(--linie); padding-top: 12px">
+                <p style="margin: 0 0 6px; font-weight: 700; font-size: 26px">
+                  <span class="mono" style="color: var(--gedaempft); font-weight: 400">3</span>
+                  Niklas
+                </p>
+                <p style="margin: 0 0 6px">
+                  <span class="etikett etikett-1b">1B</span>
+                  <span style="font-size: var(--s-min); color: var(--gedaempft)">Schritte 3–4</span>
+                </p>
+                <p style="margin: 0; color: var(--text-2)">Störung und Aufwand des zweiten Hosts</p>
+              </li>
+              <li style="border-top: 6px solid var(--linie); padding-top: 12px">
+                <p style="margin: 0 0 6px; font-weight: 700; font-size: 26px">
+                  <span class="mono" style="color: var(--gedaempft); font-weight: 400">4</span>
+                  Gemeinsam
+                </p>
+                <p style="margin: 0 0 6px"></p>
+                <p style="margin: 0; color: var(--text-2)">Antwort auf die Leitfrage</p>
+              </li>
+            </ol>
           </div>
         </div>
         <div class="folie-fuss">1 / 31 · Quelle: arsnova.eu-Projektteam, 2026b, Abschn. 4.3</div>
@@ -645,6 +710,12 @@
         data-teil="jonas"
         aria-label="2 von 31: Ein Klick. 152 Sekunden. Keine Modellantwort."
       >
+        <ol class="teilleiste" aria-label="Teil des Vortrags: 1C, 1B 1–2, Jonas">
+          <li data-aktiv aria-current="step">1C, 1B 1–2</li>
+          <li>1A</li>
+          <li>1B 3–4</li>
+          <li>Fazit</li>
+        </ol>
         <h1 class="folie-titel">Ein Klick. 152 Sekunden. Keine Modellantwort.</h1>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
@@ -707,6 +778,12 @@
         data-teil="jonas"
         aria-label="3 von 31: Zwei Hosts nachgebaut, Produktionscode unverändert"
       >
+        <ol class="teilleiste" aria-label="Teil des Vortrags: 1C, 1B 1–2, Jonas">
+          <li data-aktiv aria-current="step">1C, 1B 1–2</li>
+          <li>1A</li>
+          <li>1B 3–4</li>
+          <li>Fazit</li>
+        </ol>
         <h1 class="folie-titel">Zwei Hosts nachgebaut, Produktionscode unverändert</h1>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
@@ -855,6 +932,12 @@
         data-eigener-weg
         aria-label="4 von 31: Host nach 67 ms frei, Inferenz 151 s"
       >
+        <ol class="teilleiste" aria-label="Teil des Vortrags: 1C, 1B 1–2, Jonas">
+          <li data-aktiv aria-current="step">1C, 1B 1–2</li>
+          <li>1A</li>
+          <li>1B 3–4</li>
+          <li>Fazit</li>
+        </ol>
         <h1 class="folie-titel">Host nach 67 ms frei, Inferenz 151 s</h1>
         <div class="folie-flaeche">
           <!-- prettier-ignore --><svg viewBox="0 0 1380 560" role="img" aria-label="Weg von Auftrag 2 über app-host 192.168.150.10 und llm-host 192.168.150.20: Klick 67 ms (Auftrag 2), Kontext (Validierung aus dem 1C-Test), Netz unter 1 ms, Inferenz 151 s (Auftrag 2), Nachprüfung (Anteil aus dem 1C-Labor, ein Rechner), Gate verwirft die Antwort. Messpunkte t0 bis t3 an den Host-Grenzen. Aktuelle Station: Klick."><rect width="1380" height="560" fill="#ffffff"/><path d="M32,2V268M64,2V268M96,2V268M128,2V268M160,2V268M192,2V268M224,2V268M256,2V268M288,2V268M320,2V268M352,2V268M384,2V268M416,2V268M448,2V268M480,2V268M512,2V268M544,2V268M576,2V268M608,2V268M640,2V268M672,2V268M704,2V268M736,2V268M768,2V268M800,2V268M832,2V268M864,2V268M896,2V268M928,2V268M960,2V268M992,2V268M1024,2V268M1056,2V268M1088,2V268M1120,2V268M1152,2V268M1184,2V268M1216,2V268M1248,2V268M1280,2V268M1312,2V268M1344,2V268M1376,2V268M2,32H1378M2,64H1378M2,96H1378M2,128H1378M2,160H1378M2,192H1378M2,224H1378M2,256H1378" fill="none" stroke="#e8edf3" stroke-width="2"/><rect x="1" y="1" width="1378" height="268" rx="10" fill="none" stroke="#c9d2de" stroke-width="2"/><text x="24" y="38" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">app-host · 192.168.150.10</text><text x="1356" y="38" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#0f766e" text-anchor="end" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">1C-Werte: ein Rechner, Loopback, kein llm-host</text><path d="M32,352V548M64,352V548M96,352V548M128,352V548M160,352V548M192,352V548M224,352V548M256,352V548M288,352V548M320,352V548M352,352V548M384,352V548M416,352V548M448,352V548M480,352V548M512,352V548M544,352V548M576,352V548M608,352V548M640,352V548M672,352V548M704,352V548M736,352V548M768,352V548M800,352V548M832,352V548M864,352V548M896,352V548M928,352V548M960,352V548M992,352V548M1024,352V548M1056,352V548M1088,352V548M1120,352V548M1152,352V548M1184,352V548M1216,352V548M1248,352V548M1280,352V548M1312,352V548M1344,352V548M1376,352V548M2,382H1378M2,414H1378M2,446H1378M2,478H1378M2,510H1378M2,542H1378" fill="none" stroke="#e8edf3" stroke-width="2"/><rect x="1" y="351" width="1378" height="198" rx="10" fill="none" stroke="#c9d2de" stroke-width="2"/><text x="24" y="388" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">llm-host · 192.168.150.20</text><text x="24" y="528" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">Messpunkte t<tspan dx="-3" dy="6" font-size="22">0</tspan><tspan dy="-6">–t</tspan><tspan dx="-3" dy="6" font-size="22">3</tspan><tspan dy="-6">: Mitschnitt auf beiden Hosts</tspan></text><path class="weg-pfad" d="M120,140 L450,140 C530,140 530,460 610,460 L770,460 C850,460 850,140 930,140 L1270,140" fill="none" stroke="#0b5ea8" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><g data-messpunkt="t0"><circle cx="513.18" cy="236" r="9" fill="#b45309" stroke="#ffffff" stroke-width="3"/><text x="533.18" y="244" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="26" font-weight="600" fill="#9a4a0b" text-anchor="start" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">t<tspan dx="-3" dy="6" font-size="22">0</tspan></text></g><g data-messpunkt="t1"><circle cx="552.97" cy="384" r="9" fill="#b45309" stroke="#ffffff" stroke-width="3"/><text x="532.97" y="392" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="26" font-weight="600" fill="#9a4a0b" text-anchor="end" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">t<tspan dx="-3" dy="6" font-size="22">1</tspan></text></g><g data-messpunkt="t2"><circle cx="827.03" cy="384" r="9" fill="#b45309" stroke="#ffffff" stroke-width="3"/><text x="847.03" y="392" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="26" font-weight="600" fill="#9a4a0b" text-anchor="start" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">t<tspan dx="-3" dy="6" font-size="22">2</tspan></text></g><g data-messpunkt="t3"><circle cx="866.82" cy="236" r="9" fill="#b45309" stroke="#ffffff" stroke-width="3"/><text x="846.82" y="244" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="26" font-weight="600" fill="#9a4a0b" text-anchor="end" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">t<tspan dx="-3" dy="6" font-size="22">3</tspan></text></g><g data-station="klick"><g data-etikett="1C"><rect x="90" y="62" width="60" height="32" rx="6" fill="#e3f1ee"/><text x="120" y="86" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#0f766e" text-anchor="middle">1C</text></g><circle cx="120" cy="140" r="20" fill="#ffffff" stroke="#0f766e" stroke-width="7"/><text x="120" y="206" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="700" fill="#16202c" text-anchor="middle">Klick</text><text x="120" y="236" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="600" fill="#16202c" text-anchor="middle">67 ms</text><text x="120" y="262" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle" data-herkunft="1">Auftrag 2</text></g><g data-station="kontext"><g data-etikett="1C"><rect x="310" y="62" width="60" height="32" rx="6" fill="#e3f1ee"/><text x="340" y="86" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#0f766e" text-anchor="middle">1C</text></g><circle cx="340" cy="140" r="20" fill="#ffffff" stroke="#0f766e" stroke-width="7"/><text x="340" y="206" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="700" fill="#16202c" text-anchor="middle">Kontext</text><text x="340" y="236" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="600" fill="#16202c" text-anchor="middle">Validierung 1,6 %</text><text x="340" y="262" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle" data-herkunft="1">1C-Test · 248029dc</text></g><g data-station="nachpruefung"><g data-etikett="1C"><rect x="990" y="62" width="60" height="32" rx="6" fill="#e3f1ee"/><text x="1020" y="86" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#0f766e" text-anchor="middle">1C</text></g><circle cx="1020" cy="140" r="20" fill="#ffffff" stroke="#0f766e" stroke-width="7"/><text x="1020" y="206" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="700" fill="#16202c" text-anchor="middle">Nachprüfung</text><text x="1020" y="236" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="600" fill="#16202c" text-anchor="middle">Anteil 0,03 %</text><text x="1020" y="262" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle" data-herkunft="1">1C-Labor · def56700</text></g><g data-station="gate"><g data-etikett="1C"><rect x="1240" y="62" width="60" height="32" rx="6" fill="#e3f1ee"/><text x="1270" y="86" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#0f766e" text-anchor="middle">1C</text></g><circle cx="1270" cy="140" r="20" fill="#ffffff" stroke="#b42318" stroke-width="7"/><text x="1270" y="206" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="700" fill="#b42318" text-anchor="middle">Gate</text><text x="1270" y="236" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="600" fill="#b42318" text-anchor="middle">verwirft</text><text x="1270" y="262" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle" data-herkunft="1">1B und 1C</text></g><g data-station="netz"><circle cx="532.5" cy="310" r="12" fill="#ffffff" stroke="#b45309" stroke-width="6"/><g data-etikett="1B"><rect x="579.8" y="294" width="60" height="32" rx="6" fill="#fbefe0"/><text x="609.8" y="318" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#9a4a0b" text-anchor="middle">1B</text></g><text x="653.8" y="319" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#16202c">Netz &lt; 1 ms</text></g><g data-station="inferenz"><circle cx="690" cy="460" r="50" fill="#b45309"/><text x="690" y="470" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="28" font-weight="600" fill="#ffffff" text-anchor="middle">151 s</text><g data-etikett="1B"><rect x="900" y="418" width="60" height="32" rx="6" fill="#fbefe0"/><text x="930" y="442" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#9a4a0b" text-anchor="middle">1B</text></g><text x="976" y="444" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="700" fill="#16202c">Inferenz</text><text x="900" y="482" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">Kreis: Auftrag 2 (warm), 1B</text><text x="900" y="514" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">Anteil 99,69 %, langsame CPU</text></g><g class="auftrag" data-aktiv="klick" transform="translate(120 140)"><circle cx="0" cy="0" r="36" fill="#0b5ea8" fill-opacity="0.14" stroke="#0b5ea8" stroke-width="4"/><circle cx="0" cy="0" r="9" fill="#0b5ea8"/></g></svg>
@@ -869,6 +952,12 @@
         data-teil="jonas"
         aria-label="5 von 31: Erst die Hypothese, dann die Messung"
       >
+        <ol class="teilleiste" aria-label="Teil des Vortrags: 1C, 1B 1–2, Jonas">
+          <li data-aktiv aria-current="step">1C, 1B 1–2</li>
+          <li>1A</li>
+          <li>1B 3–4</li>
+          <li>Fazit</li>
+        </ol>
         <h1 class="folie-titel">Erst die Hypothese, dann die Messung</h1>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
@@ -1043,6 +1132,12 @@
             <span class="weg-name">Klick</span><span class="etikett etikett-1c">1C</span>
           </p>
         </div>
+        <ol class="teilleiste" aria-label="Teil des Vortrags: 1C, 1B 1–2, Jonas">
+          <li data-aktiv aria-current="step">1C, 1B 1–2</li>
+          <li>1A</li>
+          <li>1B 3–4</li>
+          <li>Fazit</li>
+        </ol>
         <h1 class="folie-titel">Der Host wartet nicht auf das Modell</h1>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
@@ -1187,6 +1282,12 @@
             <span class="weg-name">Kontext</span><span class="etikett etikett-1c">1C</span>
           </p>
         </div>
+        <ol class="teilleiste" aria-label="Teil des Vortrags: 1C, 1B 1–2, Jonas">
+          <li data-aktiv aria-current="step">1C, 1B 1–2</li>
+          <li>1A</li>
+          <li>1B 3–4</li>
+          <li>Fazit</li>
+        </ol>
         <h1 class="folie-titel">Was die Vorschau zeigt, kommt an</h1>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
@@ -1322,6 +1423,12 @@
             <span class="weg-name">Kontext</span><span class="etikett etikett-1c">1C</span>
           </p>
         </div>
+        <ol class="teilleiste" aria-label="Teil des Vortrags: 1C, 1B 1–2, Jonas">
+          <li data-aktiv aria-current="step">1C, 1B 1–2</li>
+          <li>1A</li>
+          <li>1B 3–4</li>
+          <li>Fazit</li>
+        </ol>
         <h1 class="folie-titel">Sicher geschätzt, aber Platz verschenkt</h1>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
@@ -1469,6 +1576,12 @@
             <span class="weg-name">Netz</span><span class="etikett etikett-1b">1B</span>
           </p>
         </div>
+        <ol class="teilleiste" aria-label="Teil des Vortrags: 1C, 1B 1–2, Jonas">
+          <li data-aktiv aria-current="step">1C, 1B 1–2</li>
+          <li>1A</li>
+          <li>1B 3–4</li>
+          <li>Fazit</li>
+        </ol>
         <h1 class="folie-titel">Gemessen am Draht, auf beiden Hosts</h1>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
@@ -1529,6 +1642,7 @@
         data-id="J9"
         data-teil="jonas"
         data-station="inferenz"
+        data-aufbau="2"
         aria-label="10 von 31: Die Zeit steckt in der Inferenz"
       >
         <div
@@ -1578,6 +1692,12 @@
             <span class="weg-name">Inferenz</span><span class="etikett etikett-1b">1B</span>
           </p>
         </div>
+        <ol class="teilleiste" aria-label="Teil des Vortrags: 1C, 1B 1–2, Jonas">
+          <li data-aktiv aria-current="step">1C, 1B 1–2</li>
+          <li>1A</li>
+          <li>1B 3–4</li>
+          <li>Fazit</li>
+        </ol>
         <h1 class="folie-titel">Die Zeit steckt in der Inferenz</h1>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
@@ -1585,7 +1705,7 @@
               <span class="etikett etikett-1b">1B</span>Wie verteilt sich die Zeit eines Auftrags?
             </p>
             <div class="grafik-box">
-              <!-- prettier-ignore --><svg viewBox="0 0 1380 560" role="img" aria-label="Zeitzerlegung eines Summary-Auftrags als Punkte auf logarithmischer Achse: Netz 0,43 ms, Transport (Netz plus Server ohne Inferenz) 17,8 ms, Adapter 101 ms (Mediane über alle 10 Aufträge), Inferenz 148,3 s (Median warm, n = 9); Bezugsmarke: Auftrag kalt 200,5 s (Median aus 5 Läufen mit frischer Runtime, Nachtrag). Inferenzanteil 99,92 %. Alle drei Schwellen erfüllt."><rect width="1380" height="560" fill="#ffffff"/><line x1="250" y1="60" x2="250" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="250" y="486" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="middle">0,1 ms</text><line x1="404.29" y1="60" x2="404.29" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="404.29" y="486" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="middle">1 ms</text><line x1="558.57" y1="60" x2="558.57" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="558.57" y="486" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="middle">10 ms</text><line x1="712.86" y1="60" x2="712.86" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="712.86" y="486" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="middle">100 ms</text><line x1="867.14" y1="60" x2="867.14" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="867.14" y="486" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="middle">1 s</text><line x1="1021.43" y1="60" x2="1021.43" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="1021.43" y="486" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="middle">10 s</text><line x1="1175.71" y1="60" x2="1175.71" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="1175.71" y="486" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="middle">100 s</text><line x1="1330" y1="60" x2="1330" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="1330" y="486" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="middle">1000 s</text><line data-bezug="kalt" x1="1222.34" y1="60" x2="1222.34" y2="450" stroke="#b45309" stroke-width="3" stroke-dasharray="10 7"/><text x="1234.34" y="26" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#9a4a0b" text-anchor="end">T_job kalt 200,5 s</text><text x="1234.34" y="52" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="end">Median, n = 5</text><text x="226" y="133.75" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="400" fill="#16202c" text-anchor="end">Netz</text><text x="226" y="163.75" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="end">Median, alle 10</text><line x1="250" y1="129.75" x2="1330" y2="129.75" stroke="#e8edf3" stroke-width="2"/><line x1="666.41" y1="103.75" x2="666.41" y2="155.75" stroke="#16202c" stroke-width="3" stroke-dasharray="8 6"/><path d="M680.41,126.75 l6,7 l12,-14" fill="none" stroke="#16202c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><text x="710.41" y="137.75" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#16202c" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">Schwelle 50 ms</text><circle data-punkt="Netz" cx="347.66" cy="129.75" r="11" fill="#e9b47a" stroke="#b45309" stroke-width="3"/><text x="369.66" y="115.75" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="26" font-weight="600" fill="#16202c" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">0,43 ms</text><text x="226" y="225.25" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="400" fill="#16202c" text-anchor="end">Transport</text><text x="226" y="255.25" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="end">Median, alle 10</text><line x1="250" y1="221.25" x2="1330" y2="221.25" stroke="#e8edf3" stroke-width="2"/><circle data-punkt="Transport" cx="597.29" cy="221.25" r="11" fill="#e9b47a" stroke="#b45309" stroke-width="3"/><text x="619.29" y="207.25" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="26" font-weight="600" fill="#16202c" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">17,8 ms</text><rect x="613.29" y="235.45" width="394.8" height="26.4" fill="#ffffff"/><text x="619.29" y="255.25" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#3d4757">(Netz + Server ohne Inferenz)</text><text x="226" y="316.75" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="400" fill="#16202c" text-anchor="end">Adapter</text><text x="226" y="346.75" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="end">Median, alle 10</text><line x1="250" y1="312.75" x2="1330" y2="312.75" stroke="#e8edf3" stroke-width="2"/><line x1="913.59" y1="286.75" x2="913.59" y2="338.75" stroke="#16202c" stroke-width="3" stroke-dasharray="8 6"/><path d="M927.59,309.75 l6,7 l12,-14" fill="none" stroke="#16202c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><text x="957.59" y="320.75" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#16202c" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">Schwelle 2 s</text><circle data-punkt="Adapter" cx="713.82" cy="312.75" r="11" fill="#e9b47a" stroke="#b45309" stroke-width="3"/><text x="735.82" y="298.75" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="26" font-weight="600" fill="#16202c" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">101 ms</text><text x="226" y="408.25" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="700" fill="#16202c" text-anchor="end">Inferenz</text><text x="226" y="438.25" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="end">warm, n = 9</text><line x1="250" y1="404.25" x2="1330" y2="404.25" stroke="#e8edf3" stroke-width="2"/><circle data-punkt="Inferenz" cx="1202.13" cy="404.25" r="14" fill="#b45309" stroke="#b45309" stroke-width="3"/><text x="1174.13" y="413.25" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="28" font-weight="700" fill="#16202c" text-anchor="end" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">148,3 s</text><rect x="508.13" y="350.45" width="672" height="26.4" fill="#ffffff"/><text x="1174.13" y="370.25" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#3d4757" text-anchor="end">Anteil 99,92 % (Median, alle 10) · Schwelle ≥ 95 %</text><path d="M1198.13,359.25 l6,7 l12,-14" fill="none" stroke="#16202c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><line x1="250" y1="450" x2="1330" y2="450" stroke="#566173" stroke-width="2"/><text x="0" y="542" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="24" font-weight="400" fill="#3d4757">Log-Achse, je Strich ×10. Schwellen vorab (ADR 1B-008). Anteil für diese langsame CPU, am schnelleren PC ebenfalls über 99 %.</text></svg>
+              <!-- prettier-ignore --><svg viewBox="0 0 1380 560" role="img" aria-label="Zeitzerlegung eines Summary-Auftrags als Punkte auf logarithmischer Achse: Netz 0,43 ms, Transport (Netz plus Server ohne Inferenz) 17,8 ms, Adapter 101 ms (Mediane über alle 10 Aufträge), Inferenz 148,3 s (Median warm, n = 9); Bezugsmarke: Auftrag kalt 200,5 s (Median aus 5 Läufen mit frischer Runtime, Nachtrag). Inferenzanteil 99,92 %. Alle drei Schwellen erfüllt."><rect width="1380" height="560" fill="#ffffff"/><line x1="250" y1="60" x2="250" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="250" y="486" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="middle">0,1 ms</text><line x1="404.29" y1="60" x2="404.29" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="404.29" y="486" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="middle">1 ms</text><line x1="558.57" y1="60" x2="558.57" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="558.57" y="486" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="middle">10 ms</text><line x1="712.86" y1="60" x2="712.86" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="712.86" y="486" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="middle">100 ms</text><line x1="867.14" y1="60" x2="867.14" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="867.14" y="486" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="middle">1 s</text><line x1="1021.43" y1="60" x2="1021.43" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="1021.43" y="486" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="middle">10 s</text><line x1="1175.71" y1="60" x2="1175.71" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="1175.71" y="486" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="middle">100 s</text><line x1="1330" y1="60" x2="1330" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="1330" y="486" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="middle">1000 s</text><g data-ab="2"><line data-bezug="kalt" x1="1222.34" y1="60" x2="1222.34" y2="450" stroke="#b45309" stroke-width="3" stroke-dasharray="10 7"/><text x="1234.34" y="26" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#9a4a0b" text-anchor="end">T_job kalt 200,5 s</text><text x="1234.34" y="52" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="end">Median, n = 5</text></g><text x="226" y="133.75" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="400" fill="#16202c" text-anchor="end">Netz</text><text x="226" y="163.75" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="end">Median, alle 10</text><line x1="250" y1="129.75" x2="1330" y2="129.75" stroke="#e8edf3" stroke-width="2"/><line x1="666.41" y1="103.75" x2="666.41" y2="155.75" stroke="#16202c" stroke-width="3" stroke-dasharray="8 6"/><g data-ab="1"><path d="M680.41,126.75 l6,7 l12,-14" fill="none" stroke="#16202c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></g><text x="710.41" y="137.75" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#16202c" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">Schwelle 50 ms</text><g data-ab="1"><circle data-punkt="Netz" cx="347.66" cy="129.75" r="11" fill="#e9b47a" stroke="#b45309" stroke-width="3"/><text x="369.66" y="115.75" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="26" font-weight="600" fill="#16202c" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">0,43 ms</text></g><text x="226" y="225.25" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="400" fill="#16202c" text-anchor="end">Transport</text><text x="226" y="255.25" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="end">Median, alle 10</text><line x1="250" y1="221.25" x2="1330" y2="221.25" stroke="#e8edf3" stroke-width="2"/><g data-ab="1"><circle data-punkt="Transport" cx="597.29" cy="221.25" r="11" fill="#e9b47a" stroke="#b45309" stroke-width="3"/><text x="619.29" y="207.25" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="26" font-weight="600" fill="#16202c" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">17,8 ms</text><rect x="613.29" y="235.45" width="394.8" height="26.4" fill="#ffffff"/><text x="619.29" y="255.25" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#3d4757">(Netz + Server ohne Inferenz)</text></g><text x="226" y="316.75" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="400" fill="#16202c" text-anchor="end">Adapter</text><text x="226" y="346.75" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="end">Median, alle 10</text><line x1="250" y1="312.75" x2="1330" y2="312.75" stroke="#e8edf3" stroke-width="2"/><line x1="913.59" y1="286.75" x2="913.59" y2="338.75" stroke="#16202c" stroke-width="3" stroke-dasharray="8 6"/><g data-ab="1"><path d="M927.59,309.75 l6,7 l12,-14" fill="none" stroke="#16202c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></g><text x="957.59" y="320.75" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#16202c" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">Schwelle 2 s</text><g data-ab="1"><circle data-punkt="Adapter" cx="713.82" cy="312.75" r="11" fill="#e9b47a" stroke="#b45309" stroke-width="3"/><text x="735.82" y="298.75" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="26" font-weight="600" fill="#16202c" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">101 ms</text></g><text x="226" y="408.25" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="700" fill="#16202c" text-anchor="end">Inferenz</text><text x="226" y="438.25" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="end">warm, n = 9</text><line x1="250" y1="404.25" x2="1330" y2="404.25" stroke="#e8edf3" stroke-width="2"/><g data-ab="2"><circle data-punkt="Inferenz" cx="1202.13" cy="404.25" r="14" fill="#b45309" stroke="#b45309" stroke-width="3"/><text x="1174.13" y="413.25" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="28" font-weight="700" fill="#16202c" text-anchor="end" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">148,3 s</text><rect x="508.13" y="350.45" width="672" height="26.4" fill="#ffffff"/><text x="1174.13" y="370.25" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#3d4757" text-anchor="end">Anteil 99,92 % (Median, alle 10) · Schwelle ≥ 95 %</text><path d="M1198.13,359.25 l6,7 l12,-14" fill="none" stroke="#16202c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></g><line x1="250" y1="450" x2="1330" y2="450" stroke="#566173" stroke-width="2"/><text x="0" y="542" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="24" font-weight="400" fill="#3d4757">Log-Achse, je Strich ×10 · Schwellen vorab (ADR 1B-008) · Anteil: langsame CPU, am PC ebenfalls über 99 %</text></svg>
             </div>
           </div>
         </div>
@@ -1649,6 +1769,12 @@
             <span class="weg-name">Inferenz</span><span class="etikett etikett-1b">1B</span>
           </p>
         </div>
+        <ol class="teilleiste" aria-label="Teil des Vortrags: 1C, 1B 1–2, Jonas">
+          <li data-aktiv aria-current="step">1C, 1B 1–2</li>
+          <li>1A</li>
+          <li>1B 3–4</li>
+          <li>Fazit</li>
+        </ol>
         <h1 class="folie-titel">Das Netz ist 0,3 mm auf 105 m</h1>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
@@ -1719,6 +1845,12 @@
             <span class="weg-name">Nachprüfung</span><span class="etikett etikett-1c">1C</span>
           </p>
         </div>
+        <ol class="teilleiste" aria-label="Teil des Vortrags: 1C, 1B 1–2, Jonas">
+          <li data-aktiv aria-current="step">1C, 1B 1–2</li>
+          <li>1A</li>
+          <li>1B 3–4</li>
+          <li>Fazit</li>
+        </ol>
         <h1 class="folie-titel">Nachprüfung: wenig Zeit, unter Voting riskant</h1>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
@@ -1836,6 +1968,12 @@
             <span class="weg-name">Gate</span><span class="etikett etikett-1c">1C</span>
           </p>
         </div>
+        <ol class="teilleiste" aria-label="Teil des Vortrags: 1C, 1B 1–2, Jonas">
+          <li data-aktiv aria-current="step">1C, 1B 1–2</li>
+          <li>1A</li>
+          <li>1B 3–4</li>
+          <li>Fazit</li>
+        </ol>
         <h1 class="folie-titel">38 geprüfte Antworten, keine besteht das Gate</h1>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
@@ -1980,8 +2118,15 @@
         class="folie"
         data-id="J15"
         data-teil="jonas"
+        data-aufbau="2"
         aria-label="14 von 31: Entkopplung bleibt, Gate neu abstimmen"
       >
+        <ol class="teilleiste" aria-label="Teil des Vortrags: 1C, 1B 1–2, Jonas">
+          <li data-aktiv aria-current="step">1C, 1B 1–2</li>
+          <li>1A</li>
+          <li>1B 3–4</li>
+          <li>Fazit</li>
+        </ol>
         <h1 class="folie-titel">Entkopplung bleibt, Gate neu abstimmen</h1>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
@@ -2041,6 +2186,7 @@
               Details: R12 (Kosten, Risiko und Betriebsfolge je Entscheidung)
             </p>
             <p
+              data-ab="1"
               style="
                 margin: auto 0 0;
                 padding: 16px 24px;
@@ -2053,9 +2199,11 @@
               <b style="color: var(--blau)">Zur Diskussion:</b> Prüft das Gate das Richtige, wenn
               die Antworten auch inhaltlich verfehlt sind?
             </p>
-            <p style="margin: 26px 0 0; font-size: 28px; font-weight: 700">
+            <p data-ab="2" style="margin: 26px 0 0; font-size: 28px; font-weight: 700">
               Und was verträgt der App-Host selbst neben der Live-Last?
-              <span style="color: var(--blau)">→ Niklas</span>
+              <span style="color: var(--blau)"
+                >→ Niklas <span class="etikett etikett-1a">1A</span></span
+              >
             </p>
           </div>
         </div>
@@ -2070,6 +2218,12 @@
         data-teil="niklas"
         aria-label="15 von 31: Keine Freigabe für die spaCy-Glättung"
       >
+        <ol class="teilleiste" aria-label="Teil des Vortrags: 1A, Niklas">
+          <li>1C, 1B 1–2</li>
+          <li data-aktiv aria-current="step">1A</li>
+          <li>1B 3–4</li>
+          <li>Fazit</li>
+        </ol>
         <h1 class="folie-titel">Keine Freigabe für die spaCy-Glättung</h1>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
@@ -2170,6 +2324,12 @@
         data-teil="niklas"
         aria-label="16 von 31: Fünf Dienste teilen sich den App-Host"
       >
+        <ol class="teilleiste" aria-label="Teil des Vortrags: 1A, Niklas">
+          <li>1C, 1B 1–2</li>
+          <li data-aktiv aria-current="step">1A</li>
+          <li>1B 3–4</li>
+          <li>Fazit</li>
+        </ol>
         <h1 class="folie-titel">Fünf Dienste teilen sich den App-Host</h1>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
@@ -2326,6 +2486,12 @@
         data-teil="niklas"
         aria-label="17 von 31: Fünf Varianten, je Block zufällig gemischt"
       >
+        <ol class="teilleiste" aria-label="Teil des Vortrags: 1A, Niklas">
+          <li>1C, 1B 1–2</li>
+          <li data-aktiv aria-current="step">1A</li>
+          <li>1B 3–4</li>
+          <li>Fazit</li>
+        </ol>
         <h1 class="folie-titel">Fünf Varianten, je Block zufällig gemischt</h1>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
@@ -2425,6 +2591,12 @@
         data-teil="niklas"
         aria-label="18 von 31: Die Regel stand eine Woche vorher fest"
       >
+        <ol class="teilleiste" aria-label="Teil des Vortrags: 1A, Niklas">
+          <li>1C, 1B 1–2</li>
+          <li data-aktiv aria-current="step">1A</li>
+          <li>1B 3–4</li>
+          <li>Fazit</li>
+        </ol>
         <h1 class="folie-titel">Die Regel stand eine Woche vorher fest</h1>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
@@ -2511,6 +2683,12 @@
         data-teil="niklas"
         aria-label="19 von 31: Alle 40.000 Live-Aktionen kamen an"
       >
+        <ol class="teilleiste" aria-label="Teil des Vortrags: 1A, Niklas">
+          <li>1C, 1B 1–2</li>
+          <li data-aktiv aria-current="step">1A</li>
+          <li>1B 3–4</li>
+          <li>Fazit</li>
+        </ol>
         <h1 class="folie-titel">Alle 40.000 Live-Aktionen kamen an</h1>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
@@ -2534,6 +2712,12 @@
         data-aufbau="3"
         aria-label="20 von 31: Deutlich verletzt wird die Regel nur einmal"
       >
+        <ol class="teilleiste" aria-label="Teil des Vortrags: 1A, Niklas">
+          <li>1C, 1B 1–2</li>
+          <li data-aktiv aria-current="step">1A</li>
+          <li>1B 3–4</li>
+          <li>Fazit</li>
+        </ol>
         <h1 class="folie-titel">Deutlich verletzt wird die Regel nur einmal</h1>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
@@ -2551,6 +2735,12 @@
         data-aufbau="2"
         aria-label="21 von 31: Der Ausreißer dauerte rund zehn Sekunden"
       >
+        <ol class="teilleiste" aria-label="Teil des Vortrags: 1A, Niklas">
+          <li>1C, 1B 1–2</li>
+          <li data-aktiv aria-current="step">1A</li>
+          <li>1B 3–4</li>
+          <li>Fazit</li>
+        </ol>
         <h1 class="folie-titel">Der Ausreißer dauerte rund zehn Sekunden</h1>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
@@ -2580,6 +2770,12 @@
         data-teil="niklas"
         aria-label="22 von 31: spaCy bleibt im Budget, bis CPU fehlt"
       >
+        <ol class="teilleiste" aria-label="Teil des Vortrags: 1A, Niklas">
+          <li>1C, 1B 1–2</li>
+          <li data-aktiv aria-current="step">1A</li>
+          <li>1B 3–4</li>
+          <li>Fazit</li>
+        </ol>
         <h1 class="folie-titel">spaCy bleibt im Budget, bis CPU fehlt</h1>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
@@ -2602,6 +2798,12 @@
         data-teil="niklas"
         aria-label="23 von 31: Nach 5 s liefert die App den Ersatz"
       >
+        <ol class="teilleiste" aria-label="Teil des Vortrags: 1A, Niklas">
+          <li>1C, 1B 1–2</li>
+          <li data-aktiv aria-current="step">1A</li>
+          <li>1B 3–4</li>
+          <li>Fazit</li>
+        </ol>
         <h1 class="folie-titel">Nach 5 s liefert die App den Ersatz</h1>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
@@ -2628,6 +2830,12 @@
         data-teil="niklas"
         aria-label="24 von 31: Entscheidung: lexikalische Wortwolke bleibt"
       >
+        <ol class="teilleiste" aria-label="Teil des Vortrags: 1A, Niklas">
+          <li>1C, 1B 1–2</li>
+          <li data-aktiv aria-current="step">1A</li>
+          <li>1B 3–4</li>
+          <li>Fazit</li>
+        </ol>
         <h1 class="folie-titel">Entscheidung: lexikalische Wortwolke bleibt</h1>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
@@ -2646,10 +2854,8 @@
                   <li style="margin: 0 0 12px">0,25&nbsp;CPU ist keine gleichwertige Einsparung</li>
                 </ul>
               </div>
-              <div style="border-top: 6px solid var(--petrol); padding-top: 12px">
-                <p
-                  style="margin: 0 0 10px; font-weight: 700; font-size: 30px; color: var(--petrol)"
-                >
+              <div style="border-top: 6px solid var(--tinte); padding-top: 12px">
+                <p style="margin: 0 0 10px; font-weight: 700; font-size: 30px; color: var(--tinte)">
                   Begründung
                 </p>
                 <ul style="margin: 0; padding-left: 28px; font-size: 27px; line-height: 1.36">
@@ -2709,6 +2915,12 @@
         data-teil="niklas"
         aria-label="25 von 31: Störung am zweiten Host [Titel]"
       >
+        <ol class="teilleiste" aria-label="Teil des Vortrags: 1B 3–4, Niklas">
+          <li>1C, 1B 1–2</li>
+          <li>1A</li>
+          <li data-aktiv aria-current="step">1B 3–4</li>
+          <li>Fazit</li>
+        </ol>
         <h1 class="folie-titel">
           Störung am zweiten Host
           <span style="color: var(--gedaempft); border-bottom: 2px dashed var(--linie)"
@@ -2797,6 +3009,12 @@
         data-teil="niklas"
         aria-label="26 von 31: Ausfall: Ersatz statt Warten [Titel]"
       >
+        <ol class="teilleiste" aria-label="Teil des Vortrags: 1B 3–4, Niklas">
+          <li>1C, 1B 1–2</li>
+          <li>1A</li>
+          <li data-aktiv aria-current="step">1B 3–4</li>
+          <li>Fazit</li>
+        </ol>
         <h1 class="folie-titel">
           Ausfall: Ersatz statt Warten
           <span style="color: var(--gedaempft); border-bottom: 2px dashed var(--linie)"
@@ -2888,6 +3106,12 @@
         data-teil="niklas"
         aria-label="27 von 31: Live-Aktionen unter Störung [Titel]"
       >
+        <ol class="teilleiste" aria-label="Teil des Vortrags: 1B 3–4, Niklas">
+          <li>1C, 1B 1–2</li>
+          <li>1A</li>
+          <li data-aktiv aria-current="step">1B 3–4</li>
+          <li>Fazit</li>
+        </ol>
         <h1 class="folie-titel">
           Live-Aktionen unter Störung
           <span style="color: var(--gedaempft); border-bottom: 2px dashed var(--linie)"
@@ -3017,6 +3241,12 @@
         data-teil="niklas"
         aria-label="28 von 31: Lohnt sich der zweite Host? [Titel]"
       >
+        <ol class="teilleiste" aria-label="Teil des Vortrags: 1B 3–4, Niklas">
+          <li>1C, 1B 1–2</li>
+          <li>1A</li>
+          <li data-aktiv aria-current="step">1B 3–4</li>
+          <li>Fazit</li>
+        </ol>
         <h1 class="folie-titel">
           Lohnt sich der zweite Host?
           <span style="color: var(--gedaempft); border-bottom: 2px dashed var(--linie)"
@@ -3109,13 +3339,19 @@
         data-teil="rahmen"
         aria-label="29 von 31: Trennung wirkt, Grenze ist die Inferenz"
       >
+        <ol class="teilleiste" aria-label="Teil des Vortrags: Fazit, Gemeinsam">
+          <li>1C, 1B 1–2</li>
+          <li>1A</li>
+          <li>1B 3–4</li>
+          <li data-aktiv aria-current="step">Fazit</li>
+        </ol>
         <h1 class="folie-titel">Trennung wirkt, Grenze ist die Inferenz</h1>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
             <p
               style="
                 position: absolute;
-                right: 0;
+                left: 0;
                 top: -150px;
                 margin: 0;
                 padding: 0 10px;
@@ -3127,6 +3363,19 @@
               "
             >
               Entwurf, mit Niklas abzustimmen
+            </p>
+            <p
+              data-leitfrage
+              style="
+                margin: 0 0 26px;
+                font-size: var(--s-min);
+                line-height: 1.35;
+                color: var(--gedaempft);
+              "
+            >
+              <b style="color: var(--text-2)">Leitfrage:</b> „Wie wirksam trennt die Architektur von
+              Release 1.3 Anwendung, Kontextaufbau und private Inferenz unter realer Last, und
+              welche Betriebsgrenzen ergeben sich für den Moderationskompass?“
             </p>
             <div
               style="
