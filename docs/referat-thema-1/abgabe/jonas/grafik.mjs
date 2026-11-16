@@ -1226,7 +1226,7 @@ export function abstimmungSvg({ auftrag }) {
   );
   // Stufe 2: Hash anders → Antwort verworfen
   t.push(
-    `<g data-ab="2"><rect x="${sx(0.4)}" y="${yLlm - 22}" width="${r2(sx(inferS) - sx(0.4))}" height="44" rx="6" fill="${FARBEN.weiss}" fill-opacity="0.55"/>` +
+    `<g data-ab="2"><rect x="${sx(0.4)}" y="${yLlm - 22}" width="${r2(sx(inferS) - sx(0.4))}" height="44" rx="6" fill="${FARBEN.bernsteinHell}" stroke="${FARBEN.bernstein}" stroke-width="2"/>` +
       text(sx(inferS / 2), yLlm + 8, `Inferenz ${fmt(inferS, 1)} s, Antwort verworfen`, {
         groesse: 24,
         gewicht: 700,

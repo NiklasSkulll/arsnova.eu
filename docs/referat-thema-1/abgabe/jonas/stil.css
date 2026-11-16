@@ -202,12 +202,12 @@
   font-size: var(--s-sek);
   line-height: 1.35;
 }
-/* Merksatz mit Akzentlinie (Diskussionsfrage, gemeinsames Fazit, Folgerung): Abstand zur Gruppe darüber */
+/* Merksatz auf heller Fläche (Diskussionsfrage, gemeinsames Fazit, Folgerung): Abstand zur Gruppe darüber */
 .merksatz {
   flex: none;
   margin: var(--abstand-gruppe) 0 0;
   padding: 16px 24px;
-  border-left: 6px solid var(--blau);
+  border-radius: 8px;
   background: var(--raster);
   font-size: var(--s-text);
   line-height: 1.35;
@@ -517,8 +517,8 @@
 /* Nachweisumfang auf GD: ruhig, eine Zeile, ohne Wertung (nachweisumfang.md) */
 .dank-nachweis {
   margin: 28px 0 0;
-  padding: 8px 0 8px 18px;
-  border-left: 6px solid var(--linie);
+  padding: 12px 0 0;
+  border-top: 1px solid var(--linie);
   color: var(--text-2);
   font-size: var(--s-sek);
   line-height: 1.35;
