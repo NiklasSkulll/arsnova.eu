@@ -1,10 +1,10 @@
 # Sprechnotizen Jonas
 
-Gesamt 10:05 min, Kurzfassung 6:05 min (Folien mit der Marke „Kurzfassung“). Erzeugt aus `folien.mjs` (`notiz` = Fließtext, `stichpunkte`, `zeitS`, `kurzfassung`); nicht von Hand ändern. Vorgetragen wird aus den Stichpunkten; der Fließtext ist die ausformulierte Fassung zum Üben.
+Gesamt 9:00 min, Kurzfassung 5:30 min (Folien mit der Marke „Kurzfassung“). Erzeugt aus `folien.mjs` (`notiz` = Fließtext, `stichpunkte`, `zeitS`, `kurzfassung`); nicht von Hand ändern. Vorgetragen wird aus den Stichpunkten; der Fließtext ist die ausformulierte Fassung zum Üben.
 
 ## Sprungplan
 
-Ab der ersten Folie (G0) gezählt beginnt J13 in der Langfassung bei 8:05 min. J13 und J15 brauchen zusammen 1:55 min. Damit sie bis 9:00 min gesprochen sind: Wer bei 7:05 min noch vor J13 steht, blättert mit Pfeil rechts ohne Kommentar bis J13 und spricht ab dort weiter. Bei Zeitdruck von Anfang an nur die Folien mit der Marke „Kurzfassung“ (6:05 min); sie enthält J13 und J15.
+Geplant: 9:00 min (Grenze 9:00 min), ab der ersten Folie (G0) gezählt. J13 beginnt im Plan bei 7:15 min; J13 und J15 brauchen zusammen 1:40 min. Bis 7:20 min bleiben 0:05 min Puffer. Wer bei 7:20 min noch vor J13 steht, blättert mit Pfeil rechts ohne Kommentar bis J13 und spricht ab dort weiter. Bei Zeitdruck von Anfang an nur die Folien mit der Marke „Kurzfassung“ (5:30 min); sie enthält J13 und J15.
 
 ## G0 Thema 1: KI-Inferenz im Moderationskompass (35 s, kumuliert 0:35)
 
@@ -38,7 +38,7 @@ Ein Klick der Lehrperson, 152 Sekunden Warten, und am Ende steht keine Modellant
 
 _Quelle:_ evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317 (Auftrag 2: treiber.auftraege clientWaitMs, zerlegung.auftraege jobMs; Spanne warm: zerlegung.auftraege 2–10); Code: 1B a19ca70f (v1.4.0-184), 1C-Nachlauf def56700 (v1.4.0-14), frühere 1C-Messungen v1.3.0-228 und v1.3.0-322; Leitfragen: Prüfungsdokument 4.3, ADR 1B-011
 
-## J2 Zwei Hosts nachgebaut, Produktionscode unverändert (40 s, kumuliert 1:55)
+## J2 Zwei Hosts nachgebaut, Produktionscode unverändert (30 s, kumuliert 1:45)
 
 **Stichpunkte**
 
@@ -53,7 +53,7 @@ Schritt 1 von 1B verlangt, das Zwei-Host-Deployment aus ADR-0035 nachzubauen. Ge
 
 _Quelle:_ evidenz/1B/messung/2026-11-13-aufbau-von-null.txt · ThinkPad P50 · 82319946; Abweichungen: evidenz/1B/2026-11-12-aufbau.md (Komponenten, Befund 2, Abweichungen), evidenz/1B/2026-11-13-lauf.md (Kalibrierung, Versuch 3; Modell laut Manifest Qwen3-4B-Instruct-2507-Q4_K_M), ADR 1B-001, 1B-002, 1B-005, 1B-010
 
-## J3 Host nach 67 ms frei, Inferenz 151 s (40 s, kumuliert 2:35, **Kurzfassung** 1:20)
+## J3 Host nach 67 ms frei, Inferenz 151 s (40 s, kumuliert 2:25, **Kurzfassung** 1:20)
 
 **Stichpunkte**
 
@@ -69,7 +69,7 @@ Hier ist die Karte für den Rest des Vortrags, mit den Werten von Auftrag 2. Obe
 
 _Quelle:_ evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317 (Auftrag 2: hostReturnMs, inferMs); 1C-Werte: Nachlauf, Laptop (ThinkPad P50) · def56700, und Teil 2, Laptop · 248029dc (Test-Runtime)
 
-## J4 Erst die Hypothese, dann die Messung (35 s, kumuliert 3:10)
+## J4 Erst die Hypothese, dann die Messung (30 s, kumuliert 2:55)
 
 **Stichpunkte**
 
@@ -84,7 +84,7 @@ Erstens standen Hypothesen und Schwellen vor den gewerteten Läufen fest, mit of
 
 _Quelle:_ adr/1B-008-kernaussagen-und-schwellen.md; adr/1C-003-teststrategie-modellfrei.md; evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317; Nachlauf 1C (Umgebung, Abweichungen): Laptop (ThinkPad P50) · def56700; ADR 1C-021 (Produktionslimits)
 
-## J5 Der Host wartet nicht auf das Modell (40 s, kumuliert 3:50, **Kurzfassung** 2:00)
+## J5 Der Host wartet nicht auf das Modell (35 s, kumuliert 3:30, **Kurzfassung** 1:55)
 
 **Stichpunkte**
 
@@ -99,7 +99,7 @@ Erste Station, der Klick. Die Frage aus 1C lautet: Blockiert ein langsames Model
 
 _Quelle:_ evidenz/1C/2026-11-09-labor-nachlauf.md · Laptop (ThinkPad P50) · def56700 (Branch f746ffba); 1B: evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317
 
-## J6 Was die Vorschau zeigt, kommt an (60 s, kumuliert 4:50, **Kurzfassung** 3:00)
+## J6 Was die Vorschau zeigt, kommt an (50 s, kumuliert 4:20, **Kurzfassung** 2:45)
 
 **Stichpunkte**
 
@@ -115,7 +115,7 @@ Zweite Station, der Kontext. Die Frage: Bekommt die Runtime genau das, was die L
 
 _Quelle:_ evidenz/1C/messung/2026-11-09-labor-nachlauf.json.gz, labor.quiet.runs[1] · Laptop (ThinkPad P50) · f746ffba (def56700); evidenz/1C/2026-10-24-teil2.md · Laptop (ThinkPad P50) · 248029dc; Berechtigung: routers/qa.ts, 1C-diagrams.md · def56700
 
-## J7 Sicher geschätzt, aber Platz verschenkt (40 s, kumuliert 5:30)
+## J7 Sicher geschätzt, aber Platz verschenkt (30 s, kumuliert 4:50)
 
 **Stichpunkte**
 
@@ -130,7 +130,7 @@ Zur Frage nach den Kosten der Kontextbereitstellung. Das Budget schätzt Tokens 
 
 _Quelle:_ evidenz/1C/2026-11-09-labor-nachlauf.md · Laptop (ThinkPad P50) · def56700 (Branch f746ffba); Meldung: evidenz/1C/messung/2026-11-09-labor-nachlauf.json.gz, labor.quiet.runs[1] · Laptop (ThinkPad P50) · f746ffba (def56700)
 
-## J8 Gemessen am Draht, auf beiden Hosts (35 s, kumuliert 6:05)
+## J8 Gemessen am Draht, auf beiden Hosts (30 s, kumuliert 5:20)
 
 **Stichpunkte**
 
@@ -145,7 +145,7 @@ Wie trenne ich Netz und Inferenz, ohne Produktionscode anzufassen? Ich schneide 
 
 _Quelle:_ evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317 (Auftrag 2: treiber.auftraege, zerlegung.auftraege)
 
-## J9 Die Zeit steckt in der Inferenz (45 s, kumuliert 6:50, **Kurzfassung** 3:45)
+## J9 Die Zeit steckt in der Inferenz (40 s, kumuliert 6:00, **Kurzfassung** 3:25)
 
 **Stichpunkte**
 
@@ -161,7 +161,7 @@ Die ganze Zerlegung als Punkte auf logarithmischer Achse; Balken würden hier da
 
 _Quelle:_ evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317; Kalt: evidenz/1B/2026-11-13-lauf.md, Nachtrag · ThinkPad P50 · 9e111d35
 
-## J10 Das Netz ist 0,3 mm auf 105 m (25 s, kumuliert 7:15, **Kurzfassung** 4:10)
+## J10 Das Netz ist 0,3 mm auf 105 m (25 s, kumuliert 6:25, **Kurzfassung** 3:50)
 
 **Stichpunkte**
 
@@ -176,7 +176,7 @@ Wäre der Median eines warmen Auftrags so lang wie ein Fußballfeld, dann nähme
 
 _Quelle:_ evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317; Maßstab: T_job warm (n = 9), Netz und Transport Median über alle 10
 
-## J12 Nachprüfung: wenig Zeit, unter Voting riskant (50 s, kumuliert 8:05)
+## J12 Nachprüfung: wenig Zeit, unter Voting riskant (50 s, kumuliert 7:15)
 
 **Stichpunkte**
 
@@ -192,7 +192,7 @@ Nächste Station, nach der Inferenz. Was passiert, wenn sich die Daten ändern, 
 
 _Quelle:_ Nachlauf N3, N5 · Laptop (ThinkPad P50) · def56700; ADR 1C-017 · Laptop und PC · 9f230abc; E7, E8: evidenz/1C/2026-10-24-teil2.md · Laptop · 248029dc (Test-Runtime)
 
-## J13 38 geprüfte Antworten, keine besteht das Gate (75 s, kumuliert 9:20, **Kurzfassung** 5:25)
+## J13 38 geprüfte Antworten, keine besteht das Gate (60 s, kumuliert 8:15, **Kurzfassung** 4:50)
 
 **Stichpunkte**
 
@@ -209,7 +209,7 @@ Und jetzt das Gate. Hier scheitert unser Auftrag. Links die echte Antwort des Mo
 
 _Quelle:_ evidenz/1B/messung/2026-11-15-abgelehnte-antwort.json (Auftrag 2); Lauf 1B · ThinkPad P50 · 8e9d1317 (Code a19ca70f); Nachlauf · Laptop · def56700; ADR 1C-018 · 9f230abc; Gate-Ablation: evidenz/1C/2026-11-16-gate-ablation.md · Laptop, offline · def56700 und 9f230abc; Upstream-Commits 12f1d8e4, a998ada0; Clip: evidenz/1B/2026-11-15-clip.md, 2026-11-15; Hinweis qaSummaryExtractive.ts
 
-## J15 Entkopplung bleibt, Gate neu abstimmen (40 s, kumuliert 10:00, **Kurzfassung** 6:05)
+## J15 Entkopplung bleibt, Gate neu abstimmen (40 s, kumuliert 8:55, **Kurzfassung** 5:30)
 
 **Stichpunkte**
 
@@ -225,7 +225,7 @@ Was bleibt: die Entkopplung über die Queue, die Nachprüfung, die Validierung u
 
 _Quelle:_ 1C-ergebnis.md, Abschnitt 5, ADRs 1C-010 bis 1C-024, Abschnitt Folgen (Laptop und PC · 9f230abc; Laptop · def56700); 1B-ergebnis.md, Entscheidung (ThinkPad P50 · 8e9d1317)
 
-## J16 Literaturverzeichnis (5 s, kumuliert 10:05)
+## J16 Literaturverzeichnis (5 s, kumuliert 9:00)
 
 Das vollständige Literaturverzeichnis nach dem IU-Zitierleitfaden; dieselben Einträge wie im Handout.
 

@@ -13,7 +13,7 @@
       "sha256": null
     }
   },
-  "folien": { "gemeinsamesDeck": 47, "jonasUndReserve": 28, "niklasUndReserve": 17 },
+  "folien": { "gemeinsamesDeck": 45, "jonasUndReserve": 28, "niklasUndReserve": 15 },
   "eingaben": [
     {
       "pfad": "docs/referat-thema-1/evidenz/1B/messung/2026-11-13-lauf.json",
@@ -121,7 +121,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/bau.mjs",
-      "sha256": "7727d85bfb529cde0f358ac7b838dce79407cb17c3d8ba000f70e928047ffa9f"
+      "sha256": "b904c609ba0ccff3238715dc6e1c6997c0dba9536c0327627e096cb7fc919ae8"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/deck-vorlage.html",
@@ -129,15 +129,15 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/deck.js",
-      "sha256": "f23aa52c8c95945b3f7f10b1dfe41670356d7db99346c2edb0175fb000c37450"
+      "sha256": "3b4ff2b96d701b73c096333da7773f5222f303e79fe6c2e20882473bdce8078d"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/deck.mjs",
-      "sha256": "2b570251c9fd7abc75026ba99ef4421659885b4e89302ebad5a9b4de25b3b7e7"
+      "sha256": "e7a92dc005c176fa0e0b16e2a0860c47d6e24922c0596fa4427768a074903d4b"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/folien.mjs",
-      "sha256": "bb22eff120321a919d4e5bec47aa6b0d73c47c6934bed4cd4a37c107c4f531f4"
+      "sha256": "256e3d9e83dd946f1b104006dbe4737ce4e6eebd57f64d2e7c76d1ca992b155c"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/grafik.mjs",
@@ -436,6 +436,26 @@
       "sha256": "6f5c0df08d7486e27b7e14fa3441714c575a0e9f33d4be6e8e7a0a9615ec1d5b"
     },
     {
+      "pfad": "docs/referat-thema-1/evidenz/1B/messung/2026-11-15-lauf-f1-summary.json",
+      "sha256": "ad7c48f085e65e5cea46238274c785d95ca414d436d7e243738a00ef7daf95b2"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1B/messung/2026-11-15-lauf-normal-summary.json",
+      "sha256": "8c3a484507a2e41713b857981ab5b96e84558a2a438a168fde161787a1ed74cf"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1B/messung/2026-11-16-lauf-busy-summary.json",
+      "sha256": "0e3b7e9b1768c737277b9dac5c1d1007232ddc5a3c68c4402a459134b40ca70c"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1B/messung/2026-11-16-lauf-f2-summary.json",
+      "sha256": "5c1c866191d0fb92cf9da47410f500f9197a73a039215f7961859d9792c92ff3"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1B/messung/2026-11-16-lauf-l3-summary.json",
+      "sha256": "bab996142df22efabcc6c095b168f17ab9755704a28ef565c2495e666f3b442f"
+    },
+    {
       "pfad": "scripts/load/lib/artillery-live-messungen.mjs",
       "sha256": "343ebed073757b6a699cd9a77d47d0d61650e8ef40a9172ff2db0adb075f005d"
     },
@@ -445,31 +465,31 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/niklas/daten-1a.mjs",
-      "sha256": "d9f21d8234a51dc1fe61fb0409f6493605ae5717714ada9a44d54f6ea95ce1f9"
+      "sha256": "e08fd706e8eb83e78e8f786175849bec0755903ffc9fe11147d6238c2d25c48f"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/niklas/daten-1b34.mjs",
-      "sha256": "56db0ef9c085a5e23b17950fa6e26648bc0efe3cd97521435bbcb53f8c2aa585"
+      "sha256": "305ea930bcfb645ac22d4038fb45ed6df03d382303e98332d60a0edce2d1693b"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/niklas/folien-1a.mjs",
-      "sha256": "e5ff12fddb7ab3e6d6b6dd4307dba9d36e6432c6b4a008fe1e1eed2dfa7c9aac"
+      "sha256": "116e9e83ccea9ea81a0420269ff5344430ea8dca9dcfb6d04ffe005fab4aa3b6"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/niklas/folien-1b34.mjs",
-      "sha256": "c72c022ec200cb5b83ffadfbe9dfd670994423745377415b3dcfbc13e1f9bffe"
+      "sha256": "62be89bebcce2b21a9c7dc4ee1ef9da8a567b9b15af4655696bdf9c8577a31bc"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/niklas/grafik-1a.mjs",
-      "sha256": "e937c14c53b9762e8d8eff9a625bfdec7eccc59009ef1b0985153fc94a466b86"
+      "sha256": "61dce7a9dd2d7ba8c78ef725f8882b71fa546b909bfad81e177445482b026734"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/niklas/handout-latex-1a.mjs",
-      "sha256": "04ec0d275fad12f1a513f264d01868429b660ee7887b004ac0acf6fe5dfd8229"
+      "sha256": "cf237a9941624e72f4521ee073a5be2a1469fd35c611667744beb49c3bfd629b"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/niklas/literatur-1a.mjs",
-      "sha256": "e6c969f8e5c099e6e97305e22697a99562cd2c13cf2d3df9e24ba0b89f864179"
+      "sha256": "c8ddc84d779d48430b817922b9465ea1e5c7cdea2ef0df340c46aa72d03164f8"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/niklas/teile.mjs",
@@ -479,47 +499,47 @@
   "ausgaben": [
     {
       "datei": "jonas-deck.html",
-      "bytes": 1781004,
-      "sha256": "988e162276d4509acd44e5d10cb5a67d63e1ab68fa8eeb9e37680f9e87aa0ad3"
+      "bytes": 1791511,
+      "sha256": "b9d7feb2f95451b82d438fc7400aabb597c643fd886dd181d7ce4732005f51b5"
     },
     {
       "datei": "gemeinsames-deck.pdf",
-      "bytes": 1138232,
-      "sha256": "afb2dbd7f6ad103f4b45446aa1babd26e5f5bc373719951502afed085bd95a9d",
-      "seiten": 47
+      "bytes": 1153526,
+      "sha256": "ef52a09ce32accfb3ffd29b4b1a629fbd0ff2da07a6f093113efb86c63429e01",
+      "seiten": 45
     },
     {
       "datei": "jonas-folien.pdf",
-      "bytes": 763355,
-      "sha256": "f42880664b6b4909ac8ff2cd1e6c73195e4d82d06b7851b02d4458ee625eff5e",
+      "bytes": 763526,
+      "sha256": "b288f881cc82a0f146388578f36453b9c8bbaac561c802b2cdfbbaf0608b0a5e",
       "seiten": 28
     },
     {
       "datei": "niklas-folien.pdf",
-      "bytes": 405419,
-      "sha256": "8a1d9dc0838f00418bf7cf35b2c39030e43d6fe69b46ddc359b5d4a6d530797e",
-      "seiten": 17
+      "bytes": 425064,
+      "sha256": "a5d1acd7f3f9da759cb4797ebc90d6ed356a99d33a0ea1ef9941a634dd141262",
+      "seiten": 15
     },
     {
       "datei": "sprechnotizen.md",
-      "bytes": 31666,
-      "sha256": "b6cc2135e220f1031a2b04fab9b2b63688dd42659f81de49e133cf8197389542"
+      "bytes": 31688,
+      "sha256": "210ae016367d6c338c1fcf5cda0e6afe8adfe99bb27f907809e7523aaafe06fb"
     },
     {
       "datei": "sprechnotizen-niklas.md",
-      "bytes": 23113,
-      "sha256": "30b887232f048bd76fd252cc1157f620813d30385546edf828fab20c88eee455"
+      "bytes": 26953,
+      "sha256": "bcd324c70f19da57ee9196027b6f9fe1957093c6770e2f69e85156ef2dc8e045"
     },
     {
       "datei": "sprechkarten-jonas.pdf",
-      "bytes": 71203,
-      "sha256": "da0ec12d6cddbeff8a0e0ae1080485680e8ea536b51cd766f0f581b0b39d11c4",
+      "bytes": 71193,
+      "sha256": "2e16880ecf4e35049214d4883b18422a73424339e38a78280d3f00fc64e5a082",
       "seiten": 4
     },
     {
       "datei": "sprechkarten-niklas.pdf",
-      "bytes": 56166,
-      "sha256": "d4619025d825aa065f30280ee7832fc9f27ab48b4f89d3c24af42eb73cac7823",
+      "bytes": 58732,
+      "sha256": "f9030109901b767623ab543d564d61813056ab6d8ae54a47caade8952a93809c",
       "seiten": 3
     }
   ]
