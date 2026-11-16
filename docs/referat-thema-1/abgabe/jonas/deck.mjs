@@ -196,6 +196,9 @@ function ohneUmbruchInKennungen(html) {
     .join('');
 }
 
+/** Breite des J13-Clips in px (Höhe aus dem Zuschnitt 848 × 800); vorher 380 px, im Audit zu klein. */
+const CLIP_BREITE = 480;
+
 function jonasFolie(f, nr, gesamt, clipDaten) {
   let inhalt = f.inhalt.replaceAll(' xmlns="http://www.w3.org/2000/svg"', '');
   if (clipDaten) {
@@ -208,11 +211,11 @@ function jonasFolie(f, nr, gesamt, clipDaten) {
       (_, figure) =>
         `${figure}<video class="clip" src="${uri}" muted playsinline preload="auto" ` +
         `aria-label="Clip: Lehrenden-Sicht, Klick, Warten, Ersatzzusammenfassung" ` +
-        `style="display:block;width:380px;aspect-ratio:848/800;object-fit:cover;border-radius:10px;box-shadow:0 2px 6px rgb(22 32 44 / 0.14), 0 12px 32px rgb(22 32 44 / 0.12)"></video>` +
+        `style="display:block;width:${CLIP_BREITE}px;aspect-ratio:848/800;object-fit:cover;border-radius:10px;background:var(--tinte);box-shadow:0 2px 6px rgb(22 32 44 / 0.14), 0 12px 32px rgb(22 32 44 / 0.12)"></video>` +
         // Im PDF (Druck-CSS der Vorlage) steht das Standbild an der Stelle des Videos.
         `<img class="clip-standbild" src="${standbild}" alt="Standbild: Ergebnis mit Hinweis" ` +
-        `style="width:380px;aspect-ratio:848/800;object-fit:cover;border-radius:10px">` +
-        `<figcaption style="width:380px;margin-top:12px;font-size:var(--s-min);line-height:1.35;color:var(--gedaempft)">` +
+        `style="width:${CLIP_BREITE}px;aspect-ratio:848/800;object-fit:cover;border-radius:10px">` +
+        `<figcaption style="width:${CLIP_BREITE}px;margin-top:10px;font-size:var(--s-min);line-height:1.35;color:var(--gedaempft)">` +
         `Laboraufnahme ${esc(info.datum)}: ${Math.round(info.wartezeitS)} s Wartezeit, auf ${info.raffungS} s gerafft. ` +
         (info.grund === 'timeout'
           ? `Hier Abbruch nach ${Math.round(info.timeoutMs / 1000)} s (Timeout), nicht das Gate, gleicher Hinweis. `
@@ -275,8 +278,8 @@ function niklasFolien(pngs, teil, kennung, titel) {
 }
 
 /**
- * Baut das gemeinsame Deck: G0, Niklas 1A, Jonas J1–J15, Niklas 1B 3–4, G9; Reservefolien
- * danach (nur über `r` erreichbar).
+ * Baut das gemeinsame Deck: G0, Niklas 1A, Jonas J1–J15, Niklas 1B 3–4, G9, Anhang (J16);
+ * Reservefolien danach (nur über `r` erreichbar).
  * @param {ReturnType<import('./folien.mjs').folien>} folien
  * @param {{ niklas: { teil1: string[], teil2: string[] }, clip?: string, standbild?: string,
  *   clipInfo?: { datum: string, profil: string, wartezeitS: number, raffungS: number, grund: string,
@@ -294,7 +297,9 @@ export function baueDeck(
   const nach = (pred) => folien.filter(pred);
   const g0 = nach((f) => f.id === 'G0');
   const g9 = nach((f) => f.id === 'G9');
-  const jonas = nach((f) => f.teil === 'jonas');
+  // Anhang (J16, Literaturverzeichnis) steht nach G9, damit er die Übergabe an Niklas nicht unterbricht.
+  const jonas = nach((f) => f.teil === 'jonas' && !f.anhang);
+  const anhang = nach((f) => f.teil === 'jonas' && f.anhang);
   const reserve = nach((f) => f.teil === 'reserve');
   if (g0.length !== 1 || g9.length !== 1) throw new Error('Rahmenfolien G0 und G9 fehlen');
   if (clip && !(clipInfo && standbild)) {
@@ -316,6 +321,7 @@ export function baueDeck(
     ...jonas.map((f) => ({ folie: f })),
     ...teilVonNiklas(niklas.teil2, '1B Schritte 3–4', 'N2', '1B Schritte 3–4: Störung und Aufwand'),
     ...g9.map((f) => ({ folie: f })),
+    ...anhang.map((f) => ({ folie: f })),
   ];
   const gesamt = haupt.length;
   const abschnitte = haupt.map((h, i) =>

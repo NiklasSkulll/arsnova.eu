@@ -19,22 +19,24 @@ const nach = (id) => F.find((f) => f.id === id);
 const jonas = F.filter((f) => f.teil === 'jonas');
 const summe = (liste) => liste.reduce((s, f) => s + f.zeitS, 0);
 
-/** Zeiten nach der fachlichen Prüfung 2 (I-07): Hauptteil höchstens 690 s, J14 in die Reserve (R11). */
+/**
+ * Zeiten nach dem Audit 2026-11-16: G0 bis J16 etwa 10:30 min. J11 (Betrieb) ist Reserve R13, J16 steht als
+ * Anhang nach G9; J2, J4, J8 und J15 gekürzt. Früher: J14 in die Reserve (R11, fachliche Prüfung 2).
+ */
 const PLAN = {
   J1: 40,
-  J2: 60,
+  J2: 40,
   J3: 40,
-  J4: 50,
+  J4: 35,
   J5: 40,
   J6: 60,
   J7: 40,
-  J8: 45,
+  J8: 35,
   J9: 45,
   J10: 25,
-  J11: 50,
   J12: 50,
   J13: 75,
-  J15: 50,
+  J15: 40,
   J16: 5,
 };
 
@@ -93,6 +95,8 @@ const KENNUNGEN = [
   /\b\d{1,3}(?:\.\d{1,3}){3}\b/g, // IP-Adressen der Labor-VMs
   /§\s?\d+/g, // Abschnitte des Runbooks
   /#456\b/g,
+  /\bZ\.(?: |&nbsp;)\d+(?:, \d+)*/g, // Zeilennummern im Code (R14)
+  /\bet al\. \(\d{4}\)/g, // Jahr eines Kurzbelegs im Text
 ];
 
 function whitelist() {
@@ -128,26 +132,26 @@ function whitelist() {
   return w;
 }
 
-test('Jonas-Folien in Reihenfolge mit den geplanten Zeiten, Hauptteil ≤ 690 s, mit Rahmen ≤ 750 s', () => {
+test('Jonas-Folien in Reihenfolge mit den geplanten Zeiten, mit Rahmen etwa 10:30 min', () => {
   assert.deepEqual(
     jonas.map((f) => f.id),
     Object.keys(PLAN),
   );
   for (const f of jonas) assert.equal(f.zeitS, PLAN[f.id], f.id);
   const s = summe(jonas);
-  assert.ok(s >= 600 && s <= 690, `Summe ${s}`);
+  assert.ok(s >= 540 && s <= 600, `Summe ${s}`);
   const rahmen = summe(F.filter((f) => f.teil === 'rahmen'));
-  assert.ok(s + rahmen <= 750, `mit G0/G9 ${s + rahmen} s`);
+  assert.ok(s + rahmen >= 600 && s + rahmen <= 660, `mit G0/G9 ${s + rahmen} s`);
 });
 
-test('Kurzfassung: nur Jonas-Folien, Summe 420–470 s', () => {
+test('Kurzfassung: nur Jonas-Folien, Summe 340–400 s', () => {
   const k = F.filter((f) => f.kurzfassung);
   assert.ok(
     k.every((f) => f.teil === 'jonas'),
     'nur Jonas-Folien',
   );
   const s = summe(k);
-  assert.ok(s >= 420 && s <= 470, `Summe ${s}`);
+  assert.ok(s >= 340 && s <= 400, `Summe ${s}`);
 });
 
 test('Pflichtfelder: quelle mit Rechner und Commit, notiz, auftrag, station', () => {
@@ -186,14 +190,18 @@ test('Rahmenfolien G0 und G9 sind als Entwurf markiert', () => {
     assert.match(sichtbar(f.inhalt), /Entwurf, mit Niklas abzustimmen/, id);
   }
   assert.equal(F[0].id, 'G0');
-  assert.equal(F.at(-1).teil === 'reserve' || F.at(-1).id === 'G9', true);
+  assert.equal(F.at(-1).teil, 'reserve');
+  // J16 (Literaturverzeichnis) folgt als Anhang direkt auf G9, nicht zwischen J15 und Niklas.
+  const haupt = F.filter((f) => f.teil !== 'reserve').map((f) => f.id);
+  assert.deepEqual(haupt.slice(-3), ['J15', 'G9', 'J16']);
+  assert.equal(nach('J16').anhang, true);
 });
 
-test('Reservefolien R1–R12 (Design Abschnitt 5, Abdeckung, J14 als R11, Entscheidungen als R12)', () => {
+test('Reservefolien R1–R14 (J14 als R11, Entscheidungen R12, J11 als R13, Einordnung R14)', () => {
   const r = F.filter((f) => f.teil === 'reserve');
   assert.deepEqual(
     r.map((f) => f.id),
-    ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10', 'R11', 'R12'],
+    ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10', 'R11', 'R12', 'R13', 'R14'],
   );
   const text = r.map((f) => f.titel).join(' | ');
   for (const wort of [
@@ -209,6 +217,8 @@ test('Reservefolien R1–R12 (Design Abschnitt 5, Abdeckung, J14 als R11, Entsch
     'ADR-0035',
     'Betrieb',
     'Entscheidungen',
+    'Timeout und Speicher',
+    'Cloud Computing',
   ])
     assert.ok(text.includes(wort), wort);
 });
@@ -440,7 +450,7 @@ test('W4/W5: Abweichungen und Grenzen je Auftrag offengelegt', () => {
   for (const re of [
     /4 statt 8 CPUs/,
     /Timeout 300 s statt 90 s/,
-    /202 s/,
+    /202\ss/,
     /selbst gebaut/,
     /ohne Wrapper/,
     /Schalter/,
@@ -455,14 +465,14 @@ test('W4/W5: Abweichungen und Grenzen je Auftrag offengelegt', () => {
   const s = sichtbar(c1.inhalt);
   for (const re of [/ein Rechner/, /Loopback/, /4 CPUs/, /5 GiB/, /300 s/])
     assert.match(s, re, `${c1.id}: ${re}`);
-  const j11 = sichtbar(nach('J11').inhalt);
+  const j11 = sichtbar(nach('R13').inhalt);
   assert.match(j11, /5 GiB/);
   assert.match(j11, /21\./);
   assert.match(j11, /9f230abc/);
 });
 
 test('W6/W7/W8: Speicher bei wechselnden Prompts, warm = identischer Snapshot, R1 mit den richtigen Kalibrierungen', () => {
-  assert.match(sichtbar(nach('J11').inhalt), /wechselnden Prompts/);
+  assert.match(sichtbar(nach('R13').inhalt), /wechselnden Prompts/);
   const r5 = sichtbar(nach('R5').inhalt);
   assert.match(r5, /identische/);
   assert.match(nach('J9').notiz, /identisch/);
@@ -577,10 +587,10 @@ test('I-10: Messstand mit git describe; kein „Fork-main, Version 1.4.0 (8e9d13
 });
 
 test('Minor: OOM-Vergleich, Speicherursache, Kaltaussage, Blitzlicht-Typen', () => {
-  const j11 = sichtbar(nach('J11').inhalt);
+  const j11 = sichtbar(nach('R13').inhalt);
   assert.match(j11, /10 GiB/);
   assert.match(j11, /Laptop und PC/);
-  assert.match(nach('J11').notiz, /vermutlich|nicht getrennt gemessen/);
+  assert.match(nach('R13').notiz, /vermutlich|nicht getrennt gemessen/);
   assert.ok(!/Alle drei Hypothesen sind erfüllt, auch kalt/.test(nach('J9').notiz));
   assert.match(sichtbar(nach('J12').inhalt), /geprüft: YESNO/);
   assert.match(sichtbar(nach('J7').inhalt), /keinem Lauf/);
@@ -602,7 +612,7 @@ test('R3-I1: Werte ab Werk mit Version; v1.3.0 und der Grund für den Messstand 
     );
   }
   assert.match(sichtbar(nach('J4').inhalt), /v1\.4\.0/);
-  assert.match(nach('J11').inhalt, /ab Werk v1\.4\.0/);
+  assert.match(nach('R13').inhalt, /ab Werk v1\.4\.0/);
 });
 
 test('R3-I2: 19 von 20 mit Instruktion v2 und ohne Gate; nicht allein dem Gate zugeschrieben', () => {
@@ -643,12 +653,12 @@ test('R4-I1: Früherer OOM ohne Kausalaussage „weil mehr Tokens“ (ADR 1C-024
   for (const f of F) assert.ok(!kausal.test(alles(f)), f.id);
   const katalog = readFileSync(resolve(ROOT, 'abgabe/jonas/fragenkatalog.md'), 'utf8');
   assert.ok(!kausal.test(katalog), 'Fragenkatalog');
-  assert.match(sichtbar(nach('J11').inhalt), /nicht getrennt gemessen/);
+  assert.match(sichtbar(nach('R13').inhalt), /nicht getrennt gemessen/);
 });
 
 test('R4-Minor: J4-Notiz ohne „Release“, Swap des Hosts unbekannt, Netz über beide Anfragen', () => {
   assert.ok(!/als im Release/.test(nach('J4').notiz));
-  assert.match(sichtbar(nach('J11').inhalt), /Swap des Hosts unbekannt/);
+  assert.match(sichtbar(nach('R13').inhalt), /Swap des Hosts unbekannt/);
   assert.match(sichtbar(nach('J8').inhalt), /GET \/slots und POST/);
   assert.ok(!/Uhrendrift/.test(alles(nach('J8'))));
   assert.match(nach('R2').notiz, /Streuung/);
@@ -656,7 +666,7 @@ test('R4-Minor: J4-Notiz ohne „Release“, Swap des Hosts unbekannt, Netz übe
 
 // ---------------------------------------------------------------- Fachliche Prüfung 5
 
-test('R5: Gate-Wechsel mit a998ada0, Validierung am Stand 248029dc, Nutzlastpfad, Aufteilung der 38, J11 ohne 1B-Station', () => {
+test('R5: Gate-Wechsel mit a998ada0, Validierung am Stand 248029dc, Nutzlastpfad, Aufteilung der 38', () => {
   const j13 = nach('J13');
   assert.match(sichtbar(j13.inhalt), /a998ada0/);
   assert.match(sichtbar(j13.inhalt), /uncertain/);
@@ -670,7 +680,7 @@ test('R5: Gate-Wechsel mit a998ada0, Validierung am Stand 248029dc, Nutzlastpfad
     sichtbar(nach('G9').inhalt),
     new RegExp(`1B ${daten.b1.verworfen}, 1C ${daten.c1.gateAntwortenGesamt.wert}`),
   );
-  assert.equal(nach('J11').station, null);
+  assert.equal(nach('R13').station, null);
 });
 
 test('J13: Clip-Angaben stimmen mit dem App-Hinweis überein, die Notiz nennt den Grund des Clip-Laufs', () => {
@@ -720,4 +730,100 @@ test('ZL: J16 zeigt das vollständige Literaturverzeichnis, jede Quelle ist auf 
     );
   }
   assert.match(j16.titel, /Literaturverzeichnis/);
+});
+
+// ---------------------------------------------------------------- Audit 2026-11-16
+
+test('Fußzeile: eine Quellenzeile nur mit Kurzbelegen, ohne Commit und Rechner', () => {
+  for (const f of F.filter((x) => x.id !== 'J16')) {
+    assert.ok(
+      !/\b(?=[0-9a-f]*\d)(?=[0-9a-f]*[a-f])[0-9a-f]{8}\b/.test(f.fuss),
+      `${f.id}: Commit in „${f.fuss}“`,
+    );
+    assert.ok(!/ThinkPad|i7-|· Laptop|· PC/.test(f.fuss), `${f.id}: Rechner in „${f.fuss}“`);
+    assert.ok(!/Weirauch, 2026[abd]/.test(f.fuss), `${f.id}: alter Jahresbuchstabe`);
+  }
+  // J1 zeigt keine Commits mehr (Versionen nur als git describe, I-10)
+  assert.ok(!/\b(a19ca70f|def56700)\b/.test(sichtbar(nach('J1').inhalt)));
+});
+
+test('Defensive Formulierungen: Laptop-CPU, Nebenlast, Konsistenzprüfung, Transport, Messunsicherheit', () => {
+  assert.match(sichtbar(nach('J1').inhalt), /Laptop/);
+  assert.match(sichtbar(nach('J1').inhalt), /CPU/);
+  // 223,7 s (Nachlauf) nur mit „Nebenlast“
+  const nachlauf = fmt(daten.c1.inferenzS.wert, 1);
+  for (const f of F) {
+    const t = `${sichtbar(f.inhalt)} ${f.notiz ?? ''}`;
+    for (const satz of t.split(/(?<=[.;])\s/)) {
+      if (satz.includes(nachlauf))
+        assert.match(satz, /Nebenlast/, `${f.id}: ${nachlauf} ohne Nebenlast`);
+    }
+  }
+  assert.match(alles(nach('R13')), /zu kurz auf beiden Laborrechnern/);
+  assert.match(sichtbar(nach('R13').inhalt), new RegExp(fmt(daten.c1.inferenzRuhigS.wert, 1)));
+  assert.match(alles(nach('R13')), /nicht dem Cache zu(zu)?ordnen|nicht dem Cache zuordenbar/);
+  assert.match(nach('R13').fuss, /Server-specific params/);
+  assert.match(sichtbar(nach('R3').inhalt), /gestoppt/);
+  assert.match(alles(nach('R2')), /nicht nachweisbar/);
+  assert.match(sichtbar(nach('J4').inhalt), /Konsistenzprüfung/);
+  assert.match(sichtbar(nach('J4').inhalt), /Orientiert an Papadopoulos/);
+  assert.match(sichtbar(nach('J8').inhalt), /Messunsicherheit der Uhren/);
+  assert.match(sichtbar(nach('J8').inhalt), /Server ohne Inferenz/);
+  for (const f of F)
+    assert.ok(!/Auflösung|schnellerer Hardware|nicht langsamer/.test(alles(f)), f.id);
+  assert.match(nach('J9').notiz, new RegExp(`über ${daten.abgeleitet.anteilPcMin} Prozent`));
+  // Qwen: Variante aus dem Manifest, nicht aus Yang et al.
+  assert.match(sichtbar(nach('J2').inhalt), /Instruct-2507 Q4_K_M \(Manifest\)/);
+  // Warme Spanne neben dem warmen Median (ein Lauf, keine unabhängigen Wiederholungen)
+  const spanne = `${fmt(daten.b1.jobWarmSpanneS[0], 1)}–${fmt(daten.b1.jobWarmSpanneS[1], 1)} s`;
+  for (const id of ['J1', 'R4']) assert.ok(sichtbar(nach(id).inhalt).includes(spanne), id);
+});
+
+test('J13 nennt die Gate-Ablation in einer Zeile', () => {
+  const s = sichtbar(nach('J13').inhalt);
+  assert.match(s, /Ablation/);
+  assert.ok(s.includes(daten.c1.ablationNeuEnglisch.wert));
+  assert.ok(s.includes(daten.c1.ablationAltMeta.wert));
+  assert.match(s, /Formregeln/);
+});
+
+test('Titel als Aussage: J2, J3, J10, J15; J10 aus den Daten', () => {
+  assert.equal(
+    nach('J10').titel,
+    `Das Netz ist ${fmt(daten.abgeleitet.feldNetzMm, 1)} mm auf ${fmt(daten.abgeleitet.feldM)} m`,
+  );
+  assert.match(nach('J3').titel, new RegExp(`${fmt(daten.auftrag.hostReturnMs)} ms`));
+  assert.match(nach('J15').titel, /Entkopplung bleibt/);
+  assert.match(nach('J2').titel, /Produktionscode unverändert/);
+  const j15 = sichtbar(nach('J15').inhalt);
+  for (const w of ['Bleibt', 'Empfohlen, nicht umgesetzt', 'Offen', 'Zur Diskussion'])
+    assert.match(j15, new RegExp(w));
+  assert.equal((j15.match(/\?/g) ?? []).length, 2, 'eine Diskussionsfrage plus Übergabe');
+});
+
+test('R14: Einordnung Cloud Computing als Rechnung aus dem Code, Zeilen stimmen', () => {
+  const r14 = nach('R14');
+  const s = sichtbar(r14.inhalt);
+  assert.match(s, /Rechnung aus dem Code, keine Messung/);
+  for (const w of [
+    'Elastizität',
+    'Ressourcenbündelung',
+    'Netzzugang',
+    'Bulkhead',
+    'busy',
+    'queue_full',
+    'SLO',
+  ])
+    assert.match(s, new RegExp(w), w);
+  const code = (datei) =>
+    readFileSync(resolve(ROOT, `../../apps/backend/src/lib/${datei}`), 'utf8').split('\n');
+  const client = code('openWeightLlmClient.ts');
+  assert.match(client[140], /let inFlight = false/);
+  assert.match(client[496], /if \(inFlight\) return \{ status: 'busy'/);
+  const config = code('qaSummaryConfig.ts');
+  assert.match(config[25], /QA_SUMMARY_QUEUE_LIMIT_DEFAULT = 8/);
+  assert.match(config[28], /QA_SUMMARY_CONCURRENCY_DEFAULT = 1/);
+  assert.match(code('qaSummaryQueue.ts')[509], /queue\.length \+ running >= config\.queueLimit/);
+  // NIST steht ohne Literatureintrag (nicht im Handout zitiert)
+  assert.ok(!r14.fuss.includes('NIST'));
 });

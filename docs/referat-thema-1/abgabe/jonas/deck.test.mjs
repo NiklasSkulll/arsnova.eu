@@ -120,6 +120,7 @@ test('Anzahl Folien = Rahmen + Niklas + Jonas, Reserve getrennt', async () => {
       haupt: document.querySelectorAll('.folie:not([data-teil="reserve"])').length,
       niklas: document.querySelectorAll('.folie[data-teil="niklas"]').length,
       jonas: [...document.querySelectorAll('.folie[data-teil="jonas"]')].map((s) => s.dataset.id),
+      nachG9: document.querySelector('.folie[data-id="G9"]').nextElementSibling?.dataset.id,
       reserve: document.querySelectorAll('.folie[data-teil="reserve"]').length,
       reihenfolge: [...document.querySelectorAll('.folie')].map((s) => s.dataset.teil),
       platzhalter: [...document.querySelectorAll('.folie[data-teil="niklas"] .folie-titel')].map(
@@ -135,9 +136,10 @@ test('Anzahl Folien = Rahmen + Niklas + Jonas, Reserve getrennt', async () => {
       JONAS.map((f) => f.id),
     );
     assert.equal(z.reserve, RESERVE.length);
-    // Reihenfolge: G0, Niklas 1A, Jonas, Niklas 1B 3–4, G9, Reserve
+    assert.equal(z.nachG9, 'J16', 'Literaturverzeichnis nach G9');
+    // Reihenfolge: G0, Niklas 1A, Jonas, Niklas 1B 3–4, G9, Anhang (J16), Reserve
     const block = z.reihenfolge.filter((t, i, a) => i === 0 || a[i - 1] !== t);
-    assert.deepEqual(block, ['rahmen', 'niklas', 'jonas', 'niklas', 'rahmen', 'reserve']);
+    assert.deepEqual(block, ['rahmen', 'niklas', 'jonas', 'niklas', 'rahmen', 'jonas', 'reserve']);
     if (niklas === 2) {
       assert.deepEqual(z.platzhalter, ['Teil Niklas', 'Teil Niklas']);
     } else {
@@ -162,6 +164,7 @@ test('Fußzeile zeigt Seitenzahl im Vortrag und Quelle', async () => {
   assert.match(fuss.G0, new RegExp(`^1 / ${gesamt} · `));
   assert.match(fuss.J1, new RegExp(`^3 / ${gesamt} · `));
   assert.match(fuss.R1, /^Reserve R1 · /);
+  assert.match(fuss.J16, new RegExp(`^${gesamt} / ${gesamt} · `));
   await context.close();
 });
 
@@ -331,7 +334,7 @@ test('J10 zoomt in drei Schritten über kameraViewBox, Beschriftungen über zoom
       );
     }
     await page.keyboard.press('ArrowRight');
-    assert.equal(await aktuelleId(page), 'J11');
+    assert.equal(await aktuelleId(page), 'J12');
     // zurück: J10 im Endzustand, dann schrittweise heraus
     await page.keyboard.press('ArrowLeft');
     assert.equal(await aktuelleId(page), 'J10');
@@ -352,7 +355,7 @@ test('J10 zoomt in drei Schritten über kameraViewBox, Beschriftungen über zoom
 test('Tasten: Home, End, Bild ab/auf, Leertaste; Reserve-Übersicht mit r', async () => {
   const { page, context } = await oeffne(deckOhneNiklas);
   await page.keyboard.press('End');
-  assert.equal(await aktuelleId(page), 'G9');
+  assert.equal(await aktuelleId(page), 'J16');
   await page.keyboard.press('Home');
   assert.equal(await aktuelleId(page), 'G0');
   await page.keyboard.press('PageDown');
@@ -478,7 +481,7 @@ test('Layout: je Folie keine Überlappung von Titel, Frage, Fläche und Fußzeil
   assert.deepEqual(await layoutBefunde(browser, deckOhneNiklas), []);
 });
 
-test('ZL: Quellenzeilen in der Fußzeile werden nie abgeschnitten (höchstens zwei Zeilen)', async () => {
+test('ZL: Quellenzeilen in der Fußzeile werden nie abgeschnitten, eine Zeile (Audit 2026-11-16)', async () => {
   const { page, context } = await oeffne(deckOhneNiklas);
   await page.emulateMedia({ media: 'print' });
   const befunde = await page.evaluate(() =>
@@ -487,7 +490,7 @@ test('ZL: Quellenzeilen in der Fußzeile werden nie abgeschnitten (höchstens zw
       const fehler = [];
       if (el.scrollWidth > el.clientWidth + 1) fehler.push('abgeschnitten');
       if (getComputedStyle(el).textOverflow === 'ellipsis') fehler.push('Ellipse');
-      if (el.clientHeight - 12 > zeile * 2 + 2) fehler.push('mehr als zwei Zeilen');
+      if (el.clientHeight - 12 > zeile + 2) fehler.push('mehr als eine Zeile');
       return fehler.map((f) => `${el.closest('.folie').dataset.id}: ${f}`);
     }),
   );
@@ -518,8 +521,8 @@ test('Layout-Gegenprobe: zweizeiliger Titel und überlappender Beleg werden geme
       return {
         ...f,
         inhalt: f.inhalt.replace(
-          '<p class="beleg">',
-          '<p class="beleg" style="position:relative;top:-120px">',
+          '<pre data-artefakt="budget" class="mono" style="',
+          '<pre data-artefakt="budget" class="mono" style="position:relative;top:120px;',
         ),
       };
     if (f.id === 'R8') return { ...f, inhalt: f.inhalt.replace('width:100%', 'width:1700px') };
@@ -529,7 +532,7 @@ test('Layout-Gegenprobe: zweizeiliger Titel und überlappender Beleg werden geme
   writeFileSync(pfad, baueDeck(kaputt, { niklas: { teil1: [], teil2: [] }, eingebettet: true }));
   const befunde = (await layoutBefunde(browser, pfad)).join('\n');
   assert.match(befunde, /J12: Titel zweizeilig/);
-  assert.match(befunde, /J7: pre\.mono.* trifft p\.beleg/);
+  assert.match(befunde, /J7: pre\.mono.* trifft /);
   assert.match(befunde, /R8: .*(außerhalb der Bühne|ragt aus der Fläche)/);
 });
 
