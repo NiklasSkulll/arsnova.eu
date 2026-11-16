@@ -1,12 +1,12 @@
 # Sprechnotizen Jonas
 
-Gesamt 8:30 min, Kurzfassung 5:35 min (Folien mit der Marke „Kurzfassung“). Erzeugt aus `folien.mjs` (`notiz` = Fließtext, `stichpunkte`, `zeitS`, `kurzfassung`); nicht von Hand ändern. Vorgetragen wird aus den Stichpunkten; der Fließtext ist die ausformulierte Fassung zum Üben.
+Gesamt 14:35 min, Kurzfassung 6:25 min (Folien mit der Marke „Kurzfassung“). Erzeugt aus `folien.mjs` (`notiz` = Fließtext, `stichpunkte`, `zeitS`, `kurzfassung`); nicht von Hand ändern. Vorgetragen wird aus den Stichpunkten; der Fließtext ist die ausformulierte Fassung zum Üben.
 
 ## Sprungplan
 
-Geplant: 8:30 min (Grenze 10:30 min), ab der ersten Folie (J1) gezählt. J13 beginnt im Plan bei 6:45 min; J13 und J15 brauchen zusammen 1:40 min. Bis 8:50 min bleiben 2:05 min Puffer. Wer bei 8:50 min noch vor J13 steht, blättert mit Pfeil rechts ohne Kommentar bis J13 und spricht ab dort weiter. Bei Zeitdruck von Anfang an nur die Folien mit der Marke „Kurzfassung“ (5:35 min); sie enthält J13 und J15.
+Geplant: 14:35 min (Grenze 15:00 min), ab der ersten Folie (J1) gezählt. J13 beginnt im Plan bei 11:45 min; J13 und J15 brauchen zusammen 1:55 min. Bis 13:05 min bleiben 1:20 min Puffer. Wer bei 13:05 min noch vor J13 steht, blättert mit Pfeil rechts ohne Kommentar bis J13 und spricht ab dort weiter. Bei Zeitdruck von Anfang an nur die Folien mit der Marke „Kurzfassung“ (6:25 min); sie enthält J13 und J15.
 
-## J1 Ein Klick. 152 Sekunden. Keine Modellantwort. (45 s, kumuliert 0:45, **Kurzfassung** 0:45)
+## J1 Ein Klick. 152 Sekunden. Keine Modellantwort. (50 s, kumuliert 0:50, **Kurzfassung** 0:50)
 
 **Stichpunkte**
 
@@ -19,11 +19,11 @@ Geplant: 8:30 min (Grenze 10:30 min), ab der ersten Folie (J1) gezählt. J13 beg
 
 **Fließtext**
 
-Danke, Niklas. Die schwere Arbeit, die Inferenz, ist ausgelagert auf einen zweiten Host. Was heißt das für einen einzelnen Auftrag? Ein Klick der Lehrperson, 152 Sekunden Warten, und am Ende steht keine Modellantwort auf dem Bildschirm. Dieser Auftrag ist echt, die Nummer 2 aus meinem gewerteten Lauf, auf der CPU meines Laptops. Davon rechnet der Server 151,2 Sekunden am Job; warme Aufträge brauchen im Median 148,6 Sekunden. Gemessen habe ich Code nach Version 1.4.0; das wird beim Gate wichtig. Zwei Fragen: Für 1C, hält der Kontextpfad seine Zusagen? Für 1B, Schritte 1 und 2, wo steckt die Zeit auf dem zweiten Host? Petrol ist 1C, Bernstein ist 1B.
+Danke, Niklas. Die schwere Arbeit, die Inferenz, ist ausgelagert auf einen zweiten Host. Was heißt das für einen einzelnen Auftrag? Ein Klick der Lehrperson, 152 Sekunden Warten, und am Ende steht keine Modellantwort auf dem Bildschirm. Dieser Auftrag ist echt, die Nummer 2 aus meinem gewerteten Lauf, auf der CPU meines Laptops. Davon rechnet der Server 151,2 Sekunden am Job; warme Aufträge brauchen im Median 148,6 Sekunden. Gemessen habe ich Code nach Version 1.4.0; das wird beim Gate wichtig. Zwei Fragen: Für 1C, hält der Kontextpfad seine Zusagen? Für 1B, Schritte 1 und 2, wo steckt die Zeit auf dem zweiten Host? Petrol ist 1C, Bernstein ist 1B; oben links zeigt das kleine Systembild meinen Teil.
 
 _Quelle:_ evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317 (Auftrag 2: treiber.auftraege clientWaitMs, zerlegung.auftraege jobMs; Spanne warm: zerlegung.auftraege 2–10); Code: 1B a19ca70f (v1.4.0-184), 1C-Nachlauf def56700 (v1.4.0-14), frühere 1C-Messungen v1.3.0-228 und v1.3.0-322; Leitfragen: Prüfungsdokument 4.3, ADR 1B-011
 
-## J2 Zwei Hosts nachgebaut, Produktionscode unverändert (30 s, kumuliert 1:15)
+## J2 Zwei Hosts nachgebaut, Produktionscode unverändert (45 s, kumuliert 1:35)
 
 **Stichpunkte**
 
@@ -34,11 +34,11 @@ _Quelle:_ evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317 (A
 
 **Fließtext**
 
-Schritt 1 von 1B verlangt, das Zwei-Host-Deployment aus ADR-0035 nachzubauen. Gemessen habe ich auf Wunsch des Prüfers den aktuellen Stand nach Version 1.4.0, nicht den Tag 1.3. Zwei virtuelle Maschinen auf meinem Laptop: app-host mit App, Adapter, Datenbank und Redis; llm-host mit dem LLM-Server, erreichbar nur vom app-host und mit Token. Die Abweichungen stehen im Kasten: 4 statt 8 CPUs, weil sich beide VMs den Laptop teilen, und 300 statt 90 Sekunden Timeout, weil schon die Kalibrierung 202 Sekunden dauerte.
+Schritt 1 von 1B verlangt, das Zwei-Host-Deployment aus ADR-0035 nachzubauen. Gemessen habe ich auf Wunsch des Prüfers den aktuellen Stand nach Version 1.4.0, nicht den Tag 1.3. Zwei virtuelle Maschinen auf meinem Laptop: app-host mit App, Adapter, Datenbank und Redis; llm-host mit dem LLM-Server, erreichbar nur vom app-host und mit Token. Die Abweichungen stehen im Kasten: 4 statt 8 CPUs, weil sich beide VMs den Laptop teilen, und 300 statt 90 Sekunden Timeout, weil schon die Kalibrierung 202 Sekunden dauerte. Version 1.3 selbst lief mit 4 CPUs, 5 Gibibyte und 8 Sekunden Timeout. Gebaut habe ich alles von null mit einem Skript, und die Prüfungen danach sind grün: Der llm-host antwortet nur dem app-host und nur mit Token, das Modell ist per Prüfsumme festgelegt.
 
 _Quelle:_ evidenz/1B/messung/2026-11-13-aufbau-von-null.txt · ThinkPad P50 · 82319946; Abweichungen: evidenz/1B/2026-11-12-aufbau.md (Komponenten, Befund 2, Abweichungen), evidenz/1B/2026-11-13-lauf.md (Kalibrierung, Versuch 3; Modell laut Manifest Qwen3-4B-Instruct-2507-Q4_K_M), ADR 1B-001, 1B-002, 1B-005, 1B-010
 
-## J3 Host nach 67 ms frei, Inferenz 151 s (40 s, kumuliert 1:55, **Kurzfassung** 1:25)
+## J3 Host nach 67 ms frei, Inferenz 151 s (45 s, kumuliert 2:20, **Kurzfassung** 1:35)
 
 **Stichpunkte**
 
@@ -47,14 +47,15 @@ _Quelle:_ evidenz/1B/messung/2026-11-13-aufbau-von-null.txt · ThinkPad P50 · 8
 - Auftrag 2: Host frei nach 67 ms, Inferenz 151 s
 - Kontext und Nachprüfung: Werte aus 1C, ein Rechner (klein vermerkt)
 - Der Punkt wandert ab jetzt mit
+- Vereinfacht: volle UML-Diagramme (Struktur, Zeitablauf) in der Reserve R15, R16
 
 **Fließtext**
 
-Hier ist die Karte für den Rest des Vortrags, mit den Werten von Auftrag 2. Oben der app-host, unten der llm-host. Der Auftrag startet links mit dem Klick, der Kontext wird gebaut, geht über das Netz zur Inferenz, kommt zurück, wird nachgeprüft und landet am Gate. An Klick und Inferenz stehen die Werte unseres Auftrags 2: Der Host-Aufruf kehrt nach 67 Millisekunden zurück, die Inferenz dauert 151 Sekunden. Die Werte an Kontext und Nachprüfung stammen aus 1C, gemessen auf einem Rechner ohne zweiten Host; das steht klein unter jedem Wert. Der Punkt wandert jetzt von Station zu Station mit.
+Hier ist die Karte für den Rest des Vortrags, mit den Werten von Auftrag 2. Oben der app-host, unten der llm-host. Der Auftrag startet links mit dem Klick, der Kontext wird gebaut, geht über das Netz zur Inferenz, kommt zurück, wird nachgeprüft und landet am Gate. An Klick und Inferenz stehen die Werte unseres Auftrags 2: Der Host-Aufruf kehrt nach 67 Millisekunden zurück, die Inferenz dauert 151 Sekunden. Die Werte an Kontext und Nachprüfung stammen aus 1C, gemessen auf einem Rechner ohne zweiten Host; das steht klein unter jedem Wert. Der Punkt wandert jetzt von Station zu Station mit, oben links auf jeder Folie. Die Karte ist vereinfacht; die vollständigen UML-Diagramme, Struktur und Zeitablauf, liegen für Fragen in der Reserve.
 
 _Quelle:_ evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317 (Auftrag 2: hostReturnMs, inferMs); 1C-Werte: Nachlauf, Laptop (ThinkPad P50) · def56700, und Teil 2, Laptop · 248029dc (Test-Runtime)
 
-## J4 Erst die Hypothese, dann die Messung (30 s, kumuliert 2:25)
+## J4 Erst die Hypothese, dann die Messung (40 s, kumuliert 3:00)
 
 **Stichpunkte**
 
@@ -65,11 +66,11 @@ _Quelle:_ evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317 (A
 
 **Fließtext**
 
-Erstens standen Hypothesen und Schwellen vor den gewerteten Läufen fest, mit offengelegten Ausnahmen. Für 1B: Netz im Median höchstens 50 Millisekunden, Adapter höchstens 2 Sekunden; das sind die echten Prüfungen. Der Inferenzanteil ist nur eine Konsistenzprüfung. Zweitens habe ich 1C zuerst ohne Modell getestet, mit Negativproben. Drittens das Labor: 1C lief auf einem Rechner über Loopback, ohne zweiten Host. Die Methode orientiert sich an Papadopoulos; Konfidenzintervalle und Wiederholungen über Instanzen fehlen.
+Erstens standen Hypothesen und Schwellen vor den gewerteten Läufen fest, mit offengelegten Ausnahmen. Für 1B: Netz im Median höchstens 50 Millisekunden, Adapter höchstens 2 Sekunden; das sind die echten Prüfungen. Der Inferenzanteil ist nur eine Konsistenzprüfung. Zweitens habe ich 1C zuerst ohne Modell getestet, mit Negativproben. Drittens das Labor: 1C lief auf einem Rechner über Loopback, ohne zweiten Host. Die Methode orientiert sich an Papadopoulos; Konfidenzintervalle und Wiederholungen über Instanzen fehlen. Wichtig ist die Reihenfolge: Netz und Adapter hätten scheitern können, deshalb standen die Schwellen fest, bevor ich gemessen habe.
 
 _Quelle:_ adr/1B-008-kernaussagen-und-schwellen.md; adr/1C-003-teststrategie-modellfrei.md; evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317; Nachlauf 1C (Umgebung, Abweichungen): Laptop (ThinkPad P50) · def56700; ADR 1C-021 (Produktionslimits)
 
-## J5 Der Host wartet nicht auf das Modell (35 s, kumuliert 3:00, **Kurzfassung** 2:00)
+## J5 Der Host wartet nicht auf das Modell (40 s, kumuliert 3:40, **Kurzfassung** 2:15)
 
 **Stichpunkte**
 
@@ -84,38 +85,53 @@ Erste Station, der Klick. Die Frage aus 1C lautet: Blockiert ein langsames Model
 
 _Quelle:_ evidenz/1C/2026-11-09-labor-nachlauf.md · Laptop (ThinkPad P50) · def56700 (Branch f746ffba); 1B: evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317
 
-## J6 Was die Vorschau zeigt, kommt an (50 s, kumuliert 3:50, **Kurzfassung** 2:50)
+## J5b Jeder Kontextaufbau prüft die Rechte erneut (45 s, kumuliert 4:25)
+
+**Stichpunkte**
+
+- Schritt 1 von 1C: Woher kommt der Kontext, wer darf ihn sehen?
+- Jeder Bereich aus #456: Datenquelle, Funktion, Schemafassung, Rechteprüfung
+- Erst Host-Token, dann je Kontextaufbau 8 Rechteprüfungen
+- Token bleibt auf dem Server (E2); Zeilennummern in der Diagrammdoku
+
+**Fließtext**
+
+Schritt 1 von 1C: Woher kommt der Kontext, und wer darf ihn sehen? Issue #456 nennt die Bereiche. Jeder hat eine Datenquelle, eine Funktion, eine versionierte Schemafassung und eine Rechteprüfung. Q&A-Fragen und Stimmen kommen aus PostgreSQL, die semantischen Themen aus einem Redis-Snapshot, Quiz, Blitzlicht und Kompass aus den Lehrsignalen, die Lernziele wieder aus PostgreSQL. Vorschau und Auftrag prüfen zuerst das Host-Token. Danach prüft jeder Kontextaufbau die Rechte erneut, acht Prüfungen je Aufbau. Das Token selbst bleibt auf dem Server und geht nicht an die Runtime, das zeigt Test E2. Die Tabelle mit Zeilennummern steht in der Diagrammdoku zu 1C.
+
+_Quelle:_ 1C-diagrams.md, #456-Bereiche · Code-Stand def56700 (v1.4.0-14), gelesen am Laptop (ThinkPad P50); E2: evidenz/1C/2026-10-24-teil2.md · Laptop · 248029dc
+
+## J6 Was die Vorschau zeigt, kommt an (55 s, kumuliert 5:20, **Kurzfassung** 3:10)
 
 **Stichpunkte**
 
 - Station Kontext: Kommt an, was die Vorschau zeigt?
-- Schemas geprüft, gepackt; Host-Token, 8 Rechteprüfungen je Aufbau
+- Schemas geprüft, gepackt; nur mit Host-Token
 - Echter Ausschnitt der Nutzlast: gleicher Hash, byte-gleich mit der Vorschau
 - Validierung 1,2 ms = 1,6 % (älterer Stand, Test-Runtime) → bleibt
-- Herkunft der Bereiche: Reserve R8
 
 **Fließtext**
 
-Zweite Station, der Kontext. Die Frage: Bekommt die Runtime genau das, was die Lehrperson in der Vorschau sieht? Der Kontext entsteht aus dem App-Zustand, wird gegen versionierte Schemas geprüft und dann gepackt. Vorschau und Auftrag gibt es nur mit gültigem Host-Token, und jeder Kontextaufbau prüft die Rechte erneut, acht Prüfungen je Aufbau. Unten steht ein echter Ausschnitt der Nutzlast aus dem Nachlauf, mit synthetischen Daten: die Vertragsversion, ein abgeschalteter Bereich mit seinem Grund und eine Frage aus der Fixture. Vorschau und Nutzlast tragen denselben Hash, die Nachricht an die Runtime ist byte-gleich mit der Vorschau. Was kostet die strikte Validierung? 1,2 Millisekunden, 1,6 Prozent eines warmen Kontextaufbaus; gemessen nur auf dem älteren Stand, mit der Test-Runtime. Deshalb bleibt sie. Welcher Bereich woher kommt, zeigt die Reserve.
+Zweite Station, der Kontext. Die Frage: Bekommt die Runtime genau das, was die Lehrperson in der Vorschau sieht? Der Kontext entsteht aus dem App-Zustand, wird gegen versionierte Schemas geprüft und dann gepackt. Vorschau und Auftrag gibt es nur mit gültigem Host-Token, wie gerade gezeigt. Unten steht ein echter Ausschnitt der Nutzlast aus dem Nachlauf, mit synthetischen Daten: die Vertragsversion, ein abgeschalteter Bereich mit seinem Grund und eine Frage aus der Fixture. Vorschau und Nutzlast tragen denselben Hash, die Nachricht an die Runtime ist byte-gleich mit der Vorschau. Was kostet die strikte Validierung? 1,2 Millisekunden, 1,6 Prozent eines warmen Kontextaufbaus; gemessen nur auf dem älteren Stand, mit der Test-Runtime. Deshalb bleibt sie.
 
 _Quelle:_ evidenz/1C/messung/2026-11-09-labor-nachlauf.json.gz, labor.quiet.runs[1] · Laptop (ThinkPad P50) · f746ffba (def56700); evidenz/1C/2026-10-24-teil2.md · Laptop (ThinkPad P50) · 248029dc; Berechtigung: routers/qa.ts, 1C-diagrams.md · def56700
 
-## J7 Sicher geschätzt, aber Platz verschenkt (30 s, kumuliert 4:20)
+## J7 Sicher geschätzt, aber Platz verschenkt (45 s, kumuliert 6:05)
 
 **Stichpunkte**
 
 - Budget zählt 1 Byte = 1 Token: sichere Obergrenze, kein Überlauf
-- Echte Tokens im Median nur das 0,318-fache der Schätzung
+- Rahmen = ganzes geschätztes Budget; Frage: Wie viel nutzt der Kontext?
+- [Weiter] Echte Tokens im Median nur das 0,318-fache der Schätzung
 - Rund zwei Drittel ungenutzt, trotzdem eine Frage weggelassen
 - Empfehlung: genauere Zählung prüfen, nicht umgesetzt
 
 **Fließtext**
 
-Zur Frage nach den Kosten der Kontextbereitstellung. Das Budget schätzt Tokens über Bytes: Jedes Byte zählt als ein Token. Das ist eine Obergrenze, denn ein Token umfasst mindestens ein Byte; in keinem Lauf lief das Fenster über. Aber es ist teuer. Die echten Tokens sind im Median nur das 0,318-fache der Schätzung. Rund zwei Drittel des geschätzten Budgets bleiben also ungenutzt. Und derselbe Kontext meldet gleichzeitig, dass eine Frage aus Budgetgründen weggelassen wurde. Ich empfehle, eine genauere Zählung zu prüfen. Umgesetzt ist das nicht.
+Zur Frage nach den Kosten der Kontextbereitstellung. Das Budget schätzt Tokens über Bytes: Jedes Byte zählt als ein Token. Das ist eine Obergrenze, denn ein Token umfasst mindestens ein Byte; in keinem Lauf lief das Fenster über. Der Rahmen hier ist das ganze geschätzte Budget. Was meinen Sie, wie viel davon nutzt der Kontext wirklich? [Weiter] Die echten Tokens sind im Median nur das 0,318-fache der Schätzung. Rund zwei Drittel des geschätzten Budgets bleiben also ungenutzt. Und derselbe Kontext meldet gleichzeitig, dass eine Frage aus Budgetgründen weggelassen wurde. Ich empfehle, eine genauere Zählung zu prüfen. Umgesetzt ist das nicht.
 
 _Quelle:_ evidenz/1C/2026-11-09-labor-nachlauf.md · Laptop (ThinkPad P50) · def56700 (Branch f746ffba); Meldung: evidenz/1C/messung/2026-11-09-labor-nachlauf.json.gz, labor.quiet.runs[1] · Laptop (ThinkPad P50) · f746ffba (def56700)
 
-## J8 Gemessen am Draht, auf beiden Hosts (30 s, kumuliert 4:50)
+## J8 Gemessen am Draht, auf beiden Hosts (40 s, kumuliert 6:45)
 
 **Stichpunkte**
 
@@ -126,11 +142,25 @@ _Quelle:_ evidenz/1C/2026-11-09-labor-nachlauf.md · Laptop (ThinkPad P50) · de
 
 **Fließtext**
 
-Wie trenne ich Netz und Inferenz, ohne Produktionscode anzufassen? Ich schneide auf beiden Hosts mit: am app-host t null und t drei, am llm-host t eins und t zwei. Jede Dauer misst eine Uhr; die Messunsicherheit der Uhren liegt bei etwa einer Millisekunde. Netz ist die Zeit am app-host minus die am llm-host: für Auftrag 2 unter einer Millisekunde, über alle 10 im Median 0,43. Transport heißt Netz plus Server ohne Inferenz. Auffällig: Server ohne Inferenz 368 Millisekunden, Ursache offen.
+Wie trenne ich Netz und Inferenz, ohne Produktionscode anzufassen? Ich schneide auf beiden Hosts mit: am app-host t null und t drei, am llm-host t eins und t zwei. Jede Dauer misst eine Uhr; die Messunsicherheit der Uhren liegt bei etwa einer Millisekunde. Netz ist die Zeit am app-host minus die am llm-host: für Auftrag 2 unter einer Millisekunde, über alle 10 im Median 0,43. Transport heißt Netz plus Server ohne Inferenz. Auffällig: Server ohne Inferenz 368 Millisekunden, Ursache offen. Den Mitschnitt brauche ich, weil die App selbst nur die Gesamtzeit loggt; das Zusammenspiel zeigt die UML-Sequenz in Reserve R16.
 
 _Quelle:_ evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317 (Auftrag 2: treiber.auftraege, zerlegung.auftraege)
 
-## J9 Die Zeit steckt in der Inferenz (40 s, kumuliert 5:30, **Kurzfassung** 3:30)
+## J8b Strecke und lokal: kein Unterschied messbar (35 s, kumuliert 7:20)
+
+**Stichpunkte**
+
+- Kontrolle C0: dieselbe kurze Anfrage über die Strecke und lokal
+- Differenz der Mediane −2,0 ms, Schwelle vorab ≤ 5 ms: nicht nachweisbar
+- Heißt nicht „kostenlos“: Drahtmessung 0,43 ms im Median
+
+**Fließtext**
+
+Bevor ich der Drahtmessung traue, eine Kontrolle. Kostet die Strecke zwischen den Hosts mehr als ein Aufruf im selben Host? Kontrolle C0 schickt dieselbe kurze Anfrage einmal vom app-host über das Netz und einmal vom llm-host an sich selbst und vergleicht die Mediane. Die Differenz ist −2,0 Millisekunden, also innerhalb der vorab festgelegten Schwelle von 5 Millisekunden: Ein Unterschied ist nicht nachweisbar, denn die Streuung je Seite ist größer. Das heißt nicht, dass die Strecke nichts kostet. Die eigentliche Zahl bleibt die Drahtmessung, 0,43 Millisekunden im Median.
+
+_Quelle:_ evidenz/1B/2026-11-13-lauf.md, Nachtrag · ThinkPad P50 · 9e111d35
+
+## J9 Die Zeit steckt in der Inferenz (50 s, kumuliert 8:10, **Kurzfassung** 4:00)
 
 **Stichpunkte**
 
@@ -146,7 +176,7 @@ Die ganze Zerlegung als Punkte auf logarithmischer Achse; Balken würden hier da
 
 _Quelle:_ evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317; Kalt: evidenz/1B/2026-11-13-lauf.md, Nachtrag · ThinkPad P50 · 9e111d35
 
-## J10 Das Netz ist 0,3 mm auf 105 m (25 s, kumuliert 5:55, **Kurzfassung** 3:55)
+## J10 Das Netz ist 0,3 mm auf 105 m (30 s, kumuliert 8:40, **Kurzfassung** 4:30)
 
 **Stichpunkte**
 
@@ -157,44 +187,103 @@ _Quelle:_ evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317; K
 
 **Fließtext**
 
-Wäre der Median eines warmen Auftrags so lang wie ein Fußballfeld, dann nähme die Inferenz praktisch das ganze Feld ein. Der Transport wäre gut ein Zentimeter, und darin steckt das Netz mit 0,3 Millimetern, dünner als die Kreidelinie am Tor. Am Netz zu optimieren lohnt sich nicht, jedenfalls auf dieser langsamen CPU.
+Wäre der Median eines warmen Auftrags so lang wie ein Fußballfeld, dann nähme die Inferenz praktisch das ganze Feld ein. Der Transport wäre gut ein Zentimeter, und darin steckt das Netz mit 0,3 Millimetern, dünner als die Kreidelinie am Tor. Am Netz zu optimieren lohnt sich nicht, jedenfalls auf dieser langsamen CPU. Den Hebel gibt es nur bei der Inferenz selbst: schnellere Hardware, kürzere Ausgabe oder ein kleineres Modell.
 
 _Quelle:_ evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317; Maßstab: T_job warm (n = 9), Netz und Transport Median über alle 10
 
-## J12 Nachprüfung: wenig Zeit, unter Voting riskant (50 s, kumuliert 6:45)
+## J10a Frisch gestartet: 200,5 s statt 148,6 s (40 s, kumuliert 9:20)
 
 **Stichpunkte**
 
-- Station Nachprüfung: Was, wenn sich Daten während der Inferenz ändern?
-- Kontext neu bauen, Hash vergleichen; sonst source_changed (E7, E8)
-- Kostet 0,03 % eines Auftrags
-- Preis: Unter Voting verwirft jede Stimme die Antwort; Häufigkeit offen, Empfehlung zurückgehalten
-- Blitzlicht außer TEMPO: Hash hängt an der Uhrzeit (YESNO geprüft); empfohlen, nicht umgesetzt
+- Warm = gleicher Snapshot, Prompt aus dem Cache; gilt das auch frisch gestartet?
+- 5 Kaltläufe: Median 200,5 s gegen warm 148,6 s; kalter erster Auftrag 213,7 s
+- Vorlesung ändert den Zustand ständig: eher der Kaltwert
+- Anteil der Inferenz auch kalt ≥ 95 %: Aussage hält
 
 **Fließtext**
 
-Nächste Station, nach der Inferenz. Was passiert, wenn sich die Daten ändern, während das Modell rechnet? Der Kontext wird danach noch einmal gebaut und sein Hash verglichen. Ändert sich eine Stimme oder wird eine Quelle gelöscht, wird die Antwort mit source_changed verworfen; das zeigen E7 und E8. Zeitlich kostet das 0,03 Prozent eines Auftrags. Der eigentliche Preis liegt woanders: Unter laufendem Voting verwirft jede Stimme während der Inferenz die Antwort. Wie oft das in einer Vorlesung passiert, weiß ich nicht belastbar; mein Modell dafür hat sein Kriterium verfehlt, deshalb halte ich die Empfehlung zurück. Die Nachprüfung bleibt trotzdem, weil sonst veraltete Ergebnisse als gültig gälten. Dazu ein Befund: Bei laufender Blitzlicht-Runde außer TEMPO hängt der Hash von der Uhrzeit ab; geprüft habe ich YESNO, die anderen Typen folgen aus dem Code. Empfohlen, nicht umgesetzt.
+Warm heißt bei mir: derselbe Snapshot, der Prompt kommt aus dem Cache. Gilt das Ergebnis auch, wenn die Runtime frisch startet? Dafür habe ich 5 Läufe mit je frisch gestarteter Runtime gemacht. Kalt dauert ein Auftrag im Median 200,5 Sekunden, warm 148,6 Sekunden; der kalte erste Auftrag im gewerteten Lauf lag bei 213,7. Das sind getrennte Gruppen, keine Wiederholungen über Instanzen. In der Vorlesung ändert sich der Zustand ständig, dann gilt eher der Kaltwert. Der Inferenzanteil bleibt aber in allen 5 Läufen über 95 Prozent. Die Aussage hält also: Die Zeit steckt in der Inferenz.
+
+_Quelle:_ evidenz/1B/2026-11-13-lauf.md, Nachtrag · ThinkPad P50 · 9e111d35; warm und Auftrag 1: evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317
+
+## J10b Runtime gestoppt: Ersatz nach 88,5 ms (30 s, kumuliert 9:50)
+
+**Stichpunkte**
+
+- B0: Runtime-Container gestoppt, alle 10 Aufträge extraktiv (unavailable)
+- Ersatz im Median nach 88,5 ms, Schwelle vorab ≤ 2 s
+- Toter Host kostet fast nichts; langsamer oder stummer Host: Niklas, Schritte 3–4
+
+**Fließtext**
+
+Und wenn der llm-host gar nicht antwortet? Im Ausfallversuch B0 habe ich den Runtime-Container vor dem Treiber gestoppt. Alle 10 Aufträge endeten mit der extraktiven Zusammenfassung und dem Grund unavailable, im Median nach 88,5 Millisekunden. Die Schwelle von 2 Sekunden stand vorher fest. Ein toter Host kostet also fast nichts. Andere Ausfälle, etwa ein langsamer oder stummer Host, sind damit nicht gemessen; die untersucht Niklas.
+
+_Quelle:_ evidenz/1B/2026-11-13-lauf.md, Nachtrag · ThinkPad P50 · 9e111d35
+
+## J11 90 s Timeout ab Werk sind auf der CPU zu kurz (55 s, kumuliert 10:45)
+
+**Stichpunkte**
+
+- Timeout ab Werk 90 s; PC 98,7 s, Laptop Median 163,4 s → zu kurz
+- Speicher: +0,419 GB je Auftrag bei wechselnden Prompts (Prompt-Cache, PC); Grenze 10 GiB
+- OOM im 21. (alt) bzw. 19. Auftrag (neu); 1B gleicher Prompt: 4,04 GB
+- Empfehlung: Timeout je Host, --cache-ram (Ausgabe 3 % langsamer, nicht zuzuordnen); nicht umgesetzt
+
+**Fließtext**
+
+Die Zeit steckt in der Inferenz; was heißt das für den Betrieb? Erstens der Timeout: Ab Werk bricht die App in Version 1.4.0 nach 90 Sekunden ab. Am PC ergab die Kalibrierung 98,7 Sekunden, am Laptop dauerte die Inferenz im Median 163,4. Der Timeout ist also zu kurz auf beiden Laborrechnern; über andere Hardware sagt das nichts. Zweitens der Speicher: Bei wechselnden Prompts wächst die Runtime je Auftrag um 0,419 Gigabyte; die Ursache ist der Prompt-Cache, gezeigt am PC. Beide Grenzen liegen bei 10 Gibibyte. Auf dem älteren Stand starb die Runtime im 21. Auftrag, auf dem neuen schon im 19.; warum früher, habe ich nicht getrennt gemessen. Im 1B-Lauf mit gleichem Prompt blieb sie bei 4,04 Gigabyte. Ich empfehle, den Timeout je Inferenz-Host zu kalibrieren und den Cache mit --cache-ram zu begrenzen; im Versuch war die Ausgabe dann um 3 Prozent langsamer, wegen fester Reihenfolge nicht dem Cache zuzuordnen. Umgesetzt ist das nicht.
+
+_Quelle:_ ADR 1C-023 (Laptop 9f230abc: evidenz/1C/2026-11-05-labor.md; PC i7-8700 · 9f230abc), ADR 1C-024 (U1, PC · 9f230abc); Nachlauf N3, N6 · Laptop (ThinkPad P50) · def56700; 1B-Speicher: evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317
+
+## J12 Nachprüfung: wenig Zeit, unter Voting riskant (60 s, kumuliert 11:45)
+
+**Stichpunkte**
+
+- Zeitleiste Auftrag 2: Host frei 67 ms, Inferenz 150,8 s, dann Nachprüfung (0,03 %)
+- [Weiter] Eine Stimme während der Inferenz (Zeitpunkt gedacht)
+- [Weiter] Hash anders → source_changed, Antwort verworfen (E7, E8)
+- Preis unter Voting; Häufigkeit offen, Empfehlung zurückgehalten (M7)
+- Blitzlicht außer TEMPO: Hash hängt an der Uhrzeit (YESNO); empfohlen, nicht umgesetzt
+
+**Fließtext**
+
+Nächste Station, nach der Inferenz. Was passiert, wenn sich die Daten ändern, während das Modell rechnet? Hier die Zeitleiste unseres Auftrags 2: Der Host ist nach 67 Millisekunden frei, die Inferenz dauert 150,8 Sekunden, danach wird der Kontext noch einmal gebaut und sein Hash verglichen. Zeitlich kostet das 0,03 Prozent eines Auftrags. [Weiter] Jetzt kommt während der Inferenz eine Stimme an; den Zeitpunkt habe ich gewählt, er ist nicht gemessen. [Weiter] Bei der Nachprüfung ist der Hash anders, und die Antwort wird mit source_changed verworfen, nach zweieinhalb Minuten Rechenzeit. Dass das so passiert, zeigen die Tests E7 und E8. Das ist der eigentliche Preis: Unter laufendem Voting verwirft jede Stimme während der Inferenz die Antwort. Wie oft das in einer Vorlesung passiert, weiß ich nicht belastbar, deshalb halte ich die Empfehlung zurück. Die Nachprüfung bleibt trotzdem, weil sonst veraltete Ergebnisse als gültig gälten. Dazu ein Befund: Bei laufender Blitzlicht-Runde außer TEMPO hängt der Hash von der Uhrzeit ab, geprüft an YESNO. Empfohlen, nicht umgesetzt.
 
 _Quelle:_ Nachlauf N3, N5 · Laptop (ThinkPad P50) · def56700; ADR 1C-017 · Laptop und PC · 9f230abc; E7, E8: evidenz/1C/2026-10-24-teil2.md · Laptop · 248029dc (Test-Runtime)
 
-## J13 38 geprüfte Antworten, keine besteht das Gate (60 s, kumuliert 7:45, **Kurzfassung** 4:55)
+## J13 38 geprüfte Antworten, keine besteht das Gate (70 s, kumuliert 12:55, **Kurzfassung** 5:40)
 
 **Stichpunkte**
 
 - Station Gate: Hier scheitert unser Auftrag (links die echte Antwort)
 - Gate prüft die Form: ≥ 2 Aussagen, Stichwort vorn, ganze Sätze, keine Metasätze; Sprache und Thema nicht
-- 0 von 38: 1B 10 von 10 verworfen, 1C keine von 28; ein Modell, eine Fixture
-- Vor v1.4.0 ohne Gate 19 von 20; Ablation: neu nur Form (22 von 28 englisch), alt 26 von 59 mit internen Status
-- [Taste: Clip] Lehrperson sieht Ersatz mit allgemeinem Hinweis, keinen Grund
-- Empfehlung: Instruktion, Grammatik und Gate gemeinsam abstimmen; nicht umgesetzt
+- Ein Feld je geprüfter Antwort: 1B 10, 1C 28
+- [Weiter] 0 von 38 bestehen; ein Modell, eine Fixture
+- [Weiter] Vor v1.4.0 ohne Gate 19 von 20; Ablation: neu nur Form (22 von 28 englisch), alt 26 von 59 mit internen Status
+- [Taste: Clip] Lehrperson sieht Ersatz mit allgemeinem Hinweis, keinen Grund; Empfehlung: gemeinsam abstimmen
 
 **Fließtext**
 
-Und jetzt das Gate. Hier scheitert unser Auftrag. Links die echte Antwort des Modells, gekürzt, im Original. Das Gate prüft vor allem die Form: mindestens zwei Aussagen, jede mit einem Stichwort vorn, verschiedene Stichwörter, ganze Sätze, keine Metasätze. Ausgaben mit Status failed und unsichere ohne Aussagen lässt es durch, aber jede geprüfte Antwort hatte Aussagen. Sprache und Thema prüft es nicht. Im 1B-Lauf wurden 10 von 10 Antworten verworfen, im 1C-Nachlauf bestand keine von 28; ein Modell, eine Fixture. Vor Version 1.4.0, mit älterer Instruktion und ohne Gate, endeten 19 von 20 Aufträge mit Modellzusammenfassung. Zwei Upstream-Commits änderten Instruktion und Gate zugleich. Die Offline-Ablation trennt die Regeln: Die neuen Antworten scheitern nur an der Form, 22 von 28 sind englisch. Die alten hätte das Gate auch verworfen, 26 von 59 nannten interne Status. Rechts die Lehrenden-Sicht aus dem Labor, gerafft: Ersatzzusammenfassung mit allgemeinem Hinweis, den Grund erfährt die Lehrperson nicht. Meine Empfehlung: Instruktion, Grammatik und Gate gemeinsam abstimmen. Umgesetzt ist das nicht.
+Und jetzt das Gate. Hier scheitert unser Auftrag. Links die echte Antwort des Modells, gekürzt, im Original. Das Gate prüft vor allem die Form: mindestens zwei Aussagen, jede mit einem Stichwort vorn, verschiedene Stichwörter, ganze Sätze, keine Metasätze. Ausgaben mit Status failed und unsichere ohne Aussagen lässt es durch, aber jede geprüfte Antwort hatte Aussagen. Sprache und Thema prüft es nicht. Jedes Feld darunter ist eine geprüfte Antwort, oben die 10 aus 1B, unten die 28 aus dem 1C-Nachlauf. [Weiter] Keine einzige besteht; ein Modell, eine Fixture. [Weiter] Vor Version 1.4.0, mit älterer Instruktion und ohne Gate, endeten 19 von 20 Aufträge mit Modellzusammenfassung. Ein Upstream-Commit änderte Instruktion und Gate zugleich, ein zweiter weitete das Gate auf unsichere Antworten aus. Die Offline-Ablation trennt die Regeln: Die neuen Antworten scheitern nur an der Form, 22 von 28 sind englisch. Die alten hätte das Gate auch verworfen, 26 von 59 nannten interne Status. Rechts die Lehrenden-Sicht aus dem Labor, gerafft: Ersatzzusammenfassung mit allgemeinem Hinweis, den Grund erfährt die Lehrperson nicht. Meine Empfehlung: Instruktion, Grammatik und Gate gemeinsam abstimmen. Umgesetzt ist das nicht.
 
 _Quelle:_ evidenz/1B/messung/2026-11-15-abgelehnte-antwort.json (Auftrag 2); Lauf 1B · ThinkPad P50 · 8e9d1317 (Code a19ca70f); Nachlauf · Laptop · def56700; ADR 1C-018 · 9f230abc; Gate-Ablation: evidenz/1C/2026-11-16-gate-ablation.md · Laptop, offline · def56700 und 9f230abc; Upstream-Commits 12f1d8e4, a998ada0; Clip: evidenz/1B/2026-11-15-clip.md, 2026-11-15; Hinweis qaSummaryExtractive.ts
 
-## J15 Entkopplung bleibt, Gate neu abstimmen (40 s, kumuliert 8:25, **Kurzfassung** 5:35)
+## J13b Cloud-Sicht: Bulkhead ja, Elastizität nein (50 s, kumuliert 13:45)
+
+**Stichpunkte**
+
+- NIST: IaaS ohne Selbstbedienung zur Laufzeit; keine schnelle Elastizität, nur vertikal von Hand
+- Zweiter Host = Bulkhead; Nutzen nicht gemessen
+- Kapazität aus dem Code: 1 Aufruf, Queue ≤ 8, rund 24 Zusammenfassungen pro Stunde
+- SLO trennen: Verfügbarkeit (Fallback hält) und Nutzen (0 von 10)
+
+**Fließtext**
+
+Was heißt das aus Sicht des Kurses? Nach den NIST-Merkmalen ist das IaaS-Betrieb ohne Selbstbedienung zur Laufzeit: Netzzugang und Ressourcenbündelung sind gegeben, schnelle Elastizität fehlt, die Inferenz skaliert nur vertikal und von Hand. Der zweite Host ist ein Bulkhead, ein getrennter Fehler- und Ressourcenbereich; den Nutzen habe ich nicht gemessen. Kapazität, gerechnet aus dem Code und nicht gemessen: ein Aufruf zugleich, die Queue nimmt höchstens 8 an, danach queue_full mit Ersatz. Bei 148,6 Sekunden je Auftrag sind das rund 24 Zusammenfassungen pro Stunde. Als SLO würde ich Verfügbarkeit und Nutzen trennen: Endstatus nach 300 Sekunden erfüllt der Fallback, der Nutzen lag bei 0 von 10.
+
+_Quelle:_ Code a19ca70f (gleich HEAD): apps/backend/src/lib/openWeightLlmClient.ts Z. 141 (inFlight), Z. 497 (busy); qaSummaryConfig.ts Z. 26 (QUEUE_LIMIT_DEFAULT = 8), Z. 29 (CONCURRENCY_DEFAULT = 1); qaSummaryQueue.ts Z. 510 (queue_full); Durchsatz aus T_job warm: evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317; NIST SP 800-145, S. 2 (Mell & Grance, 2011); ADR-0035 Abschn. 2.1, 2.2; SLO-Vorschlag: fragenkatalog.md F51; full-context: evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317
+
+## J15 Entkopplung bleibt, Gate neu abstimmen (45 s, kumuliert 14:30, **Kurzfassung** 6:25)
 
 **Stichpunkte**
 
@@ -206,11 +295,11 @@ _Quelle:_ evidenz/1B/messung/2026-11-15-abgelehnte-antwort.json (Auftrag 2); Lau
 
 **Fließtext**
 
-Was bleibt: die Entkopplung über die Queue, die Nachprüfung, die Validierung und die Gleichheit von Vorschau und Nutzlast; in 1B die Topologie, sie kostet keine relevante Zeit. Empfohlen, nicht umgesetzt: Instruktion und Gate gemeinsam abstimmen, den Timeout je Inferenz-Host kalibrieren, den Cache begrenzen. Offen ist, wie oft eine Stimme unter Voting die Antwort verwirft. [Weiter] Meine Frage an Sie: Prüft das Gate das Richtige? [Weiter] Und damit an Niklas: Was passiert, wenn der zweite Host langsam ist oder ausfällt?
+Was bleibt: die Entkopplung über die Queue, die Nachprüfung, die Validierung und die Gleichheit von Vorschau und Nutzlast; in 1B die Topologie, sie kostet keine relevante Zeit. Empfohlen, nicht umgesetzt: Instruktion und Gate gemeinsam abstimmen, den Timeout je Inferenz-Host kalibrieren, den Cache begrenzen. Offen ist, wie oft eine Stimme unter Voting die Antwort verwirft. Die Gründe für einen Ersatz sieht im Betrieb bisher niemand, deshalb sollten sie geloggt werden. Die Einzelheiten je Entscheidung, mit Kosten und Risiko, stehen in der Reserve. [Weiter] Meine Frage an Sie: Prüft das Gate das Richtige? [Weiter] Und damit an Niklas: Was passiert, wenn der zweite Host langsam ist oder ausfällt?
 
 _Quelle:_ 1C-ergebnis.md, Abschnitt 5, ADRs 1C-010 bis 1C-024, Abschnitt Folgen (Laptop und PC · 9f230abc; Laptop · def56700); 1B-ergebnis.md, Entscheidung (ThinkPad P50 · 8e9d1317)
 
-## J16 Literaturverzeichnis (5 s, kumuliert 8:30)
+## J16 Literaturverzeichnis (5 s, kumuliert 14:35)
 
 Das vollständige Literaturverzeichnis nach dem IU-Zitierleitfaden; dieselben Einträge wie im Handout.
 
@@ -233,48 +322,6 @@ Nur auf Nachfrage (Taste `r`), keine Zeit im Vortrag.
 Falls gefragt wird, warum ich nicht mit 90 Sekunden gemessen habe: Am Laptop dauerte die Kalibrierungsanfrage für 1C 196 Sekunden. Deshalb liefen die Laborläufe am Laptop mit 300 Sekunden, der Obergrenze des Produkts, offen als Abweichung markiert. Der PC war mit 98,7 Sekunden schneller, lag aber ebenfalls über 90. In 1B ergab die Kalibrierung 202 Sekunden, also auch dort 300.
 
 _Quelle:_ adr/1C-020-timeout-300-s-und-kalibrierungsregel.md (Laptop; PC · 9f230abc); evidenz/1B/2026-11-13-lauf.md, Kalibrierung (ThinkPad P50 · 3b2aa5e6)
-
-## R2 Reserve: Kontrolle C0, Strecke gegen lokal
-
-**Stichpunkte**
-
-- C0: dieselbe kurze Anfrage über die Strecke und lokal
-- Differenz der Mediane −2,0 ms, Streuung je Seite > 5 ms: nicht nachweisbar
-- Heißt nicht „kostenlos“: Drahtmessung 0,43 ms im Median
-
-**Fließtext**
-
-Die Kontrolle C0 vergleicht dieselbe kurze Anfrage über die Strecke und lokal. Die Differenz der Mediane ist −2,0 Millisekunden: Ein Unterschied ist nicht nachweisbar, denn die Streuung je Seite ist größer als 5 Millisekunden. Das heißt nicht, dass die Strecke nichts kostet. Die eigentliche Zahl ist die Drahtmessung, 0,43 Millisekunden im Median.
-
-_Quelle:_ evidenz/1B/2026-11-13-lauf.md, Nachtrag · ThinkPad P50 · 9e111d35
-
-## R3 Reserve: Ausfall B0
-
-**Stichpunkte**
-
-- Runtime gestoppt: Ersatz ohne Wartezeit, Median 88,5 ms
-- Langsamer oder hängender Host damit nicht gemessen
-- Das untersucht Niklas in 1B, Schritte 3–4
-
-**Fließtext**
-
-Bei gestopptem Runtime-Container fällt die App ohne Wartezeit auf die extraktive Zusammenfassung zurück, im Median nach 88,5 Millisekunden. Andere Ausfälle, etwa ein langsamer oder hängender Host, sind damit nicht gemessen; die untersucht Niklas.
-
-_Quelle:_ evidenz/1B/2026-11-13-lauf.md, Nachtrag · ThinkPad P50 · 9e111d35
-
-## R4 Reserve: Kaltläufe, n = 5
-
-**Stichpunkte**
-
-- Kalt und warm sind getrennte Gruppen
-- Kalt (frische Runtime) 200,5 s, warm 148,6 s
-- Warm-Spanne 148,1–158,3 s, ein Lauf; Anteil in beiden über der Schwelle
-
-**Fließtext**
-
-Kalt und warm sind getrennte Gruppen. Mit frischer Runtime dauert ein Auftrag im Median 200,5 Sekunden, warm 148,6 Sekunden, mit einer Spanne von 148,1 bis 158,3 Sekunden in einem Lauf. Der Inferenzanteil bleibt in beiden Fällen über der Schwelle.
-
-_Quelle:_ evidenz/1B/2026-11-13-lauf.md, Nachtrag · ThinkPad P50 · 9e111d35; warm und Auftrag 1: evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317
 
 ## R5 Reserve: Gültigkeitsgrenzen
 
@@ -319,20 +366,6 @@ _Quelle:_ 1C-eigenanteil.md (Autorenprüfung); adr/1B-011-zeitbegriffe-und-leitf
 Die Zählung der Entscheidungen in 1C nach Status. Keine Empfehlung ist umgesetzt, das verlangt der Auftrag so: Ergebnis ist eine begründete Empfehlung, kein Patch.
 
 _Quelle:_ adr/README.md, Index · Messstände 9f230abc (Laptop und PC) und def56700 (Laptop)
-
-## R8 Reserve: 1C Schritt 1, Autorisierung
-
-**Stichpunkte**
-
-- Jeder Bereich aus #456: Datenquelle, Funktion, Schemafassung, Rechteprüfung
-- Erst Host-Token, dann Rechte je Kontextaufbau erneut
-- Tabelle mit Zeilennummern: Diagrammdoku 1C
-
-**Fließtext**
-
-Falls nach Schritt 1 gefragt wird: Jeder Bereich aus #456 hat eine Datenquelle, eine Funktion, eine Schemafassung und eine Rechteprüfung. Vorschau und Auftrag prüfen zuerst das Host-Token, danach prüft jeder Kontextaufbau die Rechte erneut. Die Tabelle mit Zeilennummern steht in der Diagrammdoku zu 1C.
-
-_Quelle:_ 1C-diagrams.md, #456-Bereiche · Code-Stand def56700 (Laptop, ThinkPad P50)
 
 ## R9 Reserve: 1C Schritte 3–4, Konsistenzfälle
 
@@ -390,32 +423,30 @@ Falls nach den Entscheidungen im Einzelnen gefragt wird: Für 1C bleiben Nachpr�
 
 _Quelle:_ 1C-ergebnis.md, Abschnitt 5, ADRs 1C-010 bis 1C-024, Abschnitt Folgen (Laptop und PC · 9f230abc; Laptop · def56700); 1B-ergebnis.md, Entscheidung (ThinkPad P50 · 8e9d1317)
 
-## R13 Reserve: Betrieb, Timeout und Speicher
+## R15 Reserve: Der Host-Aufruf wartet nie auf das Modell
 
 **Stichpunkte**
 
-- Timeout ab Werk 90 s; PC 98,7 s, Laptop Median 163,4 s → zu kurz
-- Speicher: +0,419 GB je Auftrag bei wechselnden Prompts (Prompt-Cache, PC); Grenze 10 GiB
-- OOM im 21. (alt) bzw. 19. Auftrag (neu); 1B gleicher Prompt: 4,04 GB
-- Empfehlung: Timeout je Host, --cache-ram (Ausgabe 3 % langsamer, nicht zuzuordnen); nicht umgesetzt
+- Abb. 1, Aktivitätsdiagramm (vereinfacht), Stand def56700
+- Anfrage baut Kontext, Hash, Vertrag; Job in die Queue; kein Warten aufs Modell
+- Gespeichert nur bei gleichem Hash und gültiger Form, sonst Ersatz mit Grund
 
 **Fließtext**
 
-Falls nach dem Betrieb gefragt wird. Erstens der Timeout: Ab Werk bricht die App in Version 1.4.0 nach 90 Sekunden ab. Am PC ergab die Kalibrierung 98,7 Sekunden, am Laptop dauerte die Inferenz im Median 163,4. Der Timeout ist also zu kurz auf beiden Laborrechnern; über andere Hardware sagt das nichts. Im Nachlauf am Laptop waren es 223,7 Sekunden, mit mehr Ausgabetokens. Zweitens der Speicher: Bei wechselnden Prompts wächst die Runtime je Auftrag um 0,419 Gigabyte; die Ursache ist der Prompt-Cache, gezeigt am PC. Beide Grenzen liegen bei 10 Gibibyte. Auf dem älteren Stand starb die Runtime im 21. Auftrag, auf dem neuen schon im 19.; warum früher, habe ich nicht getrennt gemessen. Im 1B-Lauf mit gleichem Prompt blieb sie bei 4,04 Gigabyte. Ich empfehle, den Timeout je Inferenz-Host zu kalibrieren und den Cache mit --cache-ram zu begrenzen; im Versuch war die Ausgabe dann um 3 Prozent langsamer, wegen fester Reihenfolge nicht dem Cache zuzuordnen. Umgesetzt ist das nicht.
+Falls nach dem Aufbau des Kontextpfads gefragt wird: Das ist Abbildung 1 aus der Diagrammdoku, ein vereinfachtes Aktivitätsdiagramm auf dem Code-Stand def56700. Die Anfrage der Lehrperson baut auf dem App-Server den autorisierten Kontext, berechnet Budget, Hash und Vertrag und legt einen Job in die Queue; sie kehrt zurück, ohne auf das Modell zu warten. Der Job baut den Kontext vor und nach dem Modellaufruf neu. Gespeichert wird die Modellzusammenfassung nur bei gleichem Hash und gültiger Form, sonst der Ersatz mit Grund. Die großen Arbeitskarten A1 bis A3 stehen nur in 1C-diagrams.md.
 
-_Quelle:_ ADR 1C-023 (Laptop 9f230abc: evidenz/1C/2026-11-05-labor.md; PC i7-8700 · 9f230abc), ADR 1C-024 (U1, PC · 9f230abc); Nachlauf N3, N6 · Laptop (ThinkPad P50) · def56700; 1B-Speicher: evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317
+_Quelle:_ 1C-diagrams.md, Abb. 1 (diagrams/1c-context-path-overview.light.svg, Legende diagrams/1c-legende.light.svg) · Code-Stand def56700 (v1.4.0-14, Branch f746ffba), gezeichnet am Laptop (ThinkPad P50)
 
-## R14 Reserve: Einordnung Cloud Computing
+## R16 Reserve: Kontext dreimal gebaut, Status prüft erneut
 
 **Stichpunkte**
 
-- NIST: IaaS ohne Selbstbedienung zur Laufzeit; keine schnelle Elastizität, nur vertikal von Hand
-- Zweiter Host = Bulkhead; Nutzen nicht gemessen
-- Kapazität aus dem Code: 1 Aufruf, Queue ≤ 8, rund 24 Zusammenfassungen pro Stunde
-- SLO trennen: Verfügbarkeit (Fallback hält) und Nutzen (0 von 10)
+- Abb. 2, UML-Sequenz: gefüllt synchron, offen asynchron, gestrichelt Antwort
+- Kontext bei Anfrage, vor und nach der LLM-Anfrage gebaut; Status prüft erneut
+- Messpunkte t0–t3 (J8) auf den Pfeilen zur Runtime
 
 **Fließtext**
 
-Falls nach dem Kursbezug gefragt wird. Nach den NIST-Merkmalen ist das IaaS-Betrieb ohne Selbstbedienung zur Laufzeit: Netzzugang und Ressourcenbündelung sind gegeben, schnelle Elastizität fehlt, die Inferenz skaliert nur vertikal und von Hand. Der zweite Host ist ein Bulkhead, ein getrennter Fehler- und Ressourcenbereich; den Nutzen habe ich nicht gemessen. Kapazität, gerechnet aus dem Code und nicht gemessen: ein Aufruf zugleich, die Queue nimmt höchstens 8 an, danach queue_full mit Ersatz. Bei 148,6 Sekunden je Auftrag sind das rund 24 Zusammenfassungen pro Stunde. Als SLO würde ich Verfügbarkeit und Nutzen trennen: Endstatus nach 300 Sekunden erfüllt der Fallback, der Nutzen lag bei 0 von 10.
+Falls nach dem zeitlichen Ablauf gefragt wird: Abbildung 2, ein vereinfachtes UML-Sequenzdiagramm. Die API prüft die Rechte und baut den Kontext; ändern sich die Daten dabei, scheitert die Anfrage, sonst reiht sie asynchron einen Job ein und meldet pending. Die Queue baut den Kontext vor und nach der LLM-Anfrage neu und speichert die Modellzusammenfassung nur bei gleichem Hash und gültiger, formgerechter Antwort. Der Statusabruf prüft das fertige Ergebnis noch einmal gegen die aktuellen Daten. Die Messpunkte t0 bis t3 auf J8 liegen auf den Pfeilen zur Runtime und zurück.
 
-_Quelle:_ Code a19ca70f (gleich HEAD): apps/backend/src/lib/openWeightLlmClient.ts Z. 141 (inFlight), Z. 497 (busy); qaSummaryConfig.ts Z. 26 (QUEUE_LIMIT_DEFAULT = 8), Z. 29 (CONCURRENCY_DEFAULT = 1); qaSummaryQueue.ts Z. 510 (queue_full); Durchsatz aus T_job warm: evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317; NIST SP 800-145, S. 2 (Mell & Grance, 2011); ADR-0035 Abschn. 2.1, 2.2; SLO-Vorschlag: fragenkatalog.md F51; full-context: evidenz/1B/messung/2026-11-13-lauf.json · ThinkPad P50 · 8e9d1317
+_Quelle:_ 1C-diagrams.md, Abb. 2 (diagrams/1c-context-path-overview-sequence.light.svg) · Code-Stand def56700 (v1.4.0-14, Branch f746ffba), gezeichnet am Laptop (ThinkPad P50)
