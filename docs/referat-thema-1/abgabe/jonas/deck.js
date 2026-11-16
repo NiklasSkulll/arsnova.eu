@@ -1,7 +1,8 @@
 // Laufzeit des Browser-Decks (wird von deck.mjs in deck-vorlage.html eingesetzt).
 // Steuerung: → / Leertaste / Bild ab vor, ← / Bild auf zurück, Pos1 / Ende, f Vollbild,
-// r Reserve-Übersicht, Esc zurück in den Vortrag. Bewegung nur für den wandernden Marker
-// (600 ms) und den Zoom in J10; mit prefers-reduced-motion springt beides in den Endzustand.
+// r Reserve-Übersicht, Esc zurück in den Vortrag. Bewegung nur für die Wegkarte oben links (Punkt fährt
+// 600 ms, Säume und Zeichen blenden 300 ms, Wechsel des Wegs blendet über) und den Zoom in J10; mit
+// prefers-reduced-motion springt alles in den Endzustand.
 /* global document, window, location, history, URLSearchParams, getComputedStyle, performance,
    requestAnimationFrame, cancelAnimationFrame, setTimeout, clearTimeout */
 (() => {
@@ -13,10 +14,10 @@
   const alle = [...buehne.querySelectorAll(':scope > .folie')];
   const haupt = alle.filter((s) => s.dataset.teil !== 'reserve');
   const reserve = alle.filter((s) => s.dataset.teil === 'reserve');
-  const weg = buehne.querySelector('.weg-wandernd');
-  const punkt = weg.querySelector('.weg-punkt');
-  const wegName = weg.querySelector('.weg-name');
-  const wegEtikett = weg.querySelector('.etikett');
+  // Ein beständiger Marker je Weg (wegkarte.mjs wegLaeufer), je Folie ein Zustand (konfig.marken)
+  const laeufer = Object.fromEntries(
+    [...buehne.querySelectorAll(':scope > .weg-laeufer')].map((el) => [el.dataset.weg, el]),
+  );
   const uebersicht = buehne.querySelector('.reserve-uebersicht');
   const knoepfe = [...uebersicht.querySelectorAll('button[data-ziel]')];
   const live = document.querySelector('.live');
@@ -139,6 +140,8 @@
       if (stufe >= ab && stufe <= bis) el.setAttribute('data-an', '');
       else el.removeAttribute('data-an');
     }
+    // Zeichen der Wegkarte je Stufe (M1)
+    if (folie === aktuell) setzeMarker(folie);
   }
   /** Ein Aufbauschritt innerhalb der Folie; false, wenn die Folie keinen weiteren hat. */
   function aufbauSchritt(richtung) {
@@ -149,28 +152,69 @@
     return true;
   }
 
-  // ---------------------------------------------------------------- wandernder Marker
-  function setzeMarker(folie) {
-    const name = folie.dataset.station || '';
-    const station = konfig.stationen[name];
-    const zeigen = Boolean(station) && !('eigenerWeg' in folie.dataset);
-    const warSichtbar = !weg.hidden;
-    weg.dataset.aktiv = name;
-    weg.hidden = !zeigen;
-    if (!station) return;
-    weg.setAttribute('aria-label', `Station des Auftrags: ${station.name} (${station.auftrag})`);
-    wegName.textContent = station.name;
-    wegEtikett.textContent = station.auftrag;
-    wegEtikett.className = `etikett etikett-${station.auftrag.toLowerCase()}`;
-    if (zeigen && warSichtbar) {
-      // fährt per CSS-Übergang (600 ms ease) entlang offset-path
-      punkt.style.offsetDistance = `${station.anteil}%`;
+  // ---------------------------------------------------------------- Wegkarte (Läufer)
+  // Eine Maschine für beide Teile: Je Weg ein Element, das über alle Folien des Wegs bleibt. Innerhalb des
+  // Wegs fährt der Punkt per offset-distance (CSS-Übergang) zur nächsten Station; Säume, Ausschlag und
+  // Zeichen blenden ein und aus. Erscheint der Punkt neu, steht er ohne Fahrt an der Station. Beim Wechsel
+  // des Wegs (N10 → J1) blendet die alte Karte aus und die neue, sofort im Zustand der Folie, ein.
+  // Reduzierte Bewegung: kein Übergang (Vorlage). Druck: die feste Marke in jeder Folie.
+  const ohneUebergang = (el, fn) => {
+    el.classList.add('weg-sofort');
+    fn();
+    void el.offsetWidth;
+    el.classList.remove('weg-sofort');
+  };
+  const schalte = (el, an) => (an ? el.setAttribute('data-an', '') : el.removeAttribute('data-an'));
+  /** Zeichensatz der Marke in der aktuellen Aufbaustufe der Folie (M1 je Stufe, sonst einer). */
+  function satzVon(zustand, folie) {
+    const stufe = folie.dataset.aufbauStufe === undefined ? 0 : Number(folie.dataset.aufbauStufe);
+    const st = zustand.stufen.find((x) => stufe >= x.ab && (x.bis === null || stufe <= x.bis));
+    return st ? st.satz : '';
+  }
+  function wende(el, z, folie) {
+    const punkt = el.querySelector('.weg-punkt');
+    if (z.anteil === null) {
+      schalte(punkt, false);
+    } else if (punkt.hasAttribute('data-an')) {
+      // fährt per CSS-Übergang (600 ms) entlang offset-path
+      punkt.style.offsetDistance = `${z.anteil}%`;
     } else {
-      // erscheint ohne Fahrt an der Station
-      punkt.style.transition = 'none';
-      punkt.style.offsetDistance = `${station.anteil}%`;
-      void getComputedStyle(punkt).offsetDistance;
-      punkt.style.transition = '';
+      // erscheint ohne Fahrt an der Station und blendet ein
+      punkt.classList.add('weg-punkt-springt');
+      punkt.style.offsetDistance = `${z.anteil}%`;
+      void punkt.offsetWidth;
+      punkt.classList.remove('weg-punkt-springt');
+      schalte(punkt, true);
+    }
+    for (const g of el.querySelectorAll('.weg-saum')) schalte(g, z.saeume.includes(g.dataset.saum));
+    for (const w of el.querySelectorAll('.weg-wirkung')) schalte(w, z.wirkung);
+    const satz = satzVon(z, folie);
+    for (const s of el.querySelectorAll('.weg-satz')) schalte(s, s.dataset.satz === satz);
+    el.querySelector('.weg-name').textContent = z.text;
+    const etiketten = el.querySelector('.weg-etiketten');
+    etiketten.replaceChildren(
+      ...z.teil.map((t) => {
+        const span = document.createElement('span');
+        span.className = `etikett etikett-${t.toLowerCase()}`;
+        span.textContent = t;
+        return span;
+      }),
+    );
+    el.setAttribute('aria-label', z.label);
+    el.dataset.marke = z.name;
+    el.dataset.aktiv = z.station ?? '';
+  }
+  function setzeMarker(folie) {
+    const z = konfig.marken[folie.dataset.id] ?? null;
+    const ziel = z ? laeufer[z.weg] : null;
+    for (const el of Object.values(laeufer)) if (el !== ziel) schalte(el, false);
+    if (!ziel) return;
+    if (ziel.hasAttribute('data-an')) {
+      wende(ziel, z, folie);
+    } else {
+      // Weg erscheint (oder wechselt): Zustand ohne Übergang setzen, dann die ganze Karte einblenden
+      ohneUebergang(ziel, () => wende(ziel, z, folie));
+      schalte(ziel, true);
     }
   }
 

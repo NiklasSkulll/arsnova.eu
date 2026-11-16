@@ -14,7 +14,10 @@ import { baueDeck } from './deck.mjs';
 import { folien, ladeFolienDaten } from './folien.mjs';
 import { kameraViewBox, lupeRahmen, zoomDeckkraft } from './grafik.mjs';
 import { kopfBefunde, layoutBefunde } from './layout-pruefung.mjs';
-import { MARKEN, markeText } from './wegkarte.mjs';
+import { MARKEN, WEG_AUFTRAG, markeText, markeVon, wegMarke } from './wegkarte.mjs';
+
+const MARKEN_STATIONEN = () =>
+  Object.fromEntries(Object.entries(WEG_AUFTRAG.stationen).map(([n, s]) => [n, s.anteil]));
 
 const HIER = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HIER, '../..');
@@ -25,7 +28,6 @@ const F = folien(ladeFolienDaten(ROOT));
 const JONAS = F.filter((f) => f.teil === 'jonas');
 const RAHMEN = F.filter((f) => f.teil === 'rahmen');
 const RESERVE = F.filter((f) => f.teil === 'reserve');
-const STATIONEN = F.filter((f) => f.station);
 
 let ordner;
 let browser;
@@ -172,45 +174,117 @@ test('Fußzeile zeigt Seitenzahl im Vortrag und Quelle', async () => {
   await context.close();
 });
 
-test('wandernder Marker steht auf der Station der Folie, sonst ausgeblendet', async () => {
+test('Läufer: ein Element für alle Folien von J1 bis J15, Punkt an der Station der Folie', async () => {
   const { page, context } = await oeffne(deckOhneNiklas);
   const marker = () =>
     page.evaluate(() => {
-      const m = document.querySelector('.weg-wandernd');
-      return { aktiv: m.dataset.aktiv ?? '', sichtbar: !m.hidden && m.offsetParent !== null };
+      const m = document.querySelector('.weg-laeufer[data-an]');
+      if (!m) return { aktiv: null, sichtbar: false };
+      // Kennung am Element: bleibt sie über alle Folien gleich, ist es derselbe Knoten
+      m.dataset.pruefKnoten ??= String(Math.random());
+      return {
+        knoten: m.dataset.pruefKnoten,
+        weg: m.dataset.weg,
+        aktiv: m.dataset.aktiv,
+        punkt: m.querySelector('.weg-punkt').hasAttribute('data-an'),
+        name: m.querySelector('.weg-name').textContent,
+        sichtbar: getComputedStyle(m).visibility === 'visible',
+      };
     });
-  await geheZu(page, 'J4');
-  assert.deepEqual(await marker(), { aktiv: '', sichtbar: false });
-  await geheZu(page, 'J5');
-  assert.equal((await marker()).aktiv, 'klick');
-  await geheZu(page, 'J6');
-  assert.deepEqual(await marker(), { aktiv: 'kontext', sichtbar: true });
-  for (const f of STATIONEN) {
-    await page.keyboard.press('Home');
+  await geheZu(page, 'G0');
+  assert.deepEqual(await marker(), { aktiv: null, sichtbar: false }, 'Rahmen ohne Wegkarte');
+  await geheZu(page, 'J1');
+  const erster = (await marker()).knoten;
+  const verlauf = [];
+  for (const f of JONAS.filter((x) => !x.anhang)) {
     await geheZu(page, f.id);
     const m = await marker();
-    assert.equal(m.aktiv, f.station, f.id);
-    // J3 zeigt die große Karte mit eigenem Marker; dort bleibt die kleine Karte aus.
-    assert.equal(m.sichtbar, !f.inhalt.includes('class="auftrag"'), f.id);
+    assert.equal(m.knoten, erster, `${f.id}: derselbe Knoten`);
+    assert.equal(m.weg, 'auftrag', f.id);
+    assert.ok(m.sichtbar, f.id);
+    verlauf.push(`${f.id}:${m.aktiv || '-'}`);
+    // J3 zeigt den Weg groß mit eigenem Marker: oben links der ganze Weg ohne Punkt
+    const station = f.inhalt.includes('class="auftrag"') ? null : f.station;
+    assert.equal(m.punkt, Boolean(station), f.id);
+    assert.equal(m.aktiv, station ?? '', f.id);
+    assert.equal(m.name, station ? markeText(`station:${station}`) : m.name, f.id);
   }
+  assert.ok(verlauf.includes('J5:klick') && verlauf.includes('J13:gate'), verlauf.join(' '));
   await context.close();
 });
 
-test('Markerfahrt läuft als Übergang, mit reduzierter Bewegung gibt es keine Animation', async () => {
+test('Läufer: Punkt fährt, Säume und Zeichen blenden; Saum und Zeichen nur auf den gemeinten Folien', async () => {
+  const { page, context } = await oeffne(deckOhneNiklas);
+  const an = () =>
+    page.evaluate(() => {
+      const m = document.querySelector('.weg-laeufer[data-an]');
+      return {
+        saeume: [...m.querySelectorAll('.weg-saum[data-an]')].map((g) => g.dataset.saum),
+        saetze: [...m.querySelectorAll('.weg-satz[data-an]')].map((g) => g.dataset.satz),
+      };
+    });
+  const erwartet = {
+    J5: { saeume: [], saetze: [] },
+    J8: { saeume: ['netz|var(--bernstein)'], saetze: [] },
+    J8b: { saeume: ['netz|var(--bernstein)'], saetze: [] },
+    J9: { saeume: ['ganz|var(--blau)'], saetze: [] },
+    J10: { saeume: [], saetze: [] },
+    J10b: { saeume: [], saetze: ['stopp'] },
+    J11: { saeume: [], saetze: ['spaet'] },
+    J12: { saeume: [], saetze: [] },
+  };
+  for (const [id, soll] of Object.entries(erwartet)) {
+    await geheZu(page, id);
+    assert.deepEqual(await an(), soll, id);
+  }
+  // Fahrt J5 → J5b: offset-distance läuft als CSS-Übergang, der Punkt steht mittendrin zwischen den Stationen
+  await page.keyboard.press('Home');
+  await geheZu(page, 'J5');
+  await page.waitForTimeout(700);
+  await page.keyboard.press('ArrowRight');
+  await page.waitForTimeout(200);
+  const fahrt = await page.evaluate(() => {
+    const p = document.querySelector('.weg-laeufer[data-an] .weg-punkt');
+    return {
+      laeuft: document
+        .getAnimations()
+        .some((a) => a.effect?.target === p && a.transitionProperty === 'offset-distance'),
+      ist: parseFloat(getComputedStyle(p).offsetDistance),
+    };
+  });
+  const st = MARKEN_STATIONEN();
+  assert.ok(fahrt.laeuft, 'Fahrt als Übergang');
+  assert.ok(fahrt.ist > st.klick && fahrt.ist < st.kontext, `mittendrin: ${fahrt.ist}`);
+  await context.close();
+});
+
+test('Reduzierte Bewegung: keine Übergänge an der Wegkarte, Zustand sofort', async () => {
   const normal = await oeffne(deckOhneNiklas);
   await geheZu(normal.page, 'J5');
   await normal.page.keyboard.press('ArrowRight');
   assert.ok(
     (await normal.page.evaluate(() => document.getAnimations().length)) > 0,
-    'Gegenprobe: ohne reduzierte Bewegung fährt der Marker',
+    'Gegenprobe: ohne reduzierte Bewegung fährt der Punkt',
   );
   await normal.context.close();
 
   const ruhig = await oeffne(deckOhneNiklas, { reducedMotion: 'reduce' });
-  await geheZu(ruhig.page, 'J5');
-  for (let i = 0; i < 8; i++) {
+  await geheZu(ruhig.page, 'J4');
+  for (let i = 0; i < 12; i++) {
     await ruhig.page.keyboard.press('ArrowRight');
     assert.equal(await ruhig.page.evaluate(() => document.getAnimations().length), 0);
+    const z = await ruhig.page.evaluate(() => {
+      const m = document.querySelector('.weg-laeufer[data-an]');
+      const p = m.querySelector('.weg-punkt');
+      return {
+        dauer: getComputedStyle(p).transitionDuration,
+        aktiv: m.dataset.aktiv,
+        ist: getComputedStyle(p).offsetDistance,
+        soll: p.style.offsetDistance,
+      };
+    });
+    assert.match(z.dauer, /^0s(, 0s)*$/);
+    if (z.aktiv) assert.equal(z.ist, z.soll);
   }
   await ruhig.context.close();
 });
@@ -537,7 +611,7 @@ test('Schriften Inter 600 und IBM Plex Mono 400 sind geladen', async () => {
   await context.close();
 });
 
-test('Druck: jede Folie eine Seite 1600 × 900, J10 im Endzustand, Marker an der Station', async () => {
+test('Druck: jede Folie eine Seite 1600 × 900, J10 im Endzustand, feste Wegkarte je Folie', async () => {
   const seiten = (pdf) => (pdf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) ?? []).length;
   const { page, context } = await oeffne(deckOhneNiklas);
   await geheZu(page, 'J10'); // Zoom steht auf Stufe 0
@@ -548,17 +622,38 @@ test('Druck: jede Folie eine Seite 1600 × 900, J10 im Endzustand, Marker an der
       (s) => s.dataset.zoomFertig === String(JSON.parse(s.dataset.zoomStufen).length - 1),
     ),
   );
-  const statisch = await page.evaluate(() =>
-    [...document.querySelectorAll('.folie')]
-      .filter((s) => s.dataset.station && !s.querySelector('.folie-flaeche .auftrag'))
-      .map((s) => {
-        const m = s.querySelector('.weg-mini-statisch');
-        return [s.dataset.id, m?.dataset.aktiv, m ? getComputedStyle(m).display : 'fehlt'];
-      }),
+  // Druck: der Läufer ist aus, jede Hauptfolie trägt ihre feste Marke im Endbild (Ort, Punkt, Säume, Zeichen)
+  const statisch = await page.evaluate(() => ({
+    laeufer: [...document.querySelectorAll('.weg-laeufer')].map((l) => getComputedStyle(l).display),
+    folien: [...document.querySelectorAll('.folie')].map((s) => {
+      const m = s.querySelector(':scope > .weg-marke');
+      return [
+        s.dataset.id,
+        m ? `${m.dataset.marke}|${m.dataset.aktiv ?? ''}` : null,
+        m ? getComputedStyle(m).display : 'fehlt',
+        m
+          ? [...m.querySelectorAll('.weg-zeichen-reihe')]
+              .filter((r) => getComputedStyle(r.closest('.weg-stufe') ?? r).opacity === '1')
+              .map((r) => [...r.querySelectorAll('[data-zeichen]')].map((z) => z.dataset.zeichen))
+          : [],
+      ];
+    }),
+  }));
+  assert.ok(
+    statisch.laeufer.every((d) => d === 'none'),
+    'Läufer nicht im Druck',
   );
-  for (const [id, aktiv, display] of statisch) {
-    assert.equal(aktiv, F.find((f) => f.id === id).station, id);
+  for (const [id, html, display, zeichen] of statisch.folien) {
+    const f = F.find((x) => x.id === id);
+    const name = f && markeVon(f, { eigenerWeg: f.inhalt.includes('class="auftrag"') });
+    if (!name) {
+      assert.equal(html, null, id);
+      continue;
+    }
     assert.notEqual(display, 'none', id);
+    assert.equal(html, `${name}|${wegMarke(name).match(/data-aktiv="([a-z]+)"/)?.[1] ?? ''}`, id);
+    if (id === 'J10b') assert.deepEqual(zeichen, [['stopp']], id);
+    if (id === 'J11') assert.deepEqual(zeichen, [['spaet']], id);
   }
   const vb = await page.evaluate(() =>
     document.querySelector('.folie[data-id="J10"] svg.kamera').getAttribute('viewBox'),

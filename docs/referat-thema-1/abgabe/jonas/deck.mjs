@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 import { TEILE, teilVon } from './folien.mjs';
 import { KAMERA } from './grafik.mjs';
-import { WEG_AUFTRAG, wegMarke, wegMini } from './wegkarte.mjs';
+import { laeuferZustand, markeVon, wegLaeufer, wegMarke } from './wegkarte.mjs';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
 
@@ -89,13 +89,14 @@ function teilleiste(f) {
 }
 
 /**
- * Ortsmarke oben links ohne Bewegung (druckfest) auf jeder Folie von 1A und 1B 3–4 und auf J1: eine Wegkarte
- * in derselben Bildsprache wie Jonas' Stationsmarker (wegkarte.mjs, f.marke ist ein Schlüssel aus MARKEN).
- * Folien mit Station tragen stattdessen Jonas' Marker; zeigt die Folie den Weg selbst groß (J3, eigener Weg),
- * steht die Ortsmarke dort, damit Kopfzeile 1 auf keiner Hauptfolie fehlt.
+ * Wegkarte oben links (Kopfzeile 1, README „Kopfgrammatik“) auf jeder Hauptfolie beider Teile: eine Marke je
+ * Folie (wegkarte.mjs markeVon). In der Folie steht sie fest für den Druck (Endbild); auf dem Bildschirm zeigt
+ * der beständige Läufer des Wegs denselben Zustand (deck.js setzeMarker). Zeigt die Folie den Weg selbst groß
+ * (J3, eigener Weg), steht dort die Marke des ganzen Wegs.
  */
-function ortsmarke(f) {
-  return f.marke ? wegMarke(f.marke) : '';
+function ortsmarke(f, eigenerWeg) {
+  const name = markeVon(f, { eigenerWeg });
+  return name ? wegMarke(name) : '';
 }
 
 function jonasFolie(f, nr, gesamt, clipDaten) {
@@ -168,8 +169,7 @@ function jonasFolie(f, nr, gesamt, clipDaten) {
     .join(' ');
   const html =
     `<section ${attrs}>` +
-    (f.station && !eigenerWeg ? wegMini({ aktiv: f.station }) : '') +
-    (f.station && !eigenerWeg ? '' : ortsmarke(f)) +
+    ortsmarke(f, eigenerWeg) +
     teilleiste(f) +
     `<h1 class="folie-titel">${f.titel}</h1>` +
     kopf +
@@ -282,13 +282,24 @@ export function baueDeck(
     /url\('(schriften\/[^']+\.woff2)'\)/g,
     (_, pfad) => `url('${dataUri(join(HIER, pfad))}')`,
   );
-  const konfig = { stationen: WEG_AUFTRAG.stationen };
+  // Ein beständiger Marker je Weg (Auftrag, 1A); je Folie der Zustand aus ihrer Marke (deck.js setzeMarker)
+  const marken = {};
+  for (const f of [...haupt.filter((h) => h.folie).map((h) => h.folie), ...reserve]) {
+    const name = markeVon(f, { eigenerWeg: f.inhalt.includes('class="auftrag"') });
+    if (name) marken[f.id] = laeuferZustand(name);
+  }
+  const namenJeWeg = {};
+  for (const z of Object.values(marken)) (namenJeWeg[z.weg] ??= new Set()).add(z.name);
+  const laeufer = Object.entries(namenJeWeg)
+    .map(([weg, namen]) => wegLaeufer(weg, [...namen]))
+    .join('');
+  const konfig = { marken };
   const vorlage = readFileSync(join(HIER, 'deck-vorlage.html'), 'utf8');
   // Platzhalter stehen als HTML-Kommentare in der Vorlage, damit Prettier sie nicht umformt.
   const fuellung = {
     STIL: `<style>\n${stil}</style>`,
     FOLIEN: abschnitte.join('\n'),
-    WEG: wegMini({ wandernd: true }),
+    WEG: laeufer,
     UEBERSICHT: uebersicht,
     KONFIG:
       `<script type="application/json" id="deck-konfig">` +

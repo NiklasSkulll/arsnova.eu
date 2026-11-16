@@ -166,7 +166,7 @@ export function folien1A(d) {
         ) +
         `<p class="beleg">Labor: ein Rechner (WSL2, ${H.cpus} logische CPUs), Code ${mono(H.commit)} (nach v1.4.0), ${d.live.laeufe} Läufe am ${datum(d.vorab.ersterLauf)}2026</p>`,
     ),
-    notiz: `Ich beginne auf dem App-Host und frage: Welche Reserve hat er für optionale Analyse, ohne die Live-Signale zu verzögern? Geprüft habe ich das an der spaCy-Glättung der Wortwolke. Die Antwort vorweg: keine Freigabe. Alle ${fmt(d.live.geplant)} Live-Aktionen meiner Reihe kamen an, ohne einen Fehler. Mit spaCy verfehlen ${mitSpacyFehl} von ${mitSpacyGesamt} Vergleichen die vorher festgelegte Regel. Aber auch die Kontrolle ganz ohne spaCy verfehlt sie ${kontrolle.length} von ${d.h1.gesamt} Mal. Ich sage deshalb nicht, spaCy sei schädlich. Ich sage: Die Unschädlichkeit ist nicht belegt, und den Nutzen habe ich nicht gemessen. Oben links zeigt der kleine Weg, wo wir sind: der spaCy-Zweig neben dem Live-Pfad.`,
+    notiz: `Ich beginne auf dem App-Host und frage: Welche Reserve hat er für optionale Analyse, ohne die Live-Signale zu verzögern? Geprüft habe ich das an der spaCy-Glättung der Wortwolke. Die Antwort vorweg: keine Freigabe. Alle ${fmt(d.live.geplant)} Live-Aktionen meiner Reihe kamen an, ohne einen Fehler. Mit spaCy verfehlen ${mitSpacyFehl} von ${mitSpacyGesamt} Vergleichen die vorher festgelegte Regel. Aber auch die Kontrolle ganz ohne spaCy verfehlt sie ${kontrolle.length} von ${d.h1.gesamt} Mal. Ich sage deshalb nicht, spaCy sei schädlich. Ich sage: Die Unschädlichkeit ist nicht belegt, und den Nutzen habe ich nicht gemessen. Oben links zeigt der kleine Weg, wo wir sind: vom App-Host über den Live-Pfad zu spaCy und zurück zur Wortwolke.`,
     stichpunkte: [
       'Start auf dem App-Host (Teil 1 im Fahrplan)',
       'Leitfrage: Reserve für optionale Analyse, ohne Live-Signale zu verzögern?',
@@ -176,8 +176,9 @@ export function folien1A(d) {
     ],
     zeitS: 50,
     kurzfassung: true,
-    // Wegmarke (jonas/wegkarte.mjs MARKEN): Einstieg mit der Antwort, daher der ganze Weg ohne Hervorhebung;
-    // danach wandert die Markierung ohne Rücksprung: App (N2) → spaCy (N3) → Regel/Live → Ersatz → Wortwolke.
+    // Wegmarke (jonas/wegkarte.mjs MARKEN, Weg 1A): Einstieg mit der Antwort, daher der ganze Weg ohne Punkt;
+    // danach fährt der Punkt jede Station der Reihe nach an, ohne Sprung und ohne Rücksprung:
+    // App-Host (N2, N3) → Live-Pfad (N4–N7) → spaCy (N8) → Ersatz (N9) → Wortwolke (N10).
     marke: '1a-weg',
     quelle: q(
       `${H.datei} (live.*.planned/succeeded, hypotheses.H1/H2); Leitfrage: Prüfungsdokument Abschn. 4.3, Gruppenauftrag 1A`,
@@ -225,7 +226,7 @@ export function folien1A(d) {
         `<p class="sekundaer" style="margin-top:12px">Kein LLM hier: Der 16-GB-Host trägt neben Baseline und Sidecars kein ~4-GB-Modell, Live-Pfade dürfen nie auf Inferenz warten. Deshalb ein zweiter Host ${etikett('1B')}.</p>`,
     ),
     notiz: `Auf dem App-Host laufen fünf Dienste. Backend, Datenbank und Redis haben kein Limit; spaCy hat wie in der Produktions-Compose eine CPU, ein Gibibyte und vierundsechzig Prozesse. Ein cgroup-Limit ist eine Obergrenze, keine Reservierung: Es hält spaCy klein, schützt aber nichts für die App. Den Encoder der semantischen Wortwolke und die Q&A-Klassifikation 8.9b habe ich in allen Läufen ausgeschaltet; der Kontextaufbau läuft in der App. Ein Sprachmodell gehört nach ADR-0035 nicht hierher: Der Host mit sechzehn Gigabyte trägt neben Baseline und Sidecars kein Modell mit etwa vier Gigabyte, und Live-Pfade dürfen nie auf Inferenz warten. Deshalb sagt mein spaCy-Befund nichts über ein LLM.`,
-    // Wegmarke: Fünf Dienste teilen sich den App-Host: Station App.
+    // Wegmarke: Fünf Dienste teilen sich den App-Host: Station App-Host.
     marke: '1a-app',
     stichpunkte: [
       'Fünf Dienste; Backend, DB, Redis ohne Limit; spaCy 1 CPU, 1 GiB, 64 PIDs wie in Produktion',
@@ -274,7 +275,8 @@ export function folien1A(d) {
         `<p class="beleg">Dazu vorab: Fehler ≤ ${fmt(sw.fehler * 100, 1)} %, Quiz-p95 ≤ ${fmt(sw.quizZielMs)} ms, spaCy gedrosselt ≤ ${fmt(sw.drosselung * 100)} %, Speicher ≤ ${fmt(sw.speicher * 100)} % von 1 GiB, kein OOM</p>`,
     ),
     notiz: `Fünf Varianten: V0 nur Live-Last, V1 mit lexikalischer Analyse als Basis, V2 spaCy mit einer CPU, V3 gedrosselt auf ein Viertel, V4 hinter einem Proxy, der länger wartet als der Timeout. Fünf Blöcke, je Block zufällig gemischt, verglichen wird nur im selben Block. Die Regel: Je Aktion und Block darf der p95 höchstens zehn Prozent und höchstens fünfzig Millisekunden steigen, und alle fünf Blöcke müssen bestehen. Gemessen wird das p95, weil Nutzer auf die langsamen Anfragen warten. Die Regel steht seit dem siebten November in Git, eine Woche vor den Läufen. Offen gesagt: Eine erste vollständige Reihe auf dem älteren Code-Stand vom zwölften November verfehlte H1 und H2 ebenfalls. Gewertet wird die Wiederholung auf einem Stand nach Version 1.4.0 mit unverändertem Vertrag, weil das Ergebnis für den aktuellen Stand gelten soll.`,
-    // Wegmarke: Die vorab festgelegte Regel vergleicht Live-Latenz mit und ohne Analyse: Live-Pfad gegen Zweig.
+    // Wegmarke: Die Regel vergleicht die Latenz der Live-Aktionen mit und ohne Analyse: Station Live-Pfad,
+    // Saum auf dem Live-Pfad, die umgeschaltete Analyse gestrichelt.
     marke: '1a-regel',
     stichpunkte: [
       `V0 ohne Analyse, V1 Basis, V2 ${fmt(k.spacy.V2.cpu)} CPU, V3 ${fmt(k.spacy.V3.cpu, 2)} CPU, V4 Proxy hinter Timeout; 5 Blöcke gemischt`,
@@ -298,7 +300,7 @@ export function folien1A(d) {
         `<p class="beleg">Gemessen am Lastgenerator bis zur Antwort des Backends; Anzeige im Browser und Kompasskarten nicht gemessen</p>`,
     ),
     notiz: `Zuerst, was hält. In allen fünfundzwanzig Läufen kamen alle ${fmt(d.live.erfolgreich)} Live-Aktionen an: Beitritte, Quizstimmen, Tempostimmen und Q&A-Fragen. Jeder Punkt ist der p95 eines Laufs; die lineare Achse reicht bis zum vorab gesetzten Quiz-Ziel von einer Sekunde. Der langsamste Quiz-Lauf liegt bei ${fmt(d.live.quizMaxMs)} Millisekunden, die meisten Punkte unter sechzig. Diese Aktionen sind die Eingänge des Moderationskompasses. Wie schnell eine Karte im Browser der Lehrperson erscheint, habe ich nicht gemessen.`,
-    // Wegmarke: Alle Live-Aktionen kamen an: der ganze Live-Pfad (Hauptlinie).
+    // Wegmarke: Alle Live-Aktionen kamen an: Station Live-Pfad, Saum nur auf dem Live-Pfad.
     marke: '1a-live',
     stichpunkte: [
       `${fmt(d.live.erfolgreich)} von ${fmt(d.live.geplant)} ok, ${d.live.laeufe} Läufe, 0 Fehler`,
@@ -322,7 +324,7 @@ export function folien1A(d) {
         grafikBox(vergleichsMatrixSvg(d)),
     ),
     notiz: `Jetzt die Regel. Das sind alle ${d.vergleiche.length} gepaarten Vergleiche: jede Aktion in jedem Block gegen ihre Basis, noch ohne Ergebnis. [Weiter] Grau heißt: hält. Zuerst die Kontrolle, V1 gegen V0, ganz ohne spaCy. Schon sie verfehlt die Regel ${kontrolle.length}-mal, um höchstens ${fmt(Math.max(...kontrolle.map((x) => x.deltaMs)), 0)} Millisekunden. Bei p95-Werten um zwanzig Millisekunden reichen dafür zwei Millisekunden Schwankung. [Weiter] Mit spaCy kommen ${mitSpacy.length - v3b5Fehl.length} ebenso kleine Treffer dazu, alle unter fünf Millisekunden. Formal reicht das schon: H1 und H2 sind nicht bestätigt. [Weiter] Und hier der eine deutliche Effekt: V3, also spaCy gedrosselt, im letzten Lauf der Reihe. ${v3b5Abs.length} Aktionen über fünfzig Millisekunden, bis zu ${fmt(d.v3Block5MaxDeltaMs)} Millisekunden mehr. Insgesamt verfehlen ${fehlAlle.length} von ${d.vergleiche.length} die Regel. Ich lasse sie trotzdem stehen, weil sie vorher festgelegt war.`,
-    // Wegmarke: Gepaarte Vergleiche der Regel: Live-Pfad gegen Zweig.
+    // Wegmarke: Gepaarte Vergleiche der Live-Latenz nach der Regel: wie N4.
     marke: '1a-regel',
     stichpunkte: [
       `${d.vergleiche.length} Vergleiche, erst ohne Ergebnis`,
@@ -349,7 +351,8 @@ export function folien1A(d) {
         `<p class="beleg">Ursache offen: Rückstau der gedrosselten Analyse oder Ereignis auf Host und Datenbank; dagegen: V4 mit ${fmt(d.v4.ersatzTimeout)} Timeouts ohne Live-Effekt</p>`,
     ),
     notiz: `Was geschah im letzten Lauf? Nachträglich ausgewertet, deshalb der Vermerk hinter der Frage. Alle ${e.langsam.join} Beitritte über hundert Millisekunden liegen in einem Fenster von etwa zehn Sekunden; in den übrigen Läufen gibt es je Aktion höchstens ${e.langsamAndereMax} solchen Wert. [Weiter] Genau dort laufen die einzigen ${e.timeouts} Timeouts der gedrosselten Variante. [Weiter] Zugleich steigt die CPU der App auf ${fmt(e.appCpuMax)} Prozent einer CPU und die der Datenbank auf ${fmt(e.pgMax.max)} Prozent, sonst höchstens ${fmt(e.pgAndere[1])}. Die Ursache ist offen. Ein Rückstau der gedrosselten Analyse passt dazu, aber V4 hatte hunderte Timeouts ohne solchen Effekt; ebenso möglich ist ein Ereignis auf Host oder Datenbank. Zum Maßstab: ${d.live.laeufe} Läufe mit je ${fmt(k.profil.durationMs / 1000)} Sekunden Messfenster sind ${fmt((d.live.laeufe * k.profil.durationMs) / 60000)} Minuten; der Ausreißer betrifft davon etwa zehn Sekunden. Für die Entscheidung ändert das nichts.`,
-    // Wegmarke: Ausreißer in V3 (gedrosseltes spaCy): Station spaCy, Wirkung als Ausschlag auf dem Live-Pfad.
+    // Wegmarke: Der Ausreißer betrifft die Beitritte (Live-Aktionen) im Lauf V3/Block 5: Station Live-Pfad,
+    // Ausschlag auf dem Live-Pfad. spaCy folgt erst mit N8 (eigene Ressourcen), deshalb kein Rücksprung.
     marke: '1a-wirkung',
     stichpunkte: [
       'Nachträglich ausgewertet, nicht vorab festgelegt',
@@ -376,7 +379,7 @@ export function folien1A(d) {
         `<p class="beleg">V4: Proxy hat ${fmt(d.v4.weitergeleitet)} Anfragen weitergeleitet, geprüft werden Frist und Ersatz; ${fmt(d.v4.ersatzGegendruck)} Ersatzfälle durch Gegendruck</p>`,
     ),
     notiz: `Was sehen die Lehrenden? Die lexikalische Wortwolke ist in unter einer Zehntelsekunde da, mit spaCy im Normalbetrieb nach etwa einer halben Sekunde, gedrosselt nach zwei bis drei; das passt zur Drosselung von eben. In V4 greift nach rund fünf Sekunden der Timeout, und die App liefert den lexikalischen Ersatz; der Proxy hat keine Anfrage weitergeleitet, V4 prüft also Frist und Ersatz. ${fmt(d.v4.ersatzGegendruck)} Ersatzfälle meldet der Client als nicht erreichbar, je Lauf genau ${fmt(d.v4.gegendruckJeLauf)}: Das passt zur Grenze von zwei offenen Anfragen. Zur Reserve: Im Labor brauchte der ganze Stack weniger als eine halbe CPU von sechzehn, mindestens ${fmt(d.labor.minFreiGiBAb, 1)} Gibibyte blieben frei. Für den Zielhost habe ich das nicht gemessen.`,
-    // Wegmarke: Nach 5 s liefert die App den Ersatz: Station Ersatz auf dem Zweig.
+    // Wegmarke: Nach 5 s liefert die App den lexikalischen Ersatz: Station Ersatz nach dem Aufstieg zur App.
     marke: '1a-ersatz',
     stichpunkte: [
       'Lexikalisch < 0,1 s, spaCy ≈ 0,5 s, gedrosselt 2–3 s (passt zur Drosselung)',
@@ -432,7 +435,7 @@ export function folien1A(d) {
     ],
     zeitS: 65,
     kurzfassung: true,
-    // Wegmarke: Entscheidung über das Ergebnis des Zweigs (lexikalische Wortwolke bleibt): Ende des Zweigs.
+    // Wegmarke: Entscheidung über das Ergebnis, das Lehrende sehen (lexikalische Wortwolke bleibt): Ende des Wegs.
     marke: '1a-wortwolke',
     quelle: q(
       `1A-auswertung.md (Entscheidung, Budget und Rückweg, Grenzen); 1A-Versuchsvertrag (Gegenalternative); ${H.datei} hypotheses; NLP_ENABLED=false: .env.production.example Z. 205 (docker-compose.prod.yml liest es von dort, Default false); LLM-Dauer: 1B-ergebnis.md, warm im Median 148,6 s je Auftrag (ThinkPad P50, Commit 8e9d1317) ≈ 2,5 min`,
@@ -450,8 +453,10 @@ export function folien1A(d) {
   neu({
     id: 'N3',
     titel: 'Fünf Varianten, je Block gemischt',
-    // Wegmarke: Fünf Varianten unterscheiden sich nur in spaCy (aus, normal, gedrosselt, hinter Proxy): Station spaCy.
-    marke: '1a-spacy',
+    // Wegmarke: Last und Daten auf dem App-Host sind in allen Läufen gleich; die fünf Varianten schalten nur die
+    // Analyse um (aus, lexikalisch, spaCy normal, gedrosselt, hinter Proxy). Der Punkt bleibt deshalb am
+    // App-Host (wie N2), der Saum zeigt die umgeschaltete Strecke. spaCy selbst ist erst N8.
+    marke: '1a-varianten',
     zeitS: 45,
     inhalt: flaeche(
       frage('Welche Varianten vergleicht die Messreihe?', '1A') +
@@ -568,7 +573,7 @@ export function folien1A(d) {
   neu({
     id: 'N6b',
     titel: 'Die Regel schlägt auch ohne Wirkung an',
-    // Wegmarke: Empfindlichkeit der Regel (Kontrolle ohne spaCy schlägt an): Live-Pfad gegen Zweig.
+    // Wegmarke: Empfindlichkeit der Regel (Kontrolle ohne spaCy schlägt an): wie N4.
     marke: '1a-regel',
     zeitS: 45,
     fuss: `Quelle: ${ZITATE.N6b.map(([sl, st]) => kurzbeleg1A(sl, st).slice(1, -1)).join('; ')}`,

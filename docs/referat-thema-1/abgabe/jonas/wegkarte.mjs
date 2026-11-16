@@ -1,8 +1,11 @@
-// Wegkarten oben links (Ortsmarke ohne Bewegung und wandernder Marker): eine Bildsprache für alle Teile.
-// Eine dünne Linie mit runden Stationen, oben der App-Host, unten der zweite Host bzw. der Analysezweig;
-// hervorgehoben ist nur der Ort der Folie, beschriftet mit Name und Etikett. Beide Wege (Jonas' Auftrag,
-// Niklas' 1A) entstehen aus denselben Maßen (KARTE) und derselben Zeichenfunktion (karteSvg), damit ihre
-// Geometrie nicht auseinanderläuft. Das frühere verkleinerte Systembild (systemMini) ist ersetzt.
+// Wegkarten oben links: eine Markermaschine für alle Hauptfolien beider Teile (Ergänzt 2026-11-16).
+// Eine dünne blaue Linie mit runden Stationen (Farbe nach Auftrag), oben der App-Host, unten der zweite Host
+// bzw. der spaCy-Sidecar. Beide Wege (Jonas' Auftrag, Niklas' 1A) entstehen aus denselben Maßen (KARTE) und
+// derselben Zeichenfunktion. Je Folie beschreibt eine Marke (MARKEN) den Zustand: Station des Punkts,
+// hervorgehobene Strecken (Saum), Zeichen auf der Karte (Ausschlag, Störungszeichen), Ort und Etikett.
+// - wegMarke(name): feste Karte in der Folie, nur für den Druck (Endbild der Folie).
+// - wegLaeufer(weg, namen): ein beständiger Marker je Weg auf der Bühne; deck.js setzt ihn je Folie aus
+//   laeuferZustand(name): der Punkt fährt zwischen Stationen, Säume und Zeichen blenden ein und aus.
 import { WEG_STATIONEN } from './grafik.mjs';
 
 const r2 = (n) => Math.round(n * 100) / 100;
@@ -14,9 +17,9 @@ const esc = (s) =>
     .replace(/"/g, '&quot;');
 
 /**
- * Maße jeder Wegkarte in px (deck-vorlage.html .weg-mini, .weg-marke): oben und unten die beiden Ebenen,
- * Linie 3 px, Stationsring r 6,5 mit 3 px Rand, Hauptstation gefüllt r 9, Hervorhebung einer Strecke als
- * Saum (14 px, 16 % Deckkraft) wie der Ring des Markers (.weg-punkt). x aus WEG_STATIONEN mit Faktor 0,36.
+ * Maße jeder Wegkarte in px (deck-vorlage.html .weg-mini): oben und unten die beiden Ebenen, Linie 3 px in
+ * Blau, Stationsring r 6,5 mit 3 px Rand, Hauptstation gefüllt r 9, Hervorhebung einer Strecke als Saum
+ * (14 px, 16 % Deckkraft) wie der Ring des Markers (.weg-punkt). x aus WEG_STATIONEN mit Faktor 0,36.
  */
 export const KARTE = Object.freeze({
   breite: 450,
@@ -26,12 +29,16 @@ export const KARTE = Object.freeze({
   x0: 20,
   faktor: 0.36,
   linie: 3,
+  linienfarbe: 'var(--blau)',
   ring: 6.5,
   ringRand: 3,
   kern: 9,
   saum: 14,
   saumDeckkraft: 0.16,
 });
+
+/** Farbe der Stationen je Auftrag (README „Farbe“: Blau = 1A, Petrol = 1C, Bernstein = 1B). */
+const AUFTRAG_FARBE = { '1A': 'var(--blau)', '1B': 'var(--bernstein)', '1C': 'var(--petrol)' };
 
 // ------------------------------------------------------------------ gemeinsame Geometrie
 
@@ -46,7 +53,7 @@ const kurve = ([xa, ya], [xb, yb]) => [
 ];
 const gerade = (a, b) => ['L', a, b];
 
-/** SVG-Pfad aus Segmenten (['L', a, b] oder ['C', p0, p1, p2, p3]). */
+/** SVG-Pfad aus zusammenhängenden Segmenten (['L', a, b] oder ['C', p0, p1, p2, p3]). */
 function pfadD(segmente) {
   return (
     `M${r2(segmente[0][1][0])} ${r2(segmente[0][1][1])}` +
@@ -82,7 +89,7 @@ function abtasten(segmente) {
     );
   }
   /** Nächster Punkt auf der Linie zu (x, y) samt Anteil der Bogenlänge in %. */
-  const naechster = ([x, y]) => {
+  return ([x, y]) => {
     let best = 0;
     for (let i = 1; i < punkte.length; i++) {
       if (
@@ -97,7 +104,30 @@ function abtasten(segmente) {
       anteil: r2((laenge[best] / laenge.at(-1)) * 100),
     };
   };
-  return naechster;
+}
+
+/**
+ * Baut einen Weg aus einer zusammenhängenden Linie (der Punkt fährt per offset-path darauf), den Stationen
+ * in Wegreihenfolge und benannten Strecken (Saum). `ganz` ist immer der ganze Weg.
+ */
+function baueWeg({ id, segmente, ziele, info, strecken, wirkung = null, zeichenOrt = null }) {
+  const naechster = abtasten(segmente);
+  const stationen = {};
+  for (const [name, p] of Object.entries(ziele)) {
+    const i = info(name);
+    stationen[name] = {
+      ...naechster(p),
+      auftrag: i.auftrag,
+      name: i.name,
+      farbe: i.farbe ?? AUFTRAG_FARBE[i.auftrag],
+      kern: Boolean(i.kern),
+    };
+  }
+  const d = pfadD(segmente);
+  const abschnitte = { ganz: d };
+  for (const [name, teile] of Object.entries(strecken))
+    abschnitte[name] = teile.map(pfadD).join('');
+  return Object.freeze({ id, d, abschnitte, stationen, wirkung, zeichenOrt });
 }
 
 // ------------------------------------------------------------------ Weg 1: Jonas' Auftrag (J3 verkleinert)
@@ -106,121 +136,100 @@ const mx = (x) => Math.round((KARTE.x0 + (x - WEG_STATIONEN.klick.x) * KARTE.fak
 
 /**
  * Weg des Auftrags aus J3: oben app-host (Klick, Kontext, Nachprüfung, Gate), Senke zum llm-host (Netz,
- * Inferenz). Kurven wie in J3 (Abstieg ab Kontext + 110, Boden bei Inferenz − 80 usw.). Der Abschnitt
- * „zweiterHost“ (Abstieg, Boden, Aufstieg) ist die Strecke, die 1B 3–4 stört.
+ * Inferenz). Kurven wie in J3 (Abstieg ab Kontext + 110, Boden bei Inferenz − 80 usw.).
+ * Strecken: `zweiterHost` (Abstieg, Boden, Aufstieg; die Strecke, die 1B 3–4 stört) und `netz` (die
+ * beiden Übergänge zwischen den Hosts, hin und zurück; J8 misst den Draht auf beiden Hosts).
  */
 function wegAuftrag() {
   const S = WEG_STATIONEN;
   const { oben: o, unten: u } = KARTE;
   const ab = [mx(S.kontext.x + 110), mx(S.inferenz.x - 80)];
   const auf = [mx(S.inferenz.x + 80), mx(S.nachpruefung.x - 90)];
-  const zweiterHost = [
-    kurve([ab[0], o], [ab[1], u]),
-    gerade([ab[1], u], [auf[0], u]),
-    kurve([auf[0], u], [auf[1], o]),
-  ];
-  const segmente = [
-    gerade([mx(S.klick.x), o], [ab[0], o]),
-    ...zweiterHost,
-    gerade([auf[1], o], [mx(S.gate.x), o]),
-  ];
-  const naechster = abtasten(segmente);
-  const ziel = {
-    klick: [mx(S.klick.x), o],
-    kontext: [mx(S.kontext.x), o],
-    netz: [(ab[0] + ab[1]) / 2, (o + u) / 2],
-    inferenz: [mx(S.inferenz.x), u],
-    nachpruefung: [mx(S.nachpruefung.x), o],
-    gate: [mx(S.gate.x), o],
-  };
-  const farbe = (name) =>
-    name === 'gate'
-      ? 'var(--rot)'
-      : S[name].auftrag === '1B'
-        ? 'var(--bernstein)'
-        : 'var(--petrol)';
-  const stationen = {};
-  for (const [name, p] of Object.entries(ziel)) {
-    stationen[name] = {
-      ...naechster(p),
-      auftrag: S[name].auftrag,
-      name: S[name].name,
-      farbe: farbe(name),
-      kern: name === 'inferenz',
-    };
-  }
-  return Object.freeze({
+  const hin = kurve([ab[0], o], [ab[1], u]);
+  const boden = gerade([ab[1], u], [auf[0], u]);
+  const zurueck = kurve([auf[0], u], [auf[1], o]);
+  return baueWeg({
     id: 'auftrag',
-    linien: [{ d: pfadD(segmente), farbe: 'var(--blau)' }],
-    d: pfadD(segmente),
-    abschnitte: { zweiterHost: pfadD(zweiterHost) },
-    // Störungszeichen (1B 3–4) stehen auf der Karte über der Senke zum zweiten Host, nicht in der Beschriftung
+    segmente: [
+      gerade([mx(S.klick.x), o], [ab[0], o]),
+      hin,
+      boden,
+      zurueck,
+      gerade([auf[1], o], [mx(S.gate.x), o]),
+    ],
+    ziele: {
+      klick: [mx(S.klick.x), o],
+      kontext: [mx(S.kontext.x), o],
+      netz: [(ab[0] + ab[1]) / 2, (o + u) / 2],
+      inferenz: [mx(S.inferenz.x), u],
+      nachpruefung: [mx(S.nachpruefung.x), o],
+      gate: [mx(S.gate.x), o],
+    },
+    info: (name) => ({
+      ...S[name],
+      farbe: name === 'gate' ? 'var(--rot)' : undefined,
+      kern: name === 'inferenz',
+    }),
+    strecken: { zweiterHost: [[hin, boden, zurueck]], netz: [[hin], [zurueck]] },
+    // Störungszeichen stehen auf der Karte über der Senke zum zweiten Host, nicht in der Beschriftung
     zeichenOrt: { x: r2((ab[0] + auf[1]) / 2), y: 2 },
-    stationen,
   });
 }
 
 // ------------------------------------------------------------------ Weg 2: Niklas' 1A
 
 /**
- * Weg 1A in derselben Bildsprache: oben der Live-Pfad (Teilnehmende → App → Datenbank → Antwort), von der
- * App zweigt nach unten rechts die optionale Analyse ab (Analyse → spaCy → Ersatz → Wortwolke). Ersatz steht
- * auf dem Zweig, weil die App nach 5 s ohne spaCy-Antwort die lexikalische Wortwolke liefert. Der Abzweig
- * hat dieselbe S-Kurve wie die Senke im Auftragsweg (Breite 160 · 0,36). Neutral gezeichnet; hervorgehoben
- * wird nur der Ort der Folie in Blau (1A).
+ * Weg 1A (Neuentwurf 2026-11-16) in derselben Bildsprache und Form wie der Auftragsweg: eine Linie, die der
+ * Vortrag ohne Sprung und ohne Rücksprung abfährt. Oben der App-Host: App (N2, N3), dann der Live-Pfad
+ * (N4–N7: die Regel und alle Messungen betreffen die Latenz der Live-Aktionen), Senke zum spaCy-Sidecar
+ * (N8: CPU und Speicher des Containers), Aufstieg zum Ersatz (N9: die App liefert nach 5 s die
+ * lexikalische Wortwolke) und zur Wortwolke (N10: Entscheidung über das Ergebnis, das Lehrende sehen).
+ * Teilnehmende, Datenbank, Antwort und Analyse des früheren Entwurfs sind entfallen: Keine Folie handelte
+ * von ihnen. Strecken: `live` (App bis zum Abstieg, die Hauptlinie der Live-Aktionen) und `analyse`
+ * (Abstieg, spaCy, Aufstieg; der Teil, den die fünf Varianten umschalten).
  */
 function weg1A() {
   const { oben: o, unten: u, faktor } = KARTE;
-  const x = { teilnehmende: 20, app: 110, datenbank: 288, antwort: 432.8 };
-  const abzweig = [x.app + 22, x.app + 22 + 160 * faktor];
-  const zx = { analyse: 216, spacy: 288, ersatz: 360, wortwolke: 432.8 };
-  const haupt = [gerade([x.teilnehmende, o], [x.antwort, o])];
-  const zweig = [
-    gerade([x.app, o], [abzweig[0], o]),
-    kurve([abzweig[0], o], [abzweig[1], u]),
-    gerade([abzweig[1], u], [zx.wortwolke, u]),
+  // Abstieg und Aufstieg so breit wie die Senke im Auftragsweg (160 · 0,36)
+  const ab = [170, 170 + 160 * faktor];
+  const auf = [ab[1] + 56.8, ab[1] + 56.8 + 160 * faktor];
+  const live = gerade([20, o], [ab[0], o]);
+  const analyse = [
+    kurve([ab[0], o], [ab[1], u]),
+    gerade([ab[1], u], [auf[0], u]),
+    kurve([auf[0], u], [auf[1], o]),
   ];
   const namen = {
-    teilnehmende: 'Teilnehmende',
-    app: 'App',
-    datenbank: 'Datenbank',
-    antwort: 'Antwort',
-    analyse: 'Analyse',
+    app: 'App-Host',
+    live: 'Live-Pfad',
     spacy: 'spaCy',
     ersatz: 'Ersatz',
     wortwolke: 'Wortwolke',
   };
-  const stationen = {};
-  for (const [n, xx] of Object.entries(x)) stationen[n] = { x: xx, y: o };
-  for (const [n, xx] of Object.entries(zx)) stationen[n] = { x: xx, y: u };
-  for (const [n, s] of Object.entries(stationen)) {
-    Object.assign(s, {
-      name: namen[n],
-      auftrag: '1A',
-      farbe: 'var(--gedaempft)',
-      kern: n === 'spacy',
-    });
-  }
-  return Object.freeze({
+  return baueWeg({
     id: '1a',
-    linien: [
-      { d: pfadD(haupt), farbe: 'var(--linie)' },
-      { d: pfadD(zweig), farbe: 'var(--linie)' },
-    ],
-    abschnitte: { haupt: pfadD(haupt), zweig: pfadD(zweig) },
-    // Wirkungszeichen auf dem Live-Pfad zwischen App und Datenbank (N7)
-    wirkung: { x: r2((abzweig[1] + x.datenbank) / 2), y: o },
-    stationen,
+    segmente: [live, ...analyse, gerade([auf[1], o], [434, o])],
+    ziele: {
+      app: [20, o],
+      live: [95, o],
+      spacy: [(ab[1] + auf[0]) / 2, u],
+      ersatz: [372, o],
+      wortwolke: [434, o],
+    },
+    info: (name) => ({ auftrag: '1A', name: namen[name], kern: name === 'spacy' }),
+    strecken: { live: [[live]], analyse: [analyse] },
+    // Wirkungszeichen (N7) auf dem Live-Pfad zwischen der Station und dem Abstieg
+    wirkung: { x: r2((95 + ab[0]) / 2), y: o },
   });
 }
 
 export const WEG_AUFTRAG = wegAuftrag();
 export const WEG_1A = weg1A();
-const WEGE = { auftrag: WEG_AUFTRAG, '1a': WEG_1A };
+export const WEGE = Object.freeze({ auftrag: WEG_AUFTRAG, '1a': WEG_1A });
 
-// ------------------------------------------------------------------ Zeichnen
+// ------------------------------------------------------------------ Zeichen
 
-/** Störungszeichen (1B 3–4), 22 px wie die Etiketten, in Bernstein; Reihenfolge wie STOERUNGEN auf M1. */
+/** Störungszeichen, 22 px wie die Etiketten, in Bernstein; Reihenfolge wie STOERUNGEN auf M1. */
 export const STOERUNG_ZEICHEN = Object.freeze({
   stopp: {
     text: 'Stopp',
@@ -241,118 +250,95 @@ export const STOERUNG_ZEICHEN = Object.freeze({
 });
 const zeichen = (name) =>
   `<svg class="weg-zeichen" data-zeichen="${name}" viewBox="0 0 22 22" width="22" height="22" aria-hidden="true" focusable="false">${STOERUNG_ZEICHEN[name].svg}</svg>`;
+const reihe = (z, attr = '') =>
+  `<span class="weg-zeichen-reihe"${attr}>${z.map(zeichen).join('')}</span>`;
+
+// ------------------------------------------------------------------ Wegmarken (Zustand je Folie)
 
 /**
- * Zeichnet eine Wegkarte: Linien, hervorgehobene Abschnitte (Saum und Linie in der Farbe des Teils),
- * Stationen (Ring, Hauptstation gefüllt), optional das Wirkungszeichen. Keine Beschriftung, kein Marker.
- * @param {typeof WEG_AUFTRAG} weg
- * @param {{ abschnitte?: { name: string, gestrichelt?: boolean }[], farbe?: string, wirkung?: boolean }} o
- */
-export function karteSvg(weg, { abschnitte = [], farbe = 'var(--blau)', wirkung = false } = {}) {
-  const K = KARTE;
-  const linien = weg.linien
-    .map(
-      (l) =>
-        `<path d="${l.d}" fill="none" stroke="${l.farbe}" stroke-width="${K.linie}" stroke-linecap="round"/>`,
-    )
-    .join('');
-  const hervor = abschnitte
-    .map(({ name, gestrichelt }) => {
-      const d = weg.abschnitte[name];
-      if (!d) throw new Error(`Unbekannter Abschnitt ${name} auf Weg ${weg.id}`);
-      const strich = gestrichelt ? ' stroke-dasharray="7 6"' : '';
-      return (
-        `<g data-abschnitt="${name}"><path d="${d}" fill="none" stroke="${farbe}" stroke-opacity="${K.saumDeckkraft}" stroke-width="${K.saum}" stroke-linecap="round"/>` +
-        `<path d="${d}" fill="none" stroke="${farbe}" stroke-width="${K.linie}" stroke-linecap="round"${strich}/></g>`
-      );
-    })
-    .join('');
-  const kreise = Object.entries(weg.stationen)
-    .map(([name, s]) =>
-      s.kern
-        ? `<circle data-station="${name}" cx="${s.x}" cy="${s.y}" r="${K.kern}" fill="${s.farbe}"/>`
-        : `<circle data-station="${name}" cx="${s.x}" cy="${s.y}" r="${K.ring}" fill="#fff" stroke="${s.farbe}" stroke-width="${K.ringRand}"/>`,
-    )
-    .join('');
-  // Wirkung: kleiner Ausschlag auf der Linie (Latenzspitze), in der Farbe des Teils
-  const w = wirkung && weg.wirkung;
-  const ausschlag = w
-    ? `<path data-wirkung d="M${w.x - 14} ${w.y}h5l4 -11 5 22 4 -11h5" fill="none" stroke="${farbe}" stroke-width="${K.linie}" stroke-linecap="round" stroke-linejoin="round"/>`
-    : '';
-  return (
-    `<svg class="weg-mini-karte" data-weg="${weg.id}" viewBox="0 0 ${K.breite} ${K.hoehe}" width="${K.breite}" height="${K.hoehe}" aria-hidden="true" focusable="false">` +
-    `${linien}${hervor}${ausschlag}${kreise}</svg>`
-  );
-}
-
-const etikett = (auftrag) =>
-  `<span class="etikett etikett-${auftrag.toLowerCase()}">${auftrag}</span>`;
-
-// ------------------------------------------------------------------ Jonas' Stationsfolien (Marker)
-
-/**
- * Kleine Wegkarte auf Jonas' Stationsfolien; mit `aktiv` steht der Marker fest an der Station (Druck/PDF),
- * mit `wandernd` fährt er per offset-path (deck.js).
- */
-export function wegMini({ aktiv = null, wandernd = false } = {}) {
-  const { d, stationen } = WEG_AUFTRAG;
-  const karte = karteSvg(WEG_AUFTRAG);
-  const s = aktiv ? stationen[aktiv] : null;
-  const punkt = wandernd
-    ? `<div class="weg-punkt" style="offset-path:path('${d}')"></div>`
-    : `<div class="weg-punkt" style="left:${s.x}px;top:${s.y}px"></div>`;
-  const name = (st) =>
-    `<span class="weg-name">${st ? esc(st.name) : ''}</span>` +
-    `<span class="etikett etikett-${st ? st.auftrag.toLowerCase() : '1c'}">${st ? st.auftrag : ''}</span>`;
-  if (wandernd) {
-    return (
-      `<div class="weg-mini weg-wandernd" role="img" aria-label="Station des Auftrags" hidden>` +
-      karte +
-      punkt +
-      `<p class="weg-beschriftung">${name(null)}</p></div>`
-    );
-  }
-  return (
-    `<div class="weg-mini weg-mini-statisch" data-aktiv="${aktiv}" role="img" aria-label="Station des Auftrags: ${esc(s.name)} (${s.auftrag})">` +
-    karte +
-    punkt +
-    `<p class="weg-beschriftung" aria-hidden="true">${name(s)}</p></div>`
-  );
-}
-
-// ------------------------------------------------------------------ Wegmarken (feste Ortsmarke)
-
-/**
- * Wegmarken der Folien ohne Station (Folienfeld `marke`): Weg, Hervorhebung, Beschriftung, Etikett.
- * - station: Marker (.weg-punkt) an dieser Station
- * - abschnitte: hervorgehobene Strecken (Saum und Linie in der Farbe des Teils)
- * - wirkung: Ausschlag auf dem Live-Pfad
- * - stufen: Störungszeichen je Aufbaustufe auf der Karte (M1; Stufen wie STUFE_1B34 in folien-1b34.mjs)
- * - zeichen: Störungszeichen ohne Stufen (M2)
- * - text: nur der Ort (keine Zusätze mit „·“); Wirkung und Störung zeigen Zeichen auf der Karte
- * 1A hebt in Blau hervor, 1B 3–4 in Bernstein; J1 zeigt den ganzen Weg ohne Hervorhebung.
+ * Marke je Folie (Folienfeld `marke`; Jonas' Stationsfolien ohne `marke` bekommen `station:<name>`):
+ * - weg: 'auftrag' oder '1a'; teil: Etiketten der Beschriftung; text: nur der Ort (Kopfgrammatik)
+ * - station: Punkt an dieser Station (fehlt: kein Punkt, etwa auf Übersichtsfolien)
+ * - abschnitte: hervorgehobene Strecken als Saum in `farbe` (gestrichelt: der verglichene Teil)
+ * - wirkung: Ausschlag auf dem Live-Pfad (N7)
+ * - stufen: Störungszeichen je Aufbaustufe (M1; wie STUFE_1B34 in folien-1b34.mjs); zeichen: ohne Stufen
+ * Jede Hervorhebung und jedes Zeichen steht nur, wo es die Aussage der Folie zeigt (Begründung je Eintrag).
  */
 export const MARKEN = Object.freeze({
+  // J1, J2, J3 (eigener großer Weg), J4, J13b, J15: der ganze Weg ohne Punkt und ohne Hervorhebung
   auftrag: { weg: 'auftrag', teil: ['1C', '1B'], text: 'Weg eines Auftrags' },
+  // J8, J8b: Netz gemessen am Draht auf beiden Hosts bzw. Strecke gegen lokal: beide Übergänge im Saum
+  'auftrag-netz': {
+    weg: 'auftrag',
+    teil: ['1B'],
+    station: 'netz',
+    abschnitte: [{ name: 'netz' }],
+    farbe: 'var(--bernstein)',
+    text: 'Netz',
+  },
+  // J9: Zeitzerlegung des ganzen Auftrags, die Inferenz trägt sie: Saum über den ganzen Weg, Punkt dort
+  'auftrag-zeit': {
+    weg: 'auftrag',
+    teil: ['1B'],
+    station: 'inferenz',
+    abschnitte: [{ name: 'ganz' }],
+    text: 'Inferenz',
+  },
+  // J10b: Runtime-Container gestoppt: dasselbe Stoppzeichen wie Störung F1 auf M1
+  'auftrag-stopp': {
+    weg: 'auftrag',
+    teil: ['1B'],
+    station: 'inferenz',
+    zeichen: ['stopp'],
+    text: 'Inferenz',
+  },
+  // J11: Timeout ab Werk (90 s) endet vor der Inferenz: Zeichen „zu spät“ wie Störung L3 auf M1
+  'auftrag-timeout': {
+    weg: 'auftrag',
+    teil: ['1B'],
+    station: 'inferenz',
+    zeichen: ['spaet'],
+    text: 'Inferenz',
+  },
+  // N1: Einstieg mit der Antwort, der ganze Weg ohne Punkt
   '1a-weg': { weg: '1a', teil: ['1A'], text: 'Weg der Analyse' },
+  // N2: fünf Dienste teilen sich den App-Host
   '1a-app': { weg: '1a', teil: ['1A'], station: 'app', text: 'App-Host' },
-  '1a-spacy': { weg: '1a', teil: ['1A'], station: 'spacy', text: 'spaCy' },
-  '1a-live': { weg: '1a', teil: ['1A'], abschnitte: [{ name: 'haupt' }], text: 'Live-Pfad' },
+  // N3: Last und Daten auf dem App-Host gleich, die fünf Varianten schalten nur die Analyse um (aus,
+  // lexikalisch, spaCy normal, gedrosselt, hinter Proxy): Punkt bleibt an der App, Saum auf der Analyse
+  '1a-varianten': {
+    weg: '1a',
+    teil: ['1A'],
+    station: 'app',
+    abschnitte: [{ name: 'analyse' }],
+    text: 'App-Host',
+  },
+  // N4, N6, N6b: die Regel vergleicht die Live-Latenz mit und ohne Analyse: Live-Pfad im Saum, die
+  // umgeschaltete Analyse gestrichelt
   '1a-regel': {
     weg: '1a',
     teil: ['1A'],
-    abschnitte: [{ name: 'haupt' }, { name: 'zweig', gestrichelt: true }],
+    station: 'live',
+    abschnitte: [{ name: 'live' }, { name: 'analyse', gestrichelt: true }],
     text: 'Live-Pfad',
   },
-  '1a-wirkung': {
+  // N5: alle Live-Aktionen kamen an: nur der Live-Pfad im Saum
+  '1a-live': {
     weg: '1a',
     teil: ['1A'],
-    station: 'spacy',
-    wirkung: true,
-    text: 'spaCy',
+    station: 'live',
+    abschnitte: [{ name: 'live' }],
+    text: 'Live-Pfad',
   },
+  // N7: Ausreißer der Beitritte im Lauf V3/Block 5: Ausschlag auf dem Live-Pfad
+  '1a-wirkung': { weg: '1a', teil: ['1A'], station: 'live', wirkung: true, text: 'Live-Pfad' },
+  // N8: CPU und Speicher des spaCy-Containers
+  '1a-spacy': { weg: '1a', teil: ['1A'], station: 'spacy', text: 'spaCy' },
+  // N9: nach 5 s liefert die App den lexikalischen Ersatz
   '1a-ersatz': { weg: '1a', teil: ['1A'], station: 'ersatz', text: 'Ersatz' },
+  // N10: Entscheidung über das Ergebnis, das Lehrende sehen (lexikalische Wortwolke bleibt)
   '1a-wortwolke': { weg: '1a', teil: ['1A'], station: 'wortwolke', text: 'Wortwolke' },
+  // M1: die Strecke über den zweiten Host in Bernstein, je Stufe die Störungen der Folie
   '1b-stoerung': {
     weg: 'auftrag',
     teil: ['1B'],
@@ -366,6 +352,7 @@ export const MARKEN = Object.freeze({
       { ab: 3, zeichen: ['spaet'] },
     ],
   },
+  // M2: Rückwirkung aller vier Störungen auf die Live-Aktionen
   '1b-alle': {
     weg: 'auftrag',
     teil: ['1B'],
@@ -376,56 +363,211 @@ export const MARKEN = Object.freeze({
   },
 });
 
+/** Marke zu einem Namen; `station:<name>` ist Jonas' Station ohne Zusatz (Ort und Etikett der Station). */
+export function marke(name) {
+  const st = /^station:(.+)$/.exec(name)?.[1];
+  if (st) {
+    const s = WEG_AUFTRAG.stationen[st];
+    if (!s) throw new Error(`Unbekannte Station ${st}`);
+    return { weg: 'auftrag', teil: [s.auftrag], station: st, text: s.name };
+  }
+  const m = MARKEN[name];
+  if (!m) throw new Error(`Unbekannte Wegmarke: ${name}`);
+  const s = m.station ? WEGE[m.weg].stationen[m.station] : null;
+  if (m.station && !s) throw new Error(`Unbekannte Station ${m.station} auf Weg ${m.weg}`);
+  for (const a of m.abschnitte ?? [])
+    if (!WEGE[m.weg].abschnitte[a.name])
+      throw new Error(`Unbekannter Abschnitt ${a.name} auf Weg ${m.weg}`);
+  return m;
+}
+
+/**
+ * Name der Marke einer Folie: Stationsfolien (Jonas) zeigen ihre Station, mit `marke` samt Zusatz an derselben
+ * Station; eine Folie, die den Weg selbst groß zeigt (J3), und Folien ohne Station tragen ihre `marke`.
+ * @returns {string|null}
+ */
+export function markeVon(f, { eigenerWeg = false } = {}) {
+  if (f.station && !eigenerWeg) {
+    if (!f.marke) return `station:${f.station}`;
+    if (marke(f.marke).station !== f.station)
+      throw new Error(`${f.id}: Marke ${f.marke} steht nicht an Station ${f.station}`);
+    return f.marke;
+  }
+  return f.marke ?? null;
+}
+
 /**
  * Sichtbarer Text einer Wegmarke: nur der Ort (Kopfgrammatik, README „Designregeln“). Wirkung und Störungen
  * zeigt die Karte als Zeichen, nie als Zusatz in der Beschriftung.
  */
 export function markeText(name) {
-  const m = MARKEN[name];
-  if (!m) throw new Error(`Unbekannte Wegmarke: ${name}`);
-  return m.text;
+  return marke(name).text;
 }
 
-/** Bedeutung der Zeichen auf der Karte (für aria-label): Störungen in Stufenreihenfolge. */
-function zeichenText(m) {
-  const z = m.stufen ? m.stufen.flatMap((st) => st.zeichen) : (m.zeichen ?? []);
-  return z.map((n) => STOERUNG_ZEICHEN[n].text).join(', ');
+/** Stufen der Zeichen: M1 je Aufbaustufe, sonst eine Stufe ab 0. */
+const stufenVon = (m) => m.stufen ?? (m.zeichen?.length ? [{ ab: 0, zeichen: m.zeichen }] : []);
+
+/** Schlüssel eines Saums (Strecke, Farbe, gestrichelt), gleich in Druckkarte und Läufer. */
+const saumSchluessel = (m, a) =>
+  `${a.name}|${m.farbe ?? KARTE.linienfarbe}${a.gestrichelt ? '|gestrichelt' : ''}`;
+
+/** aria-label einer Marke: Ort, Teile, Zeichen (Störungen in Stufenreihenfolge), Wirkung. */
+function markeLabel(name) {
+  const m = marke(name);
+  const z = stufenVon(m).flatMap((st) => st.zeichen);
+  return (
+    `Ort auf dem Weg: ${m.text} (${m.teil.join(', ')})` +
+    (z.length ? `; Störungen: ${z.map((n) => STOERUNG_ZEICHEN[n].text).join(', ')}` : '') +
+    (m.wirkung ? '; Ausschlag: Wirkung auf den Live-Pfad' : '')
+  );
 }
 
-/** Feste Wegmarke oben links (druckfest, ohne Bewegung) im Platz von Jonas' Wegkarte. */
+// ------------------------------------------------------------------ Zeichnen
+
+/** Saum einer Strecke: breiter, blasser Strich in der Farbe der Marke (gestrichelt: der verglichene Teil). */
+function saumSvg(weg, schluessel, attr) {
+  const [name, farbe, gestrichelt] = schluessel.split('|');
+  // gestrichelt mit stumpfen Enden, sonst schließen die runden Kappen des breiten Saums die Lücken
+  const strich = gestrichelt ? ' stroke-dasharray="9 7"' : '';
+  const kappe = gestrichelt ? 'butt' : 'round';
+  // Eine andere Farbe als die Linie färbt auch die Linie (1B 3–4: Strecke über den zweiten Host in Bernstein)
+  const linie =
+    farbe === KARTE.linienfarbe
+      ? ''
+      : `<path d="${weg.abschnitte[name]}" fill="none" stroke="${farbe}" stroke-width="${KARTE.linie}" stroke-linecap="round"/>`;
+  return (
+    `<g data-abschnitt="${name}"${attr}><path d="${weg.abschnitte[name]}" fill="none" stroke="${farbe}" stroke-opacity="${KARTE.saumDeckkraft}" stroke-width="${KARTE.saum}" stroke-linecap="${kappe}"${strich}/>` +
+    `${linie}</g>`
+  );
+}
+
+/** Ausschlag auf der Linie (Latenzspitze), in Blau wie die Linie. */
+const ausschlagSvg = (w, attr = '') =>
+  `<path data-wirkung${attr} d="M${w.x - 14} ${w.y}h5l4 -11 5 22 4 -11h5" fill="none" stroke="${KARTE.linienfarbe}" stroke-width="${KARTE.linie}" stroke-linecap="round" stroke-linejoin="round"/>`;
+
+/**
+ * Zeichnet eine Wegkarte: Linie, Säume, Ausschlag, Stationen (Ring, Hauptstation gefüllt). Keine Beschriftung,
+ * kein Punkt. Die Linie ist auf beiden Wegen blau, die Stationen tragen die Farbe ihres Auftrags.
+ * @param {typeof WEG_AUFTRAG} weg
+ * @param {{ saeume?: string[], wirkung?: boolean, laeufer?: boolean }} o Läufer: alle Säume und der
+ *   Ausschlag stehen bereit (ausgeblendet), deck.js schaltet sie je Folie ein
+ */
+export function karteSvg(weg, { saeume = [], wirkung = false, laeufer = false } = {}) {
+  const K = KARTE;
+  const linie = `<path d="${weg.d}" fill="none" stroke="${K.linienfarbe}" stroke-width="${K.linie}" stroke-linecap="round"/>`;
+  const attr = (s) => (laeufer ? ` class="weg-saum" data-saum="${esc(s)}"` : '');
+  const hervor = saeume.map((s) => saumSvg(weg, s, attr(s))).join('');
+  const kreise = Object.entries(weg.stationen)
+    .map(([name, s]) =>
+      s.kern
+        ? `<circle data-station="${name}" cx="${s.x}" cy="${s.y}" r="${K.kern}" fill="${s.farbe}"/>`
+        : `<circle data-station="${name}" cx="${s.x}" cy="${s.y}" r="${K.ring}" fill="#fff" stroke="${s.farbe}" stroke-width="${K.ringRand}"/>`,
+    )
+    .join('');
+  const ausschlag =
+    wirkung && weg.wirkung ? ausschlagSvg(weg.wirkung, laeufer ? ' class="weg-wirkung"' : '') : '';
+  return (
+    `<svg class="weg-mini-karte" data-weg="${weg.id}" viewBox="0 0 ${K.breite} ${K.hoehe}" width="${K.breite}" height="${K.hoehe}" aria-hidden="true" focusable="false">` +
+    `${linie}${hervor}${ausschlag}${kreise}</svg>`
+  );
+}
+
+const etikett = (auftrag) =>
+  `<span class="etikett etikett-${auftrag.toLowerCase()}">${auftrag}</span>`;
+
+/**
+ * Feste Wegmarke oben links in der Folie (Druck/PDF: Endbild der Folie; auf dem Bildschirm zeigt der
+ * Läufer denselben Zustand mit Bewegung).
+ */
 export function wegMarke(name) {
-  const m = MARKEN[name];
-  if (!m) throw new Error(`Unbekannte Wegmarke: ${name}`);
+  const m = marke(name);
   const weg = WEGE[m.weg];
-  const karte = karteSvg(weg, { abschnitte: m.abschnitte, farbe: m.farbe, wirkung: m.wirkung });
+  const karte = karteSvg(weg, {
+    saeume: (m.abschnitte ?? []).map((a) => saumSchluessel(m, a)),
+    wirkung: m.wirkung,
+  });
   const s = m.station ? weg.stationen[m.station] : null;
-  if (m.station && !s) throw new Error(`Unbekannte Station ${m.station} auf Weg ${m.weg}`);
   const punkt = s ? `<div class="weg-punkt" style="left:${s.x}px;top:${s.y}px"></div>` : '';
-  const reihe = (z) => `<span class="weg-zeichen-reihe">${z.map(zeichen).join('')}</span>`;
+  const stufen = stufenVon(m);
+  if (stufen.length && !weg.zeichenOrt) throw new Error(`Weg ${m.weg} hat keinen Ort für Zeichen`);
   const zeichenSpalte = m.stufen
-    ? m.stufen
+    ? stufen
         .map(
           (st) =>
             `<span class="weg-stufe" data-ab="${st.ab}"${st.bis === undefined ? '' : ` data-bis="${st.bis}"`}>${reihe(st.zeichen)}</span>`,
         )
         .join('')
-    : m.zeichen?.length
-      ? reihe(m.zeichen)
+    : stufen.length
+      ? reihe(stufen[0].zeichen)
       : '';
-  if (zeichenSpalte && !weg.zeichenOrt) throw new Error(`Weg ${m.weg} hat keinen Ort für Zeichen`);
   const zeichenOrt = zeichenSpalte
     ? `<span class="weg-zeichen-ort" style="left:${weg.zeichenOrt.x}px;top:${weg.zeichenOrt.y}px">${zeichenSpalte}</span>`
     : '';
-  const bedeutung = zeichenText(m);
-  const label =
-    `Ort auf dem Weg: ${markeText(name)} (${m.teil.join(', ')})` +
-    (bedeutung ? `; Störungen: ${bedeutung}` : '') +
-    (m.wirkung ? '; Ausschlag: Wirkung auf den Live-Pfad' : '');
   return (
-    `<div class="weg-mini weg-marke" data-marke="${esc(name)}"${m.station ? ` data-aktiv="${m.station}"` : ''} role="img" aria-label="${esc(label)}">` +
+    `<div class="weg-mini weg-marke" data-marke="${esc(name)}"${m.station ? ` data-aktiv="${m.station}"` : ''} role="img" aria-label="${esc(markeLabel(name))}">` +
     karte +
     zeichenOrt +
     punkt +
     `<p class="weg-beschriftung" aria-hidden="true"><span class="weg-name">${esc(m.text)}</span>${m.teil.map(etikett).join('')}</p></div>`
+  );
+}
+
+// ------------------------------------------------------------------ Läufer (beständiger Marker je Weg)
+
+/** Schlüssel eines Zeichensatzes (Reihe auf der Karte); leer = keine Zeichen. */
+const satz = (z) => z.join(',');
+
+/**
+ * Zustand einer Marke für deck.js (setzeMarker): Weg, Anteil der Station auf der Linie (offset-distance),
+ * Ort, Etiketten, Säume, Ausschlag, Zeichensätze je Aufbaustufe und aria-label.
+ */
+export function laeuferZustand(name) {
+  const m = marke(name);
+  const weg = WEGE[m.weg];
+  return {
+    name,
+    weg: m.weg,
+    station: m.station ?? null,
+    anteil: m.station ? weg.stationen[m.station].anteil : null,
+    text: m.text,
+    teil: m.teil,
+    saeume: (m.abschnitte ?? []).map((a) => saumSchluessel(m, a)),
+    wirkung: Boolean(m.wirkung),
+    stufen: stufenVon(m).map((st) => ({ ab: st.ab, bis: st.bis ?? null, satz: satz(st.zeichen) })),
+    label: markeLabel(name),
+  };
+}
+
+/**
+ * Beständiger Marker eines Wegs auf der Bühne (ein Element für alle Folien des Wegs): Karte mit allen Säumen
+ * und Zeichen, die eine der Marken braucht (ausgeblendet), ein Punkt auf offset-path, Beschriftung.
+ * @param {'auftrag'|'1a'} wegId
+ * @param {string[]} namen Marken der Folien dieses Wegs
+ */
+export function wegLaeufer(wegId, namen) {
+  const weg = WEGE[wegId];
+  const zustaende = namen.map(laeuferZustand);
+  if (zustaende.some((z) => z.weg !== wegId)) throw new Error(`Marke auf fremdem Weg in ${wegId}`);
+  const saeume = [...new Set(zustaende.flatMap((z) => z.saeume))];
+  const wirkung = zustaende.some((z) => z.wirkung);
+  const saetze = [
+    ...new Set(zustaende.flatMap((z) => z.stufen.map((st) => st.satz)).filter(Boolean)),
+  ];
+  if (saetze.length && !weg.zeichenOrt) throw new Error(`Weg ${wegId} hat keinen Ort für Zeichen`);
+  const zeichenOrt = saetze.length
+    ? `<span class="weg-zeichen-ort" style="left:${weg.zeichenOrt.x}px;top:${weg.zeichenOrt.y}px">` +
+      saetze
+        .map(
+          (s) => `<span class="weg-stufe weg-satz" data-satz="${s}">${reihe(s.split(','))}</span>`,
+        )
+        .join('') +
+      `</span>`
+    : '';
+  return (
+    `<div class="weg-mini weg-laeufer" data-weg="${wegId}" role="img" aria-label="">` +
+    karteSvg(weg, { saeume, wirkung, laeufer: true }) +
+    zeichenOrt +
+    `<div class="weg-punkt" style="offset-path:path('${weg.d}')"></div>` +
+    `<p class="weg-beschriftung" aria-hidden="true"><span class="weg-name"></span><span class="weg-etiketten"></span></p></div>`
   );
 }

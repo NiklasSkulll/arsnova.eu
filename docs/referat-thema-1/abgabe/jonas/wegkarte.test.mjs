@@ -1,5 +1,6 @@
-// Prüft die Wegkarten oben links (wegkarte.mjs): ein Satz Maße für beide Wege, Jonas' Marker und die
-// festen Wegmarken aus derselben Zeichenfunktion, Beschriftung mit Etikett, keine Systembild-Miniatur mehr.
+// Prüft die Wegkarten oben links (wegkarte.mjs): ein Satz Maße und eine Linienfarbe für beide Wege, feste
+// Druckmarken und beständige Läufer aus derselben Zeichenfunktion, Beschriftung mit Etikett, keine
+// Systembild-Miniatur mehr.
 // Aufruf: node --test docs/referat-thema-1/abgabe/jonas/wegkarte.test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -12,17 +13,26 @@ import {
   WEG_1A,
   WEG_AUFTRAG,
   karteSvg,
+  laeuferZustand,
+  marke,
   markeText,
+  markeVon,
+  wegLaeufer,
   wegMarke,
-  wegMini,
 } from './wegkarte.mjs';
 
 const kreise = (svg) => [...svg.matchAll(/<circle data-station="([a-z]+)"[^>]*r="([\d.]+)"/g)];
 
-test('beide Wege: gleiche Maße, Linienstärke und Stationsradien, Höhe wie Jonas’ Karte', () => {
+test('beide Wege: gleiche Maße, Linienstärke, Linienfarbe und Stationsradien, Höhe wie Jonas’ Karte', () => {
   for (const weg of [WEG_AUFTRAG, WEG_1A]) {
     const svg = karteSvg(weg);
     assert.match(svg, new RegExp(`width="${KARTE.breite}" height="${KARTE.hoehe}"`), weg.id);
+    // eine Linie in Blau (Auftragsweg und 1A gleich), keine graue Linie mehr
+    const linien = [...svg.matchAll(/<path d="[^"]*" fill="none" stroke="([^"]+)"/g)].map(
+      (m) => m[1],
+    );
+    assert.deepEqual(linien, ['var(--blau)'], weg.id);
+    assert.doesNotMatch(svg, /var\(--linie\)|var\(--gedaempft\)/, weg.id);
     for (const [, w] of svg.matchAll(/stroke-width="([\d.]+)"/g))
       assert.equal(Number(w), KARTE.linie, weg.id);
     for (const [, name, r] of kreise(svg))
@@ -70,38 +80,52 @@ test('Auftragsweg: Stationen von Klick bis Gate, oben app-host, Netz und Inferen
   assert.ok(Math.min(...xs) > S.kontext.x && Math.max(...xs) < S.nachpruefung.x);
 });
 
-test('Weg 1A: Live-Pfad oben, Zweig mit Ersatz unten, Abzweig an der App', () => {
+test('Weg 1A: eine Linie wie der Auftragsweg, Stationen in Vortragsreihenfolge, Farbe 1A', () => {
   const S = WEG_1A.stationen;
-  for (const n of ['teilnehmende', 'app', 'datenbank', 'antwort'])
-    assert.equal(S[n].y, KARTE.oben, n);
-  for (const n of ['analyse', 'spacy', 'ersatz', 'wortwolke']) assert.equal(S[n].y, KARTE.unten, n);
-  assert.ok(WEG_1A.abschnitte.zweig.startsWith(`M${S.app.x} ${KARTE.oben}`));
-  const x = (n) => S[n].x;
-  assert.ok(
-    x('teilnehmende') < x('app') && x('app') < x('datenbank') && x('datenbank') < x('antwort'),
+  assert.deepEqual(Object.keys(S), ['app', 'live', 'spacy', 'ersatz', 'wortwolke']);
+  for (const n of ['app', 'live', 'ersatz', 'wortwolke']) assert.equal(S[n].y, KARTE.oben, n);
+  assert.equal(S.spacy.y, KARTE.unten);
+  const anteile = Object.values(S).map((s) => s.anteil);
+  assert.deepEqual(
+    [...anteile].sort((a, b) => a - b),
+    anteile,
+    'Anteile steigen entlang des Wegs',
   );
-  assert.ok(
-    x('app') < x('analyse') &&
-      x('analyse') < x('spacy') &&
-      x('spacy') < x('ersatz') &&
-      x('ersatz') < x('wortwolke'),
-  );
+  // Stationsfarbe nach Auftrag: 1A Blau wie das Etikett; Auftragsweg Petrol (1C), Bernstein (1B), Gate rot
+  for (const s of Object.values(S)) assert.equal(s.farbe, 'var(--blau)');
+  for (const [n, s] of Object.entries(WEG_AUFTRAG.stationen))
+    assert.equal(
+      s.farbe,
+      n === 'gate' ? 'var(--rot)' : s.auftrag === '1B' ? 'var(--bernstein)' : 'var(--petrol)',
+      n,
+    );
+  // Live-Pfad oben ab der App, Analyse als Senke zu spaCy
+  assert.ok(WEG_1A.abschnitte.live.startsWith(`M${S.app.x} ${KARTE.oben}`));
+  assert.ok(WEG_1A.abschnitte.analyse.includes(`${KARTE.unten}`));
 });
 
-test('Jonas’ Marker und die Wegmarken von 1B 3–4 zeichnen dieselbe Karte', () => {
-  const basis = wegMini({ aktiv: 'inferenz' }).match(
-    /<svg class="weg-mini-karte"[\s\S]*?<\/svg>/,
-  )[0];
+test('Druckmarken und Läufer zeichnen dieselbe Karte; Läufer hat alle Säume und Zeichen bereit', () => {
   const ohneHervorhebung = (h) =>
     h
       .match(/<svg class="weg-mini-karte"[\s\S]*?<\/svg>/)[0]
-      .replace(/<g data-abschnitt[\s\S]*?<\/g>/g, '');
-  for (const m of ['1b-stoerung', '1b-alle', 'auftrag'])
-    assert.equal(ohneHervorhebung(wegMarke(m)), basis, m);
+      .replace(/<g data-abschnitt[\s\S]*?<\/g>/g, '')
+      .replace(/<path data-wirkung[^>]*\/>/g, '');
+  for (const [weg, namen] of [
+    ['auftrag', Object.keys(MARKEN).filter((n) => MARKEN[n].weg === 'auftrag')],
+    ['1a', Object.keys(MARKEN).filter((n) => MARKEN[n].weg === '1a')],
+  ]) {
+    const l = wegLaeufer(weg, namen);
+    for (const n of namen) assert.equal(ohneHervorhebung(wegMarke(n)), ohneHervorhebung(l), n);
+    const saeume = new Set(namen.flatMap((n) => laeuferZustand(n).saeume));
+    assert.equal((l.match(/class="weg-saum"/g) ?? []).length, saeume.size, weg);
+    assert.equal((l.match(/class="weg-punkt"/g) ?? []).length, 1, `${weg}: ein Punkt, der fährt`);
+    assert.match(l, /style="offset-path:path\('M/, weg);
+  }
   const m1 = wegMarke('1b-stoerung');
   assert.match(m1, /<g data-abschnitt="zweiterHost"><path [^>]*stroke="var\(--bernstein\)"/);
-  // J1: ganzer Weg ohne Hervorhebung und ohne Marker
+  // J1: ganzer Weg ohne Hervorhebung und ohne Punkt
   assert.doesNotMatch(wegMarke('auftrag'), /data-abschnitt|weg-punkt/);
+  assert.throws(() => wegLaeufer('1a', ['auftrag']));
 });
 
 test('Wegmarken: Hervorhebung nur am Ort der Folie, Beschriftung mit Etikett', () => {
@@ -118,15 +142,40 @@ test('Wegmarken: Hervorhebung nur am Ort der Folie, Beschriftung mit Etikett', (
     assert.equal((h.match(/class="weg-punkt"/g) ?? []).length, m.station ? 1 : 0, name);
     assert.equal((h.match(/<g data-abschnitt=/g) ?? []).length, m.abschnitte?.length ?? 0, name);
     assert.equal((h.match(/data-wirkung/g) ?? []).length, m.wirkung ? 1 : 0, name);
-    if (m.weg === '1a') {
-      // 1A: Hervorhebung in Blau, alles andere neutral
-      assert.doesNotMatch(h, /bernstein|petrol|--rot/, name);
-    }
+    assert.doesNotMatch(markeText(name), /·/, name);
+    if (m.weg === '1a') assert.doesNotMatch(h, /bernstein|petrol|--rot/, name);
   }
-  // Marker sitzt genau auf der Station
+  // Punkt sitzt genau auf der Station
   const s = WEG_1A.stationen.ersatz;
   assert.match(wegMarke('1a-ersatz'), new RegExp(`left:${s.x}px;top:${s.y}px`));
   assert.throws(() => wegMarke('x'));
+  assert.throws(() => marke('station:x'));
+  // Stationsfolien: eigene Station, Zusatz nur an derselben Station, eigener großer Weg trägt die Marke
+  assert.equal(markeVon({ station: 'klick' }), 'station:klick');
+  assert.equal(markeVon({ station: 'netz', marke: 'auftrag-netz' }), 'auftrag-netz');
+  assert.equal(markeVon({ station: 'klick', marke: 'auftrag' }, { eigenerWeg: true }), 'auftrag');
+  assert.throws(() => markeVon({ id: 'X', station: 'klick', marke: 'auftrag-netz' }));
+  assert.deepEqual(marke('station:gate'), {
+    weg: 'auftrag',
+    teil: ['1C'],
+    station: 'gate',
+    text: 'Gate',
+  });
+});
+
+test('Läuferzustand: Anteil der Station, Säume, Zeichensätze je Stufe', () => {
+  assert.equal(laeuferZustand('station:inferenz').anteil, WEG_AUFTRAG.stationen.inferenz.anteil);
+  assert.equal(laeuferZustand('auftrag').anteil, null);
+  assert.deepEqual(laeuferZustand('1a-regel').saeume, [
+    'live|var(--blau)',
+    'analyse|var(--blau)|gestrichelt',
+  ]);
+  assert.deepEqual(
+    laeuferZustand('1b-stoerung').stufen.map((s) => s.satz),
+    ['', 'stopp,belegt', 'drop', 'spaet'],
+  );
+  assert.deepEqual(laeuferZustand('auftrag-stopp').stufen, [{ ab: 0, bis: null, satz: 'stopp' }]);
+  assert.equal(laeuferZustand('1a-wirkung').wirkung, true);
 });
 
 test('M1: Störungszeichen je Stufe auf der Karte, Beschriftung nur der Ort; M2 alle vier Zeichen', () => {

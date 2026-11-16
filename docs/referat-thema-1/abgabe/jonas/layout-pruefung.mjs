@@ -36,9 +36,7 @@ export async function layoutBefunde(browser, pfad) {
       const flaeche = folie.querySelector('.folie-flaeche');
       const fuss = folie.querySelector('.folie-fuss');
       const kopf = [
-        ...folie.querySelectorAll(
-          '.weg-mini-statisch, .weg-marke, .weg-marke .weg-beschriftung, .teilleiste',
-        ),
+        ...folie.querySelectorAll('.weg-marke, .weg-marke .weg-beschriftung, .teilleiste'),
       ];
       // 1. alles innerhalb der Bühne 1600 × 900 (SVG-Inneres zählt über sein <svg>)
       for (const el of folie.querySelectorAll('*')) {

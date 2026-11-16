@@ -71,13 +71,17 @@ er läuft springt auf das letzte Bild (`deck.js`, `clipSchritt`).
   Uhr steht, während Jonas spricht; Notizen und Sprechkarten markieren die Übergabe nach N10). Überschreitet
   die Langfassung 15:00 min, steht dort ein Budgethinweis (Entscheidung der Autoren 2026-11-16: 15 min Redezeit
   je Person, Fragen kommen hinzu; vorher 10:30 min).
-- Ortsmarke ohne Bewegung oben links (`deck.mjs`, `ortsmarke`; Folienfeld `marke`) auf jeder Folie von 1A und
-  1B 3–4 und auf J1: eine Wegkarte in derselben Bildsprache wie Jonas' Marker (`wegkarte.mjs`, gleiche Maße,
-  Linien und Stationen, Beschriftung nur Ort und Etikett). 1B 3–4 zeigt Jonas' Auftragsweg, die Strecke über den
-  zweiten Host in Bernstein, dazu je Stufe ein Störungszeichen auf der Karte (Stopp, Slot belegt, DROP, zu spät); 1A einen eigenen Weg
-  (oben Teilnehmende → App → Datenbank → Antwort, unten der Zweig Analyse → spaCy → Ersatz → Wortwolke) mit dem Ort
-  der Folie in Blau; J1 (ebenso J2, J3, J4, J13b, J15) Jonas' ganzen Weg ohne Hervorhebung. Welche Folie welche Station zeigt, steht begründet
-  an der Folie (`../niklas/folien-1a.mjs`).
+- Wegkarte oben links (_Ergänzt 2026-11-16: eine Markermaschine für beide Teile_): Jede Hauptfolie trägt eine
+  Marke (Folienfeld `marke`, Jonas' Stationsfolien sonst ihre `station`; Liste mit Begründung in `MARKEN`,
+  `wegkarte.mjs`). Zwei Wege in derselben Bildsprache (gleiche Maße, blaue Linie, Stationen in der Farbe ihres
+  Auftrags): Jonas' Auftragsweg (Klick → Kontext → Netz → Inferenz → Nachprüfung → Gate; auch für 1B 3–4) und
+  der Weg 1A (App-Host → Live-Pfad → spaCy → Ersatz → Wortwolke). Je Weg ein beständiger Läufer auf der Bühne
+  (`deck.js`, `setzeMarker`): Der Punkt fährt per `offset-path` zur nächsten Station, Säume (hervorgehobene
+  Strecken) und Zeichen (Ausschlag auf dem Live-Pfad, Störungszeichen) blenden ein; beim Wechsel des Wegs
+  (N10 → J1) blendet die Karte über. Reduzierte Bewegung: alles sofort. Im Druck steht in jeder Folie die feste
+  Marke im Endbild. Jede Station wird je Teil der Reihe nach besucht (Test in `../niklas/folien-niklas.test.mjs`).
+  Säume: N3 Analyse, N4/N6/N6b Live-Pfad und Analyse gestrichelt, N5 Live-Pfad, J8/J8b Netz, J9 ganzer Auftrag,
+  M1/M2 zweiter Host; Zeichen: N7 Ausschlag, J10b Stopp, J11 zu spät, M1 je Stufe, M2 alle vier.
 - G0 zeigt Leitfrage und Fahrplan der vier Teile in Vortragsreihenfolge (`TEILE` in `folien.mjs`: Niklas 1A,
   Jonas 1C und 1B 1–2, Niklas 1B 3–4, Fazit); dieselben Teile stehen klein oben rechts auf jeder Hauptfolie
   (Teilleiste, `deck.mjs`), der aktuelle Teil unterstrichen. G9 nimmt die Leitfrage von G0 wörtlich wieder

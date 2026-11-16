@@ -78,8 +78,8 @@
       .weg-mini-karte {
         display: block;
       }
-      /* Ortsmarke ohne Bewegung (deck.mjs ortsmarke, wegkarte.mjs wegMarke): Wegkarte im Platz und mit der
-         Beschriftung von Jonas' Marker, sichtbar auf dem Bildschirm und im Druck */
+      /* Wegkarte oben links (wegkarte.mjs): auf dem Bildschirm der beständige Läufer je Weg (deck.js
+         setzeMarker), im Druck die feste Marke in jeder Folie (Endbild). Beide aus derselben Zeichnung. */
       /* .folie p setzt text-wrap: pretty (stil.css); die Beschriftung bleibt einzeilig */
       .weg-mini .weg-beschriftung {
         text-wrap: nowrap;
@@ -87,7 +87,7 @@
       .weg-marke .weg-punkt {
         transform: translate(-50%, -50%);
       }
-      /* Störungszeichen (1B 3–4) auf der Karte über der Senke zum zweiten Host; je Aufbaustufe ein Satz */
+      /* Störungszeichen auf der Karte über der Senke zum zweiten Host; je Aufbaustufe ein Satz */
       .weg-zeichen-ort {
         position: absolute;
         display: grid;
@@ -127,14 +127,6 @@
         border-radius: 50%;
         background: var(--blau);
       }
-      .weg-wandernd .weg-punkt {
-        offset-rotate: 0deg;
-        offset-distance: 0%;
-        transition: offset-distance 600ms ease;
-      }
-      .weg-mini-statisch .weg-punkt {
-        transform: translate(-50%, -50%);
-      }
       .weg-beschriftung {
         position: absolute;
         left: 462px;
@@ -152,14 +144,55 @@
       .weg-beschriftung .etikett {
         padding: 0 10px;
       }
+      .weg-etiketten {
+        display: contents;
+      }
+      /* Läufer: ausgeblendet ohne data-an; Wechsel des Wegs blendet über (300 ms) */
+      .weg-laeufer {
+        opacity: 0;
+        visibility: hidden;
+        transition:
+          opacity 300ms ease,
+          visibility 0s linear 300ms;
+      }
+      .weg-laeufer[data-an] {
+        opacity: 1;
+        visibility: visible;
+        transition: opacity 300ms ease;
+      }
+      .weg-laeufer .weg-punkt {
+        offset-rotate: 0deg;
+        offset-distance: 0%;
+        transition:
+          offset-distance 600ms ease,
+          opacity 300ms ease;
+      }
+      .weg-laeufer .weg-punkt.weg-punkt-springt {
+        transition: opacity 300ms ease;
+      }
+      .weg-laeufer .weg-punkt:not([data-an]),
+      .weg-laeufer .weg-saum:not([data-an]),
+      .weg-laeufer .weg-wirkung:not([data-an]),
+      .weg-laeufer .weg-satz:not([data-an]) {
+        opacity: 0;
+      }
+      .weg-laeufer .weg-saum,
+      .weg-laeufer .weg-wirkung,
+      .weg-laeufer .weg-satz {
+        transition: opacity 300ms ease;
+      }
+      .weg-laeufer.weg-sofort * {
+        transition: none !important;
+      }
       @media screen {
-        .weg-mini-statisch {
+        .folie > .weg-marke {
           display: none;
         }
       }
       @media (prefers-reduced-motion: reduce) {
-        .weg-wandernd .weg-punkt {
-          transition: none;
+        .weg-laeufer,
+        .weg-laeufer * {
+          transition: none !important;
         }
       }
 
@@ -232,7 +265,7 @@
         white-space: nowrap;
       }
 
-      /* Druck/PDF: jede Folie eine Seite 1600 × 900, Marker fest an der Station. */
+      /* Druck/PDF: jede Folie eine Seite 1600 × 900, Wegkarte fest im Endbild der Folie. */
       @page {
         size: 1600px 900px;
         margin: 0;
@@ -271,7 +304,7 @@
         .clip-standbild {
           display: block !important;
         }
-        .weg-wandernd,
+        .weg-laeufer,
         .reserve-uebersicht,
         .live {
           display: none !important;

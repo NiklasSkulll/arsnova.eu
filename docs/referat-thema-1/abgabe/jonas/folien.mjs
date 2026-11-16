@@ -1257,6 +1257,8 @@ export function folien(daten) {
     kurzfassung: false,
     quelle: `${q1B} (Auftrag ${au.nr}: treiber.auftraege, zerlegung.auftraege)`,
     station: 'netz',
+    // Wegkarte (wegkarte.mjs MARKEN): Draht auf beiden Hosts, beide Übergänge im Saum
+    marke: 'auftrag-netz',
   });
 
   // ------------------------------------------------------------ J9
@@ -1276,6 +1278,8 @@ export function folien(daten) {
     aufbau: 2,
     quelle: `${q1B}; Kalt: ${q1BN}`,
     station: 'inferenz',
+    // Wegkarte: Zeitzerlegung des ganzen Auftrags, Saum über den ganzen Weg, Punkt an der Inferenz
+    marke: 'auftrag-zeit',
   });
 
   // ------------------------------------------------------------ J10
@@ -1668,7 +1672,8 @@ export function folien(daten) {
       ),
     `Bevor ich der Drahtmessung traue, eine Kontrolle. Kostet die Strecke zwischen den Hosts mehr als ein Aufruf im selben Host? Kontrolle C0 schickt dieselbe kurze Anfrage einmal vom app-host über das Netz und einmal vom llm-host an sich selbst und vergleicht die Mediane. Die Differenz ist ${z.c0} Millisekunden, also innerhalb der vorab festgelegten Schwelle von ${fw.schwelleC0Ms} Millisekunden: Ein Unterschied ist nicht nachweisbar, denn die Streuung je Seite ist größer. Das heißt nicht, dass die Strecke nichts kostet. Die eigentliche Zahl bleibt die Drahtmessung, ${z.netz} Millisekunden im Median.`,
     q1BN,
-    { zeitS: 35, station: 'netz' },
+    // Wegkarte: Strecke gegen lokal, beide Übergänge im Saum (wie J8)
+    { zeitS: 35, station: 'netz', marke: 'auftrag-netz' },
   );
 
   haupt(
@@ -1694,7 +1699,8 @@ export function folien(daten) {
       ),
     `Und wenn der llm-host gar nicht antwortet? Im Ausfallversuch B0 habe ich den Runtime-Container vor dem Treiber gestoppt. Alle ${b.nB0} Aufträge endeten mit der extraktiven Zusammenfassung und dem Grund unavailable, im Median nach ${z.b0} Millisekunden. Die Schwelle von ${fw.schwelleB0S} Sekunden stand vorher fest. Ein toter Host kostet also fast nichts. Andere Ausfälle, etwa ein langsamer oder stummer Host, sind damit nicht gemessen; die untersucht Niklas.`,
     q1BN,
-    { zeitS: 30, station: 'inferenz' },
+    // Wegkarte: Runtime gestoppt, Stoppzeichen wie Störung F1 auf M1
+    { zeitS: 30, station: 'inferenz', marke: 'auftrag-stopp' },
   );
 
   haupt(
@@ -2027,7 +2033,8 @@ export function folien(daten) {
       `</div></div>`,
     `Die Zeit steckt in der Inferenz; was heißt das für den Betrieb? Erstens der Timeout: Ab Werk bricht die App in Version 1.4.0 nach ${fw.releaseTimeoutS} Sekunden ab. Am PC ergab die Kalibrierung ${z.kalPc} Sekunden, am Laptop dauerte die Inferenz im Median ${z.inferRuhig}. Der Timeout ist also zu kurz auf beiden Laborrechnern; über andere Hardware sagt das nichts. Zweitens der Speicher: Bei wechselnden Prompts wächst die Runtime je Auftrag um ${z.delta} Gigabyte; die Ursache ist der Prompt-Cache, gezeigt am PC. Beide Grenzen liegen bei ${fw.grenzeGesamtGiB} Gibibyte. Auf dem älteren Stand starb die Runtime im ${c.oomAuftrag9f230abc.wert}. Auftrag, auf dem neuen schon im ${c.oomAuftrag.wert}.; warum früher, habe ich nicht getrennt gemessen. Im 1B-Lauf mit gleichem Prompt blieb sie bei ${z.speicher1B} Gigabyte. Ich empfehle, den Timeout je Inferenz-Host zu kalibrieren und den Cache mit --cache-ram zu begrenzen; im Versuch war die Ausgabe dann um ${fw.cacheAusAusgabeProzent} Prozent langsamer, wegen fester Reihenfolge nicht dem Cache zuzuordnen. Umgesetzt ist das nicht.`,
     `ADR 1C-023 (Laptop 9f230abc: evidenz/1C/2026-11-05-labor.md; PC i7-8700 · 9f230abc), ADR 1C-024 (U1, PC · 9f230abc); Nachlauf N3, N6 · Laptop (ThinkPad P50) · def56700; 1B-Speicher: ${q1B}`,
-    { zeitS: 55, station: 'inferenz' },
+    // Wegkarte: Timeout ab Werk endet vor der Inferenz, Zeichen „zu spät“ wie Störung L3 auf M1
+    { zeitS: 55, station: 'inferenz', marke: 'auftrag-timeout' },
   );
 
   // ------------------------------------------------------------ R14 Einordnung Cloud Computing

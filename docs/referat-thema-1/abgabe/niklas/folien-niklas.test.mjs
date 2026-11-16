@@ -557,7 +557,7 @@ test('Wegmarke: 1A auf eigenem Weg, je Folie die erwartete Station; 1B 3–4 auf
   assert.deepEqual(marken, {
     N1: '1a-weg',
     N2: '1a-app',
-    N3: '1a-spacy',
+    N3: '1a-varianten',
     N4: '1a-regel',
     N5: '1a-live',
     N6: '1a-regel',
@@ -569,23 +569,23 @@ test('Wegmarke: 1A auf eigenem Weg, je Folie die erwartete Station; 1B 3–4 auf
     M1: '1b-stoerung',
     M2: '1b-alle',
   });
-  // erwartete Station bzw. Strecke je Marke
+  // Station des Punkts und hervorgehobene Strecken je Marke
   const ort = (m) =>
-    MARKEN[m].station ?? MARKEN[m].abschnitte?.map((a) => a.name).join('+') ?? 'ganzer Weg';
+    [MARKEN[m].station ?? '-', MARKEN[m].abschnitte?.map((a) => a.name).join('+') ?? ''].join(' ');
   assert.deepEqual(Object.fromEntries(Object.entries(marken).map(([id, m]) => [id, ort(m)])), {
-    N1: 'ganzer Weg',
-    N2: 'app',
-    N3: 'spacy',
-    N4: 'haupt+zweig',
-    N5: 'haupt',
-    N6: 'haupt+zweig',
-    N6b: 'haupt+zweig',
-    N7: 'spacy',
-    N8: 'spacy',
-    N9: 'ersatz',
-    N10: 'wortwolke',
-    M1: 'zweiterHost',
-    M2: 'zweiterHost',
+    N1: '- ',
+    N2: 'app ',
+    N3: 'app analyse',
+    N4: 'live live+analyse',
+    N5: 'live live',
+    N6: 'live live+analyse',
+    N6b: 'live live+analyse',
+    N7: 'live ',
+    N8: 'spacy ',
+    N9: 'ersatz ',
+    N10: 'wortwolke ',
+    M1: '- zweiterHost',
+    M2: '- zweiterHost',
   });
   assert.equal(MARKEN['1a-wirkung'].wirkung, true);
   for (const f of haupt1A) {
@@ -609,7 +609,7 @@ test('Wegmarke: 1A auf eigenem Weg, je Folie die erwartete Station; 1B 3–4 auf
     spaet: STUFE_1B34.l3,
   });
   assert.deepEqual(MARKEN['1b-alle'].zeichen, Object.keys(STOERUNG_ZEICHEN));
-  // Im Deck: Marke je Folie mit Beschriftung und Etikett, keine Reste der Systembild-Miniatur
+  // Im Deck: Druckmarke je Folie mit Beschriftung und Etikett, keine Reste der Systembild-Miniatur
   for (const f of [...haupt1A, ...n1b]) {
     const folie = html.match(new RegExp(`<section[^>]*data-id="${f.id}"[\\s\\S]*?</section>`))[0];
     assert.match(folie, new RegExp(`class="weg-mini weg-marke" data-marke="${f.marke}"`), f.id);
@@ -617,6 +617,198 @@ test('Wegmarke: 1A auf eigenem Weg, je Folie die erwartete Station; 1B 3–4 auf
     assert.match(folie, /class="etikett etikett-1[ab]"/, f.id);
   }
   assert.doesNotMatch(html, /ort-mini|data-ort=|Ort im Systembild/);
+});
+
+test('Wegkarte: jede Station jedes Wegs wird besucht, je Teil in nicht fallender Wegreihenfolge', async () => {
+  const { WEGE, laeuferZustand, markeVon } = await import('../jonas/wegkarte.mjs');
+  const jonas = alle.filter((f) => f.teil === 'jonas' && !f.anhang);
+  const teile = { '1A': haupt1A, 'Jonas 1C/1B': jonas, '1B 3–4': n1b };
+  const besucht = { auftrag: new Set(), '1a': new Set() };
+  for (const [teil, folien] of Object.entries(teile)) {
+    let vorher = -1;
+    for (const f of folien) {
+      const name = markeVon(f, { eigenerWeg: f.inhalt.includes('class="auftrag"') });
+      assert.ok(name, `${f.id}: Hauptfolie ohne Wegkarte`);
+      const z = laeuferZustand(name);
+      if (z.station === null) continue;
+      assert.ok(z.anteil >= vorher, `${teil}: ${f.id} springt zurück (${z.station})`);
+      vorher = z.anteil;
+      besucht[z.weg].add(z.station);
+    }
+  }
+  for (const [weg, stationen] of Object.entries(besucht))
+    assert.deepEqual([...stationen].sort(), Object.keys(WEGE[weg].stationen).sort(), weg);
+});
+
+/** Zustand der Wegkarte auf dem Bildschirm (Läufer) nach jedem Tastendruck von `start` bis `ende`. */
+async function laeuferVerlauf(start, ende, reducedMotion = 'no-preference') {
+  const context = await browser.newContext({
+    viewport: { width: 1600, height: 900 },
+    reducedMotion,
+  });
+  const page = await context.newPage();
+  await page.goto(`${pathToFileURL(deck).href}#${start}`);
+  const verlauf = [];
+  for (let i = 0; i < 80; i++) {
+    verlauf.push(
+      await page.evaluate(() => {
+        const f = document.querySelector('.folie[data-aktuell]');
+        const an = [...document.querySelectorAll('.weg-laeufer[data-an]')];
+        const m = an[0];
+        // Kennung am Element: bleibt sie über die Folien gleich, ist es derselbe DOM-Knoten
+        if (m) m.dataset.pruefKnoten ??= String(Math.random());
+        return {
+          id: f.dataset.id,
+          stufe: f.dataset.aufbauStufe ?? null,
+          wege: an.map((x) => x.dataset.weg),
+          knoten: m?.dataset.pruefKnoten ?? null,
+          aktiv: m?.dataset.aktiv ?? null,
+          saeume: m ? [...m.querySelectorAll('.weg-saum[data-an]')].map((g) => g.dataset.saum) : [],
+          wirkung: Boolean(m?.querySelector('.weg-wirkung[data-an]')),
+          satz: m?.querySelector('.weg-satz[data-an]')?.dataset.satz ?? '',
+          animationen: document.getAnimations().length,
+          statischSichtbar: [
+            ...document.querySelectorAll('.folie[data-aktuell] > .weg-marke'),
+          ].some((x) => getComputedStyle(x).display !== 'none'),
+        };
+      }),
+    );
+    if (verlauf.at(-1).id === ende) break;
+    await page.keyboard.press('ArrowRight');
+  }
+  await context.close();
+  return verlauf;
+}
+
+test('Wegkarte N1–N10 und M1–M2: ein beständiger Läufer je Weg wie bei Jonas', async () => {
+  const v = await laeuferVerlauf('N1', 'G9');
+  const n = v.filter((x) => x.id.startsWith('N'));
+  const m = v.filter((x) => x.id.startsWith('M'));
+  const j = v.filter((x) => x.id.startsWith('J'));
+  // 1A: derselbe DOM-Knoten über alle Folien
+  assert.equal(new Set(n.map((x) => x.knoten)).size, 1, 'N: ein Knoten');
+  assert.ok(n.every((x) => x.wege.join() === '1a'));
+  // J und M teilen sich den Auftragsweg: derselbe Knoten von J1 bis M2
+  assert.equal(new Set([...j, ...m].map((x) => x.knoten)).size, 1, 'J und M: ein Knoten');
+  assert.ok([...j, ...m].every((x) => x.wege.join() === 'auftrag'));
+  assert.notEqual(n[0].knoten, m[0].knoten, 'zwei Wege, zwei Läufer');
+  assert.ok(
+    v.every((x) => !x.statischSichtbar),
+    'feste Druckmarke auf dem Bildschirm ausgeblendet',
+  );
+  // der Punkt fährt die Stationen von 1A der Reihe nach an
+  assert.deepEqual(
+    [...new Set(n.map((x) => x.aktiv).filter(Boolean))],
+    ['app', 'live', 'spacy', 'ersatz', 'wortwolke'],
+  );
+  // Säume und Zeichen nur, wo sie die Aussage der Folie zeigen
+  const bei = (id, stufe = null) => v.find((x) => x.id === id && x.stufe === stufe);
+  assert.deepEqual(bei('N2').saeume, []);
+  assert.deepEqual(bei('N3').saeume, ['analyse|var(--blau)']);
+  assert.deepEqual(bei('N4').saeume, ['live|var(--blau)', 'analyse|var(--blau)|gestrichelt']);
+  assert.deepEqual(bei('N5').saeume, ['live|var(--blau)']);
+  assert.equal(bei('N7', '0').wirkung, true);
+  assert.equal(bei('N8').wirkung, false);
+  assert.deepEqual(bei('M1', '0').saeume, ['zweiterHost|var(--bernstein)']);
+  assert.deepEqual(
+    ['0', '1', '2', '3'].map((s) => bei('M1', s).satz),
+    ['', 'stopp,belegt', 'drop', 'spaet'],
+  );
+  assert.equal(bei('M2').satz, 'stopp,belegt,drop,spaet');
+  // Rahmen danach (G9): keine Wegkarte
+  assert.deepEqual(v.at(-1).wege, []);
+});
+
+test('Wegkarte: innerhalb von 1A fährt der Punkt, der Wechsel N10 → J1 blendet über', async () => {
+  const context = await browser.newContext({ viewport: { width: 1600, height: 900 } });
+  const page = await context.newPage();
+  await page.goto(`${pathToFileURL(deck).href}#N8`);
+  await page.waitForTimeout(400);
+  await page.keyboard.press('ArrowRight'); // N8 → N9: spaCy → Ersatz
+  await page.waitForTimeout(200);
+  const fahrt = await page.evaluate(() => {
+    const p = document.querySelector('.weg-laeufer[data-weg="1a"] .weg-punkt');
+    return {
+      laeuft: document.getAnimations().some((a) => a.effect?.target === p),
+      ist: parseFloat(getComputedStyle(p).offsetDistance),
+      soll: parseFloat(p.style.offsetDistance),
+    };
+  });
+  assert.ok(fahrt.laeuft && fahrt.ist < fahrt.soll, `Punkt fährt: ${JSON.stringify(fahrt)}`);
+  await page.waitForTimeout(700);
+  await page.keyboard.press('ArrowRight'); // N9 → N10
+  await page.waitForTimeout(700);
+  await page.keyboard.press('ArrowRight'); // N10 → J1
+  await page.waitForTimeout(120);
+  const blende = await page.evaluate(() =>
+    Object.fromEntries(
+      [...document.querySelectorAll('.weg-laeufer')].map((l) => [
+        l.dataset.weg,
+        Number(getComputedStyle(l).opacity),
+      ]),
+    ),
+  );
+  assert.ok(blende['1a'] > 0 && blende['1a'] < 1, `1A blendet aus: ${blende['1a']}`);
+  assert.ok(blende.auftrag > 0 && blende.auftrag < 1, `Auftrag blendet ein: ${blende.auftrag}`);
+  await context.close();
+});
+
+test('Wegkarte mit reduzierter Bewegung: keine Übergänge, Zustand sofort', async () => {
+  const v = await laeuferVerlauf('N1', 'M2', 'reduce');
+  assert.deepEqual(
+    v.filter((x) => x.animationen).map((x) => x.id),
+    [],
+  );
+  assert.equal(v.at(-1).id, 'M2');
+  const normal = await laeuferVerlauf('N1', 'N3');
+  assert.ok(
+    normal.some((x) => x.animationen > 0),
+    'Gegenprobe: ohne Einstellung gibt es Übergänge',
+  );
+});
+
+test('Druck: jede Folie von 1A und 1B 3–4 trägt ihre feste Wegkarte im Endbild, kein Läufer', async () => {
+  const { wegMarke } = await import('../jonas/wegkarte.mjs');
+  const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
+  await page.goto(pathToFileURL(deck).href);
+  await page.emulateMedia({ media: 'print' });
+  await page.waitForFunction(
+    () => document.querySelector('.folie[data-id="M1"]').dataset.aufbauStufe === '3',
+  );
+  const r = await page.evaluate(() => ({
+    laeufer: [...document.querySelectorAll('.weg-laeufer')].map((l) => getComputedStyle(l).display),
+    folien: Object.fromEntries(
+      [...document.querySelectorAll('.folie[data-id^="N"], .folie[data-id^="M"]')].map((s) => {
+        const m = s.querySelector(':scope > .weg-marke');
+        return [
+          s.dataset.id,
+          {
+            marke: m?.dataset.marke,
+            aktiv: m?.dataset.aktiv ?? null,
+            display: m ? getComputedStyle(m).display : 'fehlt',
+            zeichen: m
+              ? [...m.querySelectorAll('.weg-stufe, .weg-zeichen-ort > .weg-zeichen-reihe')]
+                  .filter((x) => getComputedStyle(x).opacity === '1')
+                  .flatMap((x) =>
+                    [...x.querySelectorAll('[data-zeichen]')].map((z) => z.dataset.zeichen),
+                  )
+              : [],
+          },
+        ];
+      }),
+    ),
+  }));
+  await page.close();
+  assert.ok(r.laeufer.every((d) => d === 'none'));
+  for (const f of [...haupt1A, ...n1b]) {
+    const z = r.folien[f.id];
+    assert.equal(z.marke, f.marke, f.id);
+    assert.notEqual(z.display, 'none', f.id);
+    assert.equal(z.aktiv, wegMarke(f.marke).match(/data-aktiv="([a-z]+)"/)?.[1] ?? null, f.id);
+  }
+  // M1 im Endbild: Stufe 3 („zu spät“); M2 alle vier
+  assert.deepEqual(r.folien.M1.zeichen, ['spaet']);
+  assert.deepEqual(r.folien.M2.zeichen, ['stopp', 'belegt', 'drop', 'spaet']);
 });
 
 test('M1: Störungen als Stufen (Stopp und Slot, DROP, zu spät) und Maßstab aus dem Verhältnis der Mediane', () => {
