@@ -514,6 +514,15 @@
   color: var(--gedaempft);
   font-size: var(--s-sek);
 }
+/* Nachweisumfang auf GD: ruhig, eine Zeile, ohne Wertung (nachweisumfang.md) */
+.dank-nachweis {
+  margin: 28px 0 0;
+  padding: 8px 0 8px 18px;
+  border-left: 6px solid var(--linie);
+  color: var(--text-2);
+  font-size: var(--s-sek);
+  line-height: 1.35;
+}
 .dank-qr {
   margin: 0;
   text-align: center;

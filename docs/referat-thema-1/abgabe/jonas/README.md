@@ -71,9 +71,10 @@ er läuft springt auf das letzte Bild (`deck.js`, `clipSchritt`).
   Uhr steht, während Jonas spricht; Notizen und Sprechkarten markieren die Übergabe nach N10). Überschreitet
   die Langfassung 15:00 min, steht dort ein Budgethinweis (Entscheidung der Autoren 2026-11-16: 15 min Redezeit
   je Person, Fragen kommen hinzu; vorher 10:30 min).
-- Ortsmarken ohne Bewegung oben links (`deck.mjs`, `ortsmarke`): auf N1, J1 und M1 der Ausschnitt des Systembilds
-  von GK mit dem eigenen Teil, auf N2–N9 die Karte des App-Hosts (Live-Pfad, Nebenzweig spaCy, Frist und
-  Ersatz); auf Jonas' Stationsfolien wandert weiter der Punkt auf dem Weg des Auftrags.
+- Ortsmarke ohne Bewegung oben links (`deck.mjs`, `ortsmarke`) auf jeder Folie von 1A und 1B 3–4 und auf J1:
+  das Systembild von GK verkleinert (`grafik.mjs`, `systemMini`, dieselbe Geometrie `SYSTEM`), immer gleich;
+  nur der Ort der Folie trägt die Farbe seines Teils, die Beschriftung nennt den Ort („App-Host · spaCy-Sidecar“,
+  „Zweiter Host · gestört“) wie die Wegkarte auf Jonas' Stationsfolien.
 - G0 zeigt Leitfrage und Fahrplan der vier Teile in Vortragsreihenfolge (`TEILE` in `folien.mjs`: Niklas 1A,
   Jonas 1C und 1B 1–2, Niklas 1B 3–4, Fazit); dieselben Teile stehen klein oben rechts auf jeder Hauptfolie
   (Teilleiste, `deck.mjs`), der aktuelle Teil unterstrichen. G9 nimmt die Leitfrage von G0 wörtlich wieder

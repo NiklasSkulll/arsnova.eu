@@ -316,6 +316,29 @@ const KOMPASS_HTML =
 
 const json = (pfad) => JSON.parse(readFileSync(pfad, 'utf8'));
 
+/** Nachweisumfang (GD): Kopfzahlen aus der committeten Übersicht; nachweisumfang.test.mjs rechnet sie nach. */
+export const NACHWEIS = 'nachweisumfang.md';
+
+/**
+ * Die vier Kopfzahlen aus der Tabelle „Kopfzahlen“ von nachweisumfang.md (fett gesetzter Wert je Zeile),
+ * so wie die Datei sie nennt. Fehlt eine Zeile, bricht der Bau ab.
+ */
+export function ladeNachweis(root) {
+  const md = readFileSync(resolve(root, NACHWEIS), 'utf8');
+  const wert = (name) => {
+    const m = md.match(new RegExp(`^\\|\\s*${name}\\s*\\|\\s*\\*\\*([^*]+)\\*\\*`, 'm'));
+    if (!m) throw new Error(`${NACHWEIS}: Kopfzahl „${name}“ fehlt`);
+    return m[1].trim();
+  };
+  return {
+    datei: NACHWEIS,
+    laborzeit: wert('Gewertete Laborzeit'),
+    tests: wert('Automatisierte Tests'),
+    adrs: wert('ADRs'),
+    hypothesen: wert('Vorab festgelegte Hypothesen und Kriterien'),
+  };
+}
+
 /** Abb. 1 und 2 aus 1C-diagrams.md (gerenderte Mermaid-SVGs, helles Thema) für R15 und R16. */
 export const DIAGRAMME = {
   abb1: [
@@ -491,8 +514,10 @@ export function ladeFolienDaten(root) {
       ladeDiagramm(root, datei, `d1c-${k}`, label),
     ]),
   );
+  const nachweis = ladeNachweis(root);
   return {
     ...z,
+    nachweis,
     antwort,
     auftrag,
     aufbau,
@@ -907,11 +932,11 @@ export function folien(daten) {
         `</div>` +
         `<p class="beleg">Auftrag Nr. ${au.nr}: Klick bis Ergebnis ${z.auWarte} s, Jobdauer T_job ${z.auJob} s · Median warm, n = ${nWarm}: ${z.jobWarm} s, Spanne ${z.warmMin}–${z.warmMax} s</p>`,
     ),
-    notiz: `Danke, Niklas. Die schwere Arbeit, die Inferenz, ist ausgelagert auf einen zweiten Host. Was heißt das für einen einzelnen Auftrag? Ein Klick der Lehrperson, ${z.auS} Sekunden Warten, und am Ende steht keine Modellantwort auf dem Bildschirm. Dieser Auftrag ist echt, die Nummer ${au.nr} aus meinem gewerteten Lauf, auf der CPU meines Laptops. Davon rechnet der Server ${z.auJob} Sekunden am Job; warme Aufträge brauchen im Median ${z.jobWarm} Sekunden. Gemessen habe ich Code nach Version 1.4.0; das wird beim Gate wichtig. Zwei Fragen: Für 1C, hält der Kontextpfad seine Zusagen? Für 1B, Schritte 1 und 2, wo steckt die Zeit auf dem zweiten Host? Petrol ist 1C, Bernstein ist 1B; oben links sehen Sie meinen Ausschnitt aus dem Systembild.`,
+    notiz: `Danke, Niklas. Die schwere Arbeit, die Inferenz, ist ausgelagert auf einen zweiten Host. Was heißt das für einen einzelnen Auftrag? Ein Klick der Lehrperson, ${z.auS} Sekunden Warten, und am Ende steht keine Modellantwort auf dem Bildschirm. Dieser Auftrag ist echt, die Nummer ${au.nr} aus meinem gewerteten Lauf, auf der CPU meines Laptops. Davon rechnet der Server ${z.auJob} Sekunden am Job; warme Aufträge brauchen im Median ${z.jobWarm} Sekunden. Gemessen habe ich Code nach Version 1.4.0; das wird beim Gate wichtig. Zwei Fragen: Für 1C, hält der Kontextpfad seine Zusagen? Für 1B, Schritte 1 und 2, wo steckt die Zeit auf dem zweiten Host? Petrol ist 1C, Bernstein ist 1B; oben links zeigt das kleine Systembild meinen Teil.`,
     zeitS: 50,
     kurzfassung: true,
-    // Ausschnitt im Systembild von GK oben links: Kontextpfad und zweiter Host (deck.mjs ortsmarke)
-    systemTeil: 'jonas',
+    // Ortsmarke oben links: Systembild von GK, Kontextpfad und Inferenz hervorgehoben (deck.mjs ortsmarke)
+    ort: 'jonas',
     quelle: `${q1B} (Auftrag ${au.nr}: treiber.auftraege clientWaitMs, zerlegung.auftraege jobMs; Spanne warm: zerlegung.auftraege 2–${n}); Code: 1B a19ca70f (v1.4.0-184), 1C-Nachlauf def56700 (v1.4.0-14), frühere 1C-Messungen v1.3.0-228 und v1.3.0-322; Leitfragen: Prüfungsdokument 4.3, ADR 1B-011`,
     station: null,
   });
@@ -1490,21 +1515,23 @@ export function folien(daten) {
         `<p class="dank-was">Entscheidungen als ADR, Laufprotokolle, Messdaten und der Bau dieses Decks</p>` +
         `<p class="dank-url mono"><a href="${REPO_URL}">${url.replace('/tree/', '/<wbr>tree/').replace('/docs/', '/<wbr>docs/')}</a></p>` +
         `<p class="dank-namen">Niklas Schneider · Jonas Weirauch</p>` +
+        // Nachweisumfang, sachlich in einer Zeile; Herleitung und Quellen in nachweisumfang.md
+        `<p class="dank-nachweis" data-nachweis>Belege im Repo: ${daten.nachweis.laborzeit} gewertete Laborzeit, ${daten.nachweis.tests} automatisierte Tests, ${daten.nachweis.adrs} ADRs, ${daten.nachweis.hypothesen} vorab festgelegte Hypothesen</p>` +
         `</div>` +
         `<figure class="dank-qr">${qrSvg(REPO_URL)}<figcaption class="vermerk">Repository, Ordner docs/referat-thema-1</figcaption></figure>` +
         `</div>`,
     ),
-    notiz:
-      'Danke fürs Zuhören. Alle Belege, also Entscheidungen, Protokolle und Messdaten, liegen im Repository hinter diesem Link. Wir freuen uns auf Ihre Fragen.',
+    notiz: `Danke fürs Zuhören. Alle Belege, also Entscheidungen, Protokolle und Messdaten, liegen im Repository hinter diesem Link. Was dort liegt, steht darunter in Zahlen: ${daten.nachweis.laborzeit.replace(' h', ' Stunden')} gewertete Laborzeit, ${daten.nachweis.tests} automatisierte Tests, ${daten.nachweis.adrs} Entscheidungen als ADR und ${daten.nachweis.hypothesen} vorab festgelegte Hypothesen. Wir freuen uns auf Ihre Fragen.`,
     stichpunkte: [
       '„Danke fürs Zuhören.“',
       'Belege: Repository-Link und QR-Code',
+      `Im Repo: ${daten.nachweis.laborzeit} Laborzeit, ${daten.nachweis.tests} Tests, ${daten.nachweis.adrs} ADRs, ${daten.nachweis.hypothesen} Hypothesen`,
       '„Wir freuen uns auf Ihre Fragen.“',
     ],
-    zeitS: 10,
+    zeitS: 15,
     kurzfassung: true,
     sprecher: 'niklas',
-    quelle: `${REPO_URL} (Fork, main nach dem Merge); Eintrag weirauch2026c in literatur.mjs`,
+    quelle: `${REPO_URL} (Fork, main nach dem Merge); Eintrag weirauch2026c in literatur.mjs; Nachweisumfang: ${NACHWEIS} (Kopfzahlen, nachgerechnet von abgabe/jonas/nachweisumfang.mjs)`,
     station: null,
     // Link als Text erlaubt wie im Literaturverzeichnis (deck.mjs setzt die Quellen-Marken).
     quellenverzeichnis: true,

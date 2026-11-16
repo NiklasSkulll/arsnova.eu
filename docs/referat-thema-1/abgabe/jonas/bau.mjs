@@ -29,7 +29,7 @@ import process from 'node:process';
 import { parseArgs } from 'node:util';
 
 import { baueDeck } from './deck.mjs';
-import { DIAGRAMME, FESTWERTE, folien, ladeFolienDaten } from './folien.mjs';
+import { DIAGRAMME, FESTWERTE, NACHWEIS, folien, ladeFolienDaten } from './folien.mjs';
 import { niklasSeiten } from './niklas-seiten.mjs';
 import { eingabenNiklas, niklasTeile } from '../niklas/teile.mjs';
 
@@ -402,6 +402,8 @@ async function main() {
     ...DATEN.map((p) => join(ROOT, p)),
     // Abb. 1 und 2 aus 1C-diagrams.md (R15, R16)
     ...Object.values(DIAGRAMME).map(([p]) => join(ROOT, p)),
+    // Kopfzahlen des Nachweisumfangs (GD)
+    join(ROOT, NACHWEIS),
     ...[...new Set(Object.values(FESTWERTE).map((f) => f.quelle))]
       .map((p) => join(ROOT, p))
       .filter((p) => existsSync(p)),

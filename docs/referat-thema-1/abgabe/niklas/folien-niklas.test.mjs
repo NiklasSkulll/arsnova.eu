@@ -523,29 +523,33 @@ test('Druck: N6 und N7 stehen im Endbild', async () => {
 
 // ---------------------------------------------------------------- Ergänzt 2026-11-16: Ortsmarken, M1 in Stufen
 
-test('Ortsmarken: N1 Ausschnitt 1A im Systembild, N2–N9 Ort auf dem App-Host, M1 der zweite Host', async () => {
-  const { ORT_1A } = await import('./grafik-1a.mjs');
-  assert.equal(haupt1A[0].systemTeil, '1a');
-  const orte = Object.fromEntries(haupt1A.map((f) => [f.id, f.ort1A]));
+test('Ortsmarke: eine feste Miniatur des Systembilds auf jeder Folie von 1A und 1B 3–4, nur der Ort wechselt', async () => {
+  const { SYSTEM_ORTE } = await import('../jonas/grafik.mjs');
+  const orte = Object.fromEntries([...haupt1A, ...n1b].map((f) => [f.id, f.ort]));
   assert.deepEqual(orte, {
-    N1: undefined,
-    N2: 'host',
-    N3: 'spacy',
-    N4: 'live',
-    N5: 'live',
-    N6: 'live',
-    N6b: 'live',
-    N7: 'live',
-    N8: 'spacy',
-    N9: 'ersatz',
-    N10: undefined,
+    N1: 'app-spacy',
+    N2: 'app-alle',
+    N3: 'app-spacy',
+    N4: 'app-live',
+    N5: 'app-live',
+    N6: 'app-live',
+    N6b: 'app-live',
+    N7: 'app-live',
+    N8: 'app-spacy',
+    N9: 'app-spacy',
+    N10: 'app-spacy',
+    M1: 'llm-gestoert',
+    M2: 'llm-live',
   });
-  for (const o of Object.values(orte)) if (o) assert.ok(ORT_1A[o], o);
-  assert.equal(n1b[0].systemTeil, '1b34');
-  // Im Deck: Ortsmarke ohne Bewegung, auch im Druck sichtbar
-  assert.match(html, /data-ort="system-1a"/);
-  assert.match(html, /data-ort="1a-spacy"/);
-  assert.match(html, /data-ort="system-1b34"/);
+  for (const o of Object.values(orte)) assert.ok(SYSTEM_ORTE[o], o);
+  // Farbe je Teil: 1A auf dem App-Host, 1B am zweiten Host
+  for (const f of haupt1A) assert.equal(SYSTEM_ORTE[f.ort].teil, '1A', f.id);
+  for (const f of n1b) assert.equal(SYSTEM_ORTE[f.ort].teil, '1B', f.id);
+  // Im Deck: dieselbe Marke, Beschriftung nennt den Ort
+  for (const o of ['app-spacy', 'app-alle', 'app-live', 'llm-gestoert', 'llm-live'])
+    assert.match(html, new RegExp(`data-ort="${o}"`));
+  assert.match(html, /App-Host · spaCy-Sidecar/);
+  assert.match(html, /Zweiter Host · gestört/);
 });
 
 test('M1: Störungen als Stufen (Stopp und Slot, DROP, zu spät) und Maßstab aus dem Verhältnis der Mediane', () => {

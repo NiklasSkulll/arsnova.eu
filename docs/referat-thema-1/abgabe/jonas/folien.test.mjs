@@ -166,6 +166,7 @@ function whitelist() {
   blaetter(daten.nutzlast.zahlen);
   blaetter(daten.abgeleitet);
   for (const f of daten.nachbau.fragen) ziffern(f);
+  for (const v of Object.values(daten.nachweis)) ziffern(v);
   for (const f of Object.values(FESTWERTE)) zahl(f.wert);
   return w;
 }
@@ -1021,4 +1022,27 @@ test('J13b (bis 2026-11-16 R14): Einordnung Cloud Computing als Rechnung aus dem
   assert.match(code('qaSummaryQueue.ts')[509], /queue\.length \+ running >= config\.queueLimit/);
   // NIST steht ohne Literatureintrag (nicht im Handout zitiert)
   assert.ok(!r14.fuss.includes('NIST'));
+});
+
+test('GD: Nachweisumfang aus nachweisumfang.md, gleich der Neuberechnung, ohne Wertung', async () => {
+  const { berechneNachweisumfang, kopfzahlen } = await import('./nachweisumfang.mjs');
+  const k = kopfzahlen(berechneNachweisumfang());
+  assert.deepEqual(
+    {
+      laborzeit: daten.nachweis.laborzeit,
+      tests: daten.nachweis.tests,
+      adrs: daten.nachweis.adrs,
+      hypothesen: daten.nachweis.hypothesen,
+    },
+    { laborzeit: k.laborzeitStunden, tests: k.tests, adrs: k.adrs, hypothesen: k.hypothesen },
+  );
+  const gd = sichtbar(nach('GD').inhalt);
+  assert.match(
+    gd,
+    new RegExp(
+      `Belege im Repo: ${k.laborzeitStunden} gewertete Laborzeit, ${k.tests} automatisierte Tests, ${k.adrs} ADRs, ${k.hypothesen} vorab festgelegte Hypothesen`,
+    ),
+  );
+  // sachlich: keine Commit-Zahlen je Person, keine Wertung
+  assert.doesNotMatch(gd + nach('GD').notiz, /Commits|umfangreich|beeindruck|enorm/);
 });

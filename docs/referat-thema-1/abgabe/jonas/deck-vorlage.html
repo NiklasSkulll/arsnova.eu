@@ -78,11 +78,13 @@
       .weg-mini-karte {
         display: block;
       }
-      /* Ortsmarke ohne Bewegung (deck.mjs, ortsmarke): Ausschnitt im Systembild oder Karte des App-Hosts */
+      /* Ortsmarke ohne Bewegung (deck.mjs, ortsmarke): Systembild von GK verkleinert, im selben Platz und mit
+         derselben Beschriftung wie die Wegkarte */
       .ort-mini {
         position: absolute;
         left: var(--rand);
-        top: 18px;
+        top: 16px;
+        height: 64px;
         display: flex;
         align-items: center;
         gap: 16px;
@@ -92,16 +94,9 @@
         display: block;
         flex: none;
       }
-      .ort-text {
-        margin: 0;
-        white-space: nowrap;
-        color: var(--text-2);
-        font-size: var(--s-min);
-        font-weight: 600;
-      }
-      .ort-wer {
-        color: var(--gedaempft);
-        font-weight: 400;
+      .ort-mini .ort-beschriftung {
+        position: static;
+        height: auto;
       }
       /* Folie neben dem Weg (J11): Vermerk an der Stelle der Wegkarte */
       .weg-exkurs {

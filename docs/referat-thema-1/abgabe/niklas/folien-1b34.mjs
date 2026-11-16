@@ -189,7 +189,7 @@ export function folien1B34(
           : '') +
         `<p class="beleg">Vorab festgelegt (${mono(sw.commit)}${swDatum ? `, ${swDatum}` : ''}): Ersatz ≤ Frist + ${fmt(sw.fallbackPufferMs / 1000)} s, Stopp im Median ≤ ${fmt(sw.f1MedianMaxMs / 1000)} s, DROP > ${fmt(sw.f2ZuF1Min)} × Stopp; alle drei erfüllt</p>`,
     ),
-    notiz: `Danke, Jonas. Er hat gefragt: Was passiert, wenn der zweite Host langsam ist oder ausfällt? Oben links ist dieser zweite Host im Systembild markiert. Ich habe die Runtime im Labor gezielt gestört, jeweils unter derselben Beitrittswelle wie in 1A. Die Achse zeigt die Zeit bis zum Ersatz je Auftrag, logarithmisch; rechts steht die Frist von ${fmt(fristS)} Sekunden. Grau ist der Normalbetrieb: Die Inferenz läuft, und die Antwort verwirft das Gate, wie bei Jonas. [Weiter] Ist der Container gestoppt, wird die Verbindung sofort abgewiesen, und die App liefert die extraktive Zusammenfassung nach ${fmt(f1.jobMedianMs)} Millisekunden im Median; bei belegtem Slot nach ${fmt(busy?.jobMedianMs ?? 0)} Millisekunden. [Weiter] Verwirft die Firewall die Pakete, merkt die App das erst nach rund ${fmt((f2?.jobMedianMs ?? 0) / 1000)} Sekunden.${dropMinuten ? ` Im Maßstab: Dauerte der Stopp eine Sekunde, wartete DROP rund ${fmt(dropMinuten)} Minuten.` : ''} [Weiter] Antwortet die Runtime erst nach der Frist, wartet die App die vollen ${fmt(fristS)} Sekunden. Alle Kriterien standen vor der ersten Reihe fest und sind erfüllt. Ein stummer Host ist also teurer als ein toter.`,
+    notiz: `Danke, Jonas. Er hat gefragt: Was passiert, wenn der zweite Host langsam ist oder ausfällt? Oben links ist im kleinen Systembild jetzt der zweite Host markiert. Ich habe die Runtime im Labor gezielt gestört, jeweils unter derselben Beitrittswelle wie in 1A. Die Achse zeigt die Zeit bis zum Ersatz je Auftrag, logarithmisch; rechts steht die Frist von ${fmt(fristS)} Sekunden. Grau ist der Normalbetrieb: Die Inferenz läuft, und die Antwort verwirft das Gate, wie bei Jonas. [Weiter] Ist der Container gestoppt, wird die Verbindung sofort abgewiesen, und die App liefert die extraktive Zusammenfassung nach ${fmt(f1.jobMedianMs)} Millisekunden im Median; bei belegtem Slot nach ${fmt(busy?.jobMedianMs ?? 0)} Millisekunden. [Weiter] Verwirft die Firewall die Pakete, merkt die App das erst nach rund ${fmt((f2?.jobMedianMs ?? 0) / 1000)} Sekunden.${dropMinuten ? ` Im Maßstab: Dauerte der Stopp eine Sekunde, wartete DROP rund ${fmt(dropMinuten)} Minuten.` : ''} [Weiter] Antwortet die Runtime erst nach der Frist, wartet die App die vollen ${fmt(fristS)} Sekunden. Alle Kriterien standen vor der ersten Reihe fest und sind erfüllt. Ein stummer Host ist also teurer als ein toter.`,
     stichpunkte: [
       '„Danke, Jonas.“ Seine Frage: Was, wenn der zweite Host langsam ist oder ausfällt?',
       `Achse: Zeit bis zum Ersatz, log; Frist ${fmt(fristS)} s; grau = Normalbetrieb`,
@@ -200,8 +200,8 @@ export function folien1B34(
     ],
     zeitS: 75,
     aufbau: 3,
-    // Ausschnitt im Systembild von GK oben links: der zweite Host (deck.mjs ortsmarke)
-    systemTeil: '1b34',
+    // Ortsmarke oben links: Systembild von GK, der zweite Host hervorgehoben (deck.mjs ortsmarke)
+    ort: 'llm-gestoert',
     quelle,
     fuss,
   };
@@ -259,6 +259,7 @@ export function folien1B34(
       'Risiko: stummer Host bindet Aufträge bis zur Frist',
     ],
     zeitS: 60,
+    ort: 'llm-live',
     quelle: `${quelle}; p95 gepoolt über alle Fenster (fasseLaufzeitenZusammen), Referenz B0 = F1; F2, L3 und Slot belegt auf Commit 2b39b9df, F1 auf 5e758d0a (versionsübergreifend, Produktionscode unverändert laut Versionsnachtrag; automatischer Vergleich meldet MANIFEST_MISSING_OR_DIFFERENT); App-CPU/RSS aus treiber.auftraege[].measurement.resources (RSS-Summe zählt geteilte Seiten ggf. mehrfach); Kosten Schritt 4 aus evidenz/1B/runbook.md (Aufbau, Abschnitt 2), nicht gemessen`,
     fuss,
   };

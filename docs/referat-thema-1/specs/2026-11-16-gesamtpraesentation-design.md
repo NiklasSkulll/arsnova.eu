@@ -79,8 +79,10 @@ zurück, wo sie das Argument tragen.
   Reserve (Jonas R1, R5–R7, R9–R12, neu R15 und R16 mit Abb. 1 und 2 aus `1C-diagrams.md`; Niklas RN2).
 - **Zeit:** Jonas 14:35 min (J1–J16), Niklas 14:10 min (GT, G0, GK, 1A, 1B 3–4, G9, GD). Sprungplan, Budget und
   Sprechkarten zählen gegen 15:00 min (`bau.mjs`, `ABBRUCH_S`); Tests verlangen je Person 14:00–15:00 min.
-- **Ortsmarken:** Systembild von GK klein oben links auf N1, J1 und M1 (eigener Teil gefüllt), Karte des App-Hosts
-  auf N2–N9 (Live-Pfad, Nebenzweig spaCy, Frist und Ersatz); Jonas' wandernder Punkt bleibt.
+- **Ortsmarke:** eine feste Miniatur des Systembilds von GK oben links auf jeder Folie von 1A und 1B 3–4 und auf
+  J1 (gleiche Geometrie, gleiche Quelle); nur der Ort der Folie trägt die Farbe seines Teils, die Beschriftung
+  nennt den Ort. Ein erster Entwurf mit wechselnden Formen (App-Host-Karte) war laut Autor verwirrend und ist
+  ersetzt. Jonas' wandernder Punkt bleibt; beide Marken teilen Platz und Beschriftungsstil.
 - **Aufbaustufen neu:** GK (drei), J7 (Budget, dann echte Tokens), J12 (Zeitleiste: Stimme, dann Verwurf),
   J13 (Raster der 38 Antworten rot, dann Ablation; der Clip erst danach), M1 (je Störung eine Stufe). Analogien aus
   den Daten: M1 „Stopp 1 s → DROP rund 47 min“, Notizen N7 und N8. Urteile zu allen Ideen:

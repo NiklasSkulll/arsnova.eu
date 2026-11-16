@@ -7,8 +7,7 @@ import { dirname, extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { TEILE, teilVon } from './folien.mjs';
-import { KAMERA, SYSTEM_TEILE, WEG_STATIONEN, systemMini } from './grafik.mjs';
-import { ORT_1A, ort1AMini } from '../niklas/grafik-1a.mjs';
+import { KAMERA, SYSTEM_ORTE, WEG_STATIONEN, systemMini } from './grafik.mjs';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
 
@@ -219,28 +218,20 @@ function teilleiste(f) {
 }
 
 /**
- * Ortsmarke oben links ohne Bewegung (druckfest): auf der Eröffnungsfolie eines Teils der Ausschnitt im
- * Systembild von GK (f.systemTeil: 1a, jonas, 1b34), auf den übrigen 1A-Folien die Karte des App-Hosts
- * (f.ort1A: host, live, spacy, ersatz). Folien mit wanderndem Marker (station) tragen keine.
+ * Ortsmarke oben links ohne Bewegung (druckfest): das Systembild von GK verkleinert, auf jeder Folie von 1A und
+ * 1B 3–4 (und auf J1) gleich; nur der Ort der Folie (f.ort, Schlüssel aus SYSTEM_ORTE) trägt die Farbe seines
+ * Teils. Beschriftung wie bei Jonas' Wegkarte: Ort und Etikett. Folien mit wanderndem Marker tragen keine.
  */
 function ortsmarke(f) {
-  if (f.systemTeil) {
-    const t = SYSTEM_TEILE[f.systemTeil];
-    const name = TEILE.find((x) => x.id === f.systemTeil);
-    return (
-      `<div class="ort-mini" data-ort="system-${esc(f.systemTeil)}" role="img" aria-label="Ausschnitt im Systembild: ${esc(t.text)}">` +
-      systemMini(f.systemTeil) +
-      `<p class="ort-text" aria-hidden="true">${esc(t.text)}${name ? ` <span class="ort-wer">· ${esc(name.wer)}</span>` : ''}</p></div>`
-    );
-  }
-  if (f.ort1A) {
-    return (
-      `<div class="ort-mini" data-ort="1a-${esc(f.ort1A)}" role="img" aria-label="App-Host: ${esc(ORT_1A[f.ort1A])}">` +
-      ort1AMini(f.ort1A) +
-      `<p class="ort-text" aria-hidden="true">${esc(ORT_1A[f.ort1A])}</p></div>`
-    );
-  }
-  return '';
+  if (!f.ort) return '';
+  const o = SYSTEM_ORTE[f.ort];
+  if (!o) throw new Error(`${f.id}: unbekannter Ort ${f.ort}`);
+  return (
+    `<div class="ort-mini" data-ort="${esc(f.ort)}" role="img" aria-label="Ort im Systembild: ${esc(o.text)} (${o.teil})">` +
+    systemMini(f.ort) +
+    `<p class="weg-beschriftung ort-beschriftung" aria-hidden="true"><span class="weg-name">${esc(o.text)}</span>` +
+    `<span class="etikett etikett-${o.teil.toLowerCase()}">${o.teil}</span></p></div>`
+  );
 }
 
 function jonasFolie(f, nr, gesamt, clipDaten) {

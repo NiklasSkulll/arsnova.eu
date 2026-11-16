@@ -8,7 +8,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   FLAECHE,
   SYSTEM,
-  SYSTEM_TEILE,
+  SYSTEM_ORTE,
+  MINI_HOEHE,
   abstimmungSvg,
   fussballfeldSvg,
   gateRasterSvg,
@@ -338,13 +339,24 @@ test('GK systemSvg: drei Stufen in Fahrplanfolge, Auslegung aus FESTWERTE, Baust
   assert.ok(drin(SYSTEM.inferenz, SYSTEM.llm));
 });
 
-test('systemMini: gleiche Geometrie verkleinert, genau der Teil gefüllt', () => {
-  for (const [teil, t] of Object.entries(SYSTEM_TEILE)) {
-    const svg = systemMini(teil);
+test('systemMini: eine feste Miniatur von GK, nur der Ort trägt Farbe, Beschriftung nennt den Ort', () => {
+  const ohneFarbe = (svg) =>
+    svg.replace(/(fill|stroke)="[^"]*"/g, '').replace(/ data-an|stroke-width="\d"/g, '');
+  const formen = Object.keys(SYSTEM_ORTE).map((o) => ohneFarbe(systemMini(o)));
+  // gleiche Geometrie auf jeder Folie: ohne Farben sind alle Miniaturen identisch
+  assert.equal(new Set(formen).size, 1);
+  for (const [ort, o] of Object.entries(SYSTEM_ORTE)) {
+    const svg = systemMini(ort);
+    assert.match(svg, new RegExp(`height="${MINI_HOEHE}"`));
     assert.match(svg, /aria-hidden="true"/);
-    const gefuellt = [...svg.matchAll(new RegExp(`fill="${t.farbe}"`, 'g'))].length;
-    assert.equal(gefuellt, t.bausteine.length, teil);
+    assert.equal((svg.match(/ data-an/g) ?? []).length, o.bausteine.length, ort);
+    // Ort statt Tätigkeit: „Host · Baustein“
+    assert.match(o.text, /Host/, ort);
+    assert.doesNotMatch(o.text, /Gemessen|Nebenzweig/, ort);
   }
+  // Maßstab aus SYSTEM (dieselbe Quelle wie GK)
+  const w = Number(systemMini('app-alle').match(/width="([\d.]+)"/)[1]);
+  assert.ok(Math.abs((w - 4) / (MINI_HOEHE - 4) - SYSTEM.breite / SYSTEM.hoehe) < 0.01);
   assert.throws(() => systemMini('x'));
 });
 

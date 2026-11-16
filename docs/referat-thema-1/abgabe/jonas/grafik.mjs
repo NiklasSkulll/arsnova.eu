@@ -969,16 +969,28 @@ export const SYSTEM = Object.freeze({
   inferenz: { x: 1104, y: 290, w: 252, h: 126 },
 });
 
-/** Teile des Vortrags im Systembild: welche Bausteine sie hervorheben und in welcher Farbe. */
-export const SYSTEM_TEILE = Object.freeze({
-  '1a': { bausteine: ['spacy'], farbe: FARBEN.blau, text: 'spaCy-Sidecar auf dem App-Host' },
+/**
+ * Orte im Systembild für die Ortsmarke oben links (deck.mjs ortsmarke): welche Bausteine die Folie behandelt,
+ * in der Farbe ihres Teils (1A Blau, Jonas Petrol, 1B Bernstein). Die Beschriftung nennt immer den Ort
+ * („Host · Baustein“), nie eine Tätigkeit. Dieselbe Geometrie wie GK (SYSTEM), nur verkleinert.
+ */
+export const SYSTEM_ORTE = Object.freeze({
+  'app-alle': { bausteine: ['app'], teil: '1A', text: 'App-Host · alle Dienste' },
+  'app-live': { bausteine: ['live'], teil: '1A', text: 'App-Host · Live-App' },
+  'app-spacy': { bausteine: ['spacy'], teil: '1A', text: 'App-Host · spaCy-Sidecar' },
   jonas: {
     bausteine: ['kontext', 'inferenz'],
-    farbe: FARBEN.petrol,
-    text: 'Kontextpfad und Inferenz auf dem zweiten Host',
+    teil: '1C',
+    text: 'App-Host · Kontextpfad, zweiter Host · Inferenz',
   },
-  '1b34': { bausteine: ['llm'], farbe: FARBEN.bernstein, text: 'Zweiter Host, gestört' },
+  'llm-gestoert': { bausteine: ['llm'], teil: '1B', text: 'Zweiter Host · gestört' },
+  'llm-live': {
+    bausteine: ['llm', 'live'],
+    teil: '1B',
+    text: 'App-Host · Live-App, zweiter Host gestört',
+  },
 });
+const ORT_FARBE = { '1A': FARBEN.blau, '1C': FARBEN.petrol, '1B': FARBEN.bernstein };
 
 const kasten = (b, o = {}) =>
   `<rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="${o.rx ?? 10}" fill="${o.fuellung ?? FARBEN.weiss}" stroke="${o.farbe ?? FARBEN.linie}" stroke-width="${o.breite ?? 2}"${o.extra ?? ''}/>`;
@@ -1088,38 +1100,50 @@ export function systemSvg({ clients }) {
   );
 }
 
+/** Höhe der Ortsmarke in px: so hoch wie Jonas' Wegkarte samt Punkt (deck-vorlage.html .weg-mini). */
+export const MINI_HOEHE = 64;
+
 /**
- * Miniatur des Systembilds (nur Formen, Maßstab 56 / 470) mit hervorgehobenem Teil: Ausschnitt oben links
- * auf der Eröffnungsfolie jedes Teils (N1, J1, M1). teil: Schlüssel aus SYSTEM_TEILE.
+ * Ortsmarke: das Systembild von GK verkleinert (nur Formen, Maßstab MINI_HOEHE / SYSTEM.hoehe), auf jeder
+ * Folie gleich; nur die Bausteine des Orts tragen die Farbe ihres Teils, alles andere bleibt grau.
+ * ort: Schlüssel aus SYSTEM_ORTE.
  */
-export function systemMini(teil) {
-  const T = SYSTEM_TEILE[teil];
-  if (!T) throw new Error(`Unbekannter Teil im Systembild: ${teil}`);
+export function systemMini(ort) {
+  const O = SYSTEM_ORTE[ort];
+  if (!O) throw new Error(`Unbekannter Ort im Systembild: ${ort}`);
+  const farbe = ORT_FARBE[O.teil];
   const S = SYSTEM;
-  const f = 56 / S.hoehe;
+  const f = (MINI_HOEHE - 4) / S.hoehe;
   const b = (k) => {
     const q = S[k];
-    return { x: r2(q.x * f + 1), y: r2(q.y * f + 1), w: r2(q.w * f), h: r2(q.h * f) };
+    return { x: r2(q.x * f + 2), y: r2(q.y * f + 2), w: r2(q.w * f), h: r2(q.h * f) };
   };
-  const aktiv = (k) => T.bausteine.includes(k);
-  const form = (k, rx) => {
+  const an = (k) => O.bausteine.includes(k);
+  const behaelter = (k) => {
     const q = b(k);
-    const an = aktiv(k);
-    const fuellung = an ? T.farbe : k === 'hoersaal' ? FARBEN.raster : FARBEN.weiss;
-    return `<rect x="${q.x}" y="${q.y}" width="${q.w}" height="${q.h}" rx="${rx}" fill="${fuellung}" stroke="${an ? T.farbe : FARBEN.gedaempft}" stroke-width="2"/>`;
+    return `<rect x="${q.x}" y="${q.y}" width="${q.w}" height="${q.h}" rx="4" fill="${an(k) ? FARBEN.raster : FARBEN.weiss}" stroke="${an(k) ? farbe : FARBEN.gedaempft}" stroke-width="${an(k) ? 3 : 2}"${an(k) ? ' data-an' : ''}/>`;
   };
-  const w = r2(S.breite * f + 2);
+  const block = (k, fuellung = FARBEN.weiss) => {
+    const q = b(k);
+    return `<rect x="${q.x}" y="${q.y}" width="${q.w}" height="${q.h}" rx="2" fill="${an(k) ? farbe : fuellung}" stroke="${an(k) ? farbe : FARBEN.gedaempft}" stroke-width="2"${an(k) ? ' data-an' : ''}/>`;
+  };
+  const w = r2(S.breite * f + 4);
+  const h = b('hoersaal');
   const k = b('kontext');
   const inf = b('inferenz');
-  const netzAn = teil === 'jonas';
+  const live = b('live');
+  const yNetz = r2(k.y + k.h / 2);
+  const yLive = r2(live.y + live.h / 2);
+  const netzAn = an('kontext') || an('llm');
   return (
-    `<svg viewBox="0 0 ${w} 58" width="${w}" height="58" aria-hidden="true" focusable="false">` +
-    form('hoersaal', 2) +
-    form('app', 3) +
-    ['live', 'kompass', 'spacy', 'kontext'].map((x) => form(x, 2)).join('') +
-    form('llm', 3) +
-    form('inferenz', 2) +
-    `<line x1="${r2(k.x + k.w)}" y1="${r2(k.y + k.h / 2)}" x2="${inf.x}" y2="${r2(k.y + k.h / 2)}" stroke="${netzAn ? FARBEN.bernstein : FARBEN.gedaempft}" stroke-width="2"/>` +
+    `<svg viewBox="0 0 ${w} ${MINI_HOEHE}" width="${w}" height="${MINI_HOEHE}" aria-hidden="true" focusable="false">` +
+    block('hoersaal', FARBEN.raster) +
+    `<line x1="${r2(h.x + h.w)}" y1="${yLive}" x2="${live.x}" y2="${yLive}" stroke="${FARBEN.gedaempft}" stroke-width="2"/>` +
+    behaelter('app') +
+    ['live', 'kompass', 'spacy', 'kontext'].map((x) => block(x)).join('') +
+    behaelter('llm') +
+    block('inferenz') +
+    `<line x1="${r2(k.x + k.w)}" y1="${yNetz}" x2="${inf.x}" y2="${yNetz}" stroke="${netzAn ? farbe : FARBEN.gedaempft}" stroke-width="2"/>` +
     `</svg>`
   );
 }
