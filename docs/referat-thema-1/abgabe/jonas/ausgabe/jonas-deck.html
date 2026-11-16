@@ -618,25 +618,31 @@
       .weg-mini-karte {
         display: block;
       }
-      /* Ortsmarke ohne Bewegung (deck.mjs, ortsmarke): Systembild von GK verkleinert, im selben Platz und mit
-         derselben Beschriftung wie die Wegkarte */
-      .ort-mini {
-        position: absolute;
-        left: var(--rand);
-        top: 16px;
-        height: 64px;
+      /* Ortsmarke ohne Bewegung (deck.mjs ortsmarke, wegkarte.mjs wegMarke): Wegkarte im Platz und mit der
+         Beschriftung von Jonas' Marker, sichtbar auf dem Bildschirm und im Druck */
+      /* .folie p setzt text-wrap: pretty (stil.css); die Beschriftung bleibt einzeilig */
+      .weg-mini .weg-beschriftung {
+        text-wrap: nowrap;
+      }
+      .weg-marke .weg-punkt {
+        transform: translate(-50%, -50%);
+      }
+      .weg-stufen {
+        display: grid;
+      }
+      .weg-stufe {
+        grid-area: 1 / 1;
         display: flex;
         align-items: center;
-        gap: 16px;
-        z-index: 2;
+        gap: 10px;
       }
-      .ort-mini svg {
+      .weg-zeichen-reihe {
+        display: flex;
+        gap: 6px;
+        color: var(--bernstein);
+      }
+      .weg-zeichen {
         display: block;
-        flex: none;
-      }
-      .ort-mini .ort-beschriftung {
-        position: static;
-        height: auto;
       }
       /* Folie neben dem Weg (J11): Vermerk an der Stelle der Wegkarte */
       .weg-exkurs {
@@ -991,105 +997,103 @@
         aria-label="4 von 39: Keine Freigabe für die spaCy-Glättung"
       >
         <div
-          class="ort-mini"
-          data-ort="app-spacy"
+          class="weg-mini weg-marke"
+          data-marke="1a-spacy"
+          data-aktiv="spacy"
           role="img"
-          aria-label="Ort im Systembild: App-Host · spaCy-Sidecar (1A)"
+          aria-label="Ort auf dem Weg: spaCy (1A)"
         >
           <svg
-            viewBox="0 0 180.17 64"
-            width="180.17"
-            height="64"
+            class="weg-mini-karte"
+            data-weg="1a"
+            viewBox="0 0 450 52"
+            width="450"
+            height="52"
             aria-hidden="true"
             focusable="false"
           >
-            <rect
-              x="2"
-              y="13.49"
-              width="30.64"
-              height="33.19"
-              rx="2"
-              fill="#e8edf3"
-              stroke="#566173"
-              stroke-width="2"
+            <path
+              d="M20 15L432.8 15"
+              fill="none"
+              stroke="var(--linie)"
+              stroke-width="3"
+              stroke-linecap="round"
             />
-            <line x1="32.64" y1="16.81" x2="44.13" y2="16.81" stroke="#566173" stroke-width="2" />
-            <rect
-              x="40.3"
-              y="2"
-              width="88.09"
-              height="56.17"
-              rx="4"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <path
+              d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
+              fill="none"
+              stroke="var(--linie)"
+              stroke-width="3"
+              stroke-linecap="round"
             />
-            <rect
-              x="44.13"
-              y="10.17"
-              width="80.43"
-              height="13.28"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="teilnehmende"
+              cx="20"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="44.13"
-              y="25.74"
-              width="80.43"
-              height="12.26"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="app"
+              cx="110"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="44.13"
-              y="40.3"
-              width="38.3"
-              height="14.81"
-              rx="2"
-              fill="#0b5ea8"
-              stroke="#0b5ea8"
-              stroke-width="2"
-              data-an
+            <circle
+              data-station="datenbank"
+              cx="288"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="86.26"
-              y="40.3"
-              width="38.3"
-              height="14.81"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="antwort"
+              cx="432.8"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="139.87"
-              y="31.36"
-              width="38.3"
-              height="26.81"
-              rx="4"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="analyse"
+              cx="216"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="142.94"
-              y="39.02"
-              width="32.17"
-              height="16.09"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle data-station="spacy" cx="288" cy="40" r="9" fill="var(--gedaempft)" />
+            <circle
+              data-station="ersatz"
+              cx="360"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <line x1="124.56" y1="47.71" x2="142.94" y2="47.71" stroke="#566173" stroke-width="2" />
+            <circle
+              data-station="wortwolke"
+              cx="432.8"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
+            />
           </svg>
-          <p class="weg-beschriftung ort-beschriftung" aria-hidden="true">
-            <span class="weg-name">App-Host · spaCy-Sidecar</span
-            ><span class="etikett etikett-1a">1A</span>
+          <div class="weg-punkt" style="left: 288px; top: 40px"></div>
+          <p class="weg-beschriftung" aria-hidden="true">
+            <span class="weg-name">spaCy</span><span class="etikett etikett-1a">1A</span>
           </p>
         </div>
         <ol class="teilleiste" aria-label="Teil des Vortrags: 1A, Niklas">
@@ -1182,105 +1186,103 @@
         aria-label="5 von 39: Fünf Dienste teilen sich den App-Host"
       >
         <div
-          class="ort-mini"
-          data-ort="app-alle"
+          class="weg-mini weg-marke"
+          data-marke="1a-app"
+          data-aktiv="app"
           role="img"
-          aria-label="Ort im Systembild: App-Host · alle Dienste (1A)"
+          aria-label="Ort auf dem Weg: App-Host (1A)"
         >
           <svg
-            viewBox="0 0 180.17 64"
-            width="180.17"
-            height="64"
+            class="weg-mini-karte"
+            data-weg="1a"
+            viewBox="0 0 450 52"
+            width="450"
+            height="52"
             aria-hidden="true"
             focusable="false"
           >
-            <rect
-              x="2"
-              y="13.49"
-              width="30.64"
-              height="33.19"
-              rx="2"
-              fill="#e8edf3"
-              stroke="#566173"
-              stroke-width="2"
-            />
-            <line x1="32.64" y1="16.81" x2="44.13" y2="16.81" stroke="#566173" stroke-width="2" />
-            <rect
-              x="40.3"
-              y="2"
-              width="88.09"
-              height="56.17"
-              rx="4"
-              fill="#e8edf3"
-              stroke="#0b5ea8"
+            <path
+              d="M20 15L432.8 15"
+              fill="none"
+              stroke="var(--linie)"
               stroke-width="3"
-              data-an
+              stroke-linecap="round"
             />
-            <rect
-              x="44.13"
-              y="10.17"
-              width="80.43"
-              height="13.28"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <path
+              d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
+              fill="none"
+              stroke="var(--linie)"
+              stroke-width="3"
+              stroke-linecap="round"
             />
-            <rect
-              x="44.13"
-              y="25.74"
-              width="80.43"
-              height="12.26"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="teilnehmende"
+              cx="20"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="44.13"
-              y="40.3"
-              width="38.3"
-              height="14.81"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="app"
+              cx="110"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="86.26"
-              y="40.3"
-              width="38.3"
-              height="14.81"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="datenbank"
+              cx="288"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="139.87"
-              y="31.36"
-              width="38.3"
-              height="26.81"
-              rx="4"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="antwort"
+              cx="432.8"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="142.94"
-              y="39.02"
-              width="32.17"
-              height="16.09"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="analyse"
+              cx="216"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <line x1="124.56" y1="47.71" x2="142.94" y2="47.71" stroke="#566173" stroke-width="2" />
+            <circle data-station="spacy" cx="288" cy="40" r="9" fill="var(--gedaempft)" />
+            <circle
+              data-station="ersatz"
+              cx="360"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="wortwolke"
+              cx="432.8"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
+            />
           </svg>
-          <p class="weg-beschriftung ort-beschriftung" aria-hidden="true">
-            <span class="weg-name">App-Host · alle Dienste</span
-            ><span class="etikett etikett-1a">1A</span>
+          <div class="weg-punkt" style="left: 110px; top: 15px"></div>
+          <p class="weg-beschriftung" aria-hidden="true">
+            <span class="weg-name">App-Host</span><span class="etikett etikett-1a">1A</span>
           </p>
         </div>
         <ol class="teilleiste" aria-label="Teil des Vortrags: 1A, Niklas">
@@ -1449,105 +1451,103 @@
         aria-label="6 von 39: Fünf Varianten, je Block gemischt"
       >
         <div
-          class="ort-mini"
-          data-ort="app-spacy"
+          class="weg-mini weg-marke"
+          data-marke="1a-spacy"
+          data-aktiv="spacy"
           role="img"
-          aria-label="Ort im Systembild: App-Host · spaCy-Sidecar (1A)"
+          aria-label="Ort auf dem Weg: spaCy (1A)"
         >
           <svg
-            viewBox="0 0 180.17 64"
-            width="180.17"
-            height="64"
+            class="weg-mini-karte"
+            data-weg="1a"
+            viewBox="0 0 450 52"
+            width="450"
+            height="52"
             aria-hidden="true"
             focusable="false"
           >
-            <rect
-              x="2"
-              y="13.49"
-              width="30.64"
-              height="33.19"
-              rx="2"
-              fill="#e8edf3"
-              stroke="#566173"
-              stroke-width="2"
+            <path
+              d="M20 15L432.8 15"
+              fill="none"
+              stroke="var(--linie)"
+              stroke-width="3"
+              stroke-linecap="round"
             />
-            <line x1="32.64" y1="16.81" x2="44.13" y2="16.81" stroke="#566173" stroke-width="2" />
-            <rect
-              x="40.3"
-              y="2"
-              width="88.09"
-              height="56.17"
-              rx="4"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <path
+              d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
+              fill="none"
+              stroke="var(--linie)"
+              stroke-width="3"
+              stroke-linecap="round"
             />
-            <rect
-              x="44.13"
-              y="10.17"
-              width="80.43"
-              height="13.28"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="teilnehmende"
+              cx="20"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="44.13"
-              y="25.74"
-              width="80.43"
-              height="12.26"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="app"
+              cx="110"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="44.13"
-              y="40.3"
-              width="38.3"
-              height="14.81"
-              rx="2"
-              fill="#0b5ea8"
-              stroke="#0b5ea8"
-              stroke-width="2"
-              data-an
+            <circle
+              data-station="datenbank"
+              cx="288"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="86.26"
-              y="40.3"
-              width="38.3"
-              height="14.81"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="antwort"
+              cx="432.8"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="139.87"
-              y="31.36"
-              width="38.3"
-              height="26.81"
-              rx="4"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="analyse"
+              cx="216"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="142.94"
-              y="39.02"
-              width="32.17"
-              height="16.09"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle data-station="spacy" cx="288" cy="40" r="9" fill="var(--gedaempft)" />
+            <circle
+              data-station="ersatz"
+              cx="360"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <line x1="124.56" y1="47.71" x2="142.94" y2="47.71" stroke="#566173" stroke-width="2" />
+            <circle
+              data-station="wortwolke"
+              cx="432.8"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
+            />
           </svg>
-          <p class="weg-beschriftung ort-beschriftung" aria-hidden="true">
-            <span class="weg-name">App-Host · spaCy-Sidecar</span
-            ><span class="etikett etikett-1a">1A</span>
+          <div class="weg-punkt" style="left: 288px; top: 40px"></div>
+          <p class="weg-beschriftung" aria-hidden="true">
+            <span class="weg-name">spaCy</span><span class="etikett etikett-1a">1A</span>
           </p>
         </div>
         <ol class="teilleiste" aria-label="Teil des Vortrags: 1A, Niklas">
@@ -1657,104 +1657,136 @@
         aria-label="7 von 39: Die Regel stand eine Woche vorher fest"
       >
         <div
-          class="ort-mini"
-          data-ort="app-live"
+          class="weg-mini weg-marke"
+          data-marke="1a-regel"
           role="img"
-          aria-label="Ort im Systembild: App-Host · Live-App (1A)"
+          aria-label="Ort auf dem Weg: Live-Pfad gegen Analyse (1A)"
         >
           <svg
-            viewBox="0 0 180.17 64"
-            width="180.17"
-            height="64"
+            class="weg-mini-karte"
+            data-weg="1a"
+            viewBox="0 0 450 52"
+            width="450"
+            height="52"
             aria-hidden="true"
             focusable="false"
           >
-            <rect
-              x="2"
-              y="13.49"
-              width="30.64"
-              height="33.19"
-              rx="2"
-              fill="#e8edf3"
-              stroke="#566173"
-              stroke-width="2"
+            <path
+              d="M20 15L432.8 15"
+              fill="none"
+              stroke="var(--linie)"
+              stroke-width="3"
+              stroke-linecap="round"
             />
-            <line x1="32.64" y1="16.81" x2="44.13" y2="16.81" stroke="#566173" stroke-width="2" />
-            <rect
-              x="40.3"
-              y="2"
-              width="88.09"
-              height="56.17"
-              rx="4"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <path
+              d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
+              fill="none"
+              stroke="var(--linie)"
+              stroke-width="3"
+              stroke-linecap="round"
             />
-            <rect
-              x="44.13"
-              y="10.17"
-              width="80.43"
-              height="13.28"
-              rx="2"
-              fill="#0b5ea8"
-              stroke="#0b5ea8"
-              stroke-width="2"
-              data-an
+            <g data-abschnitt="haupt">
+              <path
+                d="M20 15L432.8 15"
+                fill="none"
+                stroke="var(--blau)"
+                stroke-opacity="0.16"
+                stroke-width="14"
+                stroke-linecap="round"
+              />
+              <path
+                d="M20 15L432.8 15"
+                fill="none"
+                stroke="var(--blau)"
+                stroke-width="3"
+                stroke-linecap="round"
+              />
+            </g>
+            <g data-abschnitt="zweig">
+              <path
+                d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
+                fill="none"
+                stroke="var(--blau)"
+                stroke-opacity="0.16"
+                stroke-width="14"
+                stroke-linecap="round"
+              />
+              <path
+                d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
+                fill="none"
+                stroke="var(--blau)"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-dasharray="7 6"
+              />
+            </g>
+            <circle
+              data-station="teilnehmende"
+              cx="20"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="44.13"
-              y="25.74"
-              width="80.43"
-              height="12.26"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="app"
+              cx="110"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="44.13"
-              y="40.3"
-              width="38.3"
-              height="14.81"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="datenbank"
+              cx="288"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="86.26"
-              y="40.3"
-              width="38.3"
-              height="14.81"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="antwort"
+              cx="432.8"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="139.87"
-              y="31.36"
-              width="38.3"
-              height="26.81"
-              rx="4"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="analyse"
+              cx="216"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="142.94"
-              y="39.02"
-              width="32.17"
-              height="16.09"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle data-station="spacy" cx="288" cy="40" r="9" fill="var(--gedaempft)" />
+            <circle
+              data-station="ersatz"
+              cx="360"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <line x1="124.56" y1="47.71" x2="142.94" y2="47.71" stroke="#566173" stroke-width="2" />
+            <circle
+              data-station="wortwolke"
+              cx="432.8"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
+            />
           </svg>
-          <p class="weg-beschriftung ort-beschriftung" aria-hidden="true">
-            <span class="weg-name">App-Host · Live-App</span
+          <p class="weg-beschriftung" aria-hidden="true">
+            <span class="weg-name">Live-Pfad gegen Analyse</span
             ><span class="etikett etikett-1a">1A</span>
           </p>
         </div>
@@ -1857,105 +1889,118 @@
         aria-label="8 von 39: Alle 40.000 Live-Aktionen kamen an"
       >
         <div
-          class="ort-mini"
-          data-ort="app-live"
+          class="weg-mini weg-marke"
+          data-marke="1a-live"
           role="img"
-          aria-label="Ort im Systembild: App-Host · Live-App (1A)"
+          aria-label="Ort auf dem Weg: Live-Pfad (1A)"
         >
           <svg
-            viewBox="0 0 180.17 64"
-            width="180.17"
-            height="64"
+            class="weg-mini-karte"
+            data-weg="1a"
+            viewBox="0 0 450 52"
+            width="450"
+            height="52"
             aria-hidden="true"
             focusable="false"
           >
-            <rect
-              x="2"
-              y="13.49"
-              width="30.64"
-              height="33.19"
-              rx="2"
-              fill="#e8edf3"
-              stroke="#566173"
-              stroke-width="2"
+            <path
+              d="M20 15L432.8 15"
+              fill="none"
+              stroke="var(--linie)"
+              stroke-width="3"
+              stroke-linecap="round"
             />
-            <line x1="32.64" y1="16.81" x2="44.13" y2="16.81" stroke="#566173" stroke-width="2" />
-            <rect
-              x="40.3"
-              y="2"
-              width="88.09"
-              height="56.17"
-              rx="4"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <path
+              d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
+              fill="none"
+              stroke="var(--linie)"
+              stroke-width="3"
+              stroke-linecap="round"
             />
-            <rect
-              x="44.13"
-              y="10.17"
-              width="80.43"
-              height="13.28"
-              rx="2"
-              fill="#0b5ea8"
-              stroke="#0b5ea8"
-              stroke-width="2"
-              data-an
+            <g data-abschnitt="haupt">
+              <path
+                d="M20 15L432.8 15"
+                fill="none"
+                stroke="var(--blau)"
+                stroke-opacity="0.16"
+                stroke-width="14"
+                stroke-linecap="round"
+              />
+              <path
+                d="M20 15L432.8 15"
+                fill="none"
+                stroke="var(--blau)"
+                stroke-width="3"
+                stroke-linecap="round"
+              />
+            </g>
+            <circle
+              data-station="teilnehmende"
+              cx="20"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="44.13"
-              y="25.74"
-              width="80.43"
-              height="12.26"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="app"
+              cx="110"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="44.13"
-              y="40.3"
-              width="38.3"
-              height="14.81"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="datenbank"
+              cx="288"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="86.26"
-              y="40.3"
-              width="38.3"
-              height="14.81"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="antwort"
+              cx="432.8"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="139.87"
-              y="31.36"
-              width="38.3"
-              height="26.81"
-              rx="4"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="analyse"
+              cx="216"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="142.94"
-              y="39.02"
-              width="32.17"
-              height="16.09"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle data-station="spacy" cx="288" cy="40" r="9" fill="var(--gedaempft)" />
+            <circle
+              data-station="ersatz"
+              cx="360"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <line x1="124.56" y1="47.71" x2="142.94" y2="47.71" stroke="#566173" stroke-width="2" />
+            <circle
+              data-station="wortwolke"
+              cx="432.8"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
+            />
           </svg>
-          <p class="weg-beschriftung ort-beschriftung" aria-hidden="true">
-            <span class="weg-name">App-Host · Live-App</span
-            ><span class="etikett etikett-1a">1A</span>
+          <p class="weg-beschriftung" aria-hidden="true">
+            <span class="weg-name">Live-Pfad</span><span class="etikett etikett-1a">1A</span>
           </p>
         </div>
         <ol class="teilleiste" aria-label="Teil des Vortrags: 1A, Niklas">
@@ -1989,104 +2034,136 @@
         aria-label="9 von 39: Deutlich verletzt wird die Regel nur einmal"
       >
         <div
-          class="ort-mini"
-          data-ort="app-live"
+          class="weg-mini weg-marke"
+          data-marke="1a-regel"
           role="img"
-          aria-label="Ort im Systembild: App-Host · Live-App (1A)"
+          aria-label="Ort auf dem Weg: Live-Pfad gegen Analyse (1A)"
         >
           <svg
-            viewBox="0 0 180.17 64"
-            width="180.17"
-            height="64"
+            class="weg-mini-karte"
+            data-weg="1a"
+            viewBox="0 0 450 52"
+            width="450"
+            height="52"
             aria-hidden="true"
             focusable="false"
           >
-            <rect
-              x="2"
-              y="13.49"
-              width="30.64"
-              height="33.19"
-              rx="2"
-              fill="#e8edf3"
-              stroke="#566173"
-              stroke-width="2"
+            <path
+              d="M20 15L432.8 15"
+              fill="none"
+              stroke="var(--linie)"
+              stroke-width="3"
+              stroke-linecap="round"
             />
-            <line x1="32.64" y1="16.81" x2="44.13" y2="16.81" stroke="#566173" stroke-width="2" />
-            <rect
-              x="40.3"
-              y="2"
-              width="88.09"
-              height="56.17"
-              rx="4"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <path
+              d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
+              fill="none"
+              stroke="var(--linie)"
+              stroke-width="3"
+              stroke-linecap="round"
             />
-            <rect
-              x="44.13"
-              y="10.17"
-              width="80.43"
-              height="13.28"
-              rx="2"
-              fill="#0b5ea8"
-              stroke="#0b5ea8"
-              stroke-width="2"
-              data-an
+            <g data-abschnitt="haupt">
+              <path
+                d="M20 15L432.8 15"
+                fill="none"
+                stroke="var(--blau)"
+                stroke-opacity="0.16"
+                stroke-width="14"
+                stroke-linecap="round"
+              />
+              <path
+                d="M20 15L432.8 15"
+                fill="none"
+                stroke="var(--blau)"
+                stroke-width="3"
+                stroke-linecap="round"
+              />
+            </g>
+            <g data-abschnitt="zweig">
+              <path
+                d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
+                fill="none"
+                stroke="var(--blau)"
+                stroke-opacity="0.16"
+                stroke-width="14"
+                stroke-linecap="round"
+              />
+              <path
+                d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
+                fill="none"
+                stroke="var(--blau)"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-dasharray="7 6"
+              />
+            </g>
+            <circle
+              data-station="teilnehmende"
+              cx="20"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="44.13"
-              y="25.74"
-              width="80.43"
-              height="12.26"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="app"
+              cx="110"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="44.13"
-              y="40.3"
-              width="38.3"
-              height="14.81"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="datenbank"
+              cx="288"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="86.26"
-              y="40.3"
-              width="38.3"
-              height="14.81"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="antwort"
+              cx="432.8"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="139.87"
-              y="31.36"
-              width="38.3"
-              height="26.81"
-              rx="4"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="analyse"
+              cx="216"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="142.94"
-              y="39.02"
-              width="32.17"
-              height="16.09"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle data-station="spacy" cx="288" cy="40" r="9" fill="var(--gedaempft)" />
+            <circle
+              data-station="ersatz"
+              cx="360"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <line x1="124.56" y1="47.71" x2="142.94" y2="47.71" stroke="#566173" stroke-width="2" />
+            <circle
+              data-station="wortwolke"
+              cx="432.8"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
+            />
           </svg>
-          <p class="weg-beschriftung ort-beschriftung" aria-hidden="true">
-            <span class="weg-name">App-Host · Live-App</span
+          <p class="weg-beschriftung" aria-hidden="true">
+            <span class="weg-name">Live-Pfad gegen Analyse</span
             ><span class="etikett etikett-1a">1A</span>
           </p>
         </div>
@@ -2115,104 +2192,136 @@
         aria-label="10 von 39: Die Regel schlägt auch ohne Wirkung an"
       >
         <div
-          class="ort-mini"
-          data-ort="app-live"
+          class="weg-mini weg-marke"
+          data-marke="1a-regel"
           role="img"
-          aria-label="Ort im Systembild: App-Host · Live-App (1A)"
+          aria-label="Ort auf dem Weg: Live-Pfad gegen Analyse (1A)"
         >
           <svg
-            viewBox="0 0 180.17 64"
-            width="180.17"
-            height="64"
+            class="weg-mini-karte"
+            data-weg="1a"
+            viewBox="0 0 450 52"
+            width="450"
+            height="52"
             aria-hidden="true"
             focusable="false"
           >
-            <rect
-              x="2"
-              y="13.49"
-              width="30.64"
-              height="33.19"
-              rx="2"
-              fill="#e8edf3"
-              stroke="#566173"
-              stroke-width="2"
+            <path
+              d="M20 15L432.8 15"
+              fill="none"
+              stroke="var(--linie)"
+              stroke-width="3"
+              stroke-linecap="round"
             />
-            <line x1="32.64" y1="16.81" x2="44.13" y2="16.81" stroke="#566173" stroke-width="2" />
-            <rect
-              x="40.3"
-              y="2"
-              width="88.09"
-              height="56.17"
-              rx="4"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <path
+              d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
+              fill="none"
+              stroke="var(--linie)"
+              stroke-width="3"
+              stroke-linecap="round"
             />
-            <rect
-              x="44.13"
-              y="10.17"
-              width="80.43"
-              height="13.28"
-              rx="2"
-              fill="#0b5ea8"
-              stroke="#0b5ea8"
-              stroke-width="2"
-              data-an
+            <g data-abschnitt="haupt">
+              <path
+                d="M20 15L432.8 15"
+                fill="none"
+                stroke="var(--blau)"
+                stroke-opacity="0.16"
+                stroke-width="14"
+                stroke-linecap="round"
+              />
+              <path
+                d="M20 15L432.8 15"
+                fill="none"
+                stroke="var(--blau)"
+                stroke-width="3"
+                stroke-linecap="round"
+              />
+            </g>
+            <g data-abschnitt="zweig">
+              <path
+                d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
+                fill="none"
+                stroke="var(--blau)"
+                stroke-opacity="0.16"
+                stroke-width="14"
+                stroke-linecap="round"
+              />
+              <path
+                d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
+                fill="none"
+                stroke="var(--blau)"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-dasharray="7 6"
+              />
+            </g>
+            <circle
+              data-station="teilnehmende"
+              cx="20"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="44.13"
-              y="25.74"
-              width="80.43"
-              height="12.26"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="app"
+              cx="110"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="44.13"
-              y="40.3"
-              width="38.3"
-              height="14.81"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="datenbank"
+              cx="288"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="86.26"
-              y="40.3"
-              width="38.3"
-              height="14.81"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="antwort"
+              cx="432.8"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="139.87"
-              y="31.36"
-              width="38.3"
-              height="26.81"
-              rx="4"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="analyse"
+              cx="216"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="142.94"
-              y="39.02"
-              width="32.17"
-              height="16.09"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle data-station="spacy" cx="288" cy="40" r="9" fill="var(--gedaempft)" />
+            <circle
+              data-station="ersatz"
+              cx="360"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <line x1="124.56" y1="47.71" x2="142.94" y2="47.71" stroke="#566173" stroke-width="2" />
+            <circle
+              data-station="wortwolke"
+              cx="432.8"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
+            />
           </svg>
-          <p class="weg-beschriftung ort-beschriftung" aria-hidden="true">
-            <span class="weg-name">App-Host · Live-App</span
+          <p class="weg-beschriftung" aria-hidden="true">
+            <span class="weg-name">Live-Pfad gegen Analyse</span
             ><span class="etikett etikett-1a">1A</span>
           </p>
         </div>
@@ -2334,104 +2443,112 @@
         aria-label="11 von 39: Der Ausreißer dauerte rund zehn Sekunden"
       >
         <div
-          class="ort-mini"
-          data-ort="app-live"
+          class="weg-mini weg-marke"
+          data-marke="1a-wirkung"
+          data-aktiv="spacy"
           role="img"
-          aria-label="Ort im Systembild: App-Host · Live-App (1A)"
+          aria-label="Ort auf dem Weg: spaCy · Wirkung auf Live-Pfad (1A)"
         >
           <svg
-            viewBox="0 0 180.17 64"
-            width="180.17"
-            height="64"
+            class="weg-mini-karte"
+            data-weg="1a"
+            viewBox="0 0 450 52"
+            width="450"
+            height="52"
             aria-hidden="true"
             focusable="false"
           >
-            <rect
-              x="2"
-              y="13.49"
-              width="30.64"
-              height="33.19"
-              rx="2"
-              fill="#e8edf3"
-              stroke="#566173"
-              stroke-width="2"
+            <path
+              d="M20 15L432.8 15"
+              fill="none"
+              stroke="var(--linie)"
+              stroke-width="3"
+              stroke-linecap="round"
             />
-            <line x1="32.64" y1="16.81" x2="44.13" y2="16.81" stroke="#566173" stroke-width="2" />
-            <rect
-              x="40.3"
-              y="2"
-              width="88.09"
-              height="56.17"
-              rx="4"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <path
+              d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
+              fill="none"
+              stroke="var(--linie)"
+              stroke-width="3"
+              stroke-linecap="round"
             />
-            <rect
-              x="44.13"
-              y="10.17"
-              width="80.43"
-              height="13.28"
-              rx="2"
-              fill="#0b5ea8"
-              stroke="#0b5ea8"
-              stroke-width="2"
-              data-an
+            <path
+              data-wirkung
+              d="M224.8 15h5l4 -11 5 22 4 -11h5"
+              fill="none"
+              stroke="var(--blau)"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
             />
-            <rect
-              x="44.13"
-              y="25.74"
-              width="80.43"
-              height="12.26"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="teilnehmende"
+              cx="20"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="44.13"
-              y="40.3"
-              width="38.3"
-              height="14.81"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="app"
+              cx="110"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="86.26"
-              y="40.3"
-              width="38.3"
-              height="14.81"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="datenbank"
+              cx="288"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="139.87"
-              y="31.36"
-              width="38.3"
-              height="26.81"
-              rx="4"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="antwort"
+              cx="432.8"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="142.94"
-              y="39.02"
-              width="32.17"
-              height="16.09"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="analyse"
+              cx="216"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <line x1="124.56" y1="47.71" x2="142.94" y2="47.71" stroke="#566173" stroke-width="2" />
+            <circle data-station="spacy" cx="288" cy="40" r="9" fill="var(--gedaempft)" />
+            <circle
+              data-station="ersatz"
+              cx="360"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="wortwolke"
+              cx="432.8"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
+            />
           </svg>
-          <p class="weg-beschriftung ort-beschriftung" aria-hidden="true">
-            <span class="weg-name">App-Host · Live-App</span
+          <div class="weg-punkt" style="left: 288px; top: 40px"></div>
+          <p class="weg-beschriftung" aria-hidden="true">
+            <span class="weg-name">spaCy · Wirkung auf Live-Pfad</span
             ><span class="etikett etikett-1a">1A</span>
           </p>
         </div>
@@ -2471,105 +2588,103 @@
         aria-label="12 von 39: spaCy bleibt im Budget, bis CPU fehlt"
       >
         <div
-          class="ort-mini"
-          data-ort="app-spacy"
+          class="weg-mini weg-marke"
+          data-marke="1a-spacy"
+          data-aktiv="spacy"
           role="img"
-          aria-label="Ort im Systembild: App-Host · spaCy-Sidecar (1A)"
+          aria-label="Ort auf dem Weg: spaCy (1A)"
         >
           <svg
-            viewBox="0 0 180.17 64"
-            width="180.17"
-            height="64"
+            class="weg-mini-karte"
+            data-weg="1a"
+            viewBox="0 0 450 52"
+            width="450"
+            height="52"
             aria-hidden="true"
             focusable="false"
           >
-            <rect
-              x="2"
-              y="13.49"
-              width="30.64"
-              height="33.19"
-              rx="2"
-              fill="#e8edf3"
-              stroke="#566173"
-              stroke-width="2"
+            <path
+              d="M20 15L432.8 15"
+              fill="none"
+              stroke="var(--linie)"
+              stroke-width="3"
+              stroke-linecap="round"
             />
-            <line x1="32.64" y1="16.81" x2="44.13" y2="16.81" stroke="#566173" stroke-width="2" />
-            <rect
-              x="40.3"
-              y="2"
-              width="88.09"
-              height="56.17"
-              rx="4"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <path
+              d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
+              fill="none"
+              stroke="var(--linie)"
+              stroke-width="3"
+              stroke-linecap="round"
             />
-            <rect
-              x="44.13"
-              y="10.17"
-              width="80.43"
-              height="13.28"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="teilnehmende"
+              cx="20"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="44.13"
-              y="25.74"
-              width="80.43"
-              height="12.26"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="app"
+              cx="110"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="44.13"
-              y="40.3"
-              width="38.3"
-              height="14.81"
-              rx="2"
-              fill="#0b5ea8"
-              stroke="#0b5ea8"
-              stroke-width="2"
-              data-an
+            <circle
+              data-station="datenbank"
+              cx="288"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="86.26"
-              y="40.3"
-              width="38.3"
-              height="14.81"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="antwort"
+              cx="432.8"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="139.87"
-              y="31.36"
-              width="38.3"
-              height="26.81"
-              rx="4"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="analyse"
+              cx="216"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="142.94"
-              y="39.02"
-              width="32.17"
-              height="16.09"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle data-station="spacy" cx="288" cy="40" r="9" fill="var(--gedaempft)" />
+            <circle
+              data-station="ersatz"
+              cx="360"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <line x1="124.56" y1="47.71" x2="142.94" y2="47.71" stroke="#566173" stroke-width="2" />
+            <circle
+              data-station="wortwolke"
+              cx="432.8"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
+            />
           </svg>
-          <p class="weg-beschriftung ort-beschriftung" aria-hidden="true">
-            <span class="weg-name">App-Host · spaCy-Sidecar</span
-            ><span class="etikett etikett-1a">1A</span>
+          <div class="weg-punkt" style="left: 288px; top: 40px"></div>
+          <p class="weg-beschriftung" aria-hidden="true">
+            <span class="weg-name">spaCy</span><span class="etikett etikett-1a">1A</span>
           </p>
         </div>
         <ol class="teilleiste" aria-label="Teil des Vortrags: 1A, Niklas">
@@ -2602,105 +2717,103 @@
         aria-label="13 von 39: Nach 5 s liefert die App den Ersatz"
       >
         <div
-          class="ort-mini"
-          data-ort="app-spacy"
+          class="weg-mini weg-marke"
+          data-marke="1a-ersatz"
+          data-aktiv="ersatz"
           role="img"
-          aria-label="Ort im Systembild: App-Host · spaCy-Sidecar (1A)"
+          aria-label="Ort auf dem Weg: Ersatz (1A)"
         >
           <svg
-            viewBox="0 0 180.17 64"
-            width="180.17"
-            height="64"
+            class="weg-mini-karte"
+            data-weg="1a"
+            viewBox="0 0 450 52"
+            width="450"
+            height="52"
             aria-hidden="true"
             focusable="false"
           >
-            <rect
-              x="2"
-              y="13.49"
-              width="30.64"
-              height="33.19"
-              rx="2"
-              fill="#e8edf3"
-              stroke="#566173"
-              stroke-width="2"
+            <path
+              d="M20 15L432.8 15"
+              fill="none"
+              stroke="var(--linie)"
+              stroke-width="3"
+              stroke-linecap="round"
             />
-            <line x1="32.64" y1="16.81" x2="44.13" y2="16.81" stroke="#566173" stroke-width="2" />
-            <rect
-              x="40.3"
-              y="2"
-              width="88.09"
-              height="56.17"
-              rx="4"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <path
+              d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
+              fill="none"
+              stroke="var(--linie)"
+              stroke-width="3"
+              stroke-linecap="round"
             />
-            <rect
-              x="44.13"
-              y="10.17"
-              width="80.43"
-              height="13.28"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="teilnehmende"
+              cx="20"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="44.13"
-              y="25.74"
-              width="80.43"
-              height="12.26"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="app"
+              cx="110"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="44.13"
-              y="40.3"
-              width="38.3"
-              height="14.81"
-              rx="2"
-              fill="#0b5ea8"
-              stroke="#0b5ea8"
-              stroke-width="2"
-              data-an
+            <circle
+              data-station="datenbank"
+              cx="288"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="86.26"
-              y="40.3"
-              width="38.3"
-              height="14.81"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="antwort"
+              cx="432.8"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="139.87"
-              y="31.36"
-              width="38.3"
-              height="26.81"
-              rx="4"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="analyse"
+              cx="216"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="142.94"
-              y="39.02"
-              width="32.17"
-              height="16.09"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle data-station="spacy" cx="288" cy="40" r="9" fill="var(--gedaempft)" />
+            <circle
+              data-station="ersatz"
+              cx="360"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <line x1="124.56" y1="47.71" x2="142.94" y2="47.71" stroke="#566173" stroke-width="2" />
+            <circle
+              data-station="wortwolke"
+              cx="432.8"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
+            />
           </svg>
-          <p class="weg-beschriftung ort-beschriftung" aria-hidden="true">
-            <span class="weg-name">App-Host · spaCy-Sidecar</span
-            ><span class="etikett etikett-1a">1A</span>
+          <div class="weg-punkt" style="left: 360px; top: 40px"></div>
+          <p class="weg-beschriftung" aria-hidden="true">
+            <span class="weg-name">Ersatz</span><span class="etikett etikett-1a">1A</span>
           </p>
         </div>
         <ol class="teilleiste" aria-label="Teil des Vortrags: 1A, Niklas">
@@ -2736,105 +2849,103 @@
         aria-label="14 von 39: Entscheidung: lexikalische Wortwolke bleibt"
       >
         <div
-          class="ort-mini"
-          data-ort="app-spacy"
+          class="weg-mini weg-marke"
+          data-marke="1a-wortwolke"
+          data-aktiv="wortwolke"
           role="img"
-          aria-label="Ort im Systembild: App-Host · spaCy-Sidecar (1A)"
+          aria-label="Ort auf dem Weg: Wortwolke (1A)"
         >
           <svg
-            viewBox="0 0 180.17 64"
-            width="180.17"
-            height="64"
+            class="weg-mini-karte"
+            data-weg="1a"
+            viewBox="0 0 450 52"
+            width="450"
+            height="52"
             aria-hidden="true"
             focusable="false"
           >
-            <rect
-              x="2"
-              y="13.49"
-              width="30.64"
-              height="33.19"
-              rx="2"
-              fill="#e8edf3"
-              stroke="#566173"
-              stroke-width="2"
+            <path
+              d="M20 15L432.8 15"
+              fill="none"
+              stroke="var(--linie)"
+              stroke-width="3"
+              stroke-linecap="round"
             />
-            <line x1="32.64" y1="16.81" x2="44.13" y2="16.81" stroke="#566173" stroke-width="2" />
-            <rect
-              x="40.3"
-              y="2"
-              width="88.09"
-              height="56.17"
-              rx="4"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <path
+              d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
+              fill="none"
+              stroke="var(--linie)"
+              stroke-width="3"
+              stroke-linecap="round"
             />
-            <rect
-              x="44.13"
-              y="10.17"
-              width="80.43"
-              height="13.28"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="teilnehmende"
+              cx="20"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="44.13"
-              y="25.74"
-              width="80.43"
-              height="12.26"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="app"
+              cx="110"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="44.13"
-              y="40.3"
-              width="38.3"
-              height="14.81"
-              rx="2"
-              fill="#0b5ea8"
-              stroke="#0b5ea8"
-              stroke-width="2"
-              data-an
+            <circle
+              data-station="datenbank"
+              cx="288"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="86.26"
-              y="40.3"
-              width="38.3"
-              height="14.81"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="antwort"
+              cx="432.8"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="139.87"
-              y="31.36"
-              width="38.3"
-              height="26.81"
-              rx="4"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="analyse"
+              cx="216"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <rect
-              x="142.94"
-              y="39.02"
-              width="32.17"
-              height="16.09"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle data-station="spacy" cx="288" cy="40" r="9" fill="var(--gedaempft)" />
+            <circle
+              data-station="ersatz"
+              cx="360"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
             />
-            <line x1="124.56" y1="47.71" x2="142.94" y2="47.71" stroke="#566173" stroke-width="2" />
+            <circle
+              data-station="wortwolke"
+              cx="432.8"
+              cy="40"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--gedaempft)"
+              stroke-width="3"
+            />
           </svg>
-          <p class="weg-beschriftung ort-beschriftung" aria-hidden="true">
-            <span class="weg-name">App-Host · spaCy-Sidecar</span
-            ><span class="etikett etikett-1a">1A</span>
+          <div class="weg-punkt" style="left: 432.8px; top: 40px"></div>
+          <p class="weg-beschriftung" aria-hidden="true">
+            <span class="weg-name">Wortwolke</span><span class="etikett etikett-1a">1A</span>
           </p>
         </div>
         <ol class="teilleiste" aria-label="Teil des Vortrags: 1A, Niklas">
@@ -2920,106 +3031,77 @@
         aria-label="15 von 39: Ein Klick. 152 Sekunden. Keine Modellantwort."
       >
         <div
-          class="ort-mini"
-          data-ort="jonas"
+          class="weg-mini weg-marke"
+          data-marke="auftrag"
           role="img"
-          aria-label="Ort im Systembild: App-Host · Kontextpfad, zweiter Host · Inferenz (1C)"
+          aria-label="Ort auf dem Weg: Weg eines Auftrags (1C, 1B)"
         >
           <svg
-            viewBox="0 0 180.17 64"
-            width="180.17"
-            height="64"
+            class="weg-mini-karte"
+            data-weg="auftrag"
+            viewBox="0 0 450 52"
+            width="450"
+            height="52"
             aria-hidden="true"
             focusable="false"
           >
-            <rect
-              x="2"
-              y="13.49"
-              width="30.64"
-              height="33.19"
-              rx="2"
-              fill="#e8edf3"
-              stroke="#566173"
-              stroke-width="2"
+            <path
+              d="M20 15L138.8 15C167.6 15 167.6 40 196.4 40L254 40C282.8 40 282.8 15 311.6 15L434 15"
+              fill="none"
+              stroke="var(--blau)"
+              stroke-width="3"
+              stroke-linecap="round"
             />
-            <line x1="32.64" y1="16.81" x2="44.13" y2="16.81" stroke="#566173" stroke-width="2" />
-            <rect
-              x="40.3"
-              y="2"
-              width="88.09"
-              height="56.17"
-              rx="4"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="klick"
+              cx="20"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
             />
-            <rect
-              x="44.13"
-              y="10.17"
-              width="80.43"
-              height="13.28"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="kontext"
+              cx="99.3"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
             />
-            <rect
-              x="44.13"
-              y="25.74"
-              width="80.43"
-              height="12.26"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle
+              data-station="netz"
+              cx="167.6"
+              cy="27.5"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--bernstein)"
+              stroke-width="3"
             />
-            <rect
-              x="44.13"
-              y="40.3"
-              width="38.3"
-              height="14.81"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <circle data-station="inferenz" cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
+            <circle
+              data-station="nachpruefung"
+              cx="344.04"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
             />
-            <rect
-              x="86.26"
-              y="40.3"
-              width="38.3"
-              height="14.81"
-              rx="2"
-              fill="#0f766e"
-              stroke="#0f766e"
-              stroke-width="2"
-              data-an
+            <circle
+              data-station="gate"
+              cx="434"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--rot)"
+              stroke-width="3"
             />
-            <rect
-              x="139.87"
-              y="31.36"
-              width="38.3"
-              height="26.81"
-              rx="4"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
-            />
-            <rect
-              x="142.94"
-              y="39.02"
-              width="32.17"
-              height="16.09"
-              rx="2"
-              fill="#0f766e"
-              stroke="#0f766e"
-              stroke-width="2"
-              data-an
-            />
-            <line x1="124.56" y1="47.71" x2="142.94" y2="47.71" stroke="#0f766e" stroke-width="2" />
           </svg>
-          <p class="weg-beschriftung ort-beschriftung" aria-hidden="true">
-            <span class="weg-name">App-Host · Kontextpfad, zweiter Host · Inferenz</span
-            ><span class="etikett etikett-1c">1C</span>
+          <p class="weg-beschriftung" aria-hidden="true">
+            <span class="weg-name">Weg eines Auftrags</span
+            ><span class="etikett etikett-1c">1C</span><span class="etikett etikett-1b">1B</span>
           </p>
         </div>
         <ol class="teilleiste" aria-label="Teil des Vortrags: 1C, 1B 1–2, Jonas">
@@ -3398,6 +3480,7 @@
         >
           <svg
             class="weg-mini-karte"
+            data-weg="auftrag"
             viewBox="0 0 450 52"
             width="450"
             height="52"
@@ -3411,9 +3494,26 @@
               stroke-width="3"
               stroke-linecap="round"
             />
-            <circle cx="20" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
-            <circle cx="99.3" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
             <circle
+              data-station="klick"
+              cx="20"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="kontext"
+              cx="99.3"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="netz"
               cx="167.6"
               cy="27.5"
               r="6.5"
@@ -3421,8 +3521,9 @@
               stroke="var(--bernstein)"
               stroke-width="3"
             />
-            <circle cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
+            <circle data-station="inferenz" cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
             <circle
+              data-station="nachpruefung"
               cx="344.04"
               cy="15"
               r="6.5"
@@ -3430,7 +3531,15 @@
               stroke="var(--petrol)"
               stroke-width="3"
             />
-            <circle cx="434" cy="15" r="6.5" fill="#fff" stroke="var(--rot)" stroke-width="3" />
+            <circle
+              data-station="gate"
+              cx="434"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--rot)"
+              stroke-width="3"
+            />
           </svg>
           <div class="weg-punkt" style="left: 20px; top: 15px"></div>
           <p class="weg-beschriftung" aria-hidden="true">
@@ -3529,6 +3638,7 @@
         >
           <svg
             class="weg-mini-karte"
+            data-weg="auftrag"
             viewBox="0 0 450 52"
             width="450"
             height="52"
@@ -3542,9 +3652,26 @@
               stroke-width="3"
               stroke-linecap="round"
             />
-            <circle cx="20" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
-            <circle cx="99.3" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
             <circle
+              data-station="klick"
+              cx="20"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="kontext"
+              cx="99.3"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="netz"
               cx="167.6"
               cy="27.5"
               r="6.5"
@@ -3552,8 +3679,9 @@
               stroke="var(--bernstein)"
               stroke-width="3"
             />
-            <circle cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
+            <circle data-station="inferenz" cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
             <circle
+              data-station="nachpruefung"
               cx="344.04"
               cy="15"
               r="6.5"
@@ -3561,7 +3689,15 @@
               stroke="var(--petrol)"
               stroke-width="3"
             />
-            <circle cx="434" cy="15" r="6.5" fill="#fff" stroke="var(--rot)" stroke-width="3" />
+            <circle
+              data-station="gate"
+              cx="434"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--rot)"
+              stroke-width="3"
+            />
           </svg>
           <div class="weg-punkt" style="left: 99.3px; top: 15px"></div>
           <p class="weg-beschriftung" aria-hidden="true">
@@ -3682,6 +3818,7 @@
         >
           <svg
             class="weg-mini-karte"
+            data-weg="auftrag"
             viewBox="0 0 450 52"
             width="450"
             height="52"
@@ -3695,9 +3832,26 @@
               stroke-width="3"
               stroke-linecap="round"
             />
-            <circle cx="20" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
-            <circle cx="99.3" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
             <circle
+              data-station="klick"
+              cx="20"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="kontext"
+              cx="99.3"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="netz"
               cx="167.6"
               cy="27.5"
               r="6.5"
@@ -3705,8 +3859,9 @@
               stroke="var(--bernstein)"
               stroke-width="3"
             />
-            <circle cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
+            <circle data-station="inferenz" cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
             <circle
+              data-station="nachpruefung"
               cx="344.04"
               cy="15"
               r="6.5"
@@ -3714,7 +3869,15 @@
               stroke="var(--petrol)"
               stroke-width="3"
             />
-            <circle cx="434" cy="15" r="6.5" fill="#fff" stroke="var(--rot)" stroke-width="3" />
+            <circle
+              data-station="gate"
+              cx="434"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--rot)"
+              stroke-width="3"
+            />
           </svg>
           <div class="weg-punkt" style="left: 99.3px; top: 15px"></div>
           <p class="weg-beschriftung" aria-hidden="true">
@@ -3814,6 +3977,7 @@
         >
           <svg
             class="weg-mini-karte"
+            data-weg="auftrag"
             viewBox="0 0 450 52"
             width="450"
             height="52"
@@ -3827,9 +3991,26 @@
               stroke-width="3"
               stroke-linecap="round"
             />
-            <circle cx="20" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
-            <circle cx="99.3" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
             <circle
+              data-station="klick"
+              cx="20"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="kontext"
+              cx="99.3"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="netz"
               cx="167.6"
               cy="27.5"
               r="6.5"
@@ -3837,8 +4018,9 @@
               stroke="var(--bernstein)"
               stroke-width="3"
             />
-            <circle cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
+            <circle data-station="inferenz" cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
             <circle
+              data-station="nachpruefung"
               cx="344.04"
               cy="15"
               r="6.5"
@@ -3846,7 +4028,15 @@
               stroke="var(--petrol)"
               stroke-width="3"
             />
-            <circle cx="434" cy="15" r="6.5" fill="#fff" stroke="var(--rot)" stroke-width="3" />
+            <circle
+              data-station="gate"
+              cx="434"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--rot)"
+              stroke-width="3"
+            />
           </svg>
           <div class="weg-punkt" style="left: 99.3px; top: 15px"></div>
           <p class="weg-beschriftung" aria-hidden="true">
@@ -3972,6 +4162,7 @@
         >
           <svg
             class="weg-mini-karte"
+            data-weg="auftrag"
             viewBox="0 0 450 52"
             width="450"
             height="52"
@@ -3985,9 +4176,26 @@
               stroke-width="3"
               stroke-linecap="round"
             />
-            <circle cx="20" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
-            <circle cx="99.3" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
             <circle
+              data-station="klick"
+              cx="20"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="kontext"
+              cx="99.3"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="netz"
               cx="167.6"
               cy="27.5"
               r="6.5"
@@ -3995,8 +4203,9 @@
               stroke="var(--bernstein)"
               stroke-width="3"
             />
-            <circle cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
+            <circle data-station="inferenz" cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
             <circle
+              data-station="nachpruefung"
               cx="344.04"
               cy="15"
               r="6.5"
@@ -4004,7 +4213,15 @@
               stroke="var(--petrol)"
               stroke-width="3"
             />
-            <circle cx="434" cy="15" r="6.5" fill="#fff" stroke="var(--rot)" stroke-width="3" />
+            <circle
+              data-station="gate"
+              cx="434"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--rot)"
+              stroke-width="3"
+            />
           </svg>
           <div class="weg-punkt" style="left: 167.6px; top: 27.5px"></div>
           <p class="weg-beschriftung" aria-hidden="true">
@@ -4087,6 +4304,7 @@
         >
           <svg
             class="weg-mini-karte"
+            data-weg="auftrag"
             viewBox="0 0 450 52"
             width="450"
             height="52"
@@ -4100,9 +4318,26 @@
               stroke-width="3"
               stroke-linecap="round"
             />
-            <circle cx="20" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
-            <circle cx="99.3" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
             <circle
+              data-station="klick"
+              cx="20"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="kontext"
+              cx="99.3"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="netz"
               cx="167.6"
               cy="27.5"
               r="6.5"
@@ -4110,8 +4345,9 @@
               stroke="var(--bernstein)"
               stroke-width="3"
             />
-            <circle cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
+            <circle data-station="inferenz" cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
             <circle
+              data-station="nachpruefung"
               cx="344.04"
               cy="15"
               r="6.5"
@@ -4119,7 +4355,15 @@
               stroke="var(--petrol)"
               stroke-width="3"
             />
-            <circle cx="434" cy="15" r="6.5" fill="#fff" stroke="var(--rot)" stroke-width="3" />
+            <circle
+              data-station="gate"
+              cx="434"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--rot)"
+              stroke-width="3"
+            />
           </svg>
           <div class="weg-punkt" style="left: 167.6px; top: 27.5px"></div>
           <p class="weg-beschriftung" aria-hidden="true">
@@ -4194,6 +4438,7 @@
         >
           <svg
             class="weg-mini-karte"
+            data-weg="auftrag"
             viewBox="0 0 450 52"
             width="450"
             height="52"
@@ -4207,9 +4452,26 @@
               stroke-width="3"
               stroke-linecap="round"
             />
-            <circle cx="20" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
-            <circle cx="99.3" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
             <circle
+              data-station="klick"
+              cx="20"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="kontext"
+              cx="99.3"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="netz"
               cx="167.6"
               cy="27.5"
               r="6.5"
@@ -4217,8 +4479,9 @@
               stroke="var(--bernstein)"
               stroke-width="3"
             />
-            <circle cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
+            <circle data-station="inferenz" cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
             <circle
+              data-station="nachpruefung"
               cx="344.04"
               cy="15"
               r="6.5"
@@ -4226,7 +4489,15 @@
               stroke="var(--petrol)"
               stroke-width="3"
             />
-            <circle cx="434" cy="15" r="6.5" fill="#fff" stroke="var(--rot)" stroke-width="3" />
+            <circle
+              data-station="gate"
+              cx="434"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--rot)"
+              stroke-width="3"
+            />
           </svg>
           <div class="weg-punkt" style="left: 225.2px; top: 40px"></div>
           <p class="weg-beschriftung" aria-hidden="true">
@@ -4271,6 +4542,7 @@
         >
           <svg
             class="weg-mini-karte"
+            data-weg="auftrag"
             viewBox="0 0 450 52"
             width="450"
             height="52"
@@ -4284,9 +4556,26 @@
               stroke-width="3"
               stroke-linecap="round"
             />
-            <circle cx="20" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
-            <circle cx="99.3" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
             <circle
+              data-station="klick"
+              cx="20"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="kontext"
+              cx="99.3"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="netz"
               cx="167.6"
               cy="27.5"
               r="6.5"
@@ -4294,8 +4583,9 @@
               stroke="var(--bernstein)"
               stroke-width="3"
             />
-            <circle cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
+            <circle data-station="inferenz" cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
             <circle
+              data-station="nachpruefung"
               cx="344.04"
               cy="15"
               r="6.5"
@@ -4303,7 +4593,15 @@
               stroke="var(--petrol)"
               stroke-width="3"
             />
-            <circle cx="434" cy="15" r="6.5" fill="#fff" stroke="var(--rot)" stroke-width="3" />
+            <circle
+              data-station="gate"
+              cx="434"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--rot)"
+              stroke-width="3"
+            />
           </svg>
           <div class="weg-punkt" style="left: 225.2px; top: 40px"></div>
           <p class="weg-beschriftung" aria-hidden="true">
@@ -4348,6 +4646,7 @@
         >
           <svg
             class="weg-mini-karte"
+            data-weg="auftrag"
             viewBox="0 0 450 52"
             width="450"
             height="52"
@@ -4361,9 +4660,26 @@
               stroke-width="3"
               stroke-linecap="round"
             />
-            <circle cx="20" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
-            <circle cx="99.3" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
             <circle
+              data-station="klick"
+              cx="20"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="kontext"
+              cx="99.3"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="netz"
               cx="167.6"
               cy="27.5"
               r="6.5"
@@ -4371,8 +4687,9 @@
               stroke="var(--bernstein)"
               stroke-width="3"
             />
-            <circle cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
+            <circle data-station="inferenz" cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
             <circle
+              data-station="nachpruefung"
               cx="344.04"
               cy="15"
               r="6.5"
@@ -4380,7 +4697,15 @@
               stroke="var(--petrol)"
               stroke-width="3"
             />
-            <circle cx="434" cy="15" r="6.5" fill="#fff" stroke="var(--rot)" stroke-width="3" />
+            <circle
+              data-station="gate"
+              cx="434"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--rot)"
+              stroke-width="3"
+            />
           </svg>
           <div class="weg-punkt" style="left: 225.2px; top: 40px"></div>
           <p class="weg-beschriftung" aria-hidden="true">
@@ -4457,6 +4782,7 @@
         >
           <svg
             class="weg-mini-karte"
+            data-weg="auftrag"
             viewBox="0 0 450 52"
             width="450"
             height="52"
@@ -4470,9 +4796,26 @@
               stroke-width="3"
               stroke-linecap="round"
             />
-            <circle cx="20" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
-            <circle cx="99.3" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
             <circle
+              data-station="klick"
+              cx="20"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="kontext"
+              cx="99.3"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="netz"
               cx="167.6"
               cy="27.5"
               r="6.5"
@@ -4480,8 +4823,9 @@
               stroke="var(--bernstein)"
               stroke-width="3"
             />
-            <circle cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
+            <circle data-station="inferenz" cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
             <circle
+              data-station="nachpruefung"
               cx="344.04"
               cy="15"
               r="6.5"
@@ -4489,7 +4833,15 @@
               stroke="var(--petrol)"
               stroke-width="3"
             />
-            <circle cx="434" cy="15" r="6.5" fill="#fff" stroke="var(--rot)" stroke-width="3" />
+            <circle
+              data-station="gate"
+              cx="434"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--rot)"
+              stroke-width="3"
+            />
           </svg>
           <div class="weg-punkt" style="left: 225.2px; top: 40px"></div>
           <p class="weg-beschriftung" aria-hidden="true">
@@ -4564,6 +4916,7 @@
         >
           <svg
             class="weg-mini-karte"
+            data-weg="auftrag"
             viewBox="0 0 450 52"
             width="450"
             height="52"
@@ -4577,9 +4930,26 @@
               stroke-width="3"
               stroke-linecap="round"
             />
-            <circle cx="20" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
-            <circle cx="99.3" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
             <circle
+              data-station="klick"
+              cx="20"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="kontext"
+              cx="99.3"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="netz"
               cx="167.6"
               cy="27.5"
               r="6.5"
@@ -4587,8 +4957,9 @@
               stroke="var(--bernstein)"
               stroke-width="3"
             />
-            <circle cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
+            <circle data-station="inferenz" cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
             <circle
+              data-station="nachpruefung"
               cx="344.04"
               cy="15"
               r="6.5"
@@ -4596,7 +4967,15 @@
               stroke="var(--petrol)"
               stroke-width="3"
             />
-            <circle cx="434" cy="15" r="6.5" fill="#fff" stroke="var(--rot)" stroke-width="3" />
+            <circle
+              data-station="gate"
+              cx="434"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--rot)"
+              stroke-width="3"
+            />
           </svg>
           <div class="weg-punkt" style="left: 225.2px; top: 40px"></div>
           <p class="weg-beschriftung" aria-hidden="true">
@@ -4689,6 +5068,7 @@
         >
           <svg
             class="weg-mini-karte"
+            data-weg="auftrag"
             viewBox="0 0 450 52"
             width="450"
             height="52"
@@ -4702,9 +5082,26 @@
               stroke-width="3"
               stroke-linecap="round"
             />
-            <circle cx="20" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
-            <circle cx="99.3" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
             <circle
+              data-station="klick"
+              cx="20"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="kontext"
+              cx="99.3"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="netz"
               cx="167.6"
               cy="27.5"
               r="6.5"
@@ -4712,8 +5109,9 @@
               stroke="var(--bernstein)"
               stroke-width="3"
             />
-            <circle cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
+            <circle data-station="inferenz" cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
             <circle
+              data-station="nachpruefung"
               cx="344.04"
               cy="15"
               r="6.5"
@@ -4721,7 +5119,15 @@
               stroke="var(--petrol)"
               stroke-width="3"
             />
-            <circle cx="434" cy="15" r="6.5" fill="#fff" stroke="var(--rot)" stroke-width="3" />
+            <circle
+              data-station="gate"
+              cx="434"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--rot)"
+              stroke-width="3"
+            />
           </svg>
           <div class="weg-punkt" style="left: 344.04px; top: 15px"></div>
           <p class="weg-beschriftung" aria-hidden="true">
@@ -4807,6 +5213,7 @@
         >
           <svg
             class="weg-mini-karte"
+            data-weg="auftrag"
             viewBox="0 0 450 52"
             width="450"
             height="52"
@@ -4820,9 +5227,26 @@
               stroke-width="3"
               stroke-linecap="round"
             />
-            <circle cx="20" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
-            <circle cx="99.3" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
             <circle
+              data-station="klick"
+              cx="20"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="kontext"
+              cx="99.3"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="netz"
               cx="167.6"
               cy="27.5"
               r="6.5"
@@ -4830,8 +5254,9 @@
               stroke="var(--bernstein)"
               stroke-width="3"
             />
-            <circle cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
+            <circle data-station="inferenz" cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
             <circle
+              data-station="nachpruefung"
               cx="344.04"
               cy="15"
               r="6.5"
@@ -4839,7 +5264,15 @@
               stroke="var(--petrol)"
               stroke-width="3"
             />
-            <circle cx="434" cy="15" r="6.5" fill="#fff" stroke="var(--rot)" stroke-width="3" />
+            <circle
+              data-station="gate"
+              cx="434"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--rot)"
+              stroke-width="3"
+            />
           </svg>
           <div class="weg-punkt" style="left: 434px; top: 15px"></div>
           <p class="weg-beschriftung" aria-hidden="true">
@@ -5207,104 +5640,174 @@
         aria-label="34 von 39: Ersatz kommt immer, ein stummer Host kostet Minuten"
       >
         <div
-          class="ort-mini"
-          data-ort="llm-gestoert"
+          class="weg-mini weg-marke"
+          data-marke="1b-stoerung"
           role="img"
-          aria-label="Ort im Systembild: Zweiter Host · gestört (1B)"
+          aria-label="Ort auf dem Weg: Zweiter Host · Normalbetrieb, dann Zweiter Host · Stopp, Slot belegt, dann Zweiter Host · DROP, dann Zweiter Host · zu spät (1B)"
         >
           <svg
-            viewBox="0 0 180.17 64"
-            width="180.17"
-            height="64"
+            class="weg-mini-karte"
+            data-weg="auftrag"
+            viewBox="0 0 450 52"
+            width="450"
+            height="52"
             aria-hidden="true"
             focusable="false"
           >
-            <rect
-              x="2"
-              y="13.49"
-              width="30.64"
-              height="33.19"
-              rx="2"
-              fill="#e8edf3"
-              stroke="#566173"
-              stroke-width="2"
-            />
-            <line x1="32.64" y1="16.81" x2="44.13" y2="16.81" stroke="#566173" stroke-width="2" />
-            <rect
-              x="40.3"
-              y="2"
-              width="88.09"
-              height="56.17"
-              rx="4"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
-            />
-            <rect
-              x="44.13"
-              y="10.17"
-              width="80.43"
-              height="13.28"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
-            />
-            <rect
-              x="44.13"
-              y="25.74"
-              width="80.43"
-              height="12.26"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
-            />
-            <rect
-              x="44.13"
-              y="40.3"
-              width="38.3"
-              height="14.81"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
-            />
-            <rect
-              x="86.26"
-              y="40.3"
-              width="38.3"
-              height="14.81"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
-            />
-            <rect
-              x="139.87"
-              y="31.36"
-              width="38.3"
-              height="26.81"
-              rx="4"
-              fill="#e8edf3"
-              stroke="#b45309"
+            <path
+              d="M20 15L138.8 15C167.6 15 167.6 40 196.4 40L254 40C282.8 40 282.8 15 311.6 15L434 15"
+              fill="none"
+              stroke="var(--blau)"
               stroke-width="3"
-              data-an
+              stroke-linecap="round"
             />
-            <rect
-              x="142.94"
-              y="39.02"
-              width="32.17"
-              height="16.09"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <g data-abschnitt="zweiterHost">
+              <path
+                d="M138.8 15C167.6 15 167.6 40 196.4 40L254 40C282.8 40 282.8 15 311.6 15"
+                fill="none"
+                stroke="var(--bernstein)"
+                stroke-opacity="0.16"
+                stroke-width="14"
+                stroke-linecap="round"
+              />
+              <path
+                d="M138.8 15C167.6 15 167.6 40 196.4 40L254 40C282.8 40 282.8 15 311.6 15"
+                fill="none"
+                stroke="var(--bernstein)"
+                stroke-width="3"
+                stroke-linecap="round"
+              />
+            </g>
+            <circle
+              data-station="klick"
+              cx="20"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
             />
-            <line x1="124.56" y1="47.71" x2="142.94" y2="47.71" stroke="#b45309" stroke-width="2" />
+            <circle
+              data-station="kontext"
+              cx="99.3"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="netz"
+              cx="167.6"
+              cy="27.5"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--bernstein)"
+              stroke-width="3"
+            />
+            <circle data-station="inferenz" cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
+            <circle
+              data-station="nachpruefung"
+              cx="344.04"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="gate"
+              cx="434"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--rot)"
+              stroke-width="3"
+            />
           </svg>
-          <p class="weg-beschriftung ort-beschriftung" aria-hidden="true">
-            <span class="weg-name">Zweiter Host · gestört</span
+          <p class="weg-beschriftung" aria-hidden="true">
+            <span class="weg-stufen"
+              ><span class="weg-stufe" data-ab="0" data-bis="0"
+                ><span class="weg-name">Zweiter Host · Normalbetrieb</span></span
+              ><span class="weg-stufe" data-ab="1" data-bis="1"
+                ><span class="weg-name">Zweiter Host · Stopp, Slot belegt</span
+                ><span class="weg-zeichen-reihe"
+                  ><svg
+                    class="weg-zeichen"
+                    data-zeichen="stopp"
+                    viewBox="0 0 22 22"
+                    width="22"
+                    height="22"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <rect x="5" y="5" width="12" height="12" rx="2" fill="currentColor" /></svg
+                  ><svg
+                    class="weg-zeichen"
+                    data-zeichen="belegt"
+                    viewBox="0 0 22 22"
+                    width="22"
+                    height="22"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <circle
+                      cx="11"
+                      cy="11"
+                      r="7.5"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                    />
+                    <path d="M6.5 11h9" stroke="currentColor" stroke-width="3" /></svg></span></span
+              ><span class="weg-stufe" data-ab="2" data-bis="2"
+                ><span class="weg-name">Zweiter Host · DROP</span
+                ><span class="weg-zeichen-reihe"
+                  ><svg
+                    class="weg-zeichen"
+                    data-zeichen="drop"
+                    viewBox="0 0 22 22"
+                    width="22"
+                    height="22"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path
+                      d="M2.5 11h11M9.5 6.5l4.5 4.5-4.5 4.5M18.5 4v14"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    /></svg></span></span
+              ><span class="weg-stufe" data-ab="3"
+                ><span class="weg-name">Zweiter Host · zu spät</span
+                ><span class="weg-zeichen-reihe"
+                  ><svg
+                    class="weg-zeichen"
+                    data-zeichen="spaet"
+                    viewBox="0 0 22 22"
+                    width="22"
+                    height="22"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <circle
+                      cx="11"
+                      cy="11"
+                      r="7.5"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                    />
+                    <path
+                      d="M11 6.5V11l3.2 2.2"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    /></svg></span></span></span
             ><span class="etikett etikett-1b">1B</span>
           </p>
         </div>
@@ -5346,105 +5849,164 @@
         aria-label="35 von 39: Kein Live-Fehler unter Störung, p95 bis +8 ms"
       >
         <div
-          class="ort-mini"
-          data-ort="llm-live"
+          class="weg-mini weg-marke"
+          data-marke="1b-alle"
           role="img"
-          aria-label="Ort im Systembild: App-Host · Live-App, zweiter Host gestört (1B)"
+          aria-label="Ort auf dem Weg: Zweiter Host · alle Störungen (1B)"
         >
           <svg
-            viewBox="0 0 180.17 64"
-            width="180.17"
-            height="64"
+            class="weg-mini-karte"
+            data-weg="auftrag"
+            viewBox="0 0 450 52"
+            width="450"
+            height="52"
             aria-hidden="true"
             focusable="false"
           >
-            <rect
-              x="2"
-              y="13.49"
-              width="30.64"
-              height="33.19"
-              rx="2"
-              fill="#e8edf3"
-              stroke="#566173"
-              stroke-width="2"
-            />
-            <line x1="32.64" y1="16.81" x2="44.13" y2="16.81" stroke="#566173" stroke-width="2" />
-            <rect
-              x="40.3"
-              y="2"
-              width="88.09"
-              height="56.17"
-              rx="4"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
-            />
-            <rect
-              x="44.13"
-              y="10.17"
-              width="80.43"
-              height="13.28"
-              rx="2"
-              fill="#b45309"
-              stroke="#b45309"
-              stroke-width="2"
-              data-an
-            />
-            <rect
-              x="44.13"
-              y="25.74"
-              width="80.43"
-              height="12.26"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
-            />
-            <rect
-              x="44.13"
-              y="40.3"
-              width="38.3"
-              height="14.81"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
-            />
-            <rect
-              x="86.26"
-              y="40.3"
-              width="38.3"
-              height="14.81"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
-            />
-            <rect
-              x="139.87"
-              y="31.36"
-              width="38.3"
-              height="26.81"
-              rx="4"
-              fill="#e8edf3"
-              stroke="#b45309"
+            <path
+              d="M20 15L138.8 15C167.6 15 167.6 40 196.4 40L254 40C282.8 40 282.8 15 311.6 15L434 15"
+              fill="none"
+              stroke="var(--blau)"
               stroke-width="3"
-              data-an
+              stroke-linecap="round"
             />
-            <rect
-              x="142.94"
-              y="39.02"
-              width="32.17"
-              height="16.09"
-              rx="2"
-              fill="#ffffff"
-              stroke="#566173"
-              stroke-width="2"
+            <g data-abschnitt="zweiterHost">
+              <path
+                d="M138.8 15C167.6 15 167.6 40 196.4 40L254 40C282.8 40 282.8 15 311.6 15"
+                fill="none"
+                stroke="var(--bernstein)"
+                stroke-opacity="0.16"
+                stroke-width="14"
+                stroke-linecap="round"
+              />
+              <path
+                d="M138.8 15C167.6 15 167.6 40 196.4 40L254 40C282.8 40 282.8 15 311.6 15"
+                fill="none"
+                stroke="var(--bernstein)"
+                stroke-width="3"
+                stroke-linecap="round"
+              />
+            </g>
+            <circle
+              data-station="klick"
+              cx="20"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
             />
-            <line x1="124.56" y1="47.71" x2="142.94" y2="47.71" stroke="#b45309" stroke-width="2" />
+            <circle
+              data-station="kontext"
+              cx="99.3"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="netz"
+              cx="167.6"
+              cy="27.5"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--bernstein)"
+              stroke-width="3"
+            />
+            <circle data-station="inferenz" cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
+            <circle
+              data-station="nachpruefung"
+              cx="344.04"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="gate"
+              cx="434"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--rot)"
+              stroke-width="3"
+            />
           </svg>
-          <p class="weg-beschriftung ort-beschriftung" aria-hidden="true">
-            <span class="weg-name">App-Host · Live-App, zweiter Host gestört</span
+          <p class="weg-beschriftung" aria-hidden="true">
+            <span class="weg-name">Zweiter Host · alle Störungen</span
+            ><span class="weg-zeichen-reihe"
+              ><svg
+                class="weg-zeichen"
+                data-zeichen="stopp"
+                viewBox="0 0 22 22"
+                width="22"
+                height="22"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <rect x="5" y="5" width="12" height="12" rx="2" fill="currentColor" /></svg
+              ><svg
+                class="weg-zeichen"
+                data-zeichen="belegt"
+                viewBox="0 0 22 22"
+                width="22"
+                height="22"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <circle
+                  cx="11"
+                  cy="11"
+                  r="7.5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                />
+                <path d="M6.5 11h9" stroke="currentColor" stroke-width="3" /></svg
+              ><svg
+                class="weg-zeichen"
+                data-zeichen="drop"
+                viewBox="0 0 22 22"
+                width="22"
+                height="22"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path
+                  d="M2.5 11h11M9.5 6.5l4.5 4.5-4.5 4.5M18.5 4v14"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                /></svg
+              ><svg
+                class="weg-zeichen"
+                data-zeichen="spaet"
+                viewBox="0 0 22 22"
+                width="22"
+                height="22"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <circle
+                  cx="11"
+                  cy="11"
+                  r="7.5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                />
+                <path
+                  d="M11 6.5V11l3.2 2.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                /></svg></span
             ><span class="etikett etikett-1b">1B</span>
           </p>
         </div>
@@ -6813,6 +7375,7 @@
       <div class="weg-mini weg-wandernd" role="img" aria-label="Station des Auftrags" hidden>
         <svg
           class="weg-mini-karte"
+          data-weg="auftrag"
           viewBox="0 0 450 52"
           width="450"
           height="52"
@@ -6826,9 +7389,26 @@
             stroke-width="3"
             stroke-linecap="round"
           />
-          <circle cx="20" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
-          <circle cx="99.3" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
           <circle
+            data-station="klick"
+            cx="20"
+            cy="15"
+            r="6.5"
+            fill="#fff"
+            stroke="var(--petrol)"
+            stroke-width="3"
+          />
+          <circle
+            data-station="kontext"
+            cx="99.3"
+            cy="15"
+            r="6.5"
+            fill="#fff"
+            stroke="var(--petrol)"
+            stroke-width="3"
+          />
+          <circle
+            data-station="netz"
             cx="167.6"
             cy="27.5"
             r="6.5"
@@ -6836,9 +7416,25 @@
             stroke="var(--bernstein)"
             stroke-width="3"
           />
-          <circle cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
-          <circle cx="344.04" cy="15" r="6.5" fill="#fff" stroke="var(--petrol)" stroke-width="3" />
-          <circle cx="434" cy="15" r="6.5" fill="#fff" stroke="var(--rot)" stroke-width="3" />
+          <circle data-station="inferenz" cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
+          <circle
+            data-station="nachpruefung"
+            cx="344.04"
+            cy="15"
+            r="6.5"
+            fill="#fff"
+            stroke="var(--petrol)"
+            stroke-width="3"
+          />
+          <circle
+            data-station="gate"
+            cx="434"
+            cy="15"
+            r="6.5"
+            fill="#fff"
+            stroke="var(--rot)"
+            stroke-width="3"
+          />
         </svg>
         <div
           class="weg-punkt"
@@ -6920,18 +7516,60 @@
     <script type="application/json" id="deck-konfig">
       {
         "stationen": {
-          "klick": { "x": 20, "y": 15, "anteil": 0, "auftrag": "1C", "name": "Klick" },
-          "kontext": { "x": 99.3, "y": 15, "anteil": 18.53, "auftrag": "1C", "name": "Kontext" },
-          "netz": { "x": 167.6, "y": 27.5, "anteil": 35.31, "auftrag": "1B", "name": "Netz" },
-          "inferenz": { "x": 225.2, "y": 40, "anteil": 49.58, "auftrag": "1B", "name": "Inferenz" },
+          "klick": {
+            "x": 20,
+            "y": 15,
+            "anteil": 0,
+            "auftrag": "1C",
+            "name": "Klick",
+            "farbe": "var(--petrol)",
+            "kern": false
+          },
+          "kontext": {
+            "x": 99.3,
+            "y": 15,
+            "anteil": 18.53,
+            "auftrag": "1C",
+            "name": "Kontext",
+            "farbe": "var(--petrol)",
+            "kern": false
+          },
+          "netz": {
+            "x": 167.6,
+            "y": 27.5,
+            "anteil": 35.31,
+            "auftrag": "1B",
+            "name": "Netz",
+            "farbe": "var(--bernstein)",
+            "kern": false
+          },
+          "inferenz": {
+            "x": 225.2,
+            "y": 40,
+            "anteil": 49.58,
+            "auftrag": "1B",
+            "name": "Inferenz",
+            "farbe": "var(--bernstein)",
+            "kern": true
+          },
           "nachpruefung": {
             "x": 344.04,
             "y": 15,
             "anteil": 78.97,
             "auftrag": "1C",
-            "name": "Nachprüfung"
+            "name": "Nachprüfung",
+            "farbe": "var(--petrol)",
+            "kern": false
           },
-          "gate": { "x": 434, "y": 15, "anteil": 100, "auftrag": "1C", "name": "Gate" }
+          "gate": {
+            "x": 434,
+            "y": 15,
+            "anteil": 100,
+            "auftrag": "1C",
+            "name": "Gate",
+            "farbe": "var(--rot)",
+            "kern": false
+          }
         }
       }
     </script>
