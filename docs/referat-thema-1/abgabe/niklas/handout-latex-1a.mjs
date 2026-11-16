@@ -307,18 +307,55 @@ export function makros1B34(d) {
     ebNormalMedianS: sek(m('normal').jobMedianMs),
     ebFEinsMedianMs: fmt(f1.jobMedianMs),
     ebFEinsN: fmt(f1.n),
+    ebNormalN: fmt(m('normal').n),
+    ebBusyN: fmt(m('busy').n),
+    ebLDreiN: fmt(m('l3').n),
     ebBusyMedianMs: fmt(m('busy').jobMedianMs),
     ebFZweiMedianS: sek(m('f2').jobMedianMs),
     ebFZweiN: fmt(m('f2').n),
     ebLDreiMedianS: sek(m('l3').jobMedianMs),
     ebLDreiMaxS: sek(m('l3').jobSpanneMs[1], 1),
     ebFaktor: fmt(Math.round(m('f2').jobMedianMs / f1.jobMedianMs / 100) * 100),
+    ebPufferS: fmt(d.schwellen.fallbackPufferMs / 1000),
+    ebFEinsMaxS: fmt(d.schwellen.f1MedianMaxMs / 1000),
+    ebFaktorMin: fmt(d.schwellen.f2ZuF1Min),
+    ebPProzent: fmt(d.schwellen.p95Faktor * 100),
     ebLiveGeplant: fmt(alle.reduce((x, l) => x + l.liveGeplant, 0)),
     ebLiveFehl: fmt(alle.reduce((x, l) => x + l.liveFehler, 0)),
     ebMaxDeltaMs: fmt(Math.max(...deltas), 1),
     ebMaxProzent: fmt((Math.max(...ratios) - 1) * 100),
     ebAppCpuMax: fmt(Math.max(...alle.map((l) => l.appCpuMax))),
     ebAppRssMiB: fmt(Math.max(...alle.map((l) => l.appRssMaxMiB))),
+  };
+}
+
+/**
+ * Festwerte aus Projektquellen, je per Muster aus dem Wortlaut gelesen (keine Literale im Handout): Zielhost und
+ * RAM-Schätzung aus ADR-0035 (Abschn. Kontext, 2.1), Inferenzdauer eines LLM-Auftrags aus Jonas' 1B-ergebnis.md.
+ */
+export function makrosQuellen(root = ROOT) {
+  const adr = readFileSync(
+    join(root, '../architecture/decisions/0035-self-hosted-llm-runtime-llama-cpp-over-ollama.md'),
+    'utf8',
+  );
+  const host = adr.match(/Live-Host bleibt \*\*(\d+) vCPU \/ (\d+) GB RAM/);
+  const ram = adr.match(
+    /~(\d+)–(\d+) GB Baseline plus spaCy (\d+) GB, Encoder (\d+) GB, PDF-Worker\s+(\d+) GB\) trägt \*\*kein\*\* zusätzliches ~(\d+)-GB-LLM/,
+  );
+  const ergebnis = readFileSync(join(root, '1B-ergebnis.md'), 'utf8');
+  const warm = ergebnis.match(/warm \(Prompt aus dem Cache, Aufträge 2–10\) im Median ([\d,]+) s/);
+  if (!host || !ram || !warm)
+    throw new Error('handout-1a: Festwert in ADR-0035 oder 1B-ergebnis.md nicht gefunden');
+  const warmS = Number(warm[1].replace(',', '.'));
+  return {
+    adrZielVcpu: host[1],
+    adrZielRamGb: host[2],
+    adrBaselineGb: `${ram[1]}–${ram[2]}`,
+    adrSpacyGb: ram[3],
+    adrEncoderGb: ram[4],
+    adrPdfGb: ram[5],
+    adrLlmGb: ram[6],
+    llmWarmMin: fmt(Math.round(warmS / 60 / 0.5) * 0.5, 1),
   };
 }
 
@@ -408,6 +445,7 @@ export async function erzeuge(ziel) {
   const makros = {
     ...makros1A(d, ladeRohdaten1A(ROOT), ladeKontext1A()),
     ...makros1B34(ladeDaten1B34(ROOT)),
+    ...makrosQuellen(ROOT),
   };
   mkdirSync(ziel, { recursive: true });
   const commit = execFileSync('git', ['rev-parse', '--short=8', 'HEAD'], {

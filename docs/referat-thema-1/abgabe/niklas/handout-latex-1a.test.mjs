@@ -170,7 +170,7 @@ test(
       .replace(/\\z[A-Za-z]+/g, '')
       // Kennungen: Varianten, Hypothesen, Prinzipien, Aufträge, ADR, Release, Modell, Perzentilname, Schritte
       .replace(
-        /\b[VHP]\d\b|\bp95\b|\b\d[ABC]\b|ADR-\d+|WSL2|cgroup v2|Release[~ ]1\.3|Opus~5\.5|95\.~Perzentil|Schritte \d--\d|\d und~?\s*\d/g,
+        /\b[VHPFLS]\d\b|\bp95\b|8\.9b|\b\d[ABC]\b|ADR-\d+|WSL2|cgroup v2|Release[~ ]1\.3|Opus~5\.5|95\.~Perzentil|Schritte \d--\d|\d und~?\s*\d/g,
         '',
       );
     const zahlen = [...rest.matchAll(/.{0,25}\d+(?:[.,]\d+)*.{0,5}/g)].map((x) => x[0]);

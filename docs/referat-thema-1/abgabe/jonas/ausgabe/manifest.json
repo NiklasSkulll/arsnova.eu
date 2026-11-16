@@ -465,7 +465,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/niklas/daten-1a.mjs",
-      "sha256": "e08fd706e8eb83e78e8f786175849bec0755903ffc9fe11147d6238c2d25c48f"
+      "sha256": "783c87450b9bac3b283fb9e1cf5e9697c96265e99b7f3d6f3a73207bae6f5274"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/niklas/daten-1b34.mjs",
@@ -477,7 +477,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/niklas/folien-1b34.mjs",
-      "sha256": "62be89bebcce2b21a9c7dc4ee1ef9da8a567b9b15af4655696bdf9c8577a31bc"
+      "sha256": "3596456c1d521c6a619bf8f3d39f63c1cfe30f25c7ea58036a55cec3d5308e9d"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/niklas/grafik-1a.mjs",
@@ -485,7 +485,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/niklas/handout-latex-1a.mjs",
-      "sha256": "cf237a9941624e72f4521ee073a5be2a1469fd35c611667744beb49c3bfd629b"
+      "sha256": "2f0817e779050b34f8be043ed6a6ac4a8d10a47b43cecfc9dd474aa64ee68017"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/niklas/literatur-1a.mjs",
@@ -505,19 +505,19 @@
     {
       "datei": "gemeinsames-deck.pdf",
       "bytes": 1153526,
-      "sha256": "ef52a09ce32accfb3ffd29b4b1a629fbd0ff2da07a6f093113efb86c63429e01",
+      "sha256": "c552a24fa75ea7e7a8d11474ef062d7309ac7e1958867adc2885a6f00af36177",
       "seiten": 45
     },
     {
       "datei": "jonas-folien.pdf",
       "bytes": 763526,
-      "sha256": "b288f881cc82a0f146388578f36453b9c8bbaac561c802b2cdfbbaf0608b0a5e",
+      "sha256": "f926473fd721b7fe3fba3f2c4fc8e62327c6c8b0c0aea44a1b816e492a4af367",
       "seiten": 28
     },
     {
       "datei": "niklas-folien.pdf",
       "bytes": 425064,
-      "sha256": "a5d1acd7f3f9da759cb4797ebc90d6ed356a99d33a0ea1ef9941a634dd141262",
+      "sha256": "a7ecf9b1142a4c7bf2809bc07447aecb906a9c8fb21594776b9f134d5a121198",
       "seiten": 15
     },
     {
@@ -533,13 +533,13 @@
     {
       "datei": "sprechkarten-jonas.pdf",
       "bytes": 71193,
-      "sha256": "2e16880ecf4e35049214d4883b18422a73424339e38a78280d3f00fc64e5a082",
+      "sha256": "cfc4939cb5b9d21ea7e4deba02896ab9e4fdb5ea24a506aa2017b5591248cb96",
       "seiten": 4
     },
     {
       "datei": "sprechkarten-niklas.pdf",
       "bytes": 58732,
-      "sha256": "f9030109901b767623ab543d564d61813056ab6d8ae54a47caade8952a93809c",
+      "sha256": "a2ab271425d83d90e945fabd6c66566efa0b19ded08c1e7fde81321496fa40b3",
       "seiten": 3
     }
   ]
