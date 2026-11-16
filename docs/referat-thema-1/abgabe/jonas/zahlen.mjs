@@ -144,7 +144,7 @@ export const ZAHLEN_1C = {
   },
   inferenzRuhigS: {
     wert: 163.4,
-    text: 'Inferenz (Prefill + Ausgabe), Median in s, Laborlauf ohne Nebenlast',
+    text: 'Inferenz (Prefill + Ausgabe), Median in s, Laborlauf 2026-11-05',
     quelle: 'evidenz/1C/2026-11-05-labor.md',
     beleg: '163,4 s (Prefill 76,2 s, Ausgabe 86,6 s)',
     rechner: 'Laptop (ThinkPad P50)',

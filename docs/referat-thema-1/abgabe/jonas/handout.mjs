@@ -219,11 +219,11 @@ export function baueHandout(daten, personen, { basis } = {}) {
     `<p class="quelle"><b>Tab. 1:</b> Aufgabenabdeckung 1C, Details im Ergebnisbericht [10]. Quelle: Nachlauf [8], ${P50}, ${nachlauf}; Tests, Teil 2 [9], ${P50}, ${teil2}.</p>` +
     grenzen('1C', [
       `ein Rechner, Runtime über Loopback, kein zweiter Host; Image lokal gebaut, Messproxy; eine synthetische Fixture`,
-      `Laborlimits ${w(`${fw.laborCpus1C} CPUs`)}, ${w(`${fw.laborSpeicher1CGiB} GiB`)} statt ${w(`${fw.releaseCpus} CPUs`)}, ${w(`${fw.prodSpeicherGiB} GiB`)} ab Werk v1.4.0; Timeout ${w(`${fw.laborTimeoutS} s`)} statt ${w(`${fw.releaseTimeoutS} s`)} (Kalibrierung am Laptop ${w(`${fw.kalibrierungLaptopS} s`)}); Nachlauf mit Nebenlast`,
+      `Laborlimits ${w(`${fw.laborCpus1C} CPUs`)}, ${w(`${fw.laborSpeicher1CGiB} GiB`)} statt ${w(`${fw.releaseCpus} CPUs`)}, ${w(`${fw.prodSpeicherGiB} GiB`)} ab Werk v1.4.0; Timeout ${w(`${fw.laborTimeoutS} s`)} statt ${w(`${fw.releaseTimeoutS} s`)} (Kalibrierung am Laptop ${w(`${fw.kalibrierungLaptopS} s`)})`,
       `Stand ${code('def56700')} (v1.4.0-14), nicht v1.3.0 (ADR 1C-001); „hält“ heißt vertragsgültig, kein Urteil über Prompts`,
     ]) +
     `<h3>Betrieb: Timeout und Speicher ${etikett('1C')}</h3>` +
-    `<p>Ab Werk v1.4.0 bricht die App nach ${w(`${fw.releaseTimeoutS} s`)} ab; die Inferenz dauerte bei der Kalibrierung am PC (${code(c.kalibrierungPcS.commit)}) ${w(`${z.kalPc} s`)}, am Laptop im Median ${w(`${z.infer1C} s`)} (${code('def56700')}, Nebenlast). ` +
+    `<p>Ab Werk v1.4.0 bricht die App nach ${w(`${fw.releaseTimeoutS} s`)} ab; die Inferenz dauerte bei der Kalibrierung am PC (${code(c.kalibrierungPcS.commit)}) ${w(`${z.kalPc} s`)}, am Laptop im Median ${w(`${z.infer1C} s`)} (${code('def56700')}). ` +
     `Bei wechselnden Prompts wächst der Speicher der Runtime je Auftrag um ${w(`${z.delta} GB`)} (Median, Laptop); der KV-Cache belegt Speicher je Token [11]. Beide Grenzen ${w(`${fw.grenzeGesamtGiB} GiB`)} (Labor ${w(`${fw.laborSpeicher1CGiB} GiB`)} + ${w(`${fw.laborSpeicher1CGiB} GiB`)}, Produktion ${w(`${fw.prodSpeicherGiB} GiB`)} + bis zu ${w(`${fw.prodSwapGiB} GiB`)} Swap, Swap des Hosts unbekannt): OOM-Kill auf ${code(c.oomAuftrag9f230abc.commit)} im ${w(`${c.oomAuftrag9f230abc.wert}.`)} Auftrag (Laptop und PC), auf ${code('def56700')} im ${w(`${c.oomAuftrag.wert}.`)} (Ursache nicht getrennt gemessen) [8, 10]. ` +
     `Im 1B-Lauf mit gleichem Prompt blieb er bei höchstens ${w(`${z.speicher1B} GB`)} [7].</p>`;
 

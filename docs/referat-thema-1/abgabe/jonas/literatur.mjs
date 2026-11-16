@@ -37,6 +37,11 @@ export const LITERATUR = [
     voll: 'Kwon, W., Li, Z., Zhuang, S., Sheng, Y., Zheng, L., Yu, C. H., Gonzalez, J. E., Zhang, H. & Stoica, I. (2023). Efficient memory management for large language model serving with PagedAttention. <i>Proceedings of the 29th Symposium on Operating Systems Principles</i>, 611–626. https://doi.org/10.1145/3600006.3613165',
   },
   {
+    schluessel: 'mell2011',
+    kurz: 'Mell & Grance, 2011',
+    voll: 'Mell, P. & Grance, T. (2011). <i>The NIST definition of cloud computing</i> (NIST Special Publication 800-145). National Institute of Standards and Technology. https://doi.org/10.6028/NIST.SP.800-145',
+  },
+  {
     schluessel: 'papadopoulos2021',
     kurz: 'Papadopoulos et al., 2021',
     voll: 'Papadopoulos, A. V., Versluis, L., Bauer, A., Herbst, N., von Kistowski, J., Ali-Eldin, A., Abad, C. L., Amaral, J. N., Tůma, P. & Iosup, A. (2021). Methodological principles for reproducible performance evaluation in cloud computing. <i>IEEE Transactions on Software Engineering, 47</i>(8), 1528–1543. https://doi.org/10.1109/TSE.2019.2927908',

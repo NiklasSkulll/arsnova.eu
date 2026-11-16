@@ -435,8 +435,8 @@ const ZITATE = {
     ['ggml2026', 'Abschn. „Server-specific params“'],
   ],
   R14: [
+    ['mell2011', 'S. 2'],
     ['dean2013', 'S. 74'],
-    ['arsnova2026adr0035', 'Abschn. 2.1'],
     [W, 'ADR 1C-018'],
   ],
 };
@@ -727,7 +727,7 @@ export function folien(daten) {
           [
             'ein Rechner, Loopback, kein zweiter Host',
             `${fw.laborCpus1C} CPUs, ${fw.laborSpeicher1CGiB} GiB statt ${fw.releaseCpus} CPUs, ${fw.prodSpeicherGiB} GiB ab Werk v1.4.0`,
-            `Timeout ${fw.laborTimeoutS} s statt ${fw.releaseTimeoutS} s; Image lokal, Messproxy, Nebenlast`,
+            `Timeout ${fw.laborTimeoutS} s statt ${fw.releaseTimeoutS} s; Image lokal, Messproxy`,
           ],
           'var(--petrol)',
         ) +
@@ -779,7 +779,7 @@ export function folien(daten) {
             zahl({
               wert: z.infer1C,
               einheit: 's',
-              was: 'Inferenz, Median, mit Nebenlast',
+              was: 'Inferenz, Median, Nachlauf v1.4.0',
               gruppe: '1C-Nachlauf, Laptop; andere Messung als Auftrag 2',
               linie: 'var(--petrol)',
             }),
@@ -787,7 +787,7 @@ export function folien(daten) {
         ) +
         `<p style="margin:0;font-size:24px;color:var(--text-2)">${etikett('1B')}&nbsp; zwei Hosts: Host-Aufruf im Median ${fmt(b.hostMedianMs, 1)} ms (alle ${n}), bei Auftrag ${au.nr} ${z.auHost} ms</p>`,
     ),
-    notiz: `Erste Station, der Klick. Die Frage aus 1C lautet: Blockiert ein langsames Modell die Lehrperson? Der Mechanismus ist eine Queue. Der Host-Aufruf baut den Kontext, legt den Auftrag ab und kehrt sofort mit dem Status pending zurück. Gerechnet wird danach im Hintergrund, mit einem Slot. Im 1C-Nachlauf am Laptop dauert der Host-Aufruf im Median ${z.request} Millisekunden, die Inferenz dagegen ${z.infer1C} Sekunden, mit Nebenlast auf dem Rechner. Der Host ist also vom Modell entkoppelt. Eine Grenze bleibt: Auf den Kontextaufbau wartet er doch, denn der passiert im Aufruf selbst. Belegt ist das mit dem Test E5 und dem Laborfall N3.`,
+    notiz: `Erste Station, der Klick. Die Frage aus 1C lautet: Blockiert ein langsames Modell die Lehrperson? Der Mechanismus ist eine Queue. Der Host-Aufruf baut den Kontext, legt den Auftrag ab und kehrt sofort mit dem Status pending zurück. Gerechnet wird danach im Hintergrund, mit einem Slot. Im 1C-Nachlauf am Laptop dauert der Host-Aufruf im Median ${z.request} Millisekunden, die Inferenz dagegen ${z.infer1C} Sekunden. Der Host ist also vom Modell entkoppelt. Eine Grenze bleibt: Auf den Kontextaufbau wartet er doch, denn der passiert im Aufruf selbst. Belegt ist das mit dem Test E5 und dem Laborfall N3.`,
     zeitS: 40,
     kurzfassung: true,
     quelle: `${q1C('requestMs', 'inferenzS')}; 1B: ${q1B}`,
@@ -1306,7 +1306,7 @@ export function folien(daten) {
         [
           'Laborrechner mit CPU-Inferenz, ein Slot, Qwen3-4B-Instruct-2507 Q4_K_M; ein Rechner über Loopback',
           'Eine synthetische Fixture, Locale de',
-          'Nachlauf auf upstream nur am Laptop, mit Nebenlast',
+          'Nachlauf auf upstream nur am Laptop',
           'Ein formal korrekter Pfad belegt keine guten Prompts',
           'Keine parallele Last: Aufträge nacheinander, die Leitfrage nennt „reale Last“',
         ],
@@ -1524,8 +1524,8 @@ export function folien(daten) {
   );
 
   // ------------------------------------------------------------ R13 (bis 2026-11-16 J11): Betrieb
-  // In die Reserve verschoben, damit der Vortrag bei etwa 10:30 min bleibt. Laptop ohne Nebenlast
-  // (9f230abc) statt des Nachlaufs mit Nebenlast; 223,7 s nur in der Notiz und nur „mit Nebenlast“.
+  // In die Reserve verschoben, damit der Vortrag bei etwa 10:30 min bleibt. Inferenz am Laptop aus dem
+  // Laborlauf (9f230abc); den Nachlaufwert (v1.4.0, mehr Ausgabetokens) nennt nur die Notiz.
   const maxS = Math.max(
     c.kalibrierungPcS.wert,
     c.inferenzRuhigS.wert,
@@ -1541,7 +1541,7 @@ export function folien(daten) {
   const timeoutSvg =
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 250" width="680" height="250" role="img" aria-label="Inferenzzeiten auf beiden Laborrechnern gegen den Timeout ab Werk v1.4.0">` +
     balken(44, c.kalibrierungPcS.wert, 'Kalibrierung', 'PC') +
-    balken(154, c.inferenzRuhigS.wert, 'Inferenz, Median', 'Laptop, ohne Nebenlast') +
+    balken(154, c.inferenzRuhigS.wert, 'Inferenz, Median', 'Laptop, 9f230abc') +
     `<line x1="${xT}" y1="204" x2="${xT}" y2="222" style="stroke:var(--rot);stroke-width:4"/>` +
     `<text x="${xT}" y="246" text-anchor="middle" style="font:700 24px var(--f-text);fill:var(--rot)">Timeout ab Werk v1.4.0: ${fw.releaseTimeoutS} s</text>` +
     `</svg>`;
@@ -1565,13 +1565,12 @@ export function folien(daten) {
       `<p style="margin:0 0 10px;font-size:24px;line-height:1.35">OOM-Kill: 9f230abc im ${c.oomAuftrag9f230abc.wert}. Auftrag (Laptop und PC), def56700 schon im <b>${c.oomAuftrag.wert}.</b> <span class="nowrap" style="color:var(--gedaempft)">warum früher: nicht getrennt gemessen</span></p>` +
       `<p style="margin:0;font-size:24px;line-height:1.35">Empfohlen, nicht umgesetzt: Timeout je Inferenz-Host kalibrieren (#16), ${mono('--cache-ram')} begrenzen (#14). Folge laut Versuch: Ausgabe um ${fw.cacheAusAusgabeProzent} % langsamer, nicht dem Cache zuordenbar.</p>` +
       `</div></div>`,
-    `Falls nach dem Betrieb gefragt wird. Erstens der Timeout: Ab Werk bricht die App in Version 1.4.0 nach ${fw.releaseTimeoutS} Sekunden ab. Am PC ergab die Kalibrierung ${z.kalPc} Sekunden, am Laptop dauerte die Inferenz ohne Nebenlast im Median ${z.inferRuhig}. Der Timeout ist also zu kurz auf beiden Laborrechnern; über andere Hardware sagt das nichts. Im Nachlauf am Laptop waren es ${z.infer1C} Sekunden, aber mit Nebenlast. Zweitens der Speicher: Bei wechselnden Prompts wächst die Runtime je Auftrag um ${z.delta} Gigabyte; die Ursache ist der Prompt-Cache, gezeigt am PC. Beide Grenzen liegen bei ${fw.grenzeGesamtGiB} Gibibyte. Auf dem älteren Stand starb die Runtime im ${c.oomAuftrag9f230abc.wert}. Auftrag, auf dem neuen schon im ${c.oomAuftrag.wert}.; warum früher, habe ich nicht getrennt gemessen. Im 1B-Lauf mit gleichem Prompt blieb sie bei ${z.speicher1B} Gigabyte. Ich empfehle, den Timeout je Inferenz-Host zu kalibrieren und den Cache mit --cache-ram zu begrenzen; im Versuch war die Ausgabe dann um ${fw.cacheAusAusgabeProzent} Prozent langsamer, wegen fester Reihenfolge nicht dem Cache zuzuordnen. Umgesetzt ist das nicht.`,
-    `ADR 1C-023 (Laptop 9f230abc ohne Nebenlast: evidenz/1C/2026-11-05-labor.md; PC i7-8700 · 9f230abc), ADR 1C-024 (U1, PC · 9f230abc); Nebenlast: evidenz/1C/2026-11-09-labor-nachlauf.md, Abweichung 2; Nachlauf N3, N6 · Laptop (ThinkPad P50) · def56700; 1B-Speicher: ${q1B}`,
+    `Falls nach dem Betrieb gefragt wird. Erstens der Timeout: Ab Werk bricht die App in Version 1.4.0 nach ${fw.releaseTimeoutS} Sekunden ab. Am PC ergab die Kalibrierung ${z.kalPc} Sekunden, am Laptop dauerte die Inferenz im Median ${z.inferRuhig}. Der Timeout ist also zu kurz auf beiden Laborrechnern; über andere Hardware sagt das nichts. Im Nachlauf am Laptop waren es ${z.infer1C} Sekunden, mit mehr Ausgabetokens. Zweitens der Speicher: Bei wechselnden Prompts wächst die Runtime je Auftrag um ${z.delta} Gigabyte; die Ursache ist der Prompt-Cache, gezeigt am PC. Beide Grenzen liegen bei ${fw.grenzeGesamtGiB} Gibibyte. Auf dem älteren Stand starb die Runtime im ${c.oomAuftrag9f230abc.wert}. Auftrag, auf dem neuen schon im ${c.oomAuftrag.wert}.; warum früher, habe ich nicht getrennt gemessen. Im 1B-Lauf mit gleichem Prompt blieb sie bei ${z.speicher1B} Gigabyte. Ich empfehle, den Timeout je Inferenz-Host zu kalibrieren und den Cache mit --cache-ram zu begrenzen; im Versuch war die Ausgabe dann um ${fw.cacheAusAusgabeProzent} Prozent langsamer, wegen fester Reihenfolge nicht dem Cache zuzuordnen. Umgesetzt ist das nicht.`,
+    `ADR 1C-023 (Laptop 9f230abc: evidenz/1C/2026-11-05-labor.md; PC i7-8700 · 9f230abc), ADR 1C-024 (U1, PC · 9f230abc); Nachlauf N3, N6 · Laptop (ThinkPad P50) · def56700; 1B-Speicher: ${q1B}`,
   );
 
   // ------------------------------------------------------------ R14 Einordnung Cloud Computing
-  // Keine neue Messung: NIST-Merkmale (SP 800-145, nicht im Literaturverzeichnis, da das Handout sie nicht
-  // zitiert), Bulkhead und Kapazität aus dem Code (Stand a19ca70f, Zeilen per Serena geprüft 2026-11-16).
+  // Keine neue Messung: NIST-Merkmale (Mell & Grance 2011, SP 800-145, S. 2), Bulkhead und Kapazität aus dem Code (Stand a19ca70f, Zeilen per Serena geprüft 2026-11-16).
   const nist = (merkmal, status, text) =>
     `<tr style="border-top:var(--linie-min) solid var(--linie)"><td style="padding:8px 14px 8px 0;font-weight:600">${merkmal}</td>` +
     `<td style="padding:8px 14px 8px 0;font-weight:700;color:${{ ja: 'var(--petrol)', nein: 'var(--rot)', teils: 'var(--bernstein-text)' }[status]}">${status}</td>` +
@@ -1614,7 +1613,7 @@ export function folien(daten) {
       ) +
       `</div></div>`,
     `Falls nach dem Kursbezug gefragt wird. Nach den NIST-Merkmalen ist das IaaS-Betrieb ohne Selbstbedienung zur Laufzeit: Netzzugang und Ressourcenbündelung sind gegeben, schnelle Elastizität fehlt, die Inferenz skaliert nur vertikal und von Hand. Der zweite Host ist ein Bulkhead, ein getrennter Fehler- und Ressourcenbereich; den Nutzen habe ich nicht gemessen. Kapazität, gerechnet aus dem Code und nicht gemessen: ein Aufruf zugleich, die Queue nimmt höchstens ${fw.queueLimit} an, danach queue_full mit Ersatz. Bei ${z.jobWarm} Sekunden je Auftrag sind das rund ${daten.abgeleitet.auftraegeProStunde} Zusammenfassungen pro Stunde. Als SLO würde ich Verfügbarkeit und Nutzen trennen: Endstatus nach ${fw.laborTimeoutS} Sekunden erfüllt der Fallback, der Nutzen lag bei ${daten.abgeleitet.fullContext1B} von ${n}.`,
-    `Code a19ca70f (gleich HEAD): apps/backend/src/lib/openWeightLlmClient.ts Z. 141 (inFlight), Z. 497 (busy); qaSummaryConfig.ts Z. 26 (QUEUE_LIMIT_DEFAULT = 8), Z. 29 (CONCURRENCY_DEFAULT = 1); qaSummaryQueue.ts Z. 510 (queue_full); Durchsatz aus T_job warm: ${q1B}; NIST SP 800-145 (Definition, nicht im Literaturverzeichnis); ADR-0035 Abschn. 2.1, 2.2; SLO-Vorschlag: fragenkatalog.md F51; full-context: ${q1B}`,
+    `Code a19ca70f (gleich HEAD): apps/backend/src/lib/openWeightLlmClient.ts Z. 141 (inFlight), Z. 497 (busy); qaSummaryConfig.ts Z. 26 (QUEUE_LIMIT_DEFAULT = 8), Z. 29 (CONCURRENCY_DEFAULT = 1); qaSummaryQueue.ts Z. 510 (queue_full); Durchsatz aus T_job warm: ${q1B}; NIST SP 800-145, S. 2 (Mell & Grance, 2011); ADR-0035 Abschn. 2.1, 2.2; SLO-Vorschlag: fragenkatalog.md F51; full-context: ${q1B}`,
   );
 
   // Kurzbelege je Folie (ZL Anhang B: „Quelle: …“ in der Fußzeile), eine Zeile; Rechner und Commit

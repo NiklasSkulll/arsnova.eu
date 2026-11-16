@@ -112,6 +112,10 @@
       "sha256": "336f1b6f28f781a188f2fc7702f96d38b7b84e9b9911a516fa97b8f62e034e4b"
     },
     {
+      "pfad": "docs/referat-thema-1/abgabe/jonas/abgabe-lokal.mjs",
+      "sha256": "5d8ee3e6a0ce327327738f3097d1d4e176605fb7234325a2d93009e2925f6b90"
+    },
+    {
       "pfad": "docs/referat-thema-1/abgabe/jonas/bau.mjs",
       "sha256": "4d3820022938788d0ee4ff35f5cbc1b4f3abd0add60a3a0929cf48c364ccfc7c"
     },
@@ -129,7 +133,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/folien.mjs",
-      "sha256": "0637696d79d07b274624aaaa0c1f0a2e6a7121891a57ccab9e0c04989e9b85bc"
+      "sha256": "7670ccf385a39e17c9041126ec995d7b9fcf883ac5455e8e82ada71a60d92c17"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/grafik.mjs",
@@ -145,7 +149,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/handout.mjs",
-      "sha256": "40cd3316fec7800507bfdd47ce603c438f7af1278a5533230bb5bede5d75f05c"
+      "sha256": "ca3e3018989627b40152d88d4f2de89033b0bbeaddeccc59c9b948cd56848775"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/layout-pruefung.mjs",
@@ -153,7 +157,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/literatur.mjs",
-      "sha256": "bee1b56ae116c1742255f043d66b4d483ec5278095e145e5aa55b99d6f436c9a"
+      "sha256": "88be807777dd35560479813fc32de07fd6e90e9ad47d74840480462f1d00d62e"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/niklas-seiten.mjs",
@@ -165,7 +169,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/zahlen.mjs",
-      "sha256": "47bf2d96ec1a7072be3113123c2b81483aa63421b0ea657e7407953921f9b02c"
+      "sha256": "b300f129045b6e2743cfc67c38effcb5580a261d46b2266829294589df01841e"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/schriften/OFL-IBMPlexMono.txt",
@@ -219,25 +223,25 @@
   "ausgaben": [
     {
       "datei": "jonas-deck.html",
-      "bytes": 3119816,
-      "sha256": "f0b54d9d9d43ef29fa1a37ada1e7764032dfc8c8d24caa1ac454553c2493c98a"
+      "bytes": 3120230,
+      "sha256": "c652a9155e6db34753b21dd363bc1fd95b1ac3dea2f51f3a41ea4a19c11b6418"
     },
     {
       "datei": "gemeinsames-deck.pdf",
-      "bytes": 1760688,
-      "sha256": "988bbcc50c1f4d1ef6d8a11a5d9b5d9ff76de97323bd7a2b0850393327de26c7",
+      "bytes": 1760853,
+      "sha256": "7383891d076787507a3f3eec0303e844a7b5fa3abaca8fb4a06f53c1f29bf1b3",
       "seiten": 40
     },
     {
       "datei": "jonas-folien.pdf",
-      "bytes": 760791,
-      "sha256": "1a26d120f8892554b5f701e5b227a1754d4f2d6cb4ba0c777633c924286dbeab",
+      "bytes": 760942,
+      "sha256": "03619c6af08b95886264601d754c94f51e0275084392e1e098c5ffecf525a1dc",
       "seiten": 28
     },
     {
       "datei": "sprechnotizen.md",
-      "bytes": 23269,
-      "sha256": "1c6af254f3298044d53fb45427671b7ae2b6f23439602a3cd0d24341880159c1"
+      "bytes": 23130,
+      "sha256": "150a6531b5c5f742056e1d2dd0b0674fe3ea0a57ac8c23781565ab241d31f93e"
     }
   ]
 }

@@ -1046,9 +1046,7 @@
                 <ul style="margin: 0; padding-left: 26px; font-size: 22px; line-height: 1.35">
                   <li style="margin: 0 0 4px">ein Rechner, Loopback, kein zweiter Host</li>
                   <li style="margin: 0 0 4px">4 CPUs, 5 GiB statt 8 CPUs, 8 GiB ab Werk v1.4.0</li>
-                  <li style="margin: 0 0 4px">
-                    Timeout 300 s statt 90 s; Image lokal, Messproxy, Nebenlast
-                  </li>
+                  <li style="margin: 0 0 4px">Timeout 300 s statt 90 s; Image lokal, Messproxy</li>
                 </ul>
               </div>
               <div>
@@ -1224,7 +1222,7 @@
                     223,7<span class="einheit" style="font-size: 38px"> s</span>
                   </div>
                   <div style="font-size: 26px; line-height: 1.25; margin-top: 8px">
-                    Inferenz, Median, mit Nebenlast
+                    Inferenz, Median, Nachlauf v1.4.0
                   </div>
                   <div
                     style="
@@ -2364,6 +2362,19 @@
                   overflow-wrap: anywhere;
                 "
               >
+                Mell, P. & Grance, T. (2011). <i>The NIST definition of cloud computing</i> (NIST
+                Special Publication 800-145). National Institute of Standards and Technology.
+                https://doi.org/10.6028/NIST.SP.800-145
+              </li>
+              <li
+                style="
+                  break-inside: avoid;
+                  margin: 0 0 9px;
+                  padding-left: 28px;
+                  text-indent: -28px;
+                  overflow-wrap: anywhere;
+                "
+              >
                 Papadopoulos, A. V., Versluis, L., Bauer, A., Herbst, N., von Kistowski, J.,
                 Ali-Eldin, A., Abad, C. L., Amaral, J. N., Tůma, P. & Iosup, A. (2021).
                 Methodological principles for reproducible performance evaluation in cloud
@@ -2718,9 +2729,7 @@
                     Rechner über Loopback
                   </li>
                   <li style="margin: 0 0 12px">Eine synthetische Fixture, Locale de</li>
-                  <li style="margin: 0 0 12px">
-                    Nachlauf auf upstream nur am Laptop, mit Nebenlast
-                  </li>
+                  <li style="margin: 0 0 12px">Nachlauf auf upstream nur am Laptop</li>
                   <li style="margin: 0 0 12px">
                     Ein formal korrekter Pfad belegt keine guten Prompts
                   </li>
@@ -3347,7 +3356,7 @@
             </p>
             <div style="display: grid; grid-template-columns: 680px 1fr; column-gap: 60px">
               <div>
-                <!-- prettier-ignore --><svg viewBox="0 0 680 250" width="680" height="250" role="img" aria-label="Inferenzzeiten auf beiden Laborrechnern gegen den Timeout ab Werk v1.4.0"><text x="0" y="30" style="font:400 24px var(--f-text);fill:var(--tinte)">Kalibrierung <tspan style="font:400 22px var(--f-text);fill:var(--gedaempft)">PC</tspan></text><rect x="0" y="44" width="314.1" height="44" rx="4" style="fill:var(--petrol)"/><text x="326.1" y="75" style="font:600 26px var(--f-mono);fill:var(--tinte)">98,7 s</text><line x1="286.4" y1="38" x2="286.4" y2="94" style="stroke:var(--rot);stroke-width:4"/><text x="0" y="140" style="font:400 24px var(--f-text);fill:var(--tinte)">Inferenz, Median <tspan style="font:400 22px var(--f-text);fill:var(--gedaempft)">Laptop, ohne Nebenlast</tspan></text><rect x="0" y="154" width="520" height="44" rx="4" style="fill:var(--petrol)"/><text x="532" y="185" style="font:600 26px var(--f-mono);fill:var(--tinte)">163,4 s</text><line x1="286.4" y1="148" x2="286.4" y2="204" style="stroke:var(--rot);stroke-width:4"/><line x1="286.4" y1="204" x2="286.4" y2="222" style="stroke:var(--rot);stroke-width:4"/><text x="286.4" y="246" text-anchor="middle" style="font:700 24px var(--f-text);fill:var(--rot)">Timeout ab Werk v1.4.0: 90 s</text></svg>
+                <!-- prettier-ignore --><svg viewBox="0 0 680 250" width="680" height="250" role="img" aria-label="Inferenzzeiten auf beiden Laborrechnern gegen den Timeout ab Werk v1.4.0"><text x="0" y="30" style="font:400 24px var(--f-text);fill:var(--tinte)">Kalibrierung <tspan style="font:400 22px var(--f-text);fill:var(--gedaempft)">PC</tspan></text><rect x="0" y="44" width="314.1" height="44" rx="4" style="fill:var(--petrol)"/><text x="326.1" y="75" style="font:600 26px var(--f-mono);fill:var(--tinte)">98,7 s</text><line x1="286.4" y1="38" x2="286.4" y2="94" style="stroke:var(--rot);stroke-width:4"/><text x="0" y="140" style="font:400 24px var(--f-text);fill:var(--tinte)">Inferenz, Median <tspan style="font:400 22px var(--f-text);fill:var(--gedaempft)">Laptop, 9f230abc</tspan></text><rect x="0" y="154" width="520" height="44" rx="4" style="fill:var(--petrol)"/><text x="532" y="185" style="font:600 26px var(--f-mono);fill:var(--tinte)">163,4 s</text><line x1="286.4" y1="148" x2="286.4" y2="204" style="stroke:var(--rot);stroke-width:4"/><line x1="286.4" y1="204" x2="286.4" y2="222" style="stroke:var(--rot);stroke-width:4"/><text x="286.4" y="246" text-anchor="middle" style="font:700 24px var(--f-text);fill:var(--rot)">Timeout ab Werk v1.4.0: 90 s</text></svg>
                 <p style="margin: 14px 0 0; font-size: 24px; line-height: 1.35">
                   90 s sind zu kurz auf beiden Laborrechnern: Der Modellpfad wäre dort nicht
                   nutzbar.
@@ -3540,8 +3549,8 @@
           </div>
         </div>
         <div class="folie-fuss">
-          Reserve R14 · Quelle: Dean &amp; Barroso, 2013, S. 74; arsnova.eu-Projektteam, 2026a,
-          Abschn. 2.1; Weirauch, 2026, ADR 1C-018
+          Reserve R14 · Quelle: Mell &amp; Grance, 2011, S. 2; Dean &amp; Barroso, 2013, S. 74;
+          Weirauch, 2026, ADR 1C-018
         </div>
       </section>
       <div class="weg-mini weg-wandernd" role="img" aria-label="Station des Auftrags" hidden>

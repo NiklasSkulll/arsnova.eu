@@ -747,17 +747,18 @@ test('Fußzeile: eine Quellenzeile nur mit Kurzbelegen, ohne Commit und Rechner'
   assert.ok(!/\b(a19ca70f|def56700)\b/.test(sichtbar(nach('J1').inhalt)));
 });
 
-test('Defensive Formulierungen: Laptop-CPU, Nebenlast, Konsistenzprüfung, Transport, Messunsicherheit', () => {
+test('Defensive Formulierungen: Laptop-CPU, Nachlaufwert benannt, Konsistenzprüfung, Transport, Messunsicherheit', () => {
   assert.match(sichtbar(nach('J1').inhalt), /Laptop/);
   assert.match(sichtbar(nach('J1').inhalt), /CPU/);
-  // 223,7 s (Nachlauf) nur mit „Nebenlast“
+  // 223,7 s nur als Nachlaufwert benannt; die geringe Nebenlast bleibt im Protokoll (Entscheidung des Autors 2026-11-16)
   const nachlauf = fmt(daten.c1.inferenzS.wert, 1);
   for (const f of F) {
     const t = `${sichtbar(f.inhalt)} ${f.notiz ?? ''}`;
     for (const satz of t.split(/(?<=[.;])\s/)) {
       if (satz.includes(nachlauf))
-        assert.match(satz, /Nebenlast/, `${f.id}: ${nachlauf} ohne Nebenlast`);
+        assert.match(satz, /Nachlauf|v1\.4\.0/, `${f.id}: ${nachlauf} ohne Nachlauf-Bezug`);
     }
+    assert.doesNotMatch(t, /Nebenlast/, `${f.id}: Nebenlast gehört nicht auf Folie oder Notiz`);
   }
   assert.match(alles(nach('R13')), /zu kurz auf beiden Laborrechnern/);
   assert.match(sichtbar(nach('R13').inhalt), new RegExp(fmt(daten.c1.inferenzRuhigS.wert, 1)));
