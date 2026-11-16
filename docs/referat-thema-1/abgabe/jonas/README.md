@@ -59,6 +59,17 @@ er läuft springt auf das letzte Bild (`deck.js`, `clipSchritt`).
 - `pdftoppm` (Poppler) rastert Niklas' PDF-Seiten für das Deck. Fehlt es, erscheint dort ein Platzhalter.
 - Für das Handout: `rsvg-convert` und `pdffonts`.
 
+## Sprechnotizen, Sprungplan, roter Faden
+
+- Jede Folie hat zwei Fassungen: `stichpunkte` (3–6, zum freien Vortrag, Zahlen mit Einheit) und `notiz`
+  (Fließtext zum Üben). `[Weiter]` markiert jeden Tastendruck einer Aufbaustufe (J9, J15; bei Niklas N6, N7).
+- Der Sprungplan steht oben in den Sprechnotizen jeder Person, gezählt ab ihrer ersten Folie: Jonas muss J13
+  und J15 bis 9:00 min erreichen, Niklas N10, 1B 3–4 und G9. Überschreitet die Langfassung etwa 10:30 min,
+  steht dort ein Budgethinweis.
+- G0 zeigt den Fahrplan der vier Teile (`TEILE` in `folien.mjs`); dieselben Teile stehen klein oben rechts
+  auf jeder Hauptfolie (Teilleiste, `deck.mjs`), der aktuelle Teil unterstrichen. G9 nimmt die Leitfrage von
+  G0 wörtlich wieder auf.
+
 ## Datenherkunft
 
 Jede Zahl stammt aus den eingecheckten Ergebnisdateien in `evidenz/1B/messung/` und
@@ -68,13 +79,15 @@ die Herkunft von Niklas' Teilen.
 
 ## Ausgaben (`ausgabe/`)
 
-| Datei                  | Inhalt                                                                          |
-| ---------------------- | ------------------------------------------------------------------------------- |
-| `jonas-deck.html`      | Gemeinsames Deck zum Vortragen, selbstständig (Schriften, Bilder, Clip)         |
-| `gemeinsames-deck.pdf` | Druck des gemeinsamen Decks, eine Seite je Folie                                |
-| `jonas-folien.pdf`     | Nur Jonas' Folien (J1–J10, J12, J13, J15, J16) und Reserve, einzeln zuordenbar  |
-| `sprechnotizen.md`     | Notizen je Folie mit Sekunden, kumulierter Zeit und Kürzung auf die Kurzfassung |
-| `manifest.json`        | SHA-256 aller Ein- und Ausgaben, Seitenzahlen                                   |
+| Datei                                               | Inhalt                                                                          |
+| --------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `jonas-deck.html`                                   | Gemeinsames Deck zum Vortragen, selbstständig (Schriften, Bilder, Clip)         |
+| `gemeinsames-deck.pdf`                              | Druck des gemeinsamen Decks, eine Seite je Folie                                |
+| `jonas-folien.pdf`                                  | Nur Jonas' Folien (J1–J10, J12, J13, J15, J16) und Reserve, einzeln zuordenbar  |
+| `sprechnotizen.md`                                  | Notizen je Folie mit Sekunden, kumulierter Zeit und Kürzung auf die Kurzfassung |
+| `sprechnotizen-niklas.md`                           | dasselbe für Niklas (1A, 1B 3–4, G9), mit eigenem Sprungplan                    |
+| `sprechkarten-jonas.pdf`, `sprechkarten-niklas.pdf` | Sprechkarten zum Ausdrucken (A4): je Folie nur die Stichpunkte mit Startzeit    |
+| `manifest.json`                                     | SHA-256 aller Ein- und Ausgaben, Seitenzahlen                                   |
 
 ## Abgabe mit Matrikelnummern (nur lokal)
 

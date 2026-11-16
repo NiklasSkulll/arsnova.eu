@@ -16,6 +16,8 @@ PDF-Seiten bleibt `--niklas1 <pdf>`.
   sichtbare Platzhalter, die `abgabe-lokal.mjs` vor der Abgabe meldet.
 - **Sprechnotizen:** je Folie `notiz` (Fließtext) und `stichpunkte` (zum freien Vortrag); `[Weiter]` markiert
   jeden Tastendruck einer Aufbaustufe (N6: drei, N7: zwei).
+- **Handout (PaperLab):** [`handout-latex-1a.mjs`](handout-latex-1a.mjs) schreibt `zahlen.tex` und
+  `abb-vergleiche.pdf` aus denselben Daten wie die Folien (`node … <PaperLab-Projekt>/generated`).
 - **Befunde zum früheren Entwurf:** [`BEFUNDE-1A.md`](BEFUNDE-1A.md).
 
 ## Bauen und prüfen
