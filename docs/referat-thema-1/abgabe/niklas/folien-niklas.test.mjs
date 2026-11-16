@@ -13,7 +13,7 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { fmt } from '../jonas/zahlen.mjs';
-import { layoutBefunde } from '../jonas/layout-pruefung.mjs';
+import { kopfBefunde, layoutBefunde } from '../jonas/layout-pruefung.mjs';
 import { baueEntwurf, notizenNiklas } from './bau-entwurf.mjs';
 import { ladeDaten1A } from './daten-1a.mjs';
 import { ladeDaten1B34 } from './daten-1b34.mjs';
@@ -377,6 +377,34 @@ test('1B 3–4 füllt sich aus Ergebnis-JSONs (Median selbst gerechnet, p95 gepo
 test('Layout: Niklas-Folien und Rahmen ohne Überlappung, Vermerke einzeilig, kein Inhalt oben klebend', async () => {
   const befunde = (await layoutBefunde(browser, deck)).filter((b) => /^(N|M|RN|G)/.test(b));
   assert.deepEqual(befunde, []);
+});
+
+test('Kopfgrammatik im gemeinsamen Deck: Ort, Titel, Fragezeile im selben Abstand (±2 px) auf allen Hauptfolien beider Teile', async () => {
+  const { abstand, autor, befunde } = await kopfBefunde(browser, deck);
+  assert.deepEqual(befunde, []);
+  const ids = Object.keys(abstand);
+  for (const f of [...haupt1A, ...n1b]) assert.ok(ids.includes(f.id), f.id);
+  assert.ok(ids.includes('J1') && ids.includes('J15'));
+  // Rahmen (GT, G0, GK, G9, GD), Anhang und Reserve folgen der Kopfgrammatik nicht (README Designregeln)
+  for (const id of ['GT', 'G0', 'GK', 'G9', 'GD', 'NL', 'J16', 'RN2'])
+    assert.ok(!ids.includes(id), id);
+  const werte = Object.values(abstand).sort((a, b) => a - b);
+  const median = werte[Math.floor(werte.length / 2)];
+  assert.deepEqual(
+    Object.entries(abstand).filter(([, v]) => Math.abs(v - median) > 2),
+    [],
+  );
+  // Autorzeile nur auf der ersten Folie jedes Teils
+  assert.deepEqual(autor, ['N1', 'J1']);
+  // Status („nachträglich ausgewertet“) nach der Frage statt an der Stelle des Etiketts
+  for (const id of ['N6b', 'N7']) {
+    const f = haupt1A.find((x) => x.id === id);
+    assert.match(
+      f.inhalt,
+      /<p class="folie-frage"><span class="etikett etikett-1a">1A<\/span>[^<]+<span class="status">nachträglich ausgewertet<\/span><\/p>/,
+      id,
+    );
+  }
 });
 
 test('Reihenfolge: GT, G0, GK, Niklas 1A, Jonas, Niklas 1B 3–4, G9, GD, Anhang, Reserve', async () => {

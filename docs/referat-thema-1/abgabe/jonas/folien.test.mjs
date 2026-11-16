@@ -678,7 +678,8 @@ test('W6/W7/W8: Speicher bei wechselnden Prompts, warm = identischer Snapshot, R
 test('W12: R12 nennt je Entscheidung Kosten, Risiko oder Betriebsfolge; J15 verweist auf R12', () => {
   const s = sichtbar(nach('R12').inhalt);
   for (const re of [/Kosten/, /Risiko/, /Betrieb/]) assert.match(s, re);
-  const j15 = sichtbar(nach('J15').inhalt);
+  // ohne die Fragezeile im Kopf (Kopfgrammatik)
+  const j15 = sichtbar(nach('J15').inhalt.replace(/<p class="folie-frage">[\s\S]*?<\/p>/, ''));
   assert.match(j15, /Details: R12/);
   assert.match(j15, /nicht umgesetzt/);
   assert.match(j15, /1C/);
@@ -991,7 +992,8 @@ test('Titel als Aussage: J2, J3, J10, J15; J10 aus den Daten', () => {
   assert.match(nach('J3').titel, new RegExp(`${fmt(daten.auftrag.hostReturnMs)} ms`));
   assert.match(nach('J15').titel, /Entkopplung bleibt/);
   assert.match(nach('J2').titel, /Produktionscode unverändert/);
-  const j15 = sichtbar(nach('J15').inhalt);
+  // ohne die Fragezeile im Kopf (Kopfgrammatik)
+  const j15 = sichtbar(nach('J15').inhalt.replace(/<p class="folie-frage">[\s\S]*?<\/p>/, ''));
   for (const w of ['Bleibt', 'Empfohlen, nicht umgesetzt', 'Offen', 'Zur Diskussion'])
     assert.match(j15, new RegExp(w));
   assert.equal((j15.match(/\?/g) ?? []).length, 2, 'eine Diskussionsfrage plus Übergabe');

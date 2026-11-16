@@ -91,7 +91,8 @@ function teilleiste(f) {
 /**
  * Ortsmarke oben links ohne Bewegung (druckfest) auf jeder Folie von 1A und 1B 3–4 und auf J1: eine Wegkarte
  * in derselben Bildsprache wie Jonas' Stationsmarker (wegkarte.mjs, f.marke ist ein Schlüssel aus MARKEN).
- * Folien mit Station tragen stattdessen Jonas' Marker.
+ * Folien mit Station tragen stattdessen Jonas' Marker; zeigt die Folie den Weg selbst groß (J3, eigener Weg),
+ * steht die Ortsmarke dort, damit Kopfzeile 1 auf keiner Hauptfolie fehlt.
  */
 function ortsmarke(f) {
   return f.marke ? wegMarke(f.marke) : '';
@@ -130,6 +131,23 @@ function jonasFolie(f, nr, gesamt, clipDaten) {
     // Prettier (bau.mjs) bricht sonst zwischen <tspan>-Elementen um; der Umbruch wird in SVG-Text zu
     // einem Leerzeichen („t 0“ statt t mit tiefgestellter 0).
     .replace(/<svg\b/g, '<!-- prettier-ignore --><svg');
+  // Kopfgrammatik (README „Designregeln“): Fragezeile und Autorzeile stehen im Kopf unter dem Titel, nicht in
+  // der zentrierten Fläche, damit sie auf jeder Folie im selben Abstand zum Titel stehen.
+  let kopf = '';
+  inhalt = inhalt.replace(
+    /^(<div class="flaeche-inhalt">)(<p class="folie-frage">[\s\S]*?<\/p>)(<p class="folie-autor">[\s\S]*?<\/p>)?/,
+    (_, div, frage, autor = '') => {
+      kopf = frage + autor;
+      return div;
+    },
+  );
+  if (/class="folie-(frage|autor)"/.test(inhalt)) {
+    throw new Error(`${f.id}: Frage- oder Autorzeile muss am Anfang der Fläche stehen`);
+  }
+  const hauptfolie = (f.teil === 'jonas' || f.teil === 'niklas') && !f.anhang;
+  if (hauptfolie && !kopf) throw new Error(`${f.id}: Hauptfolie ohne Fragezeile`);
+  if (f.exkurs)
+    throw new Error(`${f.id}: exkurs gibt es nicht mehr, Status in frage(…, { status })`);
   const eigenerWeg = inhalt.includes('class="auftrag"');
   const fussNr = f.teil === 'reserve' ? `Reserve ${f.id}` : `${nr} / ${gesamt}`;
   const attrs = [
@@ -139,6 +157,7 @@ function jonasFolie(f, nr, gesamt, clipDaten) {
     f.station ? `data-station="${esc(f.station)}"` : '',
     eigenerWeg ? 'data-eigener-weg' : '',
     f.id === 'J10' ? `data-zoom-stufen="${esc(JSON.stringify(ZOOM_STUFEN))}"` : '',
+    hauptfolie ? 'data-hauptfolie' : '',
     f.aufbau ? `data-aufbau="${Number(f.aufbau)}"` : '',
     f.autor ? `data-autor="${esc(f.autor)}"` : '',
     // Titelfolie mit beiden Namen (und lokal den Matrikelnummern) steht auch in jedem Einzel-PDF.
@@ -150,10 +169,10 @@ function jonasFolie(f, nr, gesamt, clipDaten) {
   const html =
     `<section ${attrs}>` +
     (f.station && !eigenerWeg ? wegMini({ aktiv: f.station }) : '') +
-    (f.station ? '' : ortsmarke(f)) +
+    (f.station && !eigenerWeg ? '' : ortsmarke(f)) +
     teilleiste(f) +
-    (f.exkurs ? `<p class="weg-exkurs">${esc(f.exkurs)}</p>` : '') +
     `<h1 class="folie-titel">${f.titel}</h1>` +
+    kopf +
     `<div class="folie-flaeche">${inhalt}</div>` +
     `<div class="folie-fuss"><span class="fuss-nr">${fussNr}</span> · ${esc(f.fuss ?? f.quelle ?? '')}</div>` +
     `</section>`;

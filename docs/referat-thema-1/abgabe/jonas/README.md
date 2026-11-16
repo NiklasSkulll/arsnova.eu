@@ -73,10 +73,10 @@ er läuft springt auf das letzte Bild (`deck.js`, `clipSchritt`).
   je Person, Fragen kommen hinzu; vorher 10:30 min).
 - Ortsmarke ohne Bewegung oben links (`deck.mjs`, `ortsmarke`; Folienfeld `marke`) auf jeder Folie von 1A und
   1B 3–4 und auf J1: eine Wegkarte in derselben Bildsprache wie Jonas' Marker (`wegkarte.mjs`, gleiche Maße,
-  Linien und Stationen, Beschriftung mit Etikett). 1B 3–4 zeigt Jonas' Auftragsweg, die Strecke über den zweiten
-  Host in Bernstein, dazu je Stufe ein Störungszeichen (Stopp, Slot belegt, DROP, zu spät); 1A einen eigenen Weg
+  Linien und Stationen, Beschriftung nur Ort und Etikett). 1B 3–4 zeigt Jonas' Auftragsweg, die Strecke über den
+  zweiten Host in Bernstein, dazu je Stufe ein Störungszeichen auf der Karte (Stopp, Slot belegt, DROP, zu spät); 1A einen eigenen Weg
   (oben Teilnehmende → App → Datenbank → Antwort, unten der Zweig Analyse → spaCy → Ersatz → Wortwolke) mit dem Ort
-  der Folie in Blau; J1 Jonas' ganzen Weg ohne Hervorhebung. Welche Folie welche Station zeigt, steht begründet
+  der Folie in Blau; J1 (ebenso J2, J3, J4, J13b, J15) Jonas' ganzen Weg ohne Hervorhebung. Welche Folie welche Station zeigt, steht begründet
   an der Folie (`../niklas/folien-1a.mjs`).
 - G0 zeigt Leitfrage und Fahrplan der vier Teile in Vortragsreihenfolge (`TEILE` in `folien.mjs`: Niklas 1A,
   Jonas 1C und 1B 1–2, Niklas 1B 3–4, Fazit); dieselben Teile stehen klein oben rechts auf jeder Hauptfolie
@@ -99,6 +99,18 @@ Prüfbar in `layout-pruefung.mjs` (Druckmodus, alle Folien im Endbild) und `deck
 - **Raster und Abstände:** Ränder 90 px, Titel einzeilig, Abstände eng in der Gruppe (`--abstand-eng`, 12 px)
   und weit zwischen Gruppen (`--abstand-gruppe`, 36 px); Merksätze (`merksatz`) und Übergaben (`uebergabe`)
   als eigene Bausteine, kein `margin:auto` im Fluss.
+- **Kopfgrammatik (K, _Ergänzt 2026-11-16_):** Jede Hauptfolie beider Teile (1A, 1C und 1B 1–2, 1B 3–4) hat
+  denselben Kopf. Zeile 1: Wegkarte oben links mit dem Ort als Beschriftung (nur der Name, etwa „spaCy“,
+  „App-Host“, „Live-Pfad“, „Zweiter Host“, „Nachprüfung“) und dem Etikett; Wirkung und Störung zeigt nur ein
+  Zeichen auf der Karte (Ausschlag, Störungszeichen über der Senke), nie ein Zusatz mit „·“. Zeile 2: Titel.
+  Zeile 3: Fragezeile (`frage()` in `folien.mjs`), zuerst das Etikett des Auftrags (bei beiden Aufträgen 1C
+  und 1B), dann die Frage, danach höchstens ein gedämpfter Status (`frage(…, { status })`, etwa
+  „nachträglich ausgewertet“). `deck.mjs` setzt die Fragezeile in den Kopf, 18 px unter den Titel; zentriert
+  wird nur der Inhalt darunter. Die Autorzeile (`autorZeile()`) steht nur auf N1 und J1, direkt unter der
+  Fragezeile. Rahmenfolien (GT, G0, GK, G9, GD), Anhang (J16, NL) und Reserve haben keine Wegkarte und keine
+  Pflicht zur Fragezeile; hat eine Reservefolie eine, steht sie ebenso im Kopf. Prüfung: `kopfBefunde` in
+  `layout-pruefung.mjs` (Abstand Titel → Fragezeile auf allen Hauptfolien ±2 px, Etikett zuerst, Status nur
+  am Ende der Fragezeile, Ort ohne Zusatz), Tests in `deck.test.mjs` und `../niklas/folien-niklas.test.mjs`.
 - **Farbe:** Blau = Titel und 1A, Petrol = 1C, Bernstein = 1B, Rot nur für Ablehnung; Farbe nie allein (immer
   mit Etikett). Kein Text läuft aus seinem Kasten.
 

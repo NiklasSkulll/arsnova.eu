@@ -13,7 +13,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { baueDeck } from './deck.mjs';
 import { folien, ladeFolienDaten } from './folien.mjs';
 import { kameraViewBox, lupeRahmen, zoomDeckkraft } from './grafik.mjs';
-import { layoutBefunde } from './layout-pruefung.mjs';
+import { kopfBefunde, layoutBefunde } from './layout-pruefung.mjs';
+import { MARKEN, markeText } from './wegkarte.mjs';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HIER, '../..');
@@ -587,6 +588,100 @@ test('Druck: jede Folie eine Seite 1600 × 900, J10 im Endzustand, Marker an der
 
 test('Layout: je Folie keine Überlappung von Titel, Frage, Fläche und Fußzeile, nichts außerhalb der Bühne', async () => {
   assert.deepEqual(await layoutBefunde(browser, deckOhneNiklas), []);
+});
+
+// ---------------------------------------------------------------- Kopfgrammatik (2026-11-16)
+
+/** Abstände Titel → Fragezeile liegen alle innerhalb ±2 px um ihren Median. */
+function gleicherAbstand(abstand) {
+  const werte = Object.values(abstand).sort((a, b) => a - b);
+  const median = werte[Math.floor(werte.length / 2)];
+  return Object.entries(abstand).filter(([, v]) => Math.abs(v - median) > 2);
+}
+
+test('Kopfgrammatik: jede Hauptfolie Jonas hat Ort, Titel und Fragezeile im selben Abstand, Etikett zuerst', async () => {
+  const { abstand, autor, befunde } = await kopfBefunde(browser, deckOhneNiklas);
+  assert.deepEqual(befunde, []);
+  assert.deepEqual(
+    Object.keys(abstand),
+    JONAS.filter((f) => !f.anhang).map((f) => f.id),
+  );
+  assert.deepEqual(gleicherAbstand(abstand), []);
+  // Autorzeile nur auf der ersten Folie des Teils
+  assert.deepEqual(autor, ['J1']);
+});
+
+test('Kopfgrammatik: Ortsnamen ohne „·“-Zusatz, Status nur in der Fragezeile (statisch)', () => {
+  for (const name of Object.keys(MARKEN)) assert.doesNotMatch(markeText(name), /·/, name);
+  const html = baueDeck(F, { niklas: { teil1: [], teil2: [] }, eingebettet: true });
+  for (const m of html.matchAll(/<p class="weg-beschriftung"[^>]*>([\s\S]*?)<\/p>/g))
+    assert.doesNotMatch(m[1].replace(/<[^>]+>/g, ''), /·/);
+  // Fragezeile beginnt mit dem Etikett, Status nur am Ende der Fragezeile
+  for (const m of html.matchAll(/<p class="folie-frage">([\s\S]*?)<\/p>/g))
+    assert.match(m[1], /^<span class="etikett etikett-1[abc]">/);
+  const ohneFragen = html.replace(/<p class="folie-frage">[\s\S]*?<\/p>/g, '');
+  assert.doesNotMatch(ohneFragen, /class="status"/);
+  assert.doesNotMatch(html, /weg-exkurs/);
+});
+
+test('Kopfgrammatik-Gegenprobe: Status außerhalb, Etikett nicht zuerst, Zusatz am Ort und verrutschte Frage werden gemeldet', async () => {
+  const kaputt = F.map((f) => {
+    if (f.id === 'J5')
+      return {
+        ...f,
+        inhalt: f.inhalt.replace('Lehrperson?', 'Lehrperson?<span class="status">x</span> mehr'),
+      };
+    if (f.id === 'J8')
+      return { ...f, inhalt: f.inhalt.replace(/<\/div>$/, '<span class="status">x</span></div>') };
+    if (f.id === 'J6')
+      return {
+        ...f,
+        inhalt: f.inhalt.replace(
+          /<p class="folie-frage">(<span class="etikett[^>]*>[^<]*<\/span>)/,
+          '<p class="folie-frage">Text $1',
+        ),
+      };
+    return f;
+  });
+  const pfad = join(ordner, 'kopf-kaputt.html');
+  writeFileSync(
+    pfad,
+    baueDeck(kaputt, { niklas: { teil1: [], teil2: [] }, eingebettet: true })
+      .replace(
+        '<span class="weg-name">Weg eines Auftrags</span>',
+        '<span class="weg-name">Weg eines Auftrags · Zusatz</span>',
+      )
+      // verrutschte Fragezeile auf J7
+      .replace(/(data-id="J7"[\s\S]*?<p class="folie-frage")/, '$1 style="margin-top:60px"'),
+  );
+  const { abstand, befunde } = await kopfBefunde(browser, pfad);
+  const text = befunde.join('\n');
+  assert.match(text, /J5: Status nicht am Ende der Fragezeile/);
+  assert.match(text, /J6: Fragezeile beginnt nicht mit dem Etikett/);
+  assert.match(text, /J1: Ort mit Zusatz/);
+  assert.match(text, /J8: Status außerhalb der Fragezeile/);
+  assert.deepEqual(
+    gleicherAbstand(abstand).map(([id]) => id),
+    ['J7'],
+  );
+  assert.throws(
+    () =>
+      baueDeck(
+        F.map((f) =>
+          f.id === 'J5'
+            ? {
+                ...f,
+                inhalt: f.inhalt.replace(
+                  '<p class="folie-frage">',
+                  '<p>x</p><p class="folie-frage">',
+                ),
+              }
+            : f,
+        ),
+        { niklas: { teil1: [], teil2: [] }, eingebettet: true },
+      ),
+    /J5: Frage- oder Autorzeile muss am Anfang/,
+  );
 });
 
 test('ZL: Quellenzeilen in der Fußzeile werden nie abgeschnitten, eine Zeile (Audit 2026-11-16)', async () => {

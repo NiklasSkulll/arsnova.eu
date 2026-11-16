@@ -643,8 +643,26 @@ const ZITATE = {
 
 const flaeche = (inhalt) => `<div class="flaeche-inhalt">${inhalt}</div>`;
 
-const frage = (text, auftrag) =>
-  `<p class="folie-frage">${auftrag ? `${etikett(auftrag)}` : ''}${text}</p>`;
+/**
+ * Fragezeile (Kopfzeile 3, Kopfgrammatik in README „Designregeln“): zuerst das Etikett des Auftrags (bei
+ * Folien zu beiden Aufträgen 1C und 1B), dann die Frage, danach höchstens ein gedämpfter Status
+ * („nachträglich ausgewertet“). deck.mjs hebt die Zeile aus der Fläche in den Kopf unter den Titel, damit
+ * sie auf jeder Folie im selben Abstand steht; nur der Inhalt darunter wird zentriert.
+ * @param {string} text
+ * @param {string | string[]} auftrag '1A', '1B', '1C', 'beide' oder eine Liste
+ * @param {{ status?: string }} [o]
+ */
+const frage = (text, auftrag, { status } = {}) => {
+  const etiketten = auftrag === 'beide' ? ['1C', '1B'] : [auftrag].flat().filter(Boolean);
+  if (!etiketten.length) throw new Error(`Fragezeile ohne Etikett: ${text}`);
+  return (
+    `<p class="folie-frage">${etiketten.map(etikett).join('')}${text}` +
+    `${status ? `<span class="status">${esc(status)}</span>` : ''}</p>`
+  );
+};
+
+/** Autorzeile (nur auf der ersten Folie jedes Teils, N1 und J1): steht im Kopf unter der Fragezeile. */
+const autorZeile = (name) => `<p class="folie-autor">${esc(name)}</p>`;
 
 const liste = (punkte, groesse = 28) =>
   `<ul style="margin:0;padding-left:30px;font-size:${groesse}px;line-height:1.38">` +
@@ -924,8 +942,9 @@ export function folien(daten) {
     auftrag: 'beide',
     titel: `Ein Klick. ${z.auS} Sekunden. Keine Modellantwort.`,
     inhalt: flaeche(
-      `<p style="margin:0 0 10px;font-size:30px;line-height:1.3;color:var(--text-2)">Ein echter Auftrag der Q&amp;A-Zusammenfassung mit synthetischen Daten, verfolgt vom Klick der Lehrperson bis zum Ergebnis. Labor auf einem Laptop, Inferenz auf der CPU.</p>` +
-        `<p style="margin:0 0 44px;font-size:28px;font-weight:600">Jonas Weirauch <span class="zusatz">· gemessen auf Code nach v1.4.0 (1B: v1.4.0-184, 1C: v1.4.0-14)</span></p>` +
+      frage('Was erlebt die Lehrperson bei einem einzelnen Auftrag?', 'beide') +
+        autorZeile('Jonas Weirauch') +
+        `<p class="sekundaer" style="margin:0 0 var(--abstand-gruppe);font-size:var(--s-text)">Ein echter Auftrag der Q&amp;A-Zusammenfassung mit synthetischen Daten, verfolgt vom Klick der Lehrperson bis zum Ergebnis. Labor auf einem Laptop, Inferenz auf der CPU, Code nach v1.4.0 (1B: v1.4.0-184, 1C: v1.4.0-14).</p>` +
         `<div style="display:grid;grid-template-columns:1fr 1fr;column-gap:60px;font-size:32px;line-height:1.35">` +
         `<div style="border-left:6px solid var(--petrol);padding-left:24px">${etikett('1C')}<p style="margin:14px 0 0">Hält der Kontextpfad seine Zusagen zu Vertrag, Konsistenz und Entkopplung ein?</p></div>` +
         `<div style="border-left:6px solid var(--bernstein);padding-left:24px">${etikett('1B')} <span style="font-size:var(--s-min);color:var(--gedaempft)">Schritte 1–2</span><p style="margin:14px 0 0">Wo steckt die Zeit, wenn die Inferenz auf einem zweiten Host läuft?</p></div>` +
@@ -996,7 +1015,8 @@ export function folien(daten) {
     auftrag: 'beide',
     titel: `Host nach ${z.auHost} ms frei, Inferenz ${z.auInferRund} s`,
     inhalt: flaeche(
-      grafikBox(wegSvg({ aktiv: 'klick', b1: b, c1: c, auftrag: au })) +
+      frage('Welchen Weg nimmt ein Auftrag über die zwei Hosts?', 'beide') +
+        grafikBox(wegSvg({ aktiv: 'klick', b1: b, c1: c, auftrag: au })) +
         `<p class="beleg">Vereinfacht aus Abb. 1 und 2 (1C-diagrams.md), vollständig in der Reserve (R15, R16)</p>`,
     ),
     notiz: `Hier ist die Karte für den Rest des Vortrags, mit den Werten von Auftrag ${au.nr}. Oben der app-host, unten der llm-host. Der Auftrag startet links mit dem Klick, der Kontext wird gebaut, geht über das Netz zur Inferenz, kommt zurück, wird nachgeprüft und landet am Gate. An Klick und Inferenz stehen die Werte unseres Auftrags ${au.nr}: Der Host-Aufruf kehrt nach ${z.auHost} Millisekunden zurück, die Inferenz dauert ${z.auInferRund} Sekunden. Die Werte an Kontext und Nachprüfung stammen aus 1C, gemessen auf einem Rechner ohne zweiten Host; das steht klein unter jedem Wert. Der Punkt wandert jetzt von Station zu Station mit, oben links auf jeder Folie. Die Karte ist vereinfacht; die vollständigen UML-Diagramme, Struktur und Zeitablauf, liegen für Fragen in der Reserve.`,
@@ -1004,6 +1024,8 @@ export function folien(daten) {
     kurzfassung: true,
     quelle: `${q1B} (Auftrag ${au.nr}: hostReturnMs, inferMs); 1C-Werte: Nachlauf, Laptop (ThinkPad P50) · def56700, und Teil 2, Laptop · 248029dc (Test-Runtime)`,
     station: 'klick',
+    // Kopfzeile 1: Die Folie zeigt den Weg groß (kein wandernder Marker), oben links daher der ganze Weg wie J1.
+    marke: 'auftrag',
   });
 
   // ------------------------------------------------------------ J4
@@ -1019,7 +1041,8 @@ export function folien(daten) {
     auftrag: 'beide',
     titel: 'Erst die Hypothese, dann die Messung',
     inhalt: flaeche(
-      `<div style="display:grid;grid-template-columns:repeat(3,1fr);column-gap:40px;margin-bottom:32px">` +
+      frage('Wie belastbar sind die Messungen?', 'beide') +
+        `<div style="display:grid;grid-template-columns:repeat(3,1fr);column-gap:40px;margin-bottom:32px">` +
         schritt(
           'A',
           'Vorab festgelegt',
@@ -1333,7 +1356,8 @@ export function folien(daten) {
     auftrag: 'beide',
     titel: `${daten.abgeleitet.gateBeobachtet} geprüfte Antworten, keine besteht das Gate`,
     inhalt: flaeche(
-      `<div style="display:grid;grid-template-columns:1fr auto;column-gap:56px">` +
+      frage('Warum kommt keine Modellantwort an?', 'beide') +
+        `<div style="display:grid;grid-template-columns:1fr auto;column-gap:56px">` +
         `<div>` +
         `<p class="vermerk" style="margin:0 0 8px">Echte Antwort des Modells auf Auftrag ${a.auftrag}, gekürzt, im Original</p>` +
         `<blockquote data-artefakt="antwort" lang="en" style="margin:0 0 12px;padding:10px 20px;border-left:6px solid var(--bernstein);background:var(--bernstein-hell);font-size:22px;line-height:1.3">` +
@@ -1426,7 +1450,8 @@ export function folien(daten) {
     auftrag: 'beide',
     titel: 'Entkopplung bleibt, Gate neu abstimmen',
     inhalt: flaeche(
-      `<div style="display:grid;grid-template-columns:repeat(3,1fr);column-gap:44px">` +
+      frage('Was bleibt, und was sollte sich ändern?', 'beide') +
+        `<div style="display:grid;grid-template-columns:repeat(3,1fr);column-gap:44px">` +
         triple('Bleibt', 'var(--petrol)', [
           `${etikett('1C')} Entkopplung über die Queue, Nachprüfung, Validierung, Vorschau = Nutzlast`,
           `${etikett('1B')} Topologie mit zweitem Host: kostet keine relevante Zeit`,
@@ -2015,7 +2040,8 @@ export function folien(daten) {
     'J13b',
     'beide',
     'Cloud-Sicht: Bulkhead ja, Elastizität nein',
-    `<div style="display:grid;grid-template-columns:700px 1fr;column-gap:44px">` +
+    frage('Was heißt das aus Sicht des Cloud Computing?', 'beide') +
+      `<div style="display:grid;grid-template-columns:700px 1fr;column-gap:44px">` +
       `<div><p style="margin:0 0 8px;font-weight:700;font-size:28px">Merkmale nach NIST</p>` +
       `<table style="border-collapse:collapse;font-size:22px;line-height:1.3;width:100%">` +
       nist('Selbstbedienung bei Bedarf', 'nein', 'feste VMs, von Hand nach Runbook aufgebaut') +
@@ -2273,4 +2299,4 @@ export function folien(daten) {
 }
 
 // Bausteine für den Folienentwurf 1A (abgabe/niklas/folien-1a.mjs).
-export { flaeche, frage, liste, zahl, zweiSpalten, grafikBox, mono, entwurf, etikett };
+export { flaeche, frage, autorZeile, liste, zahl, zweiSpalten, grafikBox, mono, entwurf, etikett };

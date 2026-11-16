@@ -154,6 +154,8 @@ function wegAuftrag() {
     linien: [{ d: pfadD(segmente), farbe: 'var(--blau)' }],
     d: pfadD(segmente),
     abschnitte: { zweiterHost: pfadD(zweiterHost) },
+    // Störungszeichen (1B 3–4) stehen auf der Karte über der Senke zum zweiten Host, nicht in der Beschriftung
+    zeichenOrt: { x: r2((ab[0] + auf[1]) / 2), y: 2 },
     stationen,
   });
 }
@@ -325,7 +327,9 @@ export function wegMini({ aktiv = null, wandernd = false } = {}) {
  * - station: Marker (.weg-punkt) an dieser Station
  * - abschnitte: hervorgehobene Strecken (Saum und Linie in der Farbe des Teils)
  * - wirkung: Ausschlag auf dem Live-Pfad
- * - stufen: Beschriftung und Störungszeichen je Aufbaustufe (M1; Stufen wie STUFE_1B34 in folien-1b34.mjs)
+ * - stufen: Störungszeichen je Aufbaustufe auf der Karte (M1; Stufen wie STUFE_1B34 in folien-1b34.mjs)
+ * - zeichen: Störungszeichen ohne Stufen (M2)
+ * - text: nur der Ort (keine Zusätze mit „·“); Wirkung und Störung zeigen Zeichen auf der Karte
  * 1A hebt in Blau hervor, 1B 3–4 in Bernstein; J1 zeigt den ganzen Weg ohne Hervorhebung.
  */
 export const MARKEN = Object.freeze({
@@ -338,14 +342,14 @@ export const MARKEN = Object.freeze({
     weg: '1a',
     teil: ['1A'],
     abschnitte: [{ name: 'haupt' }, { name: 'zweig', gestrichelt: true }],
-    text: 'Live-Pfad gegen Analyse',
+    text: 'Live-Pfad',
   },
   '1a-wirkung': {
     weg: '1a',
     teil: ['1A'],
     station: 'spacy',
     wirkung: true,
-    text: 'spaCy · Wirkung auf Live-Pfad',
+    text: 'spaCy',
   },
   '1a-ersatz': { weg: '1a', teil: ['1A'], station: 'ersatz', text: 'Ersatz' },
   '1a-wortwolke': { weg: '1a', teil: ['1A'], station: 'wortwolke', text: 'Wortwolke' },
@@ -354,11 +358,12 @@ export const MARKEN = Object.freeze({
     teil: ['1B'],
     abschnitte: [{ name: 'zweiterHost' }],
     farbe: 'var(--bernstein)',
+    text: 'Zweiter Host',
     stufen: [
-      { ab: 0, bis: 0, text: 'Zweiter Host · Normalbetrieb', zeichen: [] },
-      { ab: 1, bis: 1, text: 'Zweiter Host · Stopp, Slot belegt', zeichen: ['stopp', 'belegt'] },
-      { ab: 2, bis: 2, text: 'Zweiter Host · DROP', zeichen: ['drop'] },
-      { ab: 3, text: 'Zweiter Host · zu spät', zeichen: ['spaet'] },
+      { ab: 0, bis: 0, zeichen: [] },
+      { ab: 1, bis: 1, zeichen: ['stopp', 'belegt'] },
+      { ab: 2, bis: 2, zeichen: ['drop'] },
+      { ab: 3, zeichen: ['spaet'] },
     ],
   },
   '1b-alle': {
@@ -367,15 +372,24 @@ export const MARKEN = Object.freeze({
     abschnitte: [{ name: 'zweiterHost' }],
     farbe: 'var(--bernstein)',
     zeichen: ['stopp', 'belegt', 'drop', 'spaet'],
-    text: 'Zweiter Host · alle Störungen',
+    text: 'Zweiter Host',
   },
 });
 
-/** Sichtbarer Text einer Wegmarke (für aria-label und Tests): je Stufe getrennt durch „, dann “. */
+/**
+ * Sichtbarer Text einer Wegmarke: nur der Ort (Kopfgrammatik, README „Designregeln“). Wirkung und Störungen
+ * zeigt die Karte als Zeichen, nie als Zusatz in der Beschriftung.
+ */
 export function markeText(name) {
   const m = MARKEN[name];
   if (!m) throw new Error(`Unbekannte Wegmarke: ${name}`);
-  return m.stufen ? m.stufen.map((s) => s.text).join(', dann ') : m.text;
+  return m.text;
+}
+
+/** Bedeutung der Zeichen auf der Karte (für aria-label): Störungen in Stufenreihenfolge. */
+function zeichenText(m) {
+  const z = m.stufen ? m.stufen.flatMap((st) => st.zeichen) : (m.zeichen ?? []);
+  return z.map((n) => STOERUNG_ZEICHEN[n].text).join(', ');
 }
 
 /** Feste Wegmarke oben links (druckfest, ohne Bewegung) im Platz von Jonas' Wegkarte. */
@@ -387,22 +401,31 @@ export function wegMarke(name) {
   const s = m.station ? weg.stationen[m.station] : null;
   if (m.station && !s) throw new Error(`Unbekannte Station ${m.station} auf Weg ${m.weg}`);
   const punkt = s ? `<div class="weg-punkt" style="left:${s.x}px;top:${s.y}px"></div>` : '';
-  const zeichenText = (z) => z.map(zeichen).join('');
-  const name1 = (text, z = []) =>
-    `<span class="weg-name">${esc(text)}</span>${z.length ? `<span class="weg-zeichen-reihe">${zeichenText(z)}</span>` : ''}`;
-  const inhalt = m.stufen
-    ? `<span class="weg-stufen">${m.stufen
+  const reihe = (z) => `<span class="weg-zeichen-reihe">${z.map(zeichen).join('')}</span>`;
+  const zeichenSpalte = m.stufen
+    ? m.stufen
         .map(
           (st) =>
-            `<span class="weg-stufe" data-ab="${st.ab}"${st.bis === undefined ? '' : ` data-bis="${st.bis}"`}>${name1(st.text, st.zeichen)}</span>`,
+            `<span class="weg-stufe" data-ab="${st.ab}"${st.bis === undefined ? '' : ` data-bis="${st.bis}"`}>${reihe(st.zeichen)}</span>`,
         )
-        .join('')}</span>`
-    : name1(m.text, m.zeichen ?? []);
-  const label = `Ort auf dem Weg: ${markeText(name)} (${m.teil.join(', ')})`;
+        .join('')
+    : m.zeichen?.length
+      ? reihe(m.zeichen)
+      : '';
+  if (zeichenSpalte && !weg.zeichenOrt) throw new Error(`Weg ${m.weg} hat keinen Ort für Zeichen`);
+  const zeichenOrt = zeichenSpalte
+    ? `<span class="weg-zeichen-ort" style="left:${weg.zeichenOrt.x}px;top:${weg.zeichenOrt.y}px">${zeichenSpalte}</span>`
+    : '';
+  const bedeutung = zeichenText(m);
+  const label =
+    `Ort auf dem Weg: ${markeText(name)} (${m.teil.join(', ')})` +
+    (bedeutung ? `; Störungen: ${bedeutung}` : '') +
+    (m.wirkung ? '; Ausschlag: Wirkung auf den Live-Pfad' : '');
   return (
     `<div class="weg-mini weg-marke" data-marke="${esc(name)}"${m.station ? ` data-aktiv="${m.station}"` : ''} role="img" aria-label="${esc(label)}">` +
     karte +
+    zeichenOrt +
     punkt +
-    `<p class="weg-beschriftung" aria-hidden="true">${inhalt}${m.teil.map(etikett).join('')}</p></div>`
+    `<p class="weg-beschriftung" aria-hidden="true"><span class="weg-name">${esc(m.text)}</span>${m.teil.map(etikett).join('')}</p></div>`
   );
 }

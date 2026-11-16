@@ -37,7 +37,7 @@ export async function layoutBefunde(browser, pfad) {
       const fuss = folie.querySelector('.folie-fuss');
       const kopf = [
         ...folie.querySelectorAll(
-          '.weg-mini-statisch, .weg-marke, .weg-marke .weg-beschriftung, .weg-exkurs, .teilleiste',
+          '.weg-mini-statisch, .weg-marke, .weg-marke .weg-beschriftung, .teilleiste',
         ),
       ];
       // 1. alles innerhalb der Bühne 1600 × 900 (SVG-Inneres zählt über sein <svg>)
@@ -51,8 +51,11 @@ export async function layoutBefunde(browser, pfad) {
       // 2. Titel einzeilig
       const lh = parseFloat(getComputedStyle(titel).lineHeight);
       if (titel.getBoundingClientRect().height > lh * 1.5) fehler.push(`${id}: Titel zweizeilig`);
-      // 3. Kopf (Wegkarte, Exkurs), Titel, Fläche, Fußzeile überlappen nicht
-      const bloecke = [...kopf, titel, fuss];
+      // 3. Kopf (Wegkarte, Teilleiste, Frage- und Autorzeile), Titel, Fläche, Fußzeile überlappen nicht
+      const kopfZeilen = [
+        ...folie.querySelectorAll(':scope > .folie-frage, :scope > .folie-autor'),
+      ];
+      const bloecke = [...kopf, titel, ...kopfZeilen, fuss];
       for (let i = 0; i < bloecke.length; i++) {
         for (let j = i + 1; j < bloecke.length; j++) {
           if (schneiden(r(bloecke[i], s), r(bloecke[j], s)))
@@ -67,7 +70,7 @@ export async function layoutBefunde(browser, pfad) {
         const b = r(el, s);
         if (b.r - b.l === 0 || b.b - b.t === 0) continue;
         const vermerk = getComputedStyle(el).position === 'absolute' && b.b <= r(titel, s).t;
-        for (const k of [titel, fuss, ...kopf]) {
+        for (const k of [titel, fuss, ...kopf, ...kopfZeilen]) {
           if (schneiden(b, r(k, s))) fehler.push(`${id}: ${name(el)} trifft ${name(k)}`);
         }
         if (vermerk) continue;
@@ -132,4 +135,65 @@ export async function layoutBefunde(browser, pfad) {
   });
   await context.close();
   return befunde;
+}
+
+/**
+ * Kopfgrammatik (README „Designregeln“) je Hauptfolie (data-hauptfolie), gemessen im Druckmodus:
+ * Zeile 1 Wegkarte mit Ort ohne „·“-Zusatz, Zeile 2 Titel, Zeile 3 Fragezeile direkt unter dem Titel mit
+ * dem Etikett zuerst. Status („nachträglich ausgewertet“) nur am Ende einer Fragezeile, auf allen Folien.
+ * Liefert den Abstand Titelunterkante → Fragezeile je Hauptfolie (px), die Folien mit Autorzeile und Befunde.
+ * @param {import('playwright').Browser} browser
+ * @param {string} pfad Deck-HTML
+ * @returns {Promise<{ abstand: Record<string, number>, autor: string[], befunde: string[] }>}
+ */
+export async function kopfBefunde(browser, pfad) {
+  const context = await browser.newContext({ viewport: { width: 1600, height: 900 } });
+  const page = await context.newPage();
+  await page.goto(pathToFileURL(pfad).href);
+  await page.evaluate(() => document.fonts.ready);
+  await page.emulateMedia({ media: 'print' });
+  await page.waitForTimeout(300);
+  const ergebnis = await page.evaluate(() => {
+    const befunde = [];
+    const abstand = {};
+    const autor = [];
+    for (const folie of document.querySelectorAll('.folie')) {
+      const id = folie.dataset.id;
+      for (const st of folie.querySelectorAll('.status')) {
+        const zeile = st.parentElement;
+        if (!zeile?.matches('.folie > .folie-frage'))
+          befunde.push(`${id}: Status außerhalb der Fragezeile`);
+        else if (zeile.lastChild !== st) befunde.push(`${id}: Status nicht am Ende der Fragezeile`);
+      }
+      for (const a of folie.querySelectorAll('.folie-autor')) {
+        if (a.parentElement !== folie || !a.previousElementSibling?.matches('.folie-frage'))
+          befunde.push(`${id}: Autorzeile nicht unter der Fragezeile`);
+        autor.push(id);
+      }
+      if (!('hauptfolie' in folie.dataset)) continue;
+      const titel = folie.querySelector(':scope > .folie-titel');
+      const frage = titel?.nextElementSibling;
+      if (!frage?.matches('.folie-frage')) {
+        befunde.push(`${id}: keine Fragezeile direkt unter dem Titel`);
+        continue;
+      }
+      if (
+        !frage.firstElementChild?.matches('.etikett') ||
+        frage.firstChild !== frage.firstElementChild
+      )
+        befunde.push(`${id}: Fragezeile beginnt nicht mit dem Etikett`);
+      abstand[id] = Math.round(
+        frage.getBoundingClientRect().top - titel.getBoundingClientRect().bottom,
+      );
+      const marke = folie.querySelector(':scope > .weg-mini');
+      const name = marke?.querySelector('.weg-beschriftung .weg-name');
+      if (!marke || getComputedStyle(marke).display === 'none' || !name?.textContent.trim())
+        befunde.push(`${id}: keine Wegkarte mit Ort in Kopfzeile 1`);
+      else if (/·/.test(marke.querySelector('.weg-beschriftung').textContent))
+        befunde.push(`${id}: Ort mit Zusatz „·“: ${name.textContent}`);
+    }
+    return { abstand, autor, befunde };
+  });
+  await context.close();
+  return ergebnis;
 }

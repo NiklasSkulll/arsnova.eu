@@ -129,24 +129,37 @@ test('Wegmarken: Hervorhebung nur am Ort der Folie, Beschriftung mit Etikett', (
   assert.throws(() => wegMarke('x'));
 });
 
-test('M1: Beschriftung und Störungszeichen je Stufe; M2 alle vier Zeichen', () => {
+test('M1: Störungszeichen je Stufe auf der Karte, Beschriftung nur der Ort; M2 alle vier Zeichen', () => {
   const m1 = wegMarke('1b-stoerung');
   const stufen = [...m1.matchAll(/<span class="weg-stufe" data-ab="(\d)"/g)].map((m) =>
     Number(m[1]),
   );
   assert.deepEqual(stufen, [0, 1, 2, 3]);
+  // Zeichen stehen auf der Karte (weg-zeichen-ort), die Beschriftung nennt nur den Ort; ihre Bedeutung
+  // steht im aria-label
   for (const [z, { text }] of Object.entries(STOERUNG_ZEICHEN)) {
     assert.match(m1, new RegExp(`data-zeichen="${z}"`), z);
     assert.ok(
-      MARKEN['1b-stoerung'].stufen.some((st) => st.zeichen.includes(z) && st.text.includes(text)),
+      MARKEN['1b-stoerung'].stufen.some((st) => st.zeichen.includes(z)),
       z,
     );
+    assert.match(m1.match(/aria-label="([^"]*)"/)[1], new RegExp(text), z);
   }
+  const ort = m1.match(/<span class="weg-zeichen-ort"[\s\S]*?<p class="weg-beschriftung"/)[0];
+  assert.equal((ort.match(/data-zeichen=/g) ?? []).length, 4);
+  assert.match(
+    m1,
+    /<p class="weg-beschriftung" aria-hidden="true"><span class="weg-name">Zweiter Host<\/span><span class="etikett etikett-1b">1B<\/span><\/p>/,
+  );
   // nur die letzte Stufe bleibt offen (Druck zeigt das Endbild)
   assert.equal((m1.match(/data-bis=/g) ?? []).length, 3);
   const m2 = wegMarke('1b-alle');
   assert.equal((m2.match(/data-zeichen=/g) ?? []).length, 4);
-  assert.match(m2, /Zweiter Host · alle Störungen/);
+  assert.match(m2, /<span class="weg-name">Zweiter Host<\/span>/);
+  assert.match(
+    m2,
+    /aria-label="Ort auf dem Weg: Zweiter Host \(1B\); Störungen: Stopp, Slot belegt, DROP, zu spät"/,
+  );
 });
 
 test('keine Systembild-Miniatur mehr', () => {

@@ -87,14 +87,15 @@
       .weg-marke .weg-punkt {
         transform: translate(-50%, -50%);
       }
-      .weg-stufen {
+      /* Störungszeichen (1B 3–4) auf der Karte über der Senke zum zweiten Host; je Aufbaustufe ein Satz */
+      .weg-zeichen-ort {
+        position: absolute;
         display: grid;
+        transform: translateX(-50%);
       }
       .weg-stufe {
         grid-area: 1 / 1;
-        display: flex;
-        align-items: center;
-        gap: 10px;
+        justify-self: center;
       }
       .weg-zeichen-reihe {
         display: flex;
@@ -103,20 +104,6 @@
       }
       .weg-zeichen {
         display: block;
-      }
-      /* Folie neben dem Weg (J11): Vermerk an der Stelle der Wegkarte */
-      .weg-exkurs {
-        position: absolute;
-        left: var(--rand);
-        top: 30px;
-        margin: 0;
-        padding: 0 14px;
-        border: var(--linie-min) dashed var(--linie);
-        border-radius: 999px;
-        color: var(--gedaempft);
-        font-size: var(--s-min);
-        font-weight: 600;
-        line-height: 32px;
       }
       .weg-punkt {
         position: absolute;

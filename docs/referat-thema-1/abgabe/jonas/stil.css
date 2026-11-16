@@ -166,9 +166,13 @@
   max-width: 100%;
   height: 100%;
 }
+/* Kopfgrammatik (README „Designregeln“, layout-pruefung.mjs kopfBefunde): Zeile 1 Wegkarte mit Ort und
+   Etikett, Zeile 2 Titel, Zeile 3 Fragezeile in festem Abstand zum Titel: zuerst das Etikett des Auftrags,
+   dann die Frage, danach höchstens ein gedämpfter Status. Die Autorzeile (nur N1, J1) folgt darunter.
+   Beide stehen im Kopf (deck.mjs), nicht in der zentrierten Fläche. */
 .folie-frage {
   flex: none;
-  margin: 0 0 24px;
+  margin: 18px 0 0;
   color: var(--text-2);
   font-size: 30px;
   font-weight: 600;
@@ -177,6 +181,25 @@
 .folie-frage .etikett {
   margin-right: 10px;
   vertical-align: 3px;
+}
+.folie-frage .status {
+  display: inline-block;
+  margin-left: 14px;
+  padding: 2px 12px;
+  border-radius: 6px;
+  background: var(--raster);
+  color: var(--text-2);
+  font-size: var(--s-min);
+  font-weight: 600;
+  vertical-align: 3px;
+}
+.folie-autor {
+  flex: none;
+  margin: 10px 0 0;
+  color: var(--tinte);
+  font-size: var(--s-text);
+  font-weight: 600;
+  line-height: 1.3;
 }
 /* Vermerke: Beleg unten in der Fläche, Bildunterschrift, Hinweis unter einer Tabelle. Kleiner und gedämpft,
    höchstens eine Zeile (Designregel T); Einzelheiten stehen in der Sprechnotiz (`quelle`) oder in der Reserve. */

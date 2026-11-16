@@ -236,7 +236,8 @@ export function folien1B34(
     id: 'M2',
     titel: `Kein Live-Fehler unter Störung, p95 bis +${fmt(maxDelta)} ms`,
     inhalt: flaeche(
-      `<table style="border-collapse:collapse;font-size:24px;width:100%">` +
+      frage('Leiden die Live-Aktionen, wenn der zweite Host gestört ist?', '1B') +
+        `<table style="border-collapse:collapse;font-size:24px;width:100%">` +
         `<tr style="color:var(--gedaempft);font-size:var(--s-min)"><td>p95 in ms</td><td style="text-align:right;padding:0 12px"><b style="color:var(--tinte)">F1 Stopp</b><br>Referenz</td>${kandidaten.map(([, n]) => `<td style="text-align:right;padding:0 12px"><b style="color:var(--tinte)">${n}</b><br>gg. F1</td>`).join('')}</tr>` +
         AKTIONEN.map(
           ([a, name]) =>

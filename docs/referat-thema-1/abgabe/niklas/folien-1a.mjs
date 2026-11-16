@@ -8,7 +8,16 @@
 // 11 verfehlen die Regel → 4 davon schon ohne spaCy → 3 über 50 ms, alle im letzten Lauf in etwa 10 s →
 // Freigabe nicht erteilt.
 
-import { etikett, flaeche, frage, grafikBox, mono, zahl, zweiSpalten } from '../jonas/folien.mjs';
+import {
+  autorZeile,
+  etikett,
+  flaeche,
+  frage,
+  grafikBox,
+  mono,
+  zahl,
+  zweiSpalten,
+} from '../jonas/folien.mjs';
 import { fmt } from '../jonas/zahlen.mjs';
 import {
   analyseSvg,
@@ -87,8 +96,8 @@ const spanne = ([a, b], stellen = 0) =>
 const kernsatz = (html, linie = 'var(--blau)', groesse = 32) =>
   `<p style="margin:0;font-size:${groesse}px;line-height:1.3;padding-left:22px;border-left:6px solid ${linie}">${html}</p>`;
 
-/** Etikett für nachträgliche Auswertung. */
-const explorativ = `<span class="etikett" style="background:var(--raster);color:var(--text-2)">nachträglich ausgewertet</span>`;
+/** Status der nachträglichen Auswertung: gedämpft in der Fragezeile nach der Frage (Kopfgrammatik). */
+const explorativ = { status: 'nachträglich ausgewertet' };
 
 /** Folien N1–N10 mit N6b (Hauptteil), NL (Literatur, Anhang) und RN2 (Reserve). */
 export function folien1A(d) {
@@ -130,7 +139,7 @@ export function folien1A(d) {
         'Welche Reserve hat der App-Host für optionale Analyse, ohne die Live-Signale zu verzögern?',
         '1A',
       ) +
-        `<p style="margin:0 0 34px;font-size:28px;font-weight:600">Niklas Schneider</p>` +
+        autorZeile('Niklas Schneider') +
         zweiSpalten(
           kernsatz(
             `Die Live-Last läuft fehlerfrei. Mit spaCy hält die vorab festgelegte Regel aber nicht, und der Nutzen ist nicht gemessen.`,
@@ -284,7 +293,8 @@ export function folien1A(d) {
     id: 'N5',
     titel: `Alle ${fmt(d.live.erfolgreich)} Live-Aktionen kamen an`,
     inhalt: flaeche(
-      grafikBox(liveSvg(d)) +
+      frage('Kommen die Live-Aktionen unter Analyse-Last an?', '1A') +
+        grafikBox(liveSvg(d)) +
         `<p class="beleg">Gemessen am Lastgenerator bis zur Antwort des Backends; Anzeige im Browser und Kompasskarten nicht gemessen</p>`,
     ),
     notiz: `Zuerst, was hält. In allen fünfundzwanzig Läufen kamen alle ${fmt(d.live.erfolgreich)} Live-Aktionen an: Beitritte, Quizstimmen, Tempostimmen und Q&A-Fragen. Jeder Punkt ist der p95 eines Laufs; die lineare Achse reicht bis zum vorab gesetzten Quiz-Ziel von einer Sekunde. Der langsamste Quiz-Lauf liegt bei ${fmt(d.live.quizMaxMs)} Millisekunden, die meisten Punkte unter sechzig. Diese Aktionen sind die Eingänge des Moderationskompasses. Wie schnell eine Karte im Browser der Lehrperson erscheint, habe ich nicht gemessen.`,
@@ -307,7 +317,10 @@ export function folien1A(d) {
   neu({
     id: 'N6',
     titel: 'Deutlich verletzt wird die Regel nur einmal',
-    inhalt: flaeche(grafikBox(vergleichsMatrixSvg(d))),
+    inhalt: flaeche(
+      frage('Hält die vorab festgelegte Regel in jedem Vergleich?', '1A') +
+        grafikBox(vergleichsMatrixSvg(d)),
+    ),
     notiz: `Jetzt die Regel. Das sind alle ${d.vergleiche.length} gepaarten Vergleiche: jede Aktion in jedem Block gegen ihre Basis, noch ohne Ergebnis. [Weiter] Grau heißt: hält. Zuerst die Kontrolle, V1 gegen V0, ganz ohne spaCy. Schon sie verfehlt die Regel ${kontrolle.length}-mal, um höchstens ${fmt(Math.max(...kontrolle.map((x) => x.deltaMs)), 0)} Millisekunden. Bei p95-Werten um zwanzig Millisekunden reichen dafür zwei Millisekunden Schwankung. [Weiter] Mit spaCy kommen ${mitSpacy.length - v3b5Fehl.length} ebenso kleine Treffer dazu, alle unter fünf Millisekunden. Formal reicht das schon: H1 und H2 sind nicht bestätigt. [Weiter] Und hier der eine deutliche Effekt: V3, also spaCy gedrosselt, im letzten Lauf der Reihe. ${v3b5Abs.length} Aktionen über fünfzig Millisekunden, bis zu ${fmt(d.v3Block5MaxDeltaMs)} Millisekunden mehr. Insgesamt verfehlen ${fehlAlle.length} von ${d.vergleiche.length} die Regel. Ich lasse sie trotzdem stehen, weil sie vorher festgelegt war.`,
     // Wegmarke: Gepaarte Vergleiche der Regel: Live-Pfad gegen Zweig.
     marke: '1a-regel',
@@ -331,11 +344,11 @@ export function folien1A(d) {
     id: 'N7',
     titel: 'Der Ausreißer dauerte rund zehn Sekunden',
     inhalt: flaeche(
-      `<p class="folie-frage">${explorativ} Was geschah im letzten Lauf (V3, Block 5)?</p>` +
+      frage('Was geschah im letzten Lauf (V3, Block 5)?', '1A', explorativ) +
         grafikBox(ausreisserSvg(d)) +
         `<p class="beleg">Ursache offen: Rückstau der gedrosselten Analyse oder Ereignis auf Host und Datenbank; dagegen: V4 mit ${fmt(d.v4.ersatzTimeout)} Timeouts ohne Live-Effekt</p>`,
     ),
-    notiz: `Was geschah im letzten Lauf? Nachträglich ausgewertet, deshalb das Etikett. Alle ${e.langsam.join} Beitritte über hundert Millisekunden liegen in einem Fenster von etwa zehn Sekunden; in den übrigen Läufen gibt es je Aktion höchstens ${e.langsamAndereMax} solchen Wert. [Weiter] Genau dort laufen die einzigen ${e.timeouts} Timeouts der gedrosselten Variante. [Weiter] Zugleich steigt die CPU der App auf ${fmt(e.appCpuMax)} Prozent einer CPU und die der Datenbank auf ${fmt(e.pgMax.max)} Prozent, sonst höchstens ${fmt(e.pgAndere[1])}. Die Ursache ist offen. Ein Rückstau der gedrosselten Analyse passt dazu, aber V4 hatte hunderte Timeouts ohne solchen Effekt; ebenso möglich ist ein Ereignis auf Host oder Datenbank. Zum Maßstab: ${d.live.laeufe} Läufe mit je ${fmt(k.profil.durationMs / 1000)} Sekunden Messfenster sind ${fmt((d.live.laeufe * k.profil.durationMs) / 60000)} Minuten; der Ausreißer betrifft davon etwa zehn Sekunden. Für die Entscheidung ändert das nichts.`,
+    notiz: `Was geschah im letzten Lauf? Nachträglich ausgewertet, deshalb der Vermerk hinter der Frage. Alle ${e.langsam.join} Beitritte über hundert Millisekunden liegen in einem Fenster von etwa zehn Sekunden; in den übrigen Läufen gibt es je Aktion höchstens ${e.langsamAndereMax} solchen Wert. [Weiter] Genau dort laufen die einzigen ${e.timeouts} Timeouts der gedrosselten Variante. [Weiter] Zugleich steigt die CPU der App auf ${fmt(e.appCpuMax)} Prozent einer CPU und die der Datenbank auf ${fmt(e.pgMax.max)} Prozent, sonst höchstens ${fmt(e.pgAndere[1])}. Die Ursache ist offen. Ein Rückstau der gedrosselten Analyse passt dazu, aber V4 hatte hunderte Timeouts ohne solchen Effekt; ebenso möglich ist ein Ereignis auf Host oder Datenbank. Zum Maßstab: ${d.live.laeufe} Läufe mit je ${fmt(k.profil.durationMs / 1000)} Sekunden Messfenster sind ${fmt((d.live.laeufe * k.profil.durationMs) / 60000)} Minuten; der Ausreißer betrifft davon etwa zehn Sekunden. Für die Entscheidung ändert das nichts.`,
     // Wegmarke: Ausreißer in V3 (gedrosseltes spaCy): Station spaCy, Wirkung als Ausschlag auf dem Live-Pfad.
     marke: '1a-wirkung',
     stichpunkte: [
@@ -387,7 +400,8 @@ export function folien1A(d) {
     id: 'N10',
     titel: 'Entscheidung: lexikalische Wortwolke bleibt',
     inhalt: flaeche(
-      `<div style="display:grid;grid-template-columns:repeat(3,1fr);column-gap:44px">` +
+      frage('Was folgt daraus für den Betrieb?', '1A') +
+        `<div style="display:grid;grid-template-columns:repeat(3,1fr);column-gap:44px">` +
         spalte('Entscheidung', 'var(--blau)', [
           `${mono('NLP_ENABLED=false')} bleibt, Standard in ${mono('.env.production.example')}`,
           `Für neue Versuche: Budget ${fmt(k.spacy.V2.cpu)}&nbsp;CPU, ${fmt(k.spacy.V2.speicherGiB)}&nbsp;GiB, ${fmt(k.spacy.V2.pids)}&nbsp;PIDs`,
@@ -440,7 +454,8 @@ export function folien1A(d) {
     marke: '1a-spacy',
     zeitS: 45,
     inhalt: flaeche(
-      `<table style="border-collapse:collapse;font-size:28px;width:100%;margin:0 0 12px">` +
+      frage('Welche Varianten vergleicht die Messreihe?', '1A') +
+        `<table style="border-collapse:collapse;font-size:28px;width:100%;margin:0 0 12px">` +
         VAR.map(
           ([v, t, h]) =>
             `<tr style="border-top:var(--linie-min) solid var(--linie)"><td style="padding:7px 18px 7px 0;font-weight:700;width:80px">${v}</td><td style="padding:7px 0">${t}</td><td style="padding:7px 0 7px 18px;color:${h === 'Basis' ? 'var(--blau)' : 'var(--gedaempft)'};font-size:var(--s-min);font-weight:600;text-align:right">${h}</td></tr>`,
@@ -470,7 +485,8 @@ export function folien1A(d) {
     marke: '1a-spacy',
     zeitS: 45,
     inhalt: flaeche(
-      grafikBox(ressourcenSvg(d)) +
+      frage('Wie viel CPU und Speicher braucht spaCy selbst?', '1A') +
+        grafikBox(ressourcenSvg(d)) +
         `<p class="beleg">Labor: alle Container zusammen ${spanne(
           d.labor.containerCpuProzent.map((x) => x / 100),
           1,
@@ -557,7 +573,7 @@ export function folien1A(d) {
     zeitS: 45,
     fuss: `Quelle: ${ZITATE.N6b.map(([sl, st]) => kurzbeleg1A(sl, st).slice(1, -1)).join('; ')}`,
     inhalt: flaeche(
-      `<p class="folie-frage">${explorativ} Wie empfindlich ist die Regel?</p>` +
+      frage('Wie empfindlich ist die Regel?', '1A', explorativ) +
         zweiSpalten(
           `<table style="border-collapse:collapse;font-size:28px;width:100%">` +
             `<tr style="color:var(--gedaempft);font-size:var(--s-min)"><td></td><td style="text-align:right;padding:0 14px">V0</td><td style="text-align:right;padding:0 14px">V1</td><td style="text-align:right;padding:0 14px">V2</td><td style="text-align:right;padding-left:14px">V2 je Lauf</td></tr>` +
