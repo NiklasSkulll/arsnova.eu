@@ -453,7 +453,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/niklas/folien-1a.mjs",
-      "sha256": "d13f4417b6eabf284d55a0e408fe97fac0c896f3fe8e7f6784821a2e9ef6257a"
+      "sha256": "7895edc34bc3eecb2c564f5fc8d692dde350ed6d517c4818a2053e87b8b63509"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/niklas/folien-1b34.mjs",
@@ -479,25 +479,25 @@
   "ausgaben": [
     {
       "datei": "jonas-deck.html",
-      "bytes": 1770738,
-      "sha256": "8060329d126e2c570f20f572871c6ab89d63bc1941a275aa3b608da13ae9a4b5"
+      "bytes": 1770798,
+      "sha256": "4a5506b8a693de6db616566de466832c88e2548c54f17f715ab04ccefaf99b9c"
     },
     {
       "datei": "gemeinsames-deck.pdf",
-      "bytes": 1131203,
-      "sha256": "d83c6ca0ed7cddd0172d9f49406d540c0386eb8a59d34ddbc295ca747664aba8",
+      "bytes": 1131202,
+      "sha256": "c0046ef4027da50b0a51da6116520046a15a20a123d1f1dd2d218c6e0f898c27",
       "seiten": 47
     },
     {
       "datei": "jonas-folien.pdf",
       "bytes": 760957,
-      "sha256": "a6ebfdf53784b9ba4942a1616970f0afbe08305c4c6fe44af74ee257704d95e6",
+      "sha256": "9d805918c37a2050d5b76816d7c04303520dd8b601c8d62abb4bfdcfcdffa124",
       "seiten": 28
     },
     {
       "datei": "niklas-folien.pdf",
-      "bytes": 403469,
-      "sha256": "aed714dc46bcfa1c97150071368e263e169fde24e151df9dea0cc7e7f2c0c99b",
+      "bytes": 403479,
+      "sha256": "1374a0df58fb2341a9e5ba0561ff6f3232a822d6ac2a00de9a34841c49124bd6",
       "seiten": 17
     },
     {

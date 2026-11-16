@@ -412,8 +412,8 @@ export function folien1A(d) {
       `<div style="display:grid;grid-template-columns:repeat(3,1fr);column-gap:44px">` +
         spalte('Entscheidung', 'var(--blau)', [
           `${mono('NLP_ENABLED=false')} bleibt, wie in Produktion`,
-          `Für neue Versuche: Budget ${fmt(k.spacy.V2.cpu)} CPU, ${fmt(k.spacy.V2.speicherGiB)} GiB, ${fmt(k.spacy.V2.pids)} PIDs`,
-          `${fmt(k.spacy.V3.cpu, 2)} CPU ist keine gleichwertige Einsparung`,
+          `Für neue Versuche: Budget ${fmt(k.spacy.V2.cpu)}&nbsp;CPU, ${fmt(k.spacy.V2.speicherGiB)}&nbsp;GiB, ${fmt(k.spacy.V2.pids)}&nbsp;PIDs`,
+          `${fmt(k.spacy.V3.cpu, 2)}&nbsp;CPU ist keine gleichwertige Einsparung`,
         ]) +
         spalte('Begründung', 'var(--petrol)', [
           `Regel verfehlt (${mitSpacyFehl} von ${mitSpacyGesamt}), Beweislast bei der Option`,
