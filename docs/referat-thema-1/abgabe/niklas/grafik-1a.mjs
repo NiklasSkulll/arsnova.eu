@@ -766,3 +766,41 @@ export function analyseSvg(d) {
     H,
   );
 }
+
+// ------------------------------------------------------------------ Ortsmarke 1A (oben links, N2–N10)
+
+/**
+ * Orte der Ortsmarke 1A: der Live-Pfad (Hörsaal → App → Datenbank), der Nebenzweig zu spaCy, Frist und
+ * Ersatz auf diesem Zweig, oder der ganze Host. Je Folie ist genau ein Ort hervorgehoben (Leitfaden B7,
+ * Signalisierung); die Marke springt ohne Bewegung (druckfest, reduzierte Bewegung ohne Unterschied).
+ */
+export const ORT_1A = Object.freeze({
+  host: 'Alle Dienste des App-Hosts',
+  live: 'Gemessen: Live-Pfad',
+  spacy: 'Gemessen: Nebenzweig spaCy',
+  ersatz: 'Gemessen: Frist und Ersatz',
+});
+
+/** Kleine Karte des App-Hosts (220 × 58, nur Formen) mit hervorgehobenem Ort aus ORT_1A. */
+export function ort1AMini(ort) {
+  if (!ORT_1A[ort]) throw new Error(`Unbekannter Ort 1A: ${ort}`);
+  const an = (o) => ort === o || ort === 'host';
+  const farbe = (o) => (an(o) ? FARBEN.blau : FARBEN.gedaempft);
+  const breite = (o) => (an(o) ? 4 : 2);
+  const rect = (x, y, w, h, o, fuellung) =>
+    `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="${an(o) ? FARBEN.blau : fuellung}" stroke="${farbe(o)}" stroke-width="2"/>`;
+  const live = ort === 'live' || ort === 'host' ? 'live' : '-';
+  return (
+    `<svg viewBox="0 0 220 58" width="220" height="58" aria-hidden="true" focusable="false">` +
+    // Live-Pfad: Hörsaal → App → Datenbank
+    rect(2, 6, 34, 20, live, FARBEN.raster) +
+    linie(36, 16, 72, 16, farbe(live), breite(live)) +
+    rect(72, 4, 62, 24, ort === 'host' ? 'host' : '-', FARBEN.weiss) +
+    linie(134, 16, 166, 16, farbe(live), breite(live)) +
+    rect(166, 6, 50, 20, live, FARBEN.weiss) +
+    // Nebenzweig: App → spaCy (bei Ersatz gestrichelt: Frist läuft ab, die App liefert selbst)
+    `<path d="M103,28 V45 H166" fill="none" stroke="${an('spacy') || an('ersatz') ? FARBEN.blau : FARBEN.gedaempft}" stroke-width="${an('spacy') || an('ersatz') ? 4 : 2}"${ort === 'ersatz' ? ' stroke-dasharray="6 5"' : ''}/>` +
+    rect(166, 36, 50, 18, ort === 'spacy' || ort === 'host' ? ort : '-', FARBEN.weiss) +
+    `</svg>`
+  );
+}

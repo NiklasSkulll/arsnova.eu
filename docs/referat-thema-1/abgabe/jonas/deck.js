@@ -225,7 +225,8 @@
     return false;
   }
   function vor() {
-    if (clipSchritt() || zoomSchritt(+1) || aufbauSchritt(+1)) return;
+    // Aufbau vor Clip (J13: erst Raster und Ablation, dann die Lehrenden-Sicht)
+    if (aufbauSchritt(+1) || clipSchritt() || zoomSchritt(+1)) return;
     if (index < liste.length - 1) gehe(index + 1, +1);
   }
   function zurueck() {

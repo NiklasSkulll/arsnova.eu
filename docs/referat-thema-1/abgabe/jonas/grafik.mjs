@@ -948,5 +948,321 @@ export function fussballfeldSvg(b1, { zoom = 0 } = {}) {
   return svgHuelle(label, t.join(''));
 }
 
+// ---------------------------------------------------------------------------------------------
+// Systembild arsnova.eu (GK) und seine Miniatur (Ausschnitt auf N1, J1, M1)
+
+/**
+ * Geometrie des Systembilds in Weltkoordinaten (1380 × 470): Hörsaal, App-Host mit Live-App,
+ * Kompass und den beiden optionalen Bausteinen, zweiter privater Host mit der Inferenz. Dieselbe
+ * Geometrie zeichnet systemMini() verkleinert (Objektkonstanz, Leitfaden „Wow ohne Gimmick“ 3).
+ */
+export const SYSTEM = Object.freeze({
+  breite: 1380,
+  hoehe: 470,
+  hoersaal: { x: 0, y: 90, w: 240, h: 260 },
+  app: { x: 300, y: 0, w: 690, h: 440 },
+  live: { x: 330, y: 64, w: 630, h: 104 },
+  kompass: { x: 330, y: 186, w: 630, h: 96 },
+  spacy: { x: 330, y: 300, w: 300, h: 116 },
+  kontext: { x: 660, y: 300, w: 300, h: 116 },
+  llm: { x: 1080, y: 230, w: 300, h: 210 },
+  inferenz: { x: 1104, y: 290, w: 252, h: 126 },
+});
+
+/** Teile des Vortrags im Systembild: welche Bausteine sie hervorheben und in welcher Farbe. */
+export const SYSTEM_TEILE = Object.freeze({
+  '1a': { bausteine: ['spacy'], farbe: FARBEN.blau, text: 'spaCy-Sidecar auf dem App-Host' },
+  jonas: {
+    bausteine: ['kontext', 'inferenz'],
+    farbe: FARBEN.petrol,
+    text: 'Kontextpfad und Inferenz auf dem zweiten Host',
+  },
+  '1b34': { bausteine: ['llm'], farbe: FARBEN.bernstein, text: 'Zweiter Host, gestört' },
+});
+
+const kasten = (b, o = {}) =>
+  `<rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="${o.rx ?? 10}" fill="${o.fuellung ?? FARBEN.weiss}" stroke="${o.farbe ?? FARBEN.linie}" stroke-width="${o.breite ?? 2}"${o.extra ?? ''}/>`;
+
+/** Etikett wie im Deck (1A Blau, 1C Petrol, 1B Bernstein) als SVG; rechts bündig an x. */
+function svgEtikett(xRechts, y, wort) {
+  const farbe = { '1A': [FARBEN.raster, FARBEN.blau], '1C': [FARBEN.petrolHell, FARBEN.petrol] }[
+    wort.slice(0, 2)
+  ] ?? [FARBEN.bernsteinHell, FARBEN.bernsteinText];
+  const w = 18 + wort.length * 15;
+  return (
+    `<rect x="${xRechts - w}" y="${y}" width="${w}" height="32" rx="6" fill="${farbe[0]}"/>` +
+    text(xRechts - w / 2, y + 24, esc(wort), {
+      groesse: 22,
+      gewicht: 700,
+      farbe: farbe[1],
+      anker: 'middle',
+    })
+  );
+}
+
+/**
+ * Systembild für GK in drei Stufen (data-ab): 1 hebt 1A hervor (spaCy), 2 den Teil von Jonas (Kontextpfad,
+ * Netz, Inferenz), 3 den gestörten zweiten Host (1B 3–4). Ohne Stufen (Druck) stehen alle drei.
+ * clients: vorab festgelegte Auslegung (FESTWERTE.liveClients), keine Messung.
+ */
+export function systemSvg({ clients }) {
+  const S = SYSTEM;
+  const t = [];
+  const h = S.hoersaal;
+  t.push(kasten(h, { fuellung: FARBEN.raster }));
+  t.push(text(h.x + 20, h.y + 46, 'Hörsaal', { gewicht: 700 }));
+  t.push(text(h.x + 20, h.y + 96, `≥ ${fmt(clients)}`, { mono: true, groesse: 30, gewicht: 600 }));
+  t.push(text(h.x + 20, h.y + 128, 'Clients zugleich,', { groesse: 22, farbe: FARBEN.text2 }));
+  t.push(text(h.x + 20, h.y + 158, 'auch hinter einem', { groesse: 22, farbe: FARBEN.text2 }));
+  t.push(text(h.x + 20, h.y + 188, 'gemeinsamen NAT', { groesse: 22, farbe: FARBEN.text2 }));
+  t.push(text(h.x + 20, h.y + 236, 'Lehrperson', { groesse: 22, gewicht: 600 }));
+  // Pfeile Hörsaal → Live-App und Lehrperson → Kompass
+  const pfeil = (x1, y, x2) =>
+    `<line x1="${x1}" y1="${y}" x2="${x2 - 12}" y2="${y}" stroke="${FARBEN.text2}" stroke-width="3"/>` +
+    `<path d="M${x2},${y} l-14,-8 v16 z" fill="${FARBEN.text2}"/>`;
+  const a = S.app;
+  t.push(kasten(a, { rx: 14 }));
+  t.push(pfeil(h.x + h.w, S.live.y + S.live.h / 2, S.live.x));
+  t.push(pfeil(h.x + h.w, S.kompass.y + S.kompass.h / 2 + 30, S.kompass.x));
+  t.push(text(a.x + 24, a.y + 42, 'App-Host', { gewicht: 700 }));
+  t.push(
+    text(a.x + a.w - 24, a.y + 42, 'Live-Pfad wartet nie auf Analyse', {
+      groesse: 22,
+      farbe: FARBEN.gedaempft,
+      anker: 'end',
+    }),
+  );
+  const block = (b, kopf, zeilen) => {
+    t.push(kasten(b, { fuellung: FARBEN.weiss }));
+    t.push(text(b.x + 20, b.y + 38, kopf, { groesse: 26, gewicht: 700 }));
+    zeilen.forEach((z, i) =>
+      t.push(text(b.x + 20, b.y + 70 + i * 28, z, { groesse: 22, farbe: FARBEN.text2 })),
+    );
+  };
+  block(S.live, 'Live-App', ['Quiz, Q&amp;A, Blitzlicht · Backend, PostgreSQL, Redis']);
+  block(S.kompass, 'Moderationskompass', ['Hinweiskarten für die Lehrperson, regelbasiert']);
+  block(S.spacy, 'spaCy-Sidecar', ['glättet die Wortwolke', 'optional, mit Ersatz']);
+  block(S.kontext, 'Kontextpfad', ['baut den Q&amp;A-Kontext', 'für die Zusammenfassung']);
+  const l = S.llm;
+  t.push(kasten(l, { rx: 14 }));
+  t.push(text(l.x + 24, l.y + 42, 'Zweiter Host', { gewicht: 700 }));
+  block(S.inferenz, 'Inferenz', ['llama-server, privat', 'Modell auf der CPU']);
+  // Netz zwischen Kontextpfad und Inferenz
+  const k = S.kontext;
+  const yNetz = k.y + k.h / 2;
+  const netz = (farbe, breite) =>
+    `<line x1="${k.x + k.w}" y1="${yNetz}" x2="${S.inferenz.x}" y2="${yNetz}" stroke="${farbe}" stroke-width="${breite}"/>`;
+  t.push(netz(FARBEN.gedaempft, 3));
+  t.push(
+    text(l.x - 80, l.y - 14, 'privates Netz, Token', { groesse: 22, farbe: FARBEN.gedaempft }),
+  );
+
+  // Stufen: Hervorhebung je Teil, in der Reihenfolge des Fahrplans
+  const rahmen = (b, farbe) =>
+    `<rect x="${b.x - 6}" y="${b.y - 6}" width="${b.w + 12}" height="${b.h + 12}" rx="14" fill="none" stroke="${farbe}" stroke-width="6"/>`;
+  const s = S.spacy;
+  t.push(
+    `<g data-ab="1" data-teil-system="1a">${rahmen(s, FARBEN.blau)}${svgEtikett(s.x + s.w - 12, s.y + 12, '1A')}</g>`,
+  );
+  const inf = S.inferenz;
+  t.push(
+    `<g data-ab="2" data-teil-system="jonas">${rahmen(k, FARBEN.petrol)}${svgEtikett(k.x + k.w - 12, k.y + 12, '1C')}` +
+      `${netz(FARBEN.bernstein, 6)}${rahmen(inf, FARBEN.bernstein)}${svgEtikett(inf.x + inf.w - 12, inf.y + 12, '1B 1–2')}</g>`,
+  );
+  t.push(
+    `<g data-ab="3" data-teil-system="1b34"><rect x="${l.x + 3}" y="${l.y + 3}" width="${l.w - 6}" height="${l.h - 6}" rx="12" fill="none" stroke="${FARBEN.bernstein}" stroke-width="6" stroke-dasharray="14 10"/>` +
+      `${svgEtikett(l.x + l.w - 16, l.y - 16, '1B 3–4')}` +
+      text(l.x, l.y + l.h + 26, 'gestoppt, stumm, zu spät', {
+        groesse: 22,
+        gewicht: 600,
+        farbe: FARBEN.bernsteinText,
+      }) +
+      `</g>`,
+  );
+  const label =
+    `Systembild: Hörsaal mit mindestens ${fmt(clients)} gleichzeitigen Clients, App-Host mit Live-App, Moderationskompass, ` +
+    'spaCy-Sidecar (1A) und Kontextpfad (1C), über ein privates Netz der zweite Host mit der Inferenz (1B).';
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${S.breite} ${S.hoehe}" role="img" aria-label="${esc(label)}">` +
+    `<rect width="${S.breite}" height="${S.hoehe}" fill="${FARBEN.weiss}"/>${t.join('')}</svg>`
+  );
+}
+
+/**
+ * Miniatur des Systembilds (nur Formen, Maßstab 56 / 470) mit hervorgehobenem Teil: Ausschnitt oben links
+ * auf der Eröffnungsfolie jedes Teils (N1, J1, M1). teil: Schlüssel aus SYSTEM_TEILE.
+ */
+export function systemMini(teil) {
+  const T = SYSTEM_TEILE[teil];
+  if (!T) throw new Error(`Unbekannter Teil im Systembild: ${teil}`);
+  const S = SYSTEM;
+  const f = 56 / S.hoehe;
+  const b = (k) => {
+    const q = S[k];
+    return { x: r2(q.x * f + 1), y: r2(q.y * f + 1), w: r2(q.w * f), h: r2(q.h * f) };
+  };
+  const aktiv = (k) => T.bausteine.includes(k);
+  const form = (k, rx) => {
+    const q = b(k);
+    const an = aktiv(k);
+    const fuellung = an ? T.farbe : k === 'hoersaal' ? FARBEN.raster : FARBEN.weiss;
+    return `<rect x="${q.x}" y="${q.y}" width="${q.w}" height="${q.h}" rx="${rx}" fill="${fuellung}" stroke="${an ? T.farbe : FARBEN.gedaempft}" stroke-width="2"/>`;
+  };
+  const w = r2(S.breite * f + 2);
+  const k = b('kontext');
+  const inf = b('inferenz');
+  const netzAn = teil === 'jonas';
+  return (
+    `<svg viewBox="0 0 ${w} 58" width="${w}" height="58" aria-hidden="true" focusable="false">` +
+    form('hoersaal', 2) +
+    form('app', 3) +
+    ['live', 'kompass', 'spacy', 'kontext'].map((x) => form(x, 2)).join('') +
+    form('llm', 3) +
+    form('inferenz', 2) +
+    `<line x1="${r2(k.x + k.w)}" y1="${r2(k.y + k.h / 2)}" x2="${inf.x}" y2="${r2(k.y + k.h / 2)}" stroke="${netzAn ? FARBEN.bernstein : FARBEN.gedaempft}" stroke-width="2"/>` +
+    `</svg>`
+  );
+}
+
+// ---------------------------------------------------------------------------------------------
+// J12: Zeitleiste eines Auftrags mit einer Stimme während der Inferenz
+
+/**
+ * Zeitleiste in drei Stufen: 0 der Auftrag (Host frei, Inferenz, Nachprüfung) mit den Zeiten des verfolgten
+ * Auftrags; 1 eine Stimme während der Inferenz (Zeitpunkt gedacht, nicht gemessen); 2 die Nachprüfung findet
+ * einen anderen Hash und verwirft die Antwort (Verhalten belegt durch E7/E8).
+ */
+export function abstimmungSvg({ auftrag }) {
+  const H = 250;
+  const x0 = 180;
+  const x1 = 1300;
+  const maxS = 160;
+  const sx = (s) => r2(x0 + (s / maxS) * (x1 - x0));
+  const yApp = 84;
+  const yLlm = 172;
+  const inferS = auftrag.inferMs / 1000;
+  const jobS = auftrag.jobMs / 1000;
+  const t = [];
+  t.push(text(0, yApp + 8, 'app-host', { mono: true, groesse: 22, farbe: FARBEN.gedaempft }));
+  t.push(text(0, yLlm + 8, 'llm-host', { mono: true, groesse: 22, farbe: FARBEN.gedaempft }));
+  t.push(
+    `<line x1="${x0}" y1="${yApp}" x2="${x1}" y2="${yApp}" stroke="${FARBEN.linie}" stroke-width="3"/>`,
+  );
+  for (const s of [0, 30, 60, 90, 120, 150]) {
+    t.push(
+      `<line x1="${sx(s)}" y1="${yLlm + 34}" x2="${sx(s)}" y2="${yLlm + 44}" stroke="${FARBEN.gedaempft}" stroke-width="2"/>`,
+    );
+    t.push(
+      text(sx(s), yLlm + 66, `${fmt(s)} s`, {
+        mono: true,
+        groesse: 22,
+        farbe: FARBEN.gedaempft,
+        anker: 'middle',
+      }),
+    );
+  }
+  // Klick: Kontext gebaut, Host nach wenigen ms frei
+  t.push(`<circle cx="${sx(0)}" cy="${yApp}" r="10" fill="${FARBEN.petrol}"/>`);
+  t.push(
+    text(sx(0), yApp + 44, `Klick: Kontext, Host frei nach ${fmt(auftrag.hostReturnMs)} ms`, {
+      groesse: 22,
+      farbe: FARBEN.tinte,
+    }),
+  );
+  // Inferenz
+  t.push(
+    `<rect x="${sx(0.4)}" y="${yLlm - 22}" width="${r2(sx(inferS) - sx(0.4))}" height="44" rx="6" fill="${FARBEN.bernstein}"/>`,
+  );
+  t.push(
+    text(sx(inferS / 2), yLlm + 8, `Inferenz ${fmt(inferS, 1)} s`, {
+      groesse: 24,
+      gewicht: 700,
+      farbe: FARBEN.weiss,
+      anker: 'middle',
+    }),
+  );
+  // Nachprüfung am Ende
+  t.push(`<circle cx="${sx(jobS)}" cy="${yApp}" r="10" fill="${FARBEN.petrol}"/>`);
+  t.push(
+    text(sx(jobS), yApp - 26, 'Nachprüfung: Hash vergleichen', {
+      groesse: 22,
+      farbe: FARBEN.tinte,
+      anker: 'end',
+    }),
+  );
+  // Stufe 1: eine Stimme kommt während der Inferenz
+  const sStimme = 30;
+  t.push(
+    `<g data-ab="1"><path d="M${sx(sStimme)},${yApp - 14} l12,14 l-12,14 l-12,-14 z" fill="${FARBEN.tinte}"/>` +
+      text(sx(sStimme) + 20, yApp - 26, 'eine Stimme kommt an (Zeitpunkt gedacht)', {
+        groesse: 22,
+        gewicht: 600,
+      }) +
+      `</g>`,
+  );
+  // Stufe 2: Hash anders → Antwort verworfen
+  t.push(
+    `<g data-ab="2"><rect x="${sx(0.4)}" y="${yLlm - 22}" width="${r2(sx(inferS) - sx(0.4))}" height="44" rx="6" fill="${FARBEN.weiss}" fill-opacity="0.55"/>` +
+      text(sx(inferS / 2), yLlm + 8, `Inferenz ${fmt(inferS, 1)} s, Antwort verworfen`, {
+        groesse: 24,
+        gewicht: 700,
+        farbe: FARBEN.bernsteinText,
+        anker: 'middle',
+      }) +
+      `<path d="M${sx(jobS) - 14},${yApp - 14} l28,28 M${sx(jobS) + 14},${yApp - 14} l-28,28" stroke="${FARBEN.rot}" stroke-width="5" stroke-linecap="round"/>` +
+      text(sx(jobS), yApp + 44, 'Hash anders: source_changed, Antwort verworfen', {
+        groesse: 22,
+        gewicht: 700,
+        farbe: FARBEN.rot,
+        anker: 'end',
+      }) +
+      `</g>`,
+  );
+  const label =
+    `Zeitleiste von Auftrag ${auftrag.nr}: Host frei nach ${fmt(auftrag.hostReturnMs)} ms, Inferenz ${fmt(inferS, 1)} s, danach Nachprüfung. ` +
+    'Kommt während der Inferenz eine Stimme an (Zeitpunkt gedacht), ändert sich der Hash, und die Antwort wird verworfen.';
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1380 ${H}" role="img" aria-label="${esc(label)}">` +
+    `<rect width="1380" height="${H}" fill="${FARBEN.weiss}"/>${t.join('')}</svg>`
+  );
+}
+
+// ---------------------------------------------------------------------------------------------
+// J13: alle geprüften Antworten als Raster
+
+/**
+ * Ein Feld je geprüfter Modellantwort, eine Zeile je Auftrag (1B, 1C). Stufe 0 zeigt die Umrisse,
+ * Stufe 1 füllt jedes Feld rot: keine Antwort besteht das Gate.
+ */
+export function gateRasterSvg({ n1B, n1C }) {
+  const zelle = 20;
+  const abstand = 5;
+  const x0 = 70;
+  const zeilen = [
+    ['1B', n1B, 6],
+    ['1C', n1C, 44],
+  ];
+  const breite = x0 + Math.max(n1B, n1C) * (zelle + abstand);
+  const t = [];
+  const voll = [];
+  for (const [auftrag, n, y] of zeilen) {
+    t.push(svgEtikett(56, y - 4, auftrag));
+    for (let i = 0; i < n; i++) {
+      const x = x0 + i * (zelle + abstand);
+      t.push(
+        `<rect x="${x}" y="${y}" width="${zelle}" height="${zelle}" rx="3" fill="${FARBEN.weiss}" stroke="${auftrag === '1B' ? FARBEN.bernstein : FARBEN.petrol}" stroke-width="2"/>`,
+      );
+      voll.push(
+        `<rect x="${x}" y="${y}" width="${zelle}" height="${zelle}" rx="3" fill="${FARBEN.rot}"/>`,
+      );
+    }
+  }
+  const label = `${n1B + n1C} geprüfte Modellantworten (1B ${n1B}, 1C ${n1C}), jede vom Gate verworfen.`;
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${breite} 72" width="${breite}" height="72" role="img" aria-label="${esc(label)}">` +
+    `${t.join('')}<g data-ab="1" data-raster="verworfen">${voll.join('')}</g></svg>`
+  );
+}
+
 // Für den Folienentwurf 1A (abgabe/niklas/grafik-1a.mjs): dieselben Bausteine, derselbe Stil.
 export { text, svgHuelle, esc };

@@ -78,6 +78,31 @@
       .weg-mini-karte {
         display: block;
       }
+      /* Ortsmarke ohne Bewegung (deck.mjs, ortsmarke): Ausschnitt im Systembild oder Karte des App-Hosts */
+      .ort-mini {
+        position: absolute;
+        left: var(--rand);
+        top: 18px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        z-index: 2;
+      }
+      .ort-mini svg {
+        display: block;
+        flex: none;
+      }
+      .ort-text {
+        margin: 0;
+        white-space: nowrap;
+        color: var(--text-2);
+        font-size: var(--s-min);
+        font-weight: 600;
+      }
+      .ort-wer {
+        color: var(--gedaempft);
+        font-weight: 400;
+      }
       /* Folie neben dem Weg (J11): Vermerk an der Stelle der Wegkarte */
       .weg-exkurs {
         position: absolute;

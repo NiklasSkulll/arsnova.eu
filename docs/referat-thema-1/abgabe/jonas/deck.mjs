@@ -7,7 +7,8 @@ import { dirname, extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { TEILE, teilVon } from './folien.mjs';
-import { KAMERA, WEG_STATIONEN } from './grafik.mjs';
+import { KAMERA, SYSTEM_TEILE, WEG_STATIONEN, systemMini } from './grafik.mjs';
+import { ORT_1A, ort1AMini } from '../niklas/grafik-1a.mjs';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
 
@@ -217,6 +218,31 @@ function teilleiste(f) {
   );
 }
 
+/**
+ * Ortsmarke oben links ohne Bewegung (druckfest): auf der Eröffnungsfolie eines Teils der Ausschnitt im
+ * Systembild von GK (f.systemTeil: 1a, jonas, 1b34), auf den übrigen 1A-Folien die Karte des App-Hosts
+ * (f.ort1A: host, live, spacy, ersatz). Folien mit wanderndem Marker (station) tragen keine.
+ */
+function ortsmarke(f) {
+  if (f.systemTeil) {
+    const t = SYSTEM_TEILE[f.systemTeil];
+    const name = TEILE.find((x) => x.id === f.systemTeil);
+    return (
+      `<div class="ort-mini" data-ort="system-${esc(f.systemTeil)}" role="img" aria-label="Ausschnitt im Systembild: ${esc(t.text)}">` +
+      systemMini(f.systemTeil) +
+      `<p class="ort-text" aria-hidden="true">${esc(t.text)}${name ? ` <span class="ort-wer">· ${esc(name.wer)}</span>` : ''}</p></div>`
+    );
+  }
+  if (f.ort1A) {
+    return (
+      `<div class="ort-mini" data-ort="1a-${esc(f.ort1A)}" role="img" aria-label="App-Host: ${esc(ORT_1A[f.ort1A])}">` +
+      ort1AMini(f.ort1A) +
+      `<p class="ort-text" aria-hidden="true">${esc(ORT_1A[f.ort1A])}</p></div>`
+    );
+  }
+  return '';
+}
+
 function jonasFolie(f, nr, gesamt, clipDaten) {
   let inhalt = f.inhalt.replaceAll(' xmlns="http://www.w3.org/2000/svg"', '');
   if (clipDaten) {
@@ -270,6 +296,7 @@ function jonasFolie(f, nr, gesamt, clipDaten) {
   const html =
     `<section ${attrs}>` +
     (f.station && !eigenerWeg ? wegMini({ aktiv: f.station }) : '') +
+    (f.station ? '' : ortsmarke(f)) +
     teilleiste(f) +
     (f.exkurs ? `<p class="weg-exkurs">${esc(f.exkurs)}</p>` : '') +
     `<h1 class="folie-titel">${f.titel}</h1>` +
@@ -323,13 +350,13 @@ export function baueDeck(
   }
   const nach = (pred) => folien.filter(pred);
   const rahmen = (id) => nach((f) => f.id === id);
-  const [gt, g0, g9, gd] = ['GT', 'G0', 'G9', 'GD'].map(rahmen);
+  const [gt, g0, gk, g9, gd] = ['GT', 'G0', 'GK', 'G9', 'GD'].map(rahmen);
   // Anhang (J16, Literaturverzeichnis) steht nach dem Dank, damit er keine Übergabe unterbricht.
   const jonas = nach((f) => f.teil === 'jonas' && !f.anhang);
   const anhang = nach((f) => f.teil === 'jonas' && f.anhang);
   const reserve = nach((f) => f.teil === 'reserve');
-  if ([gt, g0, g9, gd].some((r) => r.length !== 1)) {
-    throw new Error('Rahmenfolien GT, G0, G9 und GD fehlen');
+  if ([gt, g0, gk, g9, gd].some((r) => r.length !== 1)) {
+    throw new Error('Rahmenfolien GT, G0, GK, G9 und GD fehlen');
   }
   if (clip && !(clipInfo && standbild)) {
     throw new Error('Clip braucht clipInfo (Datum, Profil, Zeiten) und ein Standbild für das PDF.');
@@ -351,6 +378,7 @@ export function baueDeck(
   const haupt = [
     ...gt.map((f) => ({ folie: f })),
     ...g0.map((f) => ({ folie: f })),
+    ...gk.map((f) => ({ folie: f })),
     ...teilVonNiklas(niklas.teil1, '1A', 'N1', '1A: Ressourcen auf dem App-Host'),
     ...jonas.map((f) => ({ folie: f })),
     ...teilVonNiklas(niklas.teil2, '1B Schritte 3–4', 'N2', '1B Schritte 3–4: Störung und Aufwand'),

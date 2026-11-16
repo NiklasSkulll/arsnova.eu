@@ -7,7 +7,13 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   FLAECHE,
+  SYSTEM,
+  SYSTEM_TEILE,
+  abstimmungSvg,
   fussballfeldSvg,
+  gateRasterSvg,
+  systemMini,
+  systemSvg,
   kameraViewBox,
   logX,
   wegSvg,
@@ -285,4 +291,79 @@ test('fussballfeldSvg: Linie bis zur Torlinie geschlossen, Rest der Jobzeit besc
   const rest = 105 - 105 * b1.inferAnteil - (b1.transportMs * 105) / b1.jobWarmMs;
   assert.match(svg, new RegExp(`übrige Jobzeit · ${fmt(rest * 100, 1)} cm`));
   assert.match(svg, /Inferenz endet hier/);
+});
+
+// ---------------------------------------------------------------- Ergänzt 2026-11-16: GK, J12, J13, Ortsmarken
+
+/** Regeln wie pruefeSvg, aber mit eigener viewBox. */
+function pruefeFrei(svg) {
+  assert.match(svg, /^<svg [^>]*role="img"/);
+  assert.match(svg, /aria-label="[^"]{20,}"/);
+  for (const [, px] of svg.matchAll(/font-size="([\d.]+)"/g))
+    assert.ok(Number(px) >= 22, `Schrift ${px}`);
+  for (const [, px] of svg.matchAll(/stroke-width="([\d.]+)"/g))
+    assert.ok(Number(px) >= 2, `Linie ${px}`);
+  assert.doesNotMatch(svg, /NaN|undefined|Infinity|\sid="/);
+}
+
+test('GK systemSvg: drei Stufen in Fahrplanfolge, Auslegung aus FESTWERTE, Bausteine im Rahmen', () => {
+  const svg = systemSvg({ clients: 500 });
+  pruefeFrei(svg);
+  assert.match(svg, new RegExp(`viewBox="0 0 ${SYSTEM.breite} ${SYSTEM.hoehe}"`));
+  const stufen = [...svg.matchAll(/data-ab="(\d)" data-teil-system="([^"]+)"/g)].map((m) => [
+    m[1],
+    m[2],
+  ]);
+  assert.deepEqual(stufen, [
+    ['1', '1a'],
+    ['2', 'jonas'],
+    ['3', '1b34'],
+  ]);
+  assert.match(svg, /≥ 500/);
+  for (const w of [
+    'Hörsaal',
+    'App-Host',
+    'Moderationskompass',
+    'spaCy-Sidecar',
+    'Kontextpfad',
+    'Zweiter Host',
+    'Inferenz',
+  ])
+    assert.ok(svg.includes(w), w);
+  // Bausteine liegen im App-Host bzw. im zweiten Host
+  const drin = (a, b) =>
+    a.x >= b.x && a.y >= b.y && a.x + a.w <= b.x + b.w && a.y + a.h <= b.y + b.h;
+  for (const k of ['live', 'kompass', 'spacy', 'kontext'])
+    assert.ok(drin(SYSTEM[k], SYSTEM.app), k);
+  assert.ok(drin(SYSTEM.inferenz, SYSTEM.llm));
+});
+
+test('systemMini: gleiche Geometrie verkleinert, genau der Teil gefüllt', () => {
+  for (const [teil, t] of Object.entries(SYSTEM_TEILE)) {
+    const svg = systemMini(teil);
+    assert.match(svg, /aria-hidden="true"/);
+    const gefuellt = [...svg.matchAll(new RegExp(`fill="${t.farbe}"`, 'g'))].length;
+    assert.equal(gefuellt, t.bausteine.length, teil);
+  }
+  assert.throws(() => systemMini('x'));
+});
+
+test('J12 abstimmungSvg: Zeiten des Auftrags, Stimme (Stufe 1) und Verwurf (Stufe 2)', () => {
+  const svg = abstimmungSvg({ auftrag });
+  pruefeFrei(svg);
+  assert.ok(svg.includes(`Inferenz ${fmt(auftrag.inferMs / 1000, 1)} s`));
+  assert.ok(svg.includes(`Host frei nach ${fmt(auftrag.hostReturnMs)} ms`));
+  assert.match(
+    svg,
+    /<g data-ab="1">[^]*Zeitpunkt gedacht[^]*<\/g><g data-ab="2">[^]*source_changed/,
+  );
+});
+
+test('J13 gateRasterSvg: ein Feld je geprüfter Antwort, rot erst in Stufe 1', () => {
+  const svg = gateRasterSvg({ n1B: b1.verworfen, n1C: c1.gateAntwortenGesamt.wert });
+  pruefeFrei(svg);
+  const n = b1.verworfen + c1.gateAntwortenGesamt.wert;
+  const [vorher, rot] = svg.split('<g data-ab="1"');
+  assert.equal(anzahl(vorher, /<rect x="\d+" y="\d+" width="20"/g), n);
+  assert.equal(anzahl(rot, /fill="#b42318"/g), n);
 });
