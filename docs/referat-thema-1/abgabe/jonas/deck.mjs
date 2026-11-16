@@ -1,4 +1,4 @@
-// Browser-Deck (Task 7): setzt Rahmen, Niklas' Seiten, Jonas' Folien und Reserve zu einer
+// Browser-Deck (Task 7): setzt Rahmen, Jonas' Folien, Niklas' Folien und Reserve zu einer
 // selbstständigen HTML-Datei zusammen. Schriften, Bilder und Clip stehen als data:-URI darin;
 // die Datei braucht kein Netz. Laufzeit (Tasten, Marker, Zoom) steht in deck.js, Gerüst und
 // Bühnenstil in deck-vorlage.html.
@@ -240,6 +240,7 @@ function jonasFolie(f, nr, gesamt, clipDaten) {
     eigenerWeg ? 'data-eigener-weg' : '',
     f.id === 'J10' ? `data-zoom-stufen="${esc(JSON.stringify(ZOOM_STUFEN))}"` : '',
     f.aufbau ? `data-aufbau="${Number(f.aufbau)}"` : '',
+    f.autor ? `data-autor="${esc(f.autor)}"` : '',
     `aria-label="${esc(`${fussNr.replace(' / ', ' von ')}: ${ohneTags(f.titel)}`)}"`,
   ]
     .filter(Boolean)
@@ -278,8 +279,10 @@ function niklasFolien(pngs, teil, kennung, titel) {
 }
 
 /**
- * Baut das gemeinsame Deck: G0, Niklas 1A, Jonas J1–J15, Niklas 1B 3–4, G9, Anhang (J16);
- * Reservefolien danach (nur über `r` erreichbar).
+ * Baut das gemeinsame Deck: G0 (Jonas eröffnet), Jonas J1–J15 (Übergabe auf J15), Niklas 1A und
+ * 1B 3–4, G9 (gemeinsames Fazit, spricht Niklas), Anhang (J16, Literatur 1A); Reservefolien danach
+ * (nur über `r` erreichbar). Native Niklas-Folien mit `anhang` kommen in den Anhang, mit
+ * `teil: 'reserve'` in die Reserve (data-autor="niklas" für den Druckauszug).
  * @param {ReturnType<import('./folien.mjs').folien>} folien
  * @param {{ niklas: { teil1: string[], teil2: string[] }, clip?: string, standbild?: string,
  *   clipInfo?: { datum: string, profil: string, wartezeitS: number, raffungS: number, grund: string,
@@ -309,20 +312,24 @@ export function baueDeck(
     ? { uri: dataUri(clip), standbild: dataUri(standbild), info: clipInfo }
     : null;
 
-  // Niklas' Teile: gerasterte PDF-Seiten (Pfade) oder native Folien im Deck-Stil (Objekte wie
-  // folien(); Entwurf in abgabe/niklas/).
+  // Niklas' Teile: native Folien im Deck-Stil (Objekte wie folien(), abgabe/niklas/) oder gerasterte
+  // PDF-Seiten (Pfade, Rückfallweg --niklas1/--niklas2).
+  const nativ = (teil) => (teil?.length && typeof teil[0] === 'object' ? teil : null);
+  const niklasNativ = [...(nativ(niklas.teil1) ?? []), ...(nativ(niklas.teil2) ?? [])];
   const teilVonNiklas = (teil, ...rest) =>
-    teil?.length && typeof teil[0] === 'object'
-      ? teil.map((f) => ({ folie: f }))
+    nativ(teil)
+      ? teil.filter((f) => f.teil !== 'reserve' && !f.anhang).map((f) => ({ folie: f }))
       : niklasFolien(teil ?? [], ...rest);
   const haupt = [
     ...g0.map((f) => ({ folie: f })),
-    ...teilVonNiklas(niklas.teil1, '1A', 'N1', '1A: Ressourcen auf dem App-Host'),
     ...jonas.map((f) => ({ folie: f })),
+    ...teilVonNiklas(niklas.teil1, '1A', 'N1', '1A: Ressourcen auf dem App-Host'),
     ...teilVonNiklas(niklas.teil2, '1B Schritte 3–4', 'N2', '1B Schritte 3–4: Störung und Aufwand'),
     ...g9.map((f) => ({ folie: f })),
     ...anhang.map((f) => ({ folie: f })),
+    ...niklasNativ.filter((f) => f.anhang && f.teil !== 'reserve').map((f) => ({ folie: f })),
   ];
+  reserve.push(...niklasNativ.filter((f) => f.teil === 'reserve'));
   const gesamt = haupt.length;
   const abschnitte = haupt.map((h, i) =>
     h.folie ? jonasFolie(h.folie, i + 1, gesamt, clipDaten) : h.html(i + 1, gesamt),

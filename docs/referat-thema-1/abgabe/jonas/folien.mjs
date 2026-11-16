@@ -569,15 +569,14 @@ export function folien(daten) {
 
   const F = [];
 
-  // ------------------------------------------------------------ G0 Rahmen (Entwurf)
+  // ------------------------------------------------------------ G0 Rahmen (Jonas eröffnet)
   F.push({
     id: 'G0',
     teil: 'rahmen',
     auftrag: null,
     titel: 'Thema 1: KI-Inferenz im Moderationskompass',
     inhalt: flaeche(
-      entwurf +
-        `<p style="margin:0 0 30px;font-size:30px;color:var(--text-2)">„Wie wirksam trennt die Architektur von Release 1.3 Anwendung, Kontextaufbau und private Inferenz unter realer Last, und welche Betriebsgrenzen ergeben sich für den Moderationskompass?“</p>` +
+      `<p style="margin:0 0 30px;font-size:30px;color:var(--text-2)">„Wie wirksam trennt die Architektur von Release 1.3 Anwendung, Kontextaufbau und private Inferenz unter realer Last, und welche Betriebsgrenzen ergeben sich für den Moderationskompass?“</p>` +
         // Systembild
         `<div style="display:grid;grid-template-columns:250px 60px 1fr 60px 1fr;align-items:stretch;font-size:26px;margin-bottom:34px">` +
         `<div style="border:var(--linie-min) solid var(--linie);border-radius:10px;padding:16px">Lehrperson<br><span style="color:var(--gedaempft);font-size:var(--s-min)">Browser</span></div>` +
@@ -588,13 +587,13 @@ export function folien(daten) {
         `</div>` +
         // wer macht was
         `<div style="display:grid;grid-template-columns:repeat(3,1fr);column-gap:40px;font-size:26px">` +
-        `<div><b>1A · Niklas</b><br>Ressourcen auf dem App-Host</div>` +
-        `<div><b>1B · Jonas, dann Niklas</b><br>Zweiter Host: Aufbau und Zeit (Jonas), Störung und Aufwand (Niklas)</div>` +
         `<div><b>1C · Jonas</b><br>Kontext und Adapterpfad</div>` +
+        `<div><b>1B · Jonas, dann Niklas</b><br>Zweiter Host: Aufbau und Zeit (Jonas), Störung und Aufwand (Niklas)</div>` +
+        `<div><b>1A · Niklas</b><br>Ressourcen auf dem App-Host</div>` +
         `</div>`,
     ),
     notiz:
-      'Entwurf für Niklas und mich. Unser Thema ist die KI-Inferenz für den Moderationskompass. Die Leitfrage: Wie wirksam trennt die Architektur von Release 1.3 Anwendung, Kontextaufbau und private Inferenz unter realer Last? Reale Last haben wir nicht erzeugt, unsere Läufe sind sequenziell; das ist eine Grenze. Niklas beginnt mit dem App-Host, ich verfolge dann einen echten Auftrag über beide Hosts, und Niklas schließt mit Störungen und dem Aufwand der zweiten Serverrolle.',
+      'Unser Thema ist die KI-Inferenz für den Moderationskompass. Die Leitfrage: Wie wirksam trennt die Architektur von Release 1.3 Anwendung, Kontextaufbau und private Inferenz unter realer Last? Reale Last haben wir nur als Labormodell, meine Läufe sind sequenziell; das ist eine Grenze. Ich verfolge zuerst einen echten Auftrag über beide Hosts. Danach prüft Niklas, wie viel Zusatzarbeit der App-Host selbst verträgt und was passiert, wenn der zweite Host gestört ist.',
     zeitS: 30,
     kurzfassung: false,
     quelle:
@@ -1122,35 +1121,56 @@ export function folien(daten) {
         `</div>` +
         `<p style="margin:14px 0 0;font-size:var(--s-min);color:var(--gedaempft)">Details: R12 (Kosten, Risiko und Betriebsfolge je Entscheidung)</p>` +
         `<p style="margin:auto 0 0;padding:16px 24px;border-left:6px solid var(--blau);background:var(--raster);font-size:30px;line-height:1.35"><b style="color:var(--blau)">Zur Diskussion:</b> Prüft das Gate das Richtige, wenn die Antworten auch inhaltlich verfehlt sind?</p>` +
-        `<p style="margin:26px 0 0;font-size:28px;font-weight:700">Und wenn der zweite Host langsam ist oder ausfällt? <span style="color:var(--blau)">→ Niklas</span></p>`,
+        `<p style="margin:26px 0 0;font-size:28px;font-weight:700">Und was verträgt der App-Host selbst neben der Live-Last? <span style="color:var(--blau)">→ Niklas</span></p>`,
     ),
-    notiz: `Was bleibt: die Entkopplung über die Queue, die Nachprüfung, die Validierung und die Gleichheit von Vorschau und Nutzlast; in 1B die Topologie, sie kostet keine relevante Zeit. Empfohlen, nicht umgesetzt: Instruktion und Gate gemeinsam abstimmen, den Timeout je Inferenz-Host kalibrieren, den Cache begrenzen. Offen ist, wie oft eine Stimme unter Voting die Antwort verwirft. Meine Frage an Sie: Prüft das Gate das Richtige? Und damit an Niklas: Was passiert, wenn der zweite Host ausfällt?`,
+    notiz: `Was bleibt: die Entkopplung über die Queue, die Nachprüfung, die Validierung und die Gleichheit von Vorschau und Nutzlast; in 1B die Topologie, sie kostet keine relevante Zeit. Empfohlen, nicht umgesetzt: Instruktion und Gate gemeinsam abstimmen, den Timeout je Inferenz-Host kalibrieren, den Cache begrenzen. Offen ist, wie oft eine Stimme unter Voting die Antwort verwirft. Meine Frage an Sie: Prüft das Gate das Richtige? Und damit an Niklas: Was verträgt der App-Host selbst neben der Live-Last?`,
     zeitS: 40,
     kurzfassung: true,
     quelle: `1C-ergebnis.md, Abschnitt 5, ADRs 1C-010 bis 1C-024, Abschnitt Folgen (Laptop und PC · 9f230abc; Laptop · def56700); 1B-ergebnis.md, Entscheidung (${rechnerKurz(H.hauptlauf.rechner)} · ${H.hauptlauf.commit.slice(0, 8)})`,
     station: null,
   });
 
-  // ------------------------------------------------------------ G9 Rahmen (Entwurf)
+  // ------------------------------------------------------------ G9 Rahmen (gemeinsames Fazit, spricht Niklas)
+  // Ein Satz je Person, dann die gemeinsame Antwort auf die Leitfrage. Der Teil zu 1B Schritte 3–4 bleibt
+  // Platzhalter, bis Niklas' Ergebnis steht; deshalb trägt G9 noch den Entwurfsvermerk.
+  const person = (kopf, farbe, saetze) =>
+    `<div style="border-top:6px solid ${farbe};padding-top:14px">` +
+    `<p style="margin:0 0 8px;font-weight:700;font-size:28px">${kopf}</p>` +
+    saetze.map((x) => `<p style="margin:0 0 10px">${x}</p>`).join('') +
+    `</div>`;
   F.push({
     id: 'G9',
     teil: 'rahmen',
     auftrag: null,
-    titel: 'Kurzfazit Thema 1',
+    titel: 'Trennung wirkt, Grenze ist die Inferenz',
     inhalt: flaeche(
       entwurf +
-        `<div style="display:grid;grid-template-columns:repeat(3,1fr);column-gap:40px;font-size:26px;line-height:1.4;padding-top:20px">` +
-        `<div style="border-top:6px solid var(--blau);padding-top:14px"><b>1A App-Host</b><p style="margin:8px 0 0;color:var(--gedaempft)">[Niklas]</p></div>` +
-        `<div style="border-top:6px solid var(--bernstein);padding-top:14px"><b>1B Zweiter Host</b><p style="margin:8px 0 0">Die Trennung kostet keine relevante Zeit; die Zeit steckt in der Inferenz.</p><p style="margin:8px 0 0;color:var(--gedaempft)">[Niklas: Störung und Aufwand]</p></div>` +
-        `<div style="border-top:6px solid var(--petrol);padding-top:14px"><b>1C Kontextpfad</b><p style="margin:8px 0 0">Vertrag, Konsistenz und Entkopplung halten, mit benannten Ausnahmen (T2.3, T3.1). Nach v1.4.0 besteht keine der ${daten.abgeleitet.gateBeobachtet} geprüften Modellantworten das Gate (1B ${b.verworfen}, 1C ${c.gateAntwortenGesamt.wert}; ein Modell, eine Fixture); davor (${mono('9f230abc')}, Instruktion v2, ohne Gate) ${c.fullContextVorGate.wert}.</p></div>` +
+        `<div style="display:grid;grid-template-columns:1fr 1fr;column-gap:56px;font-size:24px;line-height:1.38">` +
+        person('Jonas · 1C und 1B, Schritte 1–2', 'var(--petrol)', [
+          `${etikett('1C')} Vertrag, Konsistenz und Entkopplung halten, mit benannten Ausnahmen (T2.3, T3.1). Nach v1.4.0 besteht keine der ${daten.abgeleitet.gateBeobachtet} geprüften Modellantworten das Gate (1B ${b.verworfen}, 1C ${c.gateAntwortenGesamt.wert}; ein Modell, eine Fixture); davor (${mono('9f230abc')}, Instruktion v2, ohne Gate) ${c.fullContextVorGate.wert}.`,
+          `${etikett('1B')} Der zweite Host kostet keine relevante Zeit; die Zeit steckt in der Inferenz.`,
+        ]) +
+        person('Niklas · 1A und 1B, Schritte 3–4', 'var(--blau)', [
+          `${etikett('1A')} Der App-Host trägt die Live-Last fehlerfrei. Die spaCy-Glättung bekommt keine Freigabe: Die vorab festgelegte Regel hält nicht, der Nutzen ist ungemessen.`,
+          `${etikett('1B')} <span style="color:var(--gedaempft)">[Niklas: Satz zu Störung, Ausfall und Aufwand der zweiten Serverrolle]</span>`,
+        ]) +
         `</div>` +
-        `<p style="margin:auto 0 0;font-size:28px;font-weight:600">Gemeinsam: [Satz zur Leitfrage von Thema 1, mit Niklas]</p>`,
+        `<p style="margin:auto 0 0;padding:16px 24px;border-left:6px solid var(--blau);background:var(--raster);font-size:27px;line-height:1.35"><b style="color:var(--blau)">Gemeinsam:</b> Im Labor trennt die Architektur Live-Pfad und Inferenz wirksam. Die Betriebsgrenzen liegen in der Inferenz selbst und in optionaler Arbeit ohne Nutzenbeleg. <span style="color:var(--gedaempft)">[Satz zu Ausfall und Aufwand, Niklas]</span></p>`,
     ),
     notiz:
-      'Entwurf für das gemeinsame Kurzfazit, mit Niklas abzustimmen: je Auftrag ein Satz, dann ein gemeinsamer Satz zur Leitfrage.',
-    zeitS: 30,
+      'Zum Schluss unsere Antwort auf die gemeinsame Leitfrage. Jonas hat gezeigt: Der Kontextpfad hält seine Zusagen, der zweite Host kostet keine relevante Zeit, und die Zeit steckt in der Inferenz; nach Version 1.4.0 besteht aber keine geprüfte Modellantwort das Gate. Mein Teil: Der App-Host trägt die Live-Last fehlerfrei, optionale Analyse bekommt ohne Nutzenbeleg keine Freigabe. [Niklas: Satz zu Störung und Aufwand.] Gemeinsam heißt das: Im Labor trennt die Architektur Live-Pfad und Inferenz wirksam; die Grenzen liegen in der Inferenz selbst und in optionaler Arbeit, deren Nutzen niemand gemessen hat. Wir freuen uns auf Ihre Fragen.',
+    stichpunkte: [
+      'Jonas: Kontextpfad hält, zweiter Host kostet keine Zeit, Zeit steckt in der Inferenz; Gate verwirft alle geprüften Antworten',
+      'Niklas: App-Host trägt die Live-Last, spaCy ohne Freigabe',
+      '[Niklas: Störung und Aufwand]',
+      'Gemeinsam: Trennung wirkt im Labor; Grenze = Inferenz und Option ohne Nutzenbeleg',
+      'Wir freuen uns auf Ihre Fragen',
+    ],
+    zeitS: 40,
     kurzfassung: false,
-    quelle: '1B-ergebnis.md, 1C-ergebnis.md (Kurzantwort, Verlauf 9f230abc); 1A von Niklas',
+    sprecher: 'niklas',
+    quelle:
+      '1B-ergebnis.md, 1C-ergebnis.md (Kurzantwort, Verlauf 9f230abc); 1A: abgabe/niklas/folien-1a.mjs (N1, N10); 1B Schritte 3–4: offen',
     station: null,
   });
 

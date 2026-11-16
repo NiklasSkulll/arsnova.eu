@@ -140,8 +140,10 @@ test('Jonas-Folien in Reihenfolge mit den geplanten Zeiten, mit Rahmen etwa 10:3
   for (const f of jonas) assert.equal(f.zeitS, PLAN[f.id], f.id);
   const s = summe(jonas);
   assert.ok(s >= 540 && s <= 600, `Summe ${s}`);
-  const rahmen = summe(F.filter((f) => f.teil === 'rahmen'));
-  assert.ok(s + rahmen >= 600 && s + rahmen <= 660, `mit G0/G9 ${s + rahmen} s`);
+  // G0 eröffnet Jonas; G9 (gemeinsames Fazit) spricht Niklas und zählt zu seiner Zeit.
+  const rahmen = summe(F.filter((f) => f.teil === 'rahmen' && f.sprecher !== 'niklas'));
+  assert.ok(s + rahmen >= 600 && s + rahmen <= 660, `mit G0 ${s + rahmen} s`);
+  assert.equal(F.find((f) => f.id === 'G9').sprecher, 'niklas');
 });
 
 test('Kurzfassung: nur Jonas-Folien, Summe 340–400 s', () => {
@@ -183,12 +185,12 @@ test('Sprechnotizen passen zur Folienzeit (etwa 130 Wörter je Minute)', () => {
   }
 });
 
-test('Rahmenfolien G0 und G9 sind als Entwurf markiert', () => {
-  for (const id of ['G0', 'G9']) {
-    const f = nach(id);
-    assert.equal(f?.teil, 'rahmen', id);
-    assert.match(sichtbar(f.inhalt), /Entwurf, mit Niklas abzustimmen/, id);
-  }
+test('Rahmen: G0 abgestimmt, G9 als Entwurf markiert, solange 1B 3–4 offen ist', () => {
+  for (const id of ['G0', 'G9']) assert.equal(nach(id)?.teil, 'rahmen', id);
+  assert.doesNotMatch(sichtbar(nach('G0').inhalt), /Entwurf/);
+  // G9 trägt Niklas' Platzhalter für 1B 3–4; der Vermerk fällt mit ihnen (abgabe-lokal.mjs blockiert sonst)
+  assert.match(sichtbar(nach('G9').inhalt), /Entwurf, mit Niklas abzustimmen/);
+  assert.match(sichtbar(nach('G9').inhalt), /\[Niklas/);
   assert.equal(F[0].id, 'G0');
   assert.equal(F.at(-1).teil, 'reserve');
   // J16 (Literaturverzeichnis) folgt als Anhang direkt auf G9, nicht zwischen J15 und Niklas.

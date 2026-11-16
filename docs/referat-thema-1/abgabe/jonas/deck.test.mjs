@@ -137,9 +137,9 @@ test('Anzahl Folien = Rahmen + Niklas + Jonas, Reserve getrennt', async () => {
     );
     assert.equal(z.reserve, RESERVE.length);
     assert.equal(z.nachG9, 'J16', 'Literaturverzeichnis nach G9');
-    // Reihenfolge: G0, Niklas 1A, Jonas, Niklas 1B 3–4, G9, Anhang (J16), Reserve
+    // Reihenfolge: G0, Jonas, Niklas 1A und 1B 3–4, G9, Anhang (J16), Reserve
     const block = z.reihenfolge.filter((t, i, a) => i === 0 || a[i - 1] !== t);
-    assert.deepEqual(block, ['rahmen', 'niklas', 'jonas', 'niklas', 'rahmen', 'jonas', 'reserve']);
+    assert.deepEqual(block, ['rahmen', 'jonas', 'niklas', 'rahmen', 'jonas', 'reserve']);
     if (niklas === 2) {
       assert.deepEqual(z.platzhalter, ['Teil Niklas', 'Teil Niklas']);
     } else {
@@ -162,7 +162,7 @@ test('Fußzeile zeigt Seitenzahl im Vortrag und Quelle', async () => {
   const gesamt = RAHMEN.length + 2 + JONAS.length;
   // ohne führende Null wie bei Niklas („2 / 9“)
   assert.match(fuss.G0, new RegExp(`^1 / ${gesamt} · `));
-  assert.match(fuss.J1, new RegExp(`^3 / ${gesamt} · `));
+  assert.match(fuss.J1, new RegExp(`^2 / ${gesamt} · `));
   assert.match(fuss.R1, /^Reserve R1 · /);
   assert.match(fuss.J16, new RegExp(`^${gesamt} / ${gesamt} · `));
   await context.close();
@@ -359,8 +359,9 @@ test('Tasten: Home, End, Bild ab/auf, Leertaste; Reserve-Übersicht mit r', asyn
   await page.keyboard.press('Home');
   assert.equal(await aktuelleId(page), 'G0');
   await page.keyboard.press('PageDown');
+  assert.equal(await aktuelleId(page), 'J1', 'Jonas folgt direkt auf G0');
   await page.keyboard.press('Space');
-  assert.equal(await aktuelleId(page), 'J1');
+  assert.equal(await aktuelleId(page), 'J2');
   await page.keyboard.press('PageUp');
   await geheZu(page, 'J7');
 

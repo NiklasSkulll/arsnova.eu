@@ -4,6 +4,9 @@
 //   node bau.mjs [--niklas1 <pdf>] [--niklas2 <pdf>] [--niklas1-stand <text>]
 //                [--niklas2-stand <text>] [--ausgabe <ordner>]
 //
+// Niklas' Teile kommen standardmäßig nativ aus abgabe/niklas/ (1A aus seiner Messreihe, 1B 3–4 als
+// Gerüst). --niklas1/--niklas2 betten stattdessen die Seiten eines PDFs ein (Rückfallweg).
+//
 // Das Handout entsteht seit 2026-11-15 in PaperLab (Typ referat, IU-Format nach RL und ZL); Zahlen und
 // Abbildungen dafür liefert handout-latex.mjs. Name und Matrikelnummer stehen nur dort (author.ini).
 /* global console, document */
@@ -28,6 +31,7 @@ import { parseArgs } from 'node:util';
 import { baueDeck } from './deck.mjs';
 import { FESTWERTE, folien, ladeFolienDaten } from './folien.mjs';
 import { niklasSeiten } from './niklas-seiten.mjs';
+import { eingabenNiklas, niklasTeile } from '../niklas/teile.mjs';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HIER, '../..'); // docs/referat-thema-1
@@ -35,7 +39,6 @@ const REPO = resolve(ROOT, '../..');
 const requireRepo = createRequire(resolve(REPO, 'package.json'));
 
 const STANDARD_AUSGABE = join(HIER, 'ausgabe');
-const NIKLAS_1A_STANDARD = join(ROOT, 'abgabe/1A-folien.pdf');
 
 /** Ergebnis-JSONs, Antwort-Ausschnitt und Belege, aus denen folien.mjs/zahlen.mjs lesen (relativ zu ROOT). */
 const DATEN = [
@@ -111,8 +114,22 @@ function sprungplan(haupt) {
   ];
 }
 
-/** Sprechnotizen aus folien: je Folie Kennung, Titel, Sekunden, kumulierte Zeit, Kurzfassung-Marke, Notiz. */
-export function baueSprechnotizen(alle) {
+/** Stichpunkte (zum freien Vortrag) als Liste; fehlen sie, bleibt nur der Fließtext. */
+function stichpunkteBlock(f) {
+  if (!f.stichpunkte?.length) return [];
+  return ['**Stichpunkte**', '', ...f.stichpunkte.map((p) => `- ${p}`), '', '**Fließtext**', ''];
+}
+
+/**
+ * Sprechnotizen: je Folie Kennung, Titel, Sekunden, kumulierte Zeit, Kurzfassung-Marke, Stichpunkte
+ * (falls vorhanden) und Fließtext. Ohne Optionen die Fassung für Jonas (mit Sprungplan zu J13/J15).
+ * @param {object[]} alle Folien in Vortragsreihenfolge, Reserve beliebig dazwischen
+ * @param {{ person?: string, quelle?: string, sprungplan?: boolean }} [o]
+ */
+export function baueSprechnotizen(
+  alle,
+  { person = 'Jonas', quelle = '`folien.mjs`', sprungplan: mitSprungplan = true } = {},
+) {
   const ohneTags = (s) =>
     s
       .replace(/<[^>]+>/g, '')
@@ -123,12 +140,13 @@ export function baueSprechnotizen(alle) {
   const gesamt = haupt.reduce((s, f) => s + f.zeitS, 0);
   const kurz = haupt.filter((f) => f.kurzfassung).reduce((s, f) => s + f.zeitS, 0);
   const zeilen = [
-    '# Sprechnotizen Jonas',
+    `# Sprechnotizen ${person}`,
     '',
     `Gesamt ${mmss(gesamt)} min, Kurzfassung ${mmss(kurz)} min (Folien mit der Marke „Kurzfassung“). ` +
-      'Erzeugt aus `folien.mjs` (`notiz`, `zeitS`, `kurzfassung`); nicht von Hand ändern.',
+      `Erzeugt aus ${quelle} (\`notiz\` = Fließtext, \`stichpunkte\`, \`zeitS\`, \`kurzfassung\`); nicht von Hand ändern. ` +
+      'Vorgetragen wird aus den Stichpunkten; der Fließtext ist die ausformulierte Fassung zum Üben.',
     '',
-    ...sprungplan(haupt),
+    ...(mitSprungplan ? sprungplan(haupt) : []),
   ];
   let kumuliert = 0;
   let kumuliertKurz = 0;
@@ -139,6 +157,7 @@ export function baueSprechnotizen(alle) {
       `## ${f.id} ${ohneTags(f.titel)} (${f.zeitS} s, kumuliert ${mmss(kumuliert)}` +
         `${f.kurzfassung ? `, **Kurzfassung** ${mmss(kumuliertKurz)}` : ''})`,
       '',
+      ...stichpunkteBlock(f),
       f.notiz.trim(),
       '',
       `_Quelle:_ ${f.quelle ?? ''}`,
@@ -150,6 +169,7 @@ export function baueSprechnotizen(alle) {
     zeilen.push(
       `## ${f.id} ${ohneTags(f.titel)}`,
       '',
+      ...stichpunkteBlock(f),
       f.notiz.trim(),
       '',
       `_Quelle:_ ${f.quelle}`,
@@ -158,6 +178,22 @@ export function baueSprechnotizen(alle) {
   }
   return zeilen.join('\n');
 }
+
+/** Folien, die Niklas spricht: G9 (gemeinsames Fazit) und seine Teile samt Reserve, ohne Literatur. */
+export function folienNiklas(alle, niklas) {
+  const eigene = [...(niklas.teil1 ?? []), ...(niklas.teil2 ?? [])].filter(
+    (f) => typeof f === 'object' && !f.anhang,
+  );
+  const g9 = alle.filter((f) => f.sprecher === 'niklas');
+  return [
+    ...eigene.filter((f) => f.teil !== 'reserve'),
+    ...g9,
+    ...eigene.filter((f) => f.teil === 'reserve'),
+  ];
+}
+
+/** Folien, die Jonas spricht: alles aus folien() außer G9. */
+export const folienJonas = (alle) => alle.filter((f) => f.sprecher !== 'niklas');
 
 export async function drucke(browser, url, pdfPfad) {
   const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
@@ -216,13 +252,12 @@ async function main() {
   const { format, resolveConfig } = ladeAbhaengigkeit('prettier');
   const formatierung = (await resolveConfig(join(REPO, 'package.json'))) ?? {};
 
-  // Niklas' Teile: 1A standardmäßig aus der gemergten PDF, sonst Platzhalter; 1B 3–4 nur auf Angabe.
-  // Ausdrücklich angegebene PDFs müssen existieren und eingebettet werden können.
+  // Niklas' Teile: standardmäßig nativ (abgabe/niklas/); ein angegebenes PDF ersetzt den Teil
+  // (Rückfallweg). Ausdrücklich angegebene PDFs müssen existieren und eingebettet werden können.
   const niklasQuellen = { teil1: null, teil2: null };
   if (o.niklas1) pruefePdf(o.niklas1, '--niklas1');
   if (o.niklas2) pruefePdf(o.niklas2, '--niklas2');
-  const eins = o.niklas1 ?? (existsSync(NIKLAS_1A_STANDARD) ? NIKLAS_1A_STANDARD : undefined);
-  if (eins) niklasQuellen.teil1 = { pfad: eins, stand: o['niklas1-stand'] };
+  if (o.niklas1) niklasQuellen.teil1 = { pfad: o.niklas1, stand: o['niklas1-stand'] };
   if (o.niklas2) niklasQuellen.teil2 = { pfad: o.niklas2, stand: o['niklas2-stand'] };
 
   // Clip für J13 mit Angaben (medien/clip.json: Datum, Profil, Zeiten) und Standbild für das PDF.
@@ -240,6 +275,7 @@ async function main() {
       .map((n) => join(HIER, n)),
     ...alleDateien(join(HIER, 'schriften')),
     ...(mitClip ? [clip, clipJson, standbild] : []),
+    ...eingabenNiklas(ROOT),
   ];
   const fehlend = festeEingaben.filter((p) => !existsSync(p));
   if (fehlend.length) {
@@ -250,7 +286,7 @@ async function main() {
   try {
     const daten = ladeFolienDaten(ROOT);
     const alle = folien(daten);
-    const niklas = { teil1: [], teil2: [] };
+    const niklas = niklasTeile(ROOT);
     for (const [teil, flag, ziel] of [
       ['teil1', '--niklas1', 'n1'],
       ['teil2', '--niklas2', 'n2'],
@@ -258,10 +294,7 @@ async function main() {
       if (!niklasQuellen[teil]) continue;
       niklas[teil] = await niklasSeiten(niklasQuellen[teil].pfad, join(arbeit, ziel));
       if (niklas[teil].length === 0) {
-        if (flag === '--niklas1' && !o.niklas1)
-          niklasQuellen[teil] = null; // Standard-PDF nicht rasterbar
-        else
-          fehler(`${flag}: Seiten von ${niklasQuellen[teil].pfad} nicht einbettbar (pdftoppm?).`);
+        fehler(`${flag}: Seiten von ${niklasQuellen[teil].pfad} nicht einbettbar (pdftoppm?).`);
       }
     }
     const rohHtml = baueDeck(alle, {
@@ -285,13 +318,29 @@ async function main() {
         `${pathToFileURL(deckPfad).href}?druck=jonas`,
         join(ausgabe, 'jonas-folien.pdf'),
       );
+      await drucke(
+        browser,
+        `${pathToFileURL(deckPfad).href}?druck=niklas`,
+        join(ausgabe, 'niklas-folien.pdf'),
+      );
     } finally {
       await browser.close();
     }
 
     writeFileSync(
       join(ausgabe, 'sprechnotizen.md'),
-      await format(baueSprechnotizen(alle), { ...formatierung, parser: 'markdown' }),
+      await format(baueSprechnotizen(folienJonas(alle)), { ...formatierung, parser: 'markdown' }),
+    );
+    writeFileSync(
+      join(ausgabe, 'sprechnotizen-niklas.md'),
+      await format(
+        baueSprechnotizen(folienNiklas(alle, niklas), {
+          person: 'Niklas',
+          quelle: '`abgabe/niklas/folien-1a.mjs`, `folien-1b34.mjs` und G9 in `folien.mjs`',
+          sprungplan: false,
+        }),
+        { ...formatierung, parser: 'markdown' },
+      ),
     );
 
     // Manifest: Eingaben (Daten, Vorlagen, Module, Schriften, Niklas-PDFs) und Ausgaben mit SHA-256.
@@ -313,7 +362,9 @@ async function main() {
       'jonas-deck.html',
       'gemeinsames-deck.pdf',
       'jonas-folien.pdf',
+      'niklas-folien.pdf',
       'sprechnotizen.md',
+      'sprechnotizen-niklas.md',
     ]) {
       const p = join(ausgabe, datei);
       const daten_ = readFileSync(p);
@@ -331,14 +382,19 @@ async function main() {
             stand: q.stand ?? 'nicht angegeben',
             sha256: sha256(readFileSync(q.pfad)),
           }
-        : { quelle: 'Platzhalter (Teil noch nicht geliefert)', stand: null, sha256: null };
+        : {
+            quelle: 'nativ: abgabe/niklas/ (folien-1a.mjs, folien-1b34.mjs)',
+            stand: null,
+            sha256: null,
+          };
     const manifest = {
       schemaVersion: 1,
       bauskript: 'docs/referat-thema-1/abgabe/jonas/bau.mjs',
       niklas: { teil1: nikEintrag(niklasQuellen.teil1), teil2: nikEintrag(niklasQuellen.teil2) },
       folien: {
-        gemeinsamesDeck: alle.filter((f) => f.teil !== 'reserve').length,
+        gemeinsamesDeck: ausgaben.find((a) => a.datei === 'gemeinsames-deck.pdf').seiten,
         jonasUndReserve: alle.filter((f) => f.teil === 'jonas' || f.teil === 'reserve').length,
+        niklasUndReserve: ausgaben.find((a) => a.datei === 'niklas-folien.pdf').seiten,
       },
       eingaben: eingaben.map(eingabeEintrag),
       ausgaben,

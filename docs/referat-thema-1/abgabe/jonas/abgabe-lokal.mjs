@@ -27,7 +27,7 @@ export function gruppenZeile(gruppe) {
     .join(' · ');
 }
 
-/** Zeile rechts oben auf Seite 1 setzen (dort ist auf G0 und J1 Platz); übrige Seiten unverändert. */
+/** Zeile rechts oben auf Seite 1 setzen (dort ist auf G0, J1 und N1 Platz); übrige Seiten unverändert. */
 export async function stempele(pdfBytes, zeile) {
   const doc = await PDFDocument.load(pdfBytes);
   const seite = doc.getPage(0);
@@ -81,7 +81,7 @@ async function main() {
   const { gruppe } = JSON.parse(readFileSync(eingabe, 'utf8'));
   const zeile = gruppenZeile(gruppe);
   mkdirSync(ziel, { recursive: true });
-  for (const name of ['jonas-folien.pdf', 'gemeinsames-deck.pdf']) {
+  for (const name of ['jonas-folien.pdf', 'niklas-folien.pdf', 'gemeinsames-deck.pdf']) {
     const quelle = join(HIER, 'ausgabe', name);
     if (!existsSync(quelle)) throw new Error(`${quelle} fehlt, erst bau.mjs ausführen`);
     const entwurf = await entwurfsSeiten(readFileSync(quelle));

@@ -21,6 +21,7 @@ import { fileURLToPath } from 'node:url';
 
 import { baueDeck } from './deck.mjs';
 import { folien, ladeFolienDaten } from './folien.mjs';
+import { niklasTeile } from '../niklas/teile.mjs';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HIER, '../..');
@@ -30,11 +31,15 @@ const requireRepo = createRequire(resolve(ROOT, '../../package.json'));
 const daten0 = ladeFolienDaten(ROOT);
 const F = folien(daten0);
 const JONAS_UND_RESERVE = F.filter((f) => f.teil === 'jonas' || f.teil === 'reserve');
+const NIKLAS = niklasTeile(ROOT);
+const NIKLAS_ALLE = [...NIKLAS.teil1, ...NIKLAS.teil2];
 const AUSGABEN = [
   'jonas-deck.html',
   'gemeinsames-deck.pdf',
   'jonas-folien.pdf',
+  'niklas-folien.pdf',
   'sprechnotizen.md',
+  'sprechnotizen-niklas.md',
 ];
 
 let wurzel;
@@ -91,6 +96,9 @@ test('Manifest: SHA-256 aller Eingaben und Ausgaben, Seitenzahlen', () => {
     'abgabe/jonas/handout-vorlage.html',
     'abgabe/jonas/folien.mjs',
     'abgabe/jonas/schriften/inter-latin-400-normal.woff2',
+    'abgabe/niklas/folien-1a.mjs',
+    'evidenz/1A/reihe-main-a19ca70f-20261115-122547/auswertung/auswertung.json',
+    'evidenz/1A/reihe-main-a19ca70f-20261115-122547/V3/block-05/ressourcen.json.gz',
   ]) {
     assert.ok(
       pfade.some((p) => p.endsWith(erwartet)),
@@ -110,6 +118,7 @@ test('Manifest: SHA-256 aller Eingaben und Ausgaben, Seitenzahlen', () => {
   }
   const seiten = (n) => m.ausgaben.find((a) => a.datei === n).seiten;
   assert.equal(seiten('jonas-folien.pdf'), JONAS_UND_RESERVE.length);
+  assert.equal(seiten('niklas-folien.pdf'), NIKLAS_ALLE.length);
   assert.ok(m.niklas.teil1.quelle && m.niklas.teil2.quelle, 'Herkunft von Niklas im Manifest');
   assert.doesNotMatch(JSON.stringify(m), /TEST-MATRIKEL|personen\.json/);
 });
@@ -118,11 +127,11 @@ test('jonas-folien.pdf: genau J1–J16 plus Reserve, eine Seite je Folie, 1600 x
   const { seiten } = await pdfInfo(join(platzhalter, 'jonas-folien.pdf'));
   assert.equal(seiten, JONAS_UND_RESERVE.length);
   const gemeinsam = await pdfInfo(join(platzhalter, 'gemeinsames-deck.pdf'));
-  // G0, Niklas 1A (gemergte PDF unter abgabe/ oder eine Platzhalterfolie), Platzhalter 1B 3–4,
-  // Jonas, G9 und Reserve.
-  const pdf1A = join(ROOT, 'abgabe/1A-folien.pdf');
-  const seiten1A = existsSync(pdf1A) ? (await pdfInfo(pdf1A)).seiten : 1;
-  assert.equal(gemeinsam.seiten, F.length + seiten1A + 1);
+  // G0, Jonas, Niklas nativ (1A, 1B 3–4, Literatur, Reserve), G9, J16 und Jonas' Reserve
+  assert.equal(gemeinsam.seiten, F.length + NIKLAS_ALLE.length);
+  const niklas = await pdfInfo(join(platzhalter, 'niklas-folien.pdf'));
+  assert.equal(niklas.seiten, NIKLAS_ALLE.length);
+  assert.match(niklas.text, /Keine Freigabe für die spaCy-Glättung/);
   const roh = readFileSync(join(platzhalter, 'jonas-folien.pdf'), 'latin1');
   assert.match(roh, /\/MediaBox\s*\[\s*0\s+0\s+1200(\.\d+)?\s+675(\.\d+)?\s*\]/);
 });
@@ -137,9 +146,10 @@ test('jonas-deck.html ist selbstständig (kein http(s), kein externes Skript)', 
   assert.doesNotMatch(h, /<script[^>]+src=/);
 });
 
-test('sprechnotizen.md: Summen und Folien stimmen mit folien.mjs überein', () => {
+test('sprechnotizen.md: Summen und Folien stimmen mit folien.mjs überein (ohne G9, das Niklas spricht)', () => {
   const md = readFileSync(join(platzhalter, 'sprechnotizen.md'), 'utf8');
-  const haupt = F.filter((f) => f.teil !== 'reserve');
+  const haupt = F.filter((f) => f.teil !== 'reserve' && f.sprecher !== 'niklas');
+  assert.ok(!md.includes('## G9 '), 'G9 steht in Niklas’ Notizen');
   const gesamt = haupt.reduce((s, f) => s + f.zeitS, 0);
   const kurz = haupt.filter((f) => f.kurzfassung).reduce((s, f) => s + f.zeitS, 0);
   const mmss = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
@@ -163,7 +173,12 @@ test('sprechnotizen.md: Summen und Folien stimmen mit folien.mjs überein', () =
 test('generierte Textausgaben sind Prettier-formatiert (Pre-commit würde sie sonst ändern)', async () => {
   const { check, resolveConfig } = requireRepo('prettier');
   const konfig = (await resolveConfig(resolve(ROOT, '../../package.json'))) ?? {};
-  for (const name of ['jonas-deck.html', 'sprechnotizen.md', 'manifest.json']) {
+  for (const name of [
+    'jonas-deck.html',
+    'sprechnotizen.md',
+    'sprechnotizen-niklas.md',
+    'manifest.json',
+  ]) {
     const text = readFileSync(join(platzhalter, name), 'utf8');
     assert.ok(
       await check(text, { ...konfig, filepath: join(HIER, name) }),
@@ -216,7 +231,7 @@ test('Manifest führt jede Datei auf, die die Module beim Bau lesen', () => {
   try {
     const d = ladeFolienDaten(ROOT);
     const alle = folien(d);
-    baueDeck(alle, { niklas: { teil1: [], teil2: [] }, eingebettet: true });
+    baueDeck(alle, { niklas: niklasTeile(ROOT), eingebettet: true });
   } finally {
     fs.readFileSync = original;
     syncBuiltinESMExports();
@@ -247,4 +262,15 @@ test('Sprechnotizen: Sprungplan zu J13 und J15 bei Abbruch (Prüfung 3, I5)', as
   assert.match(md, /J13/);
   assert.match(md, /J15/);
   assert.match(md, /9:00/);
+});
+
+test('sprechnotizen-niklas.md: Stichpunkte und Fließtext je Folie, G9 und Reserve, ohne Literatur', () => {
+  const md = readFileSync(join(platzhalter, 'sprechnotizen-niklas.md'), 'utf8');
+  assert.match(md, /^# Sprechnotizen Niklas/);
+  for (const f of [...NIKLAS_ALLE.filter((x) => !x.anhang), F.find((x) => x.id === 'G9')]) {
+    assert.ok(md.includes(`## ${f.id} `), f.id);
+  }
+  assert.ok(!md.includes('## NL '));
+  assert.ok((md.match(/\*\*Stichpunkte\*\*/g) ?? []).length >= 10);
+  assert.doesNotMatch(md, /Sprungplan/);
 });

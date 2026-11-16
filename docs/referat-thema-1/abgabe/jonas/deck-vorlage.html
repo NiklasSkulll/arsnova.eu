@@ -263,10 +263,11 @@
         .live {
           display: none !important;
         }
-        html[data-druck='jonas'] .folie:not([data-teil='jonas']):not([data-teil='reserve']) {
+        html[data-druck='jonas'] .folie:not([data-teil='jonas']):not([data-teil='reserve']),
+        html[data-druck='jonas'] .folie[data-autor='niklas'] {
           display: none !important;
         }
-        html[data-druck='niklas'] .folie:not([data-teil='niklas']) {
+        html[data-druck='niklas'] .folie:not([data-teil='niklas']):not([data-autor='niklas']) {
           display: none !important;
         }
       }
