@@ -40,6 +40,8 @@ const AUSGABEN = [
   'niklas-folien.pdf',
   'sprechnotizen.md',
   'sprechnotizen-niklas.md',
+  'sprechkarten-jonas.pdf',
+  'sprechkarten-niklas.pdf',
 ];
 
 let wurzel;
@@ -272,5 +274,45 @@ test('sprechnotizen-niklas.md: Stichpunkte und Fließtext je Folie, G9 und Reser
   }
   assert.ok(!md.includes('## NL '));
   assert.ok((md.match(/\*\*Stichpunkte\*\*/g) ?? []).length >= 10);
-  assert.doesNotMatch(md, /Sprungplan/);
+  // Sprungplan für Niklas: N10, 1B 3–4 und G9 müssen gesprochen sein; Budgethinweis bei Überlänge.
+  assert.match(md, /## Sprungplan/);
+  assert.match(md, /N10 bis G9/);
+  assert.match(md, /9:00/);
+  const haupt = [
+    ...NIKLAS_ALLE.filter((x) => x.teil !== 'reserve' && !x.anhang),
+    F.find((x) => x.id === 'G9'),
+  ];
+  const gesamt = haupt.reduce((s, f) => s + f.zeitS, 0);
+  assert.equal(/\*\*Zeitbudget:\*\*/.test(md), gesamt > 630);
+});
+
+test('Sprechnotizen: Jonas’ Sprungplan zählt ab G0; jede Folie mit Stichpunkten vor dem Fließtext', () => {
+  const md = readFileSync(join(platzhalter, 'sprechnotizen.md'), 'utf8');
+  assert.match(md, /Ab der ersten Folie \(G0\) gezählt beginnt J13/);
+  for (const f of F.filter((x) => x.sprecher !== 'niklas' && x.id !== 'J16')) {
+    const abschnitt = md.split(`## ${f.id} `)[1].split('\n## ')[0];
+    assert.ok(abschnitt.indexOf('**Stichpunkte**') < abschnitt.indexOf('**Fließtext**'), f.id);
+  }
+});
+
+test('Sprechkarten: je Person ein PDF mit allen Stichpunkten, ohne Fließtext', async () => {
+  const { PDFParse } = requireRepo('pdf-parse');
+  const text = async (datei) => {
+    const p = new PDFParse({ data: new Uint8Array(readFileSync(join(platzhalter, datei))) });
+    try {
+      return (await p.getText()).text.replace(/\s+/g, ' ');
+    } finally {
+      await p.destroy();
+    }
+  };
+  const jonas = await text('sprechkarten-jonas.pdf');
+  assert.match(jonas, /Sprechkarten Jonas/);
+  for (const f of F.filter((x) => x.sprecher !== 'niklas' && x.stichpunkte)) {
+    assert.ok(jonas.includes(f.stichpunkte[0].slice(0, 25)), `${f.id}: erster Stichpunkt`);
+  }
+  assert.ok(!jonas.includes(F.find((x) => x.id === 'J1').notiz.slice(0, 60)), 'kein Fließtext');
+  const niklas = await text('sprechkarten-niklas.pdf');
+  assert.match(niklas, /Sprechkarten Niklas/);
+  assert.match(niklas, /N10/);
+  assert.match(niklas, /G9/);
 });
