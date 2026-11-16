@@ -10,43 +10,74 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 
+import qrcode from 'qrcode-generator';
+
 import { fussballMasse, fussballfeldSvg, wegSvg, zeitzerlegungSvg } from './grafik.mjs';
 import { LITERATUR, kurzbeleg } from './literatur.mjs';
 import { fmt, ladeZahlen } from './zahlen.mjs';
 
 /**
- * Teile des gemeinsamen Vortrags in Reihenfolge: Fahrplan auf G0 und Teilleiste oben rechts auf jeder
- * Hauptfolie (deck.mjs). etiketten: [Auftrag, Zusatz]; Farben über die Etiketten (1C Petrol, 1B
- * Bernstein, 1A Blau).
+ * Teile des gemeinsamen Vortrags in Reihenfolge (Design 2026-11-15 §3: Niklas eröffnet mit 1A, Jonas erzählt
+ * 1C und 1B 1–2 am Stück, Niklas schließt mit 1B 3–4): Fahrplan auf G0 und Teilleiste oben rechts auf jeder
+ * Hauptfolie (deck.mjs). etiketten: [Auftrag, Zusatz]; farben: Akzentlinie im Fahrplan (1A Blau, 1C Petrol,
+ * 1B Bernstein, Fazit neutral).
  */
 export const TEILE = [
-  {
-    id: 'jonas',
-    kurz: '1C, 1B 1–2',
-    wer: 'Jonas',
-    etiketten: [['1C'], ['1B', 'Schritte 1–2']],
-    was: 'Kontextpfad und Zeit am zweiten Host',
-  },
   {
     id: '1a',
     kurz: '1A',
     wer: 'Niklas',
     etiketten: [['1A']],
-    was: 'Reserve des App-Hosts neben der Live-Last',
+    farben: ['var(--blau)'],
+    was: 'App-Host: Reserve neben der Live-Last',
+  },
+  {
+    id: 'jonas',
+    kurz: '1C, 1B 1–2',
+    wer: 'Jonas',
+    etiketten: [['1C'], ['1B', 'Schritte 1–2']],
+    farben: ['var(--petrol)', 'var(--bernstein)'],
+    was: 'Ein Auftrag über zwei Hosts: Kontextpfad und Zeit',
   },
   {
     id: '1b34',
     kurz: '1B 3–4',
     wer: 'Niklas',
     etiketten: [['1B', 'Schritte 3–4']],
-    was: 'Störung und Aufwand des zweiten Hosts',
+    farben: ['var(--bernstein)'],
+    was: 'Zweiter Host gestört: Ersatz und Aufwand',
   },
-  { id: 'fazit', kurz: 'Fazit', wer: 'Gemeinsam', etiketten: [], was: 'Antwort auf die Leitfrage' },
+  {
+    id: 'fazit',
+    kurz: 'Fazit',
+    wer: 'Gemeinsam',
+    etiketten: [],
+    farben: ['var(--text-2)'],
+    was: 'Antwort auf die Leitfrage',
+  },
 ];
 
-/** Teil einer Folie für die Teilleiste; null für G0, Anhang und Reserve. */
+/** Angaben der Titelfolie: Modul laut Prüfungsdokument (DSCC0127); Prüfer und Termin nach Angabe der Gruppe (2026-11-16). */
+export const TITEL = {
+  kurs: 'Cloud Computing',
+  modul: 'DSCC0127',
+  hochschule: 'IU Internationale Hochschule',
+  pruefer: 'Prof. Dr. Klaus Quibeldey-Cirkel',
+  datum: '24.11.2026',
+};
+
+/**
+ * Vermerk im Platz für die Matrikelnummer (Titelfolie, data-matrikel="<Name>"). Die Nummern stehen nie im
+ * Repo; abgabe-lokal.mjs ersetzt den Vermerk in einer ignorierten Kopie des Decks.
+ */
+export const MATRIKEL_VERMERK = 'Matrikelnummer in der Abgabefassung';
+
+/** Rahmenfolien ohne Teilleiste: Titel, Fahrplan, Dank. */
+export const RAHMEN_OHNE_LEISTE = ['GT', 'G0', 'GD'];
+
+/** Teil einer Folie für die Teilleiste; null für Titel, Fahrplan, Dank, Anhang und Reserve. */
 export function teilVon(f) {
-  if (f.teil === 'reserve' || f.anhang || f.id === 'G0') return null;
+  if (f.teil === 'reserve' || f.anhang || RAHMEN_OHNE_LEISTE.includes(f.id)) return null;
   if (f.id === 'G9') return 'fazit';
   if (f.teil === 'jonas') return 'jonas';
   if (f.teil === 'niklas') return f.auftrag === '1A' ? '1a' : '1b34';
@@ -401,6 +432,30 @@ export function ladeFolienDaten(root) {
   return { ...z, antwort, auftrag, aufbau, nutzlast, nachbau, antwortCommit, abgeleitet, clip };
 }
 
+/** Belegrepository (Dankfolie, QR-Code); dieselbe Adresse wie weirauch2026c in literatur.mjs. */
+export const REPO_URL = 'https://github.com/NiklasSkulll/arsnova.eu/tree/main/docs/referat-thema-1';
+
+/**
+ * QR-Code als SVG, offline erzeugt (qrcode-generator aus den Repo-Abhängigkeiten): ein Pfad aus Modulen,
+ * Ruhezone 4 Module, Tinte auf Weiß.
+ */
+export function qrSvg(text, px = 280) {
+  const q = qrcode(0, 'M');
+  q.addData(text);
+  q.make();
+  const n = q.getModuleCount();
+  const rand = 4;
+  const d = [];
+  for (let y = 0; y < n; y++) {
+    for (let x = 0; x < n; x++) if (q.isDark(y, x)) d.push(`M${x + rand},${y + rand}h1v1h-1z`);
+  }
+  const w = n + 2 * rand;
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${w}" width="${px}" height="${px}" role="img" aria-label="QR-Code zum Belegrepository" shape-rendering="crispEdges">` +
+    `<rect width="${w}" height="${w}" style="fill:var(--grund)"/><path d="${d.join('')}" style="fill:var(--tinte)"/></svg>`
+  );
+}
+
 // ---------------------------------------------------------------- Bausteine
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -416,7 +471,9 @@ const grafikBox = (svg) => `<div class="grafik-box">${svg}</div>`;
 // Kurzbelege in einer Zeile; Rechner und Commit stehen in `quelle` (Sprechnotizen) und im Manifest.
 const W = 'weirauch2026c';
 const ZITATE = {
+  GT: [['arsnova2026pruefung', 'Abschn. 4.3']],
   G0: [['arsnova2026pruefung', 'Abschn. 4.3']],
+  GD: [[W, 'Ordner docs/referat-thema-1']],
   J1: [
     ['arsnova2026pruefung', 'Abschn. 4.3'],
     [W, 'Ordner evidenz/1B, ADR 1B-011'],
@@ -504,8 +561,8 @@ function zahl({
     `<div style="border-left:6px solid ${linie};padding:4px 0 4px 24px;margin:0 0 24px">` +
     `<div class="kennzahl" style="font-size:${gross}px;line-height:1.05;color:${farbe}">${wert}` +
     `<span class="einheit" style="font-size:${Math.round(gross * 0.45)}px">${einheit ? ` ${einheit}` : ''}</span></div>` +
-    `<div style="font-size:26px;line-height:1.25;margin-top:8px">${was}</div>` +
-    `<div style="font-size:var(--s-min);line-height:1.3;margin-top:4px;color:var(--gedaempft)">${gruppe}</div></div>`
+    `<div class="zahl-was">${was}</div>` +
+    `<div class="vermerk zahl-gruppe">${gruppe}</div></div>`
   );
 }
 
@@ -608,43 +665,92 @@ export function folien(daten) {
 
   const F = [];
 
-  // ------------------------------------------------------------ G0 Rahmen (Jonas eröffnet)
-  // Leitfrage wörtlich (Prüfungsdokument 4.3); G9 nimmt sie wieder auf (Klammer Anfang–Ende).
+  // ------------------------------------------------------------ GT Titel (spricht Niklas)
+  // Beide Namen mit Platz für die Matrikelnummer: Die Nummern setzt nur abgabe-lokal.mjs ein (ignorierte
+  // Kopie); im Repo steht dort ein neutraler Vermerk (data-matrikel, Name als Schlüssel).
+  const titelPerson = (name, etiketten) =>
+    `<div class="titel-person">` +
+    `<p class="titel-name">${name}</p>` +
+    `<p class="titel-auftraege">${etiketten}</p>` +
+    `<p class="matrikel" data-matrikel="${name}">${MATRIKEL_VERMERK}</p></div>`;
+  F.push({
+    id: 'GT',
+    teil: 'rahmen',
+    auftrag: null,
+    titel: 'Thema 1: KI-Inferenz im Moderationskompass',
+    inhalt: flaeche(
+      `<p class="titel-unter">Release 1.3 im Labor: App-Host, zweiter Host und private Inferenz unter Last</p>` +
+        `<div class="titel-personen">` +
+        titelPerson(
+          'Niklas Schneider',
+          `${etikett('1A')} ${etikett('1B')} <span class="zusatz">Schritte 3–4</span>`,
+        ) +
+        titelPerson(
+          'Jonas Weirauch',
+          `${etikett('1C')} ${etikett('1B')} <span class="zusatz">Schritte 1–2</span>`,
+        ) +
+        `</div>` +
+        // Angaben in zwei Gruppen auf dem Raster der Namensspalten
+        `<div class="titel-meta">` +
+        `<dl><div><dt>Kurs ${TITEL.modul}</dt><dd>${TITEL.kurs}</dd></div>` +
+        `<div><dt>Hochschule</dt><dd>${TITEL.hochschule}</dd></div></dl>` +
+        `<dl><div><dt>Prüfer</dt><dd>${TITEL.pruefer}</dd></div>` +
+        `<div><dt>Datum</dt><dd>${TITEL.datum}</dd></div></dl>` +
+        `</div>`,
+    ),
+    notiz:
+      'Guten Tag. Wir sind Niklas Schneider und Jonas Weirauch und stellen Thema 1 vor: die KI-Inferenz im Moderationskompass von arsnova.eu.',
+    stichpunkte: [
+      '„Guten Tag. Wir sind Niklas Schneider und Jonas Weirauch.“',
+      'Thema 1: KI-Inferenz im Moderationskompass',
+      'Weiter zum Fahrplan',
+    ],
+    zeitS: 10,
+    kurzfassung: true,
+    sprecher: 'niklas',
+    quelle:
+      'Prüfungsdokument (Modul DSCC0127, Abschnitt 4.3 Thema 1); Prüfer und Termin nach Angabe der Gruppe (2026-11-16)',
+    station: null,
+  });
+
+  // ------------------------------------------------------------ G0 Fahrplan (spricht Niklas)
+  // Leitfrage wörtlich (Prüfungsdokument 4.3); G9 nimmt sie wieder auf (Klammer Anfang–Ende). Der Fahrplan
+  // zeigt die vier Teile in Vortragsreihenfolge; dieselben Teile stehen klein oben rechts auf jeder Folie
+  // (Teilleiste, deck.mjs), Leitfaden E24.
   const LEITFRAGE =
     '„Wie wirksam trennt die Architektur von Release 1.3 Anwendung, Kontextaufbau und private Inferenz unter realer Last, und welche Betriebsgrenzen ergeben sich für den Moderationskompass?“';
   F.push({
     id: 'G0',
     teil: 'rahmen',
     auftrag: null,
-    titel: 'Thema 1: KI-Inferenz im Moderationskompass',
+    titel: 'Eine Leitfrage, vier Teile',
     inhalt: flaeche(
-      `<p style="margin:0 0 30px;font-size:30px;color:var(--text-2)">${LEITFRAGE}</p>` +
-        // Systembild
-        `<div style="display:grid;grid-template-columns:250px 60px 1fr 60px 1fr;align-items:stretch;font-size:26px;margin-bottom:34px">` +
-        `<div style="border:var(--linie-min) solid var(--linie);border-radius:10px;padding:16px">Lehrperson<br><span style="color:var(--gedaempft);font-size:var(--s-min)">Browser</span></div>` +
-        `<div style="align-self:center;text-align:center;color:var(--blau);font-weight:800">→</div>` +
-        `<div style="border:var(--linie-min) solid var(--blau);border-radius:10px;padding:16px;background:var(--raster)"><b>app-host</b><br>App, Kontextaufbau, Queue, Adapter<br><span style="font-size:var(--s-min)">${etikett('1C')} ${etikett('1A')}</span></div>` +
-        `<div style="align-self:center;text-align:center;color:var(--blau);font-weight:800">→</div>` +
-        `<div style="border:var(--linie-min) solid var(--blau);border-radius:10px;padding:16px;background:var(--raster)"><b>llm-host</b><br>private Runtime mit Modell<br><span style="font-size:var(--s-min)">${etikett('1B')}</span></div>` +
-        `</div>` +
-        // Fahrplan in Vortragsreihenfolge; dieselben Teile stehen klein oben rechts auf jeder Folie
-        // (Teilleiste, deck.mjs), Leitfaden E24.
-        `<ol data-fahrplan style="display:grid;grid-template-columns:repeat(${TEILE.length},1fr);column-gap:32px;margin:0;padding:0;list-style:none;font-size:24px;line-height:1.35">` +
+      `<p class="leitfrage"><span class="leitfrage-kopf">Leitfrage</span>${LEITFRAGE}</p>` +
+        `<ol data-fahrplan class="fahrplan">` +
         TEILE.map(
           (t, i) =>
-            `<li style="border-top:6px solid var(--linie);padding-top:12px">` +
-            `<p style="margin:0 0 6px;font-weight:700;font-size:26px"><span class="mono" style="color:var(--gedaempft);font-weight:400">${i + 1}</span> ${t.wer}</p>` +
-            `<p style="margin:0 0 6px">${t.etiketten.map(([a, zusatz]) => `${etikett(a)}${zusatz ? ` <span style="font-size:var(--s-min);color:var(--gedaempft)">${zusatz}</span>` : ''}`).join(' ')}</p>` +
-            `<p style="margin:0;color:var(--text-2)">${t.was}</p></li>`,
+            `<li>` +
+            `<div class="fahrplan-linie">${t.farben.map((f) => `<span style="background:${f}"></span>`).join('')}</div>` +
+            `<p class="fahrplan-wer"><span class="mono">${i + 1}</span> ${t.wer}</p>` +
+            `<p class="fahrplan-etiketten">${t.etiketten.length ? t.etiketten.map(([a, zusatz]) => `${etikett(a)}${zusatz ? ` <span class="zusatz">${zusatz}</span>` : ''}`).join(' ') : '<span class="zusatz">alle Aufträge</span>'}</p>` +
+            `<p class="fahrplan-was">${t.was}</p></li>`,
         ).join('') +
         `</ol>`,
     ),
     notiz:
-      'Unser Thema ist die KI-Inferenz für den Moderationskompass. Die Leitfrage: Wie wirksam trennt die Architektur von Release 1.3 Anwendung, Kontextaufbau und private Inferenz unter realer Last? Reale Last haben wir nur als Labormodell, meine Läufe sind sequenziell; das ist eine Grenze. Ich verfolge zuerst einen echten Auftrag über beide Hosts. Danach prüft Niklas, wie viel Zusatzarbeit der App-Host selbst verträgt und was passiert, wenn der zweite Host gestört ist; am Ende steht unser gemeinsames Fazit. Diesen Fahrplan sehen Sie oben rechts auf jeder Folie. Ich beginne mit einem einzigen Klick.',
+      'Die Leitfrage stammt aus dem Prüfungsdokument: Wie wirksam trennt die Architektur von Release 1.3 Anwendung, Kontextaufbau und private Inferenz unter realer Last? Reale Last gibt es bei uns nur als Labormodell; das ist eine Grenze. Ich beginne mit 1A auf dem App-Host: Wie viel optionale Arbeit verträgt er neben der Live-Last? Danach verfolgt Jonas einen echten Auftrag über beide Hosts. Zum Schluss störe ich den zweiten Host, und wir antworten gemeinsam auf die Leitfrage. Den Fahrplan sehen Sie oben rechts auf jeder Folie.',
+    stichpunkte: [
+      'Leitfrage (Prüfungsdokument): Trennt Release 1.3 App, Kontextaufbau und private Inferenz unter realer Last?',
+      'Grenze vorweg: reale Last nur als Labormodell',
+      'Fahrplan: Niklas 1A → Jonas 1C und 1B 1–2 → Niklas 1B 3–4 → Fazit',
+      'Teilleiste oben rechts auf jeder Folie',
+      'Übergang: Ich beginne auf dem App-Host',
+    ],
     zeitS: 35,
-    kurzfassung: false,
+    kurzfassung: true,
+    sprecher: 'niklas',
     quelle:
-      'Prüfungsdokument Abschnitt 4.3 (Thema 1, Aufträge 1A–1C); 01-aufteilung.md; Design Abschnitt 3',
+      'Prüfungsdokument Abschnitt 4.3 (Thema 1, Aufträge 1A–1C); 01-aufteilung.md; Design 2026-11-15, Abschnitt 3 (Reihenfolge)',
     station: null,
   });
 
@@ -656,17 +762,15 @@ export function folien(daten) {
     titel: `Ein Klick. ${z.auS} Sekunden. Keine Modellantwort.`,
     inhalt: flaeche(
       `<p style="margin:0 0 10px;font-size:30px;line-height:1.3;color:var(--text-2)">Ein echter Auftrag der Q&amp;A-Zusammenfassung mit synthetischen Daten, verfolgt vom Klick der Lehrperson bis zum Ergebnis. Labor auf einem Laptop, Inferenz auf der CPU.</p>` +
-        `<p style="margin:0 0 44px;font-size:26px;font-weight:600">Jonas Weirauch</p>` +
+        `<p style="margin:0 0 44px;font-size:28px;font-weight:600">Jonas Weirauch <span class="zusatz">· gemessen auf Code nach v1.4.0 (1B: v1.4.0-184, 1C: v1.4.0-14)</span></p>` +
         `<div style="display:grid;grid-template-columns:1fr 1fr;column-gap:60px;font-size:32px;line-height:1.35">` +
         `<div style="border-left:6px solid var(--petrol);padding-left:24px">${etikett('1C')}<p style="margin:14px 0 0">Hält der Kontextpfad seine Zusagen zu Vertrag, Konsistenz und Entkopplung ein?</p></div>` +
         `<div style="border-left:6px solid var(--bernstein);padding-left:24px">${etikett('1B')} <span style="font-size:var(--s-min);color:var(--gedaempft)">Schritte 1–2</span><p style="margin:14px 0 0">Wo steckt die Zeit, wenn die Inferenz auf einem zweiten Host läuft?</p></div>` +
         `</div>` +
-        `<div style="margin-top:auto;font-size:var(--s-min);line-height:1.45;color:var(--gedaempft)">` +
-        `<p style="margin:0;color:var(--text-2)">Auftrag Nr. ${au.nr}: Klick bis Ergebnis ${z.auWarte} s, Jobdauer T_job ${z.auJob} s · Median warm, n = ${nWarm}: ${z.jobWarm} s, Spanne ${z.warmMin}–${z.warmMax} s (ein Lauf)</p>` +
-        `<p style="margin:0">Architektur nach Release 1.3 (ADR-0035) · gemessen auf Code nach v1.4.0 (1B: v1.4.0-184, 1C: v1.4.0-14)</p></div>`,
+        `<p class="beleg">Auftrag Nr. ${au.nr}: Klick bis Ergebnis ${z.auWarte} s, Jobdauer T_job ${z.auJob} s · Median warm, n = ${nWarm}: ${z.jobWarm} s, Spanne ${z.warmMin}–${z.warmMax} s</p>`,
     ),
-    notiz: `Ein Klick der Lehrperson, ${z.auS} Sekunden Warten, und am Ende steht keine Modellantwort auf dem Bildschirm. Dieser Auftrag ist echt, die Nummer ${au.nr} aus meinem gewerteten Lauf, auf der CPU meines Laptops. Davon rechnet der Server ${z.auJob} Sekunden am Job, der Rest ist der Host-Aufruf und das Nachfragen. Zum Vergleich: Warme Aufträge brauchen im Median ${z.jobWarm} Sekunden. Die Architektur folgt Release 1.3, gemessen habe ich Code nach Version 1.4.0; das wird beim Gate wichtig. Zwei Fragen: Für 1C, hält der Kontextpfad seine Zusagen? Für 1B, Schritte 1 und 2, wo steckt die Zeit auf einem zweiten Host? Petrol ist 1C, Bernstein ist 1B.`,
-    zeitS: 40,
+    notiz: `Danke, Niklas. Die schwere Arbeit, die Inferenz, ist ausgelagert auf einen zweiten Host. Was heißt das für einen einzelnen Auftrag? Ein Klick der Lehrperson, ${z.auS} Sekunden Warten, und am Ende steht keine Modellantwort auf dem Bildschirm. Dieser Auftrag ist echt, die Nummer ${au.nr} aus meinem gewerteten Lauf, auf der CPU meines Laptops. Davon rechnet der Server ${z.auJob} Sekunden am Job; warme Aufträge brauchen im Median ${z.jobWarm} Sekunden. Gemessen habe ich Code nach Version 1.4.0; das wird beim Gate wichtig. Zwei Fragen: Für 1C, hält der Kontextpfad seine Zusagen? Für 1B, Schritte 1 und 2, wo steckt die Zeit auf dem zweiten Host? Petrol ist 1C, Bernstein ist 1B.`,
+    zeitS: 45,
     kurzfassung: true,
     quelle: `${q1B} (Auftrag ${au.nr}: treiber.auftraege clientWaitMs, zerlegung.auftraege jobMs; Spanne warm: zerlegung.auftraege 2–${n}); Code: 1B a19ca70f (v1.4.0-184), 1C-Nachlauf def56700 (v1.4.0-14), frühere 1C-Messungen v1.3.0-228 und v1.3.0-322; Leitfragen: Prüfungsdokument 4.3, ADR 1B-011`,
     station: null,
@@ -686,7 +790,7 @@ export function folien(daten) {
     inhalt: flaeche(
       frage('Lässt sich das Zwei-Host-Release nachbauen, ohne Produktionscode zu ändern?', '1B') +
         `<div style="flex:1 1 auto;min-height:0;display:grid;grid-template-columns:820px 1fr;column-gap:60px">` +
-        `<div style="display:flex;flex-direction:column"><p style="margin:0 0 22px;font-size:27px;line-height:1.38">Aufbau von null mit ${mono('labor.sh up')}, Prüfungen grün; privates Netz, Firewall, Token; Speicherlimits wie ab Werk v1.4.0, Modell per SHA-256 gepinnt</p>` +
+        `<div style="display:flex;flex-direction:column"><p style="margin:0 0 22px;font-size:28px;line-height:1.38">Aufbau von null mit ${mono('labor.sh up')}, Prüfungen grün; privates Netz, Firewall, Token; Speicherlimits wie ab Werk v1.4.0, Modell per SHA-256 gepinnt</p>` +
         kasten(
           'Abweichungen und Grenzen',
           [
@@ -696,9 +800,9 @@ export function folien(daten) {
             'Summary-Schalter an; Hintergrunddienste von Hand aus',
           ],
           'var(--bernstein)',
-          26,
+          24,
         ) +
-        `<p style="margin:auto 0 0;font-size:var(--s-min);color:var(--gedaempft)">${STAND}</p></div>` +
+        `<p class="vermerk" style="margin-top:auto">${STAND}</p></div>` +
         `<div style="display:flex;flex-direction:column;min-height:0">` +
         host(
           'app-host',
@@ -791,8 +895,8 @@ export function folien(daten) {
           'Inferenzanteil <span style="color:var(--gedaempft)">(Konsistenzprüfung)</span>',
           mono(`Median ≥ ${fw.schwelleInferenzProzent} %`),
         ) +
-        `</table>` +
-        `<p style="margin:10px 0 0;font-size:var(--s-min);line-height:1.35;color:var(--gedaempft)">Orientiert an Papadopoulos et al. (2021). Es fehlen Konfidenzintervalle und Wiederholung über Instanzen: n = ${n} ist ein Lauf, keine unabhängigen Wiederholungen.</p></div></div>`,
+        `</table></div></div>` +
+        `<p class="beleg">Orientiert an Papadopoulos et al. (2021); es fehlen Konfidenzintervalle und Wiederholung über Instanzen (n = ${n} aus einem Lauf)</p>`,
     ),
     notiz: `Erstens standen Hypothesen und Schwellen vor den gewerteten Läufen fest, mit offengelegten Ausnahmen. Für 1B: Netz im Median höchstens ${fw.schwelleNetzMs} Millisekunden, Adapter höchstens ${fw.schwelleAdapterS} Sekunden; das sind die echten Prüfungen. Der Inferenzanteil ist nur eine Konsistenzprüfung. Zweitens habe ich 1C zuerst ohne Modell getestet, mit Negativproben. Drittens das Labor: 1C lief auf einem Rechner über Loopback, ohne zweiten Host. Die Methode orientiert sich an Papadopoulos; Konfidenzintervalle und Wiederholungen über Instanzen fehlen.`,
     zeitS: 30,
@@ -851,14 +955,11 @@ export function folien(daten) {
     inhalt: flaeche(
       frage('Bekommt die Runtime genau das, was die Lehrperson in der Vorschau sieht?', '1C') +
         zweiSpalten(
-          liste(
-            [
-              'Kontext aus dem App-Zustand, gegen Schemas geprüft, gepackt',
-              `Vorschau = Nutzlast: Hash ${mono(nl.hashVorschau.slice(0, 8))}, Nachricht byte-gleich`,
-              'Nur mit gültigem Host-Token; Token und Budget bleiben auf dem Server',
-            ],
-            24,
-          ),
+          liste([
+            'Kontext aus dem App-Zustand, gegen Schemas geprüft, gepackt',
+            `Vorschau = Nutzlast: Hash ${mono(nl.hashVorschau.slice(0, 8))}, Nachricht byte-gleich`,
+            'Nur mit gültigem Host-Token; Token und Budget bleiben auf dem Server',
+          ]),
           zahl({
             wert: z.valMs,
             einheit: 'ms',
@@ -869,7 +970,7 @@ export function folien(daten) {
           }),
           780,
         ) +
-        `<p style="margin:4px 0 6px;font-size:var(--s-min);color:var(--gedaempft)">Echte Nutzlast an die Runtime, Ausschnitt (synthetische Referenzfixture, erster Messlauf des Nachlaufs)</p>` +
+        `<p class="vermerk" style="margin:var(--abstand-gruppe) 0 8px">Echte Nutzlast an die Runtime, Ausschnitt (synthetische Referenzfixture, erster Messlauf des Nachlaufs)</p>` +
         artefakt('nutzlast', ['{…', ...nl.zeilen, '…}'], 'var(--petrol)'),
     ),
     notiz: `Zweite Station, der Kontext. Die Frage: Bekommt die Runtime genau das, was die Lehrperson in der Vorschau sieht? Der Kontext entsteht aus dem App-Zustand, wird gegen versionierte Schemas geprüft und dann gepackt. Vorschau und Auftrag gibt es nur mit gültigem Host-Token, und jeder Kontextaufbau prüft die Rechte erneut, acht Prüfungen je Aufbau. Unten steht ein echter Ausschnitt der Nutzlast aus dem Nachlauf, mit synthetischen Daten: die Vertragsversion, ein abgeschalteter Bereich mit seinem Grund und eine Frage aus der Fixture. Vorschau und Nutzlast tragen denselben Hash, die Nachricht an die Runtime ist byte-gleich mit der Vorschau. Was kostet die strikte Validierung? ${z.valMs} Millisekunden, ${z.valP} Prozent eines warmen Kontextaufbaus; gemessen nur auf dem älteren Stand, mit der Test-Runtime. Deshalb bleibt sie. Welcher Bereich woher kommt, zeigt die Reserve.`,
@@ -888,24 +989,21 @@ export function folien(daten) {
     titel: 'Sicher geschätzt, aber Platz verschenkt',
     inhalt: flaeche(
       frage('Wie viel vom Kontextfenster nutzt der Kontext wirklich?', '1C') +
-        liste(
-          [
-            'Das Budget zählt jedes UTF-8-Byte als ein Token: in keinem Lauf lief das Fenster über',
-            'Echte Tokens sind nur ein Bruchteil davon; der Template-Anteil ist nicht budgetiert',
-          ],
-          26,
-        ) +
+        liste([
+          'Das Budget zählt jedes UTF-8-Byte als ein Token: in keinem Lauf lief das Fenster über',
+          'Echte Tokens sind nur ein Bruchteil davon; der Template-Anteil ist nicht budgetiert',
+        ]) +
         `<div style="margin:14px 0 10px;display:flex;align-items:baseline;gap:24px">` +
         `<span class="kennzahl" style="font-size:72px;line-height:1.05">q = ${z.q}</span>` +
-        `<span style="font-size:26px">echte / geschätzte Tokens, Median</span>` +
-        `<span style="font-size:var(--s-min);color:var(--gedaempft)">1C-Nachlauf, Laptop</span></div>` +
+        `<span style="font-size:28px">echte / geschätzte Tokens, Median</span>` +
+        `<span class="vermerk" style="margin:0">1C-Nachlauf, Laptop</span></div>` +
         `<div role="img" aria-label="Balken: echte Tokens als Anteil der Schätzung" style="position:relative;flex:none;height:40px;border:var(--linie-min) solid var(--petrol);border-radius:6px;background:var(--grund)">` +
         `<div style="position:absolute;left:0;top:0;bottom:0;width:${qBreite}%;background:var(--petrol)"></div>` +
         `<span style="position:absolute;left:14px;top:4px;font-size:var(--s-min);font-weight:600;color:var(--grund)">echte Tokens</span>` +
         `<span style="position:absolute;right:14px;top:4px;font-size:var(--s-min);color:var(--text-2)">geschätzt = ganzes Budget; rund zwei Drittel bleiben ungenutzt</span></div>` +
-        `<p style="margin:22px 0 6px;font-size:var(--s-min);color:var(--gedaempft)">Zugleich meldet dieselbe Nutzlast, wörtlich (umbrochen):</p>` +
+        `<p class="vermerk" style="margin:var(--abstand-gruppe) 0 8px">Zugleich meldet dieselbe Nutzlast, wörtlich (umbrochen):</p>` +
         artefakt('budget', [nl.budgetZeile.replace(/,"/g, ',\n "')], 'var(--petrol)') +
-        `<p style="margin:14px 0 0;font-size:24px;color:var(--text-2)">Empfohlen: genauere Zählung prüfen (#17), nicht umgesetzt</p>`,
+        `<p class="sekundaer" style="margin-top:20px">Empfohlen: genauere Zählung prüfen (#17), nicht umgesetzt</p>`,
     ),
     notiz: `Zur Frage nach den Kosten der Kontextbereitstellung. Das Budget schätzt Tokens über Bytes: Jedes Byte zählt als ein Token. Das ist eine Obergrenze, denn ein Token umfasst mindestens ein Byte; in keinem Lauf lief das Fenster über. Aber es ist teuer. Die echten Tokens sind im Median nur das ${z.q}-fache der Schätzung. Rund zwei Drittel des geschätzten Budgets bleiben also ungenutzt. Und derselbe Kontext meldet gleichzeitig, dass eine Frage aus Budgetgründen weggelassen wurde. Ich empfehle, eine genauere Zählung zu prüfen. Umgesetzt ist das nicht.`,
     zeitS: 30,
@@ -949,7 +1047,7 @@ export function folien(daten) {
       frage('Wie trennt man Netz und Inferenz, ohne Produktionscode zu ändern?', '1B') +
         `<div style="display:grid;grid-template-columns:680px 1fr;column-gap:40px">` +
         `<div>${draht}</div><div>` +
-        `<p style="margin:0 0 12px;font-size:24px;line-height:1.35">Mitschnitt auf beiden Hosts plus ${mono('timings')}; jede Dauer von einer Uhr; Messunsicherheit der Uhren ≈ ±${fw.netzAufloesungMs} ms. Netz summiert über <span class="nowrap">GET /slots und POST</span>.</p>` +
+        `<p class="sekundaer" style="margin:0 0 12px;color:var(--tinte)">Mitschnitt auf beiden Hosts plus ${mono('timings')}; jede Dauer von einer Uhr; Messunsicherheit der Uhren ≈ ±${fw.netzAufloesungMs} ms. Netz summiert über <span class="nowrap">GET /slots und POST</span>.</p>` +
         `<p class="mono" style="margin:0 0 18px;font-size:28px;font-weight:600">Netz = (${t(3)} − ${t(0)}) − (${t(2)} − ${t(1)})</p>` +
         `<div style="border-left:6px solid var(--bernstein);padding-left:20px;font-size:24px;line-height:1.45">` +
         `<div style="font-weight:700">Unser Auftrag (Nr. ${au.nr})</div>` +
@@ -958,7 +1056,7 @@ export function folien(daten) {
         `<div class="mono">Netz &lt; ${fw.netzAufloesungMs} ms · Inferenz ${z.auInfer} s</div>` +
         `<div style="font-size:22px;line-height:1.3;margin-top:4px;color:var(--text-2)">Wartezeit am Client ${z.auWarte} s, T_job ${z.auJob} s</div>` +
         `<div style="font-size:22px;line-height:1.3;margin-top:2px;color:var(--text-2)">Server ohne Inferenz ${fmt(au.serverOhneInferenzMs)} ms, Ausreißer wie Auftrag 3</div></div>` +
-        `<p style="margin:14px 0 0;font-size:var(--s-min);color:var(--gedaempft)">Alle ${n}, Median: Netz ${z.netz} ms, Transport ${z.transport} ms (Netz + Server ohne Inferenz)</p>` +
+        `<p class="vermerk" style="margin-top:16px">Alle ${n}, Median: Netz ${z.netz} ms, Transport ${z.transport} ms</p>` +
         `</div></div>`,
     ),
     notiz: `Wie trenne ich Netz und Inferenz, ohne Produktionscode anzufassen? Ich schneide auf beiden Hosts mit: am app-host t null und t drei, am llm-host t eins und t zwei. Jede Dauer misst eine Uhr; die Messunsicherheit der Uhren liegt bei etwa einer Millisekunde. Netz ist die Zeit am app-host minus die am llm-host: für Auftrag ${au.nr} unter einer Millisekunde, über alle ${n} im Median ${z.netz}. Transport heißt Netz plus Server ohne Inferenz. Auffällig: Server ohne Inferenz ${fmt(au.serverOhneInferenzMs)} Millisekunden, Ursache offen.`,
@@ -1019,7 +1117,7 @@ export function folien(daten) {
               `<b>Preis unter Voting:</b> jede Stimme während der Inferenz verwirft die Antwort (belegt); Häufigkeit nicht belastbar gemessen (M7 verfehlt, Empfehlung zurückgehalten)`,
               `<b>Befund Blitzlicht:</b> Runde außer TEMPO, Hash hängt an der Uhrzeit (geprüft: YESNO, ${c.yesno.wert} ohne Datenänderung verworfen; andere Typen laut Code); Korrektur empfohlen, nicht umgesetzt (#18)`,
             ],
-            24,
+            28,
           ),
           zahl({
             wert: z.nachpr,
@@ -1029,7 +1127,7 @@ export function folien(daten) {
             linie: 'var(--petrol)',
             gross: 64,
           }) +
-            `<p style="margin:0;font-size:22px;color:var(--text-2);line-height:1.3">Regel vorab: unter ${fw.schwelleNachpruefungProzent} % bleibt sie. Hauptgrund: Ohne sie gälten veraltete Ergebnisse als gültig (V1, E8).</p>`,
+            `<p class="sekundaer">Regel vorab: unter ${fw.schwelleNachpruefungProzent} % bleibt sie. Hauptgrund: Ohne sie gälten veraltete Ergebnisse als gültig (V1, E8).</p>`,
           860,
         ),
     ),
@@ -1056,7 +1154,8 @@ export function folien(daten) {
     `<p style="margin:0 0 2px;font-weight:700">Hinweise</p>` +
     `<p style="margin:0;color:var(--text-2)">${esc(nb.hinweis)}</p>` +
     `</div></div>` +
-    `<p style="margin:12px 0 0;font-size:var(--s-min);line-height:1.35;color:var(--gedaempft)"><span style="display:inline-block;padding:0 10px;margin-right:8px;border:var(--linie-min) solid var(--linie);border-radius:999px;color:var(--text-2);font-weight:600">Nachbau, keine Bildschirmaufnahme</span>Fragen nach der Fallback-Regel aus der echten Nutzlast (1C-Nachlauf), Überschrift und Hinweis wörtlich aus der App; den Grund erfährt die Lehrperson nicht.</p>` +
+    `<p class="vermerk"><span style="display:inline-block;padding:0 10px;border:var(--linie-min) solid var(--linie);border-radius:999px;color:var(--text-2);font-weight:600">Nachbau, keine Bildschirmaufnahme</span></p>` +
+    `<p class="vermerk" style="margin-top:4px">Den Grund erfährt die Lehrperson nicht</p>` +
     `</div><!--/nachbau-->`;
   F.push({
     id: 'J13',
@@ -1066,7 +1165,7 @@ export function folien(daten) {
     inhalt: flaeche(
       `<div style="display:grid;grid-template-columns:1fr auto;column-gap:56px">` +
         `<div>` +
-        `<p style="margin:0 0 8px;font-size:var(--s-min);color:var(--gedaempft)">Echte Antwort des Modells auf Auftrag ${a.auftrag}, gekürzt, im Original</p>` +
+        `<p class="vermerk" style="margin:0 0 8px">Echte Antwort des Modells auf Auftrag ${a.auftrag}, gekürzt, im Original</p>` +
         `<blockquote data-artefakt="antwort" lang="en" style="margin:0 0 12px;padding:10px 20px;border-left:6px solid var(--bernstein);background:var(--bernstein-hell);font-size:22px;line-height:1.3">` +
         gekuerzt.map((s) => `<p style="margin:0 0 4px">${esc(s)}</p>`).join('') +
         `</blockquote>` +
@@ -1081,12 +1180,13 @@ export function folien(daten) {
         `<p style="margin:4px 0 0">${etikett('1C')} ${c.gateAntworten.wert} bestehen</p></div></div>` +
         // Befund der Offline-Ablation (Nachtrag zu ADR 1C-018) in einer Zeile unter der Kennzahl.
         `<p style="margin:14px 0 0;font-size:24px;line-height:1.35"><b>Ablation:</b> Die neuen Antworten verletzen nur Formregeln, ${c.ablationNeuEnglisch.wert} sind englisch. Die alten hätte das Gate auch verworfen: ${c.ablationAltMeta.wert} nannten interne Status.</p>` +
-        // Geltung als Sekundärtext unter der Kennzahl: bleibt sichtbar, konkurriert aber nicht mit 0 / 38.
-        `<p style="margin:10px 0 0;font-size:var(--s-min);line-height:1.35;color:var(--gedaempft)">Geltung: ein Modell, eine Fixture, Code nach v1.4.0. Vor v1.4.0 (Instruktion v2, ohne Gate): ${c.fullContextVorGate.wert} mit Modellzusammenfassung. Zwei Upstream-Commits änderten Instruktion und Gate zugleich; erst a998ada0 prüft auch uncertain.</p>` +
+        `<p class="sekundaer" style="margin-top:10px">Zwei Upstream-Commits änderten Instruktion und Gate zugleich; erst ${mono('a998ada0')} prüft auch uncertain.</p>` +
         `</div>` +
         `<figure data-clip="jonas-gate-clip.webm" style="margin:0;display:flex;flex-direction:column">` +
         nachbau +
-        `</figure></div>`,
+        `</figure></div>` +
+        // Geltung als einzeiliger Beleg; die Upstream-Commits stehen in Notiz und quelle.
+        `<p class="beleg">Geltung: ein Modell, eine Fixture, Code nach v1.4.0. Vor v1.4.0 (Instruktion v2, ohne Gate): ${c.fullContextVorGate.wert} mit Modellzusammenfassung</p>`,
     ),
     notiz: `Und jetzt das Gate. Hier scheitert unser Auftrag. Links die echte Antwort des Modells, gekürzt, im Original. Das Gate prüft vor allem die Form: mindestens zwei Aussagen, jede mit einem Stichwort vorn, verschiedene Stichwörter, ganze Sätze, keine Metasätze. Ausgaben mit Status failed und unsichere ohne Aussagen lässt es durch, aber jede geprüfte Antwort hatte Aussagen. Sprache und Thema prüft es nicht. Im 1B-Lauf wurden ${b.verworfen} von ${n} Antworten verworfen, im 1C-Nachlauf bestand keine von ${c.gateAntwortenGesamt.wert}; ein Modell, eine Fixture. Vor Version 1.4.0, mit älterer Instruktion und ohne Gate, endeten ${c.fullContextVorGate.wert} Aufträge mit Modellzusammenfassung. Zwei Upstream-Commits änderten Instruktion und Gate zugleich. Die Offline-Ablation trennt die Regeln: Die neuen Antworten scheitern nur an der Form, ${c.ablationNeuEnglisch.wert} sind englisch. Die alten hätte das Gate auch verworfen, ${c.ablationAltMeta.wert} nannten interne Status. ${
       daten.clip
@@ -1147,7 +1247,7 @@ export function folien(daten) {
   const triple = (kopf, farbe, punkte) =>
     `<div style="border-top:6px solid ${farbe};padding-top:12px">` +
     `<p style="margin:0 0 12px;font-weight:700;font-size:30px;color:${farbe}">${kopf}</p>` +
-    `<ul style="margin:0;padding-left:28px;font-size:27px;line-height:1.38">${punkte.map((p) => `<li style="margin:0 0 12px">${p}</li>`).join('')}</ul></div>`;
+    `<ul style="margin:0;padding-left:28px;font-size:28px;line-height:1.38">${punkte.map((p) => `<li style="margin:0 0 12px">${p}</li>`).join('')}</ul></div>`;
   F.push({
     id: 'J15',
     teil: 'jonas',
@@ -1169,11 +1269,11 @@ export function folien(daten) {
           'Sprache und Inhalt der Antworten prüft niemand',
         ]) +
         `</div>` +
-        `<p style="margin:14px 0 0;font-size:var(--s-min);color:var(--gedaempft)">Details: R12 (Kosten, Risiko und Betriebsfolge je Entscheidung)</p>` +
-        `<p data-ab="1" style="margin:auto 0 0;padding:16px 24px;border-left:6px solid var(--blau);background:var(--raster);font-size:30px;line-height:1.35"><b style="color:var(--blau)">Zur Diskussion:</b> Prüft das Gate das Richtige, wenn die Antworten auch inhaltlich verfehlt sind?</p>` +
-        `<p data-ab="2" style="margin:26px 0 0;font-size:28px;font-weight:700">Und was verträgt der App-Host selbst neben der Live-Last? <span style="color:var(--blau)">→ Niklas ${etikett('1A')}</span></p>`,
+        `<p class="vermerk">Details: R12 (Kosten, Risiko und Betriebsfolge je Entscheidung)</p>` +
+        `<p data-ab="1" class="merksatz"><b>Zur Diskussion:</b> Prüft das Gate das Richtige, wenn die Antworten auch inhaltlich verfehlt sind?</p>` +
+        `<p data-ab="2" class="uebergabe">Und wenn der zweite Host langsam ist oder ausfällt? <span class="uebergabe-ziel">→ Niklas ${etikett('1B')}</span></p>`,
     ),
-    notiz: `Was bleibt: die Entkopplung über die Queue, die Nachprüfung, die Validierung und die Gleichheit von Vorschau und Nutzlast; in 1B die Topologie, sie kostet keine relevante Zeit. Empfohlen, nicht umgesetzt: Instruktion und Gate gemeinsam abstimmen, den Timeout je Inferenz-Host kalibrieren, den Cache begrenzen. Offen ist, wie oft eine Stimme unter Voting die Antwort verwirft. [Weiter] Meine Frage an Sie: Prüft das Gate das Richtige? [Weiter] Und damit an Niklas: Was verträgt der App-Host selbst neben der Live-Last?`,
+    notiz: `Was bleibt: die Entkopplung über die Queue, die Nachprüfung, die Validierung und die Gleichheit von Vorschau und Nutzlast; in 1B die Topologie, sie kostet keine relevante Zeit. Empfohlen, nicht umgesetzt: Instruktion und Gate gemeinsam abstimmen, den Timeout je Inferenz-Host kalibrieren, den Cache begrenzen. Offen ist, wie oft eine Stimme unter Voting die Antwort verwirft. [Weiter] Meine Frage an Sie: Prüft das Gate das Richtige? [Weiter] Und damit an Niklas: Was passiert, wenn der zweite Host langsam ist oder ausfällt?`,
     zeitS: 40,
     kurzfassung: true,
     // Erst die Entscheidungen, dann die Diskussionsfrage, zuletzt die Übergabe an Niklas.
@@ -1198,7 +1298,7 @@ export function folien(daten) {
     auftrag: null,
     titel: 'Zweiter Host: kaum Zeitkosten, keine Live-Fehler',
     inhalt: flaeche(
-      `<p data-leitfrage style="margin:0 0 26px;font-size:var(--s-min);line-height:1.35;color:var(--gedaempft)"><b style="color:var(--text-2)">Leitfrage:</b> ${LEITFRAGE}</p>` +
+      `<p data-leitfrage class="sekundaer" style="margin:0 0 var(--abstand-gruppe)"><b>Leitfrage:</b> ${LEITFRAGE}</p>` +
         `<div style="display:grid;grid-template-columns:1fr 1fr;column-gap:56px;font-size:24px;line-height:1.38">` +
         person('Jonas · 1C und 1B, Schritte 1–2', 'var(--petrol)', [
           `${etikett('1C')} Vertrag, Konsistenz und Entkopplung halten, mit benannten Ausnahmen (T2.3, T3.1). Nach v1.4.0 besteht keine der ${daten.abgeleitet.gateBeobachtet} geprüften Modellantworten das Gate (1B ${b.verworfen}, 1C ${c.gateAntwortenGesamt.wert}; ein Modell, eine Fixture); davor (${mono('9f230abc')}, Instruktion v2, ohne Gate) ${c.fullContextVorGate.wert}.`,
@@ -1209,16 +1309,15 @@ export function folien(daten) {
           `${etikett('1B')} Fällt die Inferenz aus oder schweigt sie, kommt der Ersatz, und keine Live-Aktion scheitert; ein stummer Host kostet aber Zeit bis zur Frist.`,
         ]) +
         `</div>` +
-        `<p style="margin:auto 0 0;padding:16px 24px;border-left:6px solid var(--blau);background:var(--raster);font-size:27px;line-height:1.35"><b style="color:var(--blau)">Gemeinsam:</b> Im Labor kostet die Trennung kaum Zeit, und Störungen der Inferenz werden nicht zu Live-Fehlern. Die Grenzen liegen in der Inferenz selbst, in optionaler Arbeit ohne Nutzenbeleg und im ungemessenen Betriebsaufwand.</p>`,
+        `<p class="merksatz"><b>Gemeinsam:</b> Im Labor kostet die Trennung kaum Zeit, und Störungen der Inferenz werden nicht zu Live-Fehlern. Die Grenzen liegen in der Inferenz selbst, in optionaler Arbeit ohne Nutzenbeleg und im ungemessenen Betriebsaufwand.</p>`,
     ),
     notiz:
-      'Zum Schluss unsere Antwort auf die gemeinsame Leitfrage. Jonas hat gezeigt: Der Kontextpfad hält seine Zusagen, der zweite Host kostet keine relevante Zeit, und die Zeit steckt in der Inferenz; nach Version 1.4.0 besteht aber keine geprüfte Modellantwort das Gate. Mein Teil: Der App-Host trägt die Live-Last fehlerfrei, optionale Analyse bekommt ohne Nutzenbeleg keine Freigabe. Fällt die Inferenz aus oder schweigt sie, kommt der Ersatz, und keine Live-Aktion scheitert; ein stummer Host kostet aber Zeit bis zur Frist. Gemeinsam heißt das: Im Labor kostet die Trennung kaum Zeit, und Störungen der Inferenz werden nicht zu Live-Fehlern. Die Grenzen liegen in der Inferenz selbst, in optionaler Arbeit ohne Nutzenbeleg und im Betriebsaufwand, den wir nicht gemessen haben. Wir freuen uns auf Ihre Fragen.',
+      'Zum Schluss unsere Antwort auf die gemeinsame Leitfrage. Jonas hat gezeigt: Der Kontextpfad hält seine Zusagen, der zweite Host kostet keine relevante Zeit, und die Zeit steckt in der Inferenz; nach Version 1.4.0 besteht aber keine geprüfte Modellantwort das Gate. Mein Teil: Der App-Host trägt die Live-Last fehlerfrei, optionale Analyse bekommt ohne Nutzenbeleg keine Freigabe. Fällt die Inferenz aus oder schweigt sie, kommt der Ersatz, und keine Live-Aktion scheitert; ein stummer Host kostet aber Zeit bis zur Frist. Gemeinsam heißt das: Im Labor kostet die Trennung kaum Zeit, und Störungen der Inferenz werden nicht zu Live-Fehlern. Die Grenzen liegen in der Inferenz selbst, in optionaler Arbeit ohne Nutzenbeleg und im Betriebsaufwand, den wir nicht gemessen haben.',
     stichpunkte: [
       'Jonas: Kontextpfad hält, zweiter Host kostet keine Zeit, Zeit steckt in der Inferenz; Gate verwirft alle geprüften Antworten',
       'Niklas: App-Host trägt die Live-Last, spaCy ohne Freigabe',
       'Niklas 1B: Ersatz bei Ausfall und Stille, kein Live-Fehler; stummer Host kostet Zeit',
       'Gemeinsam: Trennung kostet kaum Zeit, Störung wird kein Live-Fehler; Grenzen: Inferenz, Option ohne Nutzen, Aufwand',
-      'Wir freuen uns auf Ihre Fragen',
     ],
     zeitS: 40,
     // Gehört zu Niklas' Kurzfassung: das Fazit fällt nie weg (Sprungplan Niklas).
@@ -1227,6 +1326,41 @@ export function folien(daten) {
     quelle:
       '1B-ergebnis.md, 1C-ergebnis.md (Kurzantwort, Verlauf 9f230abc); 1A: abgabe/niklas/folien-1a.mjs (N1, N10); 1B Schritte 3–4: abgabe/niklas/folien-1b34.mjs (M1, M2), evidenz/1B/messung/2026-11-15-lauf-f1-summary.json, 2026-11-16-lauf-{f2,l3,busy}-summary.json (i7-10700K, Hyper-V · 5e758d0a, 2b39b9df)',
     station: null,
+  });
+
+  // ------------------------------------------------------------ GD Dank und Fragen (spricht Niklas)
+  // Bleibt während der Befragung stehen (Leitfaden E23); Link und QR-Code führen zu allen Belegen.
+  const url = REPO_URL.replace(/^https:\/\//, '');
+  F.push({
+    id: 'GD',
+    teil: 'rahmen',
+    auftrag: null,
+    titel: 'Danke. Wir freuen uns auf Ihre Fragen.',
+    inhalt: flaeche(
+      `<div class="dank">` +
+        `<div class="dank-text">` +
+        `<p class="dank-kopf">Alle Belege zum Nachprüfen</p>` +
+        `<p class="dank-was">Entscheidungen als ADR, Laufprotokolle, Messdaten und der Bau dieses Decks</p>` +
+        `<p class="dank-url mono"><a href="${REPO_URL}">${url.replace('/tree/', '/<wbr>tree/').replace('/docs/', '/<wbr>docs/')}</a></p>` +
+        `<p class="dank-namen">Niklas Schneider · Jonas Weirauch</p>` +
+        `</div>` +
+        `<figure class="dank-qr">${qrSvg(REPO_URL)}<figcaption class="vermerk">Repository, Ordner docs/referat-thema-1</figcaption></figure>` +
+        `</div>`,
+    ),
+    notiz:
+      'Danke fürs Zuhören. Alle Belege, also Entscheidungen, Protokolle und Messdaten, liegen im Repository hinter diesem Link. Wir freuen uns auf Ihre Fragen.',
+    stichpunkte: [
+      '„Danke fürs Zuhören.“',
+      'Belege: Repository-Link und QR-Code',
+      '„Wir freuen uns auf Ihre Fragen.“',
+    ],
+    zeitS: 10,
+    kurzfassung: true,
+    sprecher: 'niklas',
+    quelle: `${REPO_URL} (Fork, main nach dem Merge); Eintrag weirauch2026c in literatur.mjs`,
+    station: null,
+    // Link als Text erlaubt wie im Literaturverzeichnis (deck.mjs setzt die Quellen-Marken).
+    quellenverzeichnis: true,
   });
 
   // ------------------------------------------------------------ J16 Literaturverzeichnis (ZL S. 2–3)
@@ -1413,7 +1547,7 @@ export function folien(daten) {
           'Läufe angestoßen, Wiederholung nach Störung entschieden',
           'Ergebnisse und Protokolle geprüft, Kernzahlen stichprobenartig nachgerechnet',
         ],
-        26,
+        28,
       )}</div>` +
       `<div><p style="margin:0 0 12px;font-weight:700;font-size:28px">Entworfen von der KI</p>${liste(
         [
@@ -1421,7 +1555,7 @@ export function folien(daten) {
           'Vorschläge für Schwellen und Messmethode, im Design als KI-Vorschlag markiert',
           'Reviews waren KI-Sitzungen, keine menschlichen Gutachten',
         ],
-        26,
+        28,
       )}</div></div>`,
     'Zur KI-Nutzung: Die KI hat Skripte, Tests, Auswertungen und Texte entworfen. Hypothesen und Schwellen habe ich vor den gewerteten Läufen freigegeben, mit offengelegten Ausnahmen: Zwei 1C-Messungen liefen ohne meine vorherige Freigabe, und die 1B-Leitfrage habe ich nach dem Lauf bestätigt. Die Läufe habe ich gesteuert und die Ergebnisse geprüft. Wer was gemacht hat, steht je Artefakt in den Eigenanteil-Dateien.',
     '1C-eigenanteil.md (Autorenprüfung); adr/1B-011-zeitbegriffe-und-leitfrage.md; 1B-eigenanteil.md (Stand 2026-11-14) · Arbeit an Laptop (ThinkPad P50) und PC (i7-8700) · Baselines 9f230abc, def56700, a19ca70f',
@@ -1433,13 +1567,13 @@ export function folien(daten) {
     'R7',
     '1C',
     'Reserve: ADR-Zählung 1C',
-    `<table style="border-collapse:collapse;font-size:26px;width:100%">` +
+    `<table style="border-collapse:collapse;font-size:28px;width:100%">` +
       `<tr><td style="padding:12px 20px 12px 0;font-weight:700;width:300px">Beibehaltung</td><td>${adrs(['1C-010', '1C-011', '1C-012', '1C-013'])}; dazu ${mono('1C-019')} nur für ${mono('9f230abc')}</td></tr>` +
       `<tr style="border-top:var(--linie-min) solid var(--linie)"><td style="padding:12px 20px 12px 0;font-weight:700">Empfohlen, nicht umgesetzt</td><td>${adrs(['1C-014', '1C-015', '1C-016', '1C-018', '1C-023', '1C-024'])}</td></tr>` +
       `<tr style="border-top:var(--linie-min) solid var(--linie)"><td style="padding:12px 20px 12px 0;font-weight:700">Zurückgehalten</td><td>${adrs(['1C-017'])}</td></tr>` +
       `<tr style="border-top:var(--linie-min) solid var(--linie)"><td style="padding:12px 20px 12px 0;font-weight:700">Methodisch</td><td>${adrs(['1C-001', '1C-002', '1C-003', '1C-004', '1C-005', '1C-020', '1C-021', '1C-022', '1C-025', '1C-026'])}</td></tr>` +
       `</table>` +
-      `<p style="margin:24px 0 0;font-size:26px">Das Ergebnis ist eine Empfehlung, kein Patch (ADR 1C-004).</p>`,
+      `<p style="margin:24px 0 0;font-size:28px">Das Ergebnis ist eine Empfehlung, kein Patch (ADR 1C-004).</p>`,
     'Die Zählung der Entscheidungen in 1C nach Status. Keine Empfehlung ist umgesetzt, das verlangt der Auftrag so: Ergebnis ist eine begründete Empfehlung, kein Patch.',
     'adr/README.md, Index · Messstände 9f230abc (Laptop und PC) und def56700 (Laptop)',
   );
@@ -1501,7 +1635,7 @@ export function folien(daten) {
     '1C',
     'Reserve: 1C Schritte 3–4, Konsistenzfälle',
     `<div style="display:grid;grid-template-columns:1fr 1fr;column-gap:44px">` +
-      `<div><p style="margin:0 0 8px;font-weight:700;font-size:26px">Schritt 3</p>${liste(
+      `<div><p style="margin:0 0 8px;font-weight:700;font-size:28px">Schritt 3</p>${liste(
         [
           'Inkompatible Version: endet an jeder Grenze kontrolliert (T1, E4)',
           `Fehlender Bereich: bleibt mit Zustand und Grund (T2.1 ${mono('disabled')}, T2.2 ${mono('failed')})`,
@@ -1510,7 +1644,7 @@ export function folien(daten) {
         ],
         22,
       )}</div>` +
-      `<div><p style="margin:0 0 8px;font-weight:700;font-size:26px">Schritt 4</p>${liste(
+      `<div><p style="margin:0 0 8px;font-weight:700;font-size:28px">Schritt 4</p>${liste(
         [
           `Stimme oder gelöschte Quelle nach dem Auftrag: ${mono('source_changed')} (T5, E7, E8); ohne Änderung gültig (E9)`,
           `Stimme während des Kontextaufbaus: ${mono('CONFLICT')} (E12)`,
@@ -1525,7 +1659,7 @@ export function folien(daten) {
 
   const rolle = (name, ort, text) =>
     `<div style="border:var(--linie-min) solid var(--bernstein);border-radius:10px;padding:12px 18px;background:var(--bernstein-hell)">` +
-    `<div style="font-weight:700;font-size:26px">${name}</div><div class="mono" style="font-size:22px;color:var(--text-2)">${ort}</div>` +
+    `<div style="font-weight:700;font-size:28px">${name}</div><div class="mono" style="font-size:22px;color:var(--text-2)">${ort}</div>` +
     `<div style="font-size:22px;margin-top:6px;line-height:1.3">${text}</div></div>`;
   reserve(
     'R10',
@@ -1568,18 +1702,18 @@ export function folien(daten) {
     'Reserve: Was der Betrieb nicht sieht',
     frage('Was davon steht im Log der App?', '1B') +
       zweiSpalten(
-        `<table style="border-collapse:collapse;font-size:26px;width:100%">` +
+        `<table style="border-collapse:collapse;font-size:28px;width:100%">` +
           logZeile('Auftrag gesamt', `ja, ${mono('latencyMs')}`, true) +
           logZeile('Inferenz', 'nein, die App liest die Zeiten nicht aus', false) +
           logZeile('Netz und Adapter', 'nein, nur mit Mitschnitt', false) +
           logZeile('Warum das Gate ablehnt', `nein, nur grob ${mono('invalid_response')}`, false) +
           `</table>` +
-          `<p style="margin:18px 0 0;font-size:24px;color:var(--text-2)">Empfohlen: Zeiten und Grund des Fallbacks ohne Prompttext loggen (#19, #20), nicht umgesetzt</p>`,
+          `<p class="sekundaer" style="margin-top:18px">Empfohlen: Zeiten und Grund des Fallbacks ohne Prompttext loggen (#19, #20), nicht umgesetzt</p>`,
         zahl({
           wert: z.transport,
           einheit: 'ms',
           was: 'Transport (Netz + Server ohne Inferenz), Median, alle 10',
-          gruppe: `Inferenzanteil ${z.anteil} %, nur auf dieser langsamen CPU so hoch`,
+          gruppe: `Inferenzanteil ${z.anteil} %, langsame CPU`,
           linie: 'var(--bernstein)',
           gross: 72,
         }),
@@ -1655,7 +1789,7 @@ export function folien(daten) {
     'beide',
     'Reserve: Einordnung Cloud Computing',
     `<div style="display:grid;grid-template-columns:700px 1fr;column-gap:44px">` +
-      `<div><p style="margin:0 0 8px;font-weight:700;font-size:26px">Merkmale nach NIST</p>` +
+      `<div><p style="margin:0 0 8px;font-weight:700;font-size:28px">Merkmale nach NIST</p>` +
       `<table style="border-collapse:collapse;font-size:22px;line-height:1.3;width:100%">` +
       nist('Selbstbedienung bei Bedarf', 'nein', 'feste VMs, von Hand nach Runbook aufgebaut') +
       nist('Breiter Netzzugang', 'ja', 'App im Browser; Runtime nur im privaten Netz') +
@@ -1668,7 +1802,7 @@ export function folien(daten) {
       nist('Messbarer Dienst', 'teils', 'Log nur mit Gesamtzeit je Auftrag (R11)') +
       `</table>` +
       `<p style="margin:14px 0 0;font-size:22px;line-height:1.35"><b>Bulkhead:</b> Der zweite Host ist ein getrennter Fehler- und Ressourcenbereich; die Inferenz konkurriert nicht mit dem Live-Pfad um CPU. Den Effekt habe ich nicht gemessen.</p></div>` +
-      `<div><p style="margin:0 0 4px;font-weight:700;font-size:26px">Kapazität</p>` +
+      `<div><p style="margin:0 0 4px;font-weight:700;font-size:28px">Kapazität</p>` +
       `<p style="margin:0 0 8px;display:inline-block;padding:0 10px;border:var(--linie-min) dashed var(--linie);border-radius:6px;font-size:var(--s-min);font-weight:600;color:var(--text-2)">Rechnung aus dem Code, keine Messung</p>` +
       liste(
         [
@@ -1678,7 +1812,7 @@ export function folien(daten) {
         ],
         22,
       ) +
-      `<p style="margin:6px 0 4px;font-weight:700;font-size:26px">SLO, Vorschlag</p>` +
+      `<p style="margin:6px 0 4px;font-weight:700;font-size:28px">SLO, Vorschlag</p>` +
       liste(
         [
           `Verfügbarkeit: ${fw.sloEndstatusProzent} % der Aufträge haben nach ${fw.laborTimeoutS} s einen Endstatus`,
@@ -1696,14 +1830,8 @@ export function folien(daten) {
   // Erster Satz (G0) und letzter Satz (J15) stehen wörtlich in Anführungszeichen.
   const ab = daten.abgeleitet;
   const STICHPUNKTE = {
-    G0: [
-      '„Unser Thema ist die KI-Inferenz für den Moderationskompass.“',
-      'Leitfrage: Trennt Release 1.3 App, Kontextaufbau und private Inferenz unter realer Last?',
-      'Grenze vorweg: reale Last nur als Labormodell, meine Läufe sequenziell',
-      'Fahrplan unten: Jonas 1C und 1B 1–2 → Niklas 1A → Niklas 1B 3–4 → Fazit',
-      'Übergang: Ich beginne mit einem einzigen Klick',
-    ],
     J1: [
+      '„Danke, Niklas. Die schwere Arbeit, die Inferenz, ist ausgelagert auf einen zweiten Host.“',
       `Ein Klick, ${z.auS} s Warten, keine Modellantwort`,
       `Echter Auftrag Nr. ${au.nr}, Laptop-CPU: Job ${z.auJob} s, warm im Median ${z.jobWarm} s`,
       'Architektur Release 1.3, gemessen Code nach v1.4.0 (wichtig beim Gate)',
@@ -1787,7 +1915,7 @@ export function folien(daten) {
       'Empfohlen, nicht umgesetzt: Instruktion und Gate abstimmen, Timeout je Host, Cache begrenzen',
       'Offen: Wie oft verwirft eine Stimme unter Voting die Antwort?',
       '[Weiter] Frage an Sie: Prüft das Gate das Richtige?',
-      '[Weiter] „Und damit an Niklas: Was verträgt der App-Host selbst neben der Live-Last?“',
+      '[Weiter] „Und damit an Niklas: Was passiert, wenn der zweite Host langsam ist oder ausfällt?“',
     ],
     R1: [
       `Laptop-Kalibrierung 1C ${fw.kalibrierungLaptopS} s > ${fw.releaseTimeoutS} s → Labor ${fw.laborTimeoutS} s, offen als Abweichung`,
@@ -1883,6 +2011,8 @@ export function folien(daten) {
   // G9 nennt auch Niklas' Ergebnisse (1A, 1B 3–4); sein Eintrag steht in seinem Verzeichnis (NL).
   const g9 = F.find((f) => f.id === 'G9');
   g9.fuss += '; Schneider, 2026, Ordner evidenz/1A und evidenz/1B';
+  const gd = F.find((f) => f.id === 'GD');
+  gd.fuss += '; Schneider, 2026, Ordner evidenz/1A';
   return F;
 }
 

@@ -54,7 +54,7 @@
         object-fit: contain;
       }
       .niklas-platzhalter {
-        margin: 90px 0 0;
+        margin: 0;
         color: var(--text-2);
         font-size: 40px;
         font-weight: 700;
@@ -263,11 +263,14 @@
         .live {
           display: none !important;
         }
-        html[data-druck='jonas'] .folie:not([data-teil='jonas']):not([data-teil='reserve']),
+        /* Einzel-PDFs: eigene Folien und Reserve; die Titelfolie (beide Namen) steht in jedem. */
+        html[data-druck='jonas']
+          .folie:not([data-teil='jonas']):not([data-teil='reserve']):not([data-titelfolie]),
         html[data-druck='jonas'] .folie[data-autor='niklas'] {
           display: none !important;
         }
-        html[data-druck='niklas'] .folie:not([data-teil='niklas']):not([data-autor='niklas']) {
+        html[data-druck='niklas']
+          .folie:not([data-teil='niklas']):not([data-autor='niklas']):not([data-titelfolie]) {
           display: none !important;
         }
       }

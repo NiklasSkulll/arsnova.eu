@@ -9,7 +9,7 @@
 // code, Treiber und Ablauf unverändert, Versionsnachtrag in 1B-3u4-Planung.md), Schritt 4 ohne Aufwandsmessung.
 
 import { FARBEN, esc, text } from '../jonas/grafik.mjs';
-import { etikett, flaeche, frage, grafikBox, mono } from '../jonas/folien.mjs';
+import { flaeche, frage, grafikBox, mono } from '../jonas/folien.mjs';
 import { fmt } from '../jonas/zahlen.mjs';
 import { huelle } from './grafik-1a.mjs';
 import { kurzbeleg1A } from './literatur-1a.mjs';
@@ -175,11 +175,11 @@ export function folien1B34(
     inhalt: flaeche(
       frage('Wie schnell liefert die App den Ersatz, wenn die Inferenz gestört ist?', '1B') +
         grafikBox(ersatzSvg(d)) +
-        `<p class="beleg">Vorab festgelegt (${mono(sw.commit)}${swDatum ? `, ${swDatum}` : ''}): Ersatz spätestens Frist + ${fmt(sw.fallbackPufferMs / 1000)} s, Stopp im Median ≤ ${fmt(sw.f1MedianMaxMs / 1000)} s, DROP mehr als ${fmt(sw.f2ZuF1Min)} × Stopp. Alle drei erfüllt${faktor ? ` (DROP etwa ${fmt(Math.round(faktor / 100) * 100)}-mal so lang wie Stopp)` : ''}. Labor: ${esc(f1.rechner)}, zwei VMs</p>`,
+        `<p class="beleg">Vorab festgelegt (${mono(sw.commit)}${swDatum ? `, ${swDatum}` : ''}): Ersatz ≤ Frist + ${fmt(sw.fallbackPufferMs / 1000)} s, Stopp im Median ≤ ${fmt(sw.f1MedianMaxMs / 1000)} s, DROP > ${fmt(sw.f2ZuF1Min)} × Stopp; alle drei erfüllt</p>`,
     ),
-    notiz: `Jonas hat gefragt: Was passiert, wenn der zweite Host langsam ist oder ausfällt? Ich habe die Runtime im Labor gezielt gestört, jeweils unter derselben Beitrittswelle wie in 1A. Ist der Container gestoppt, wird die Verbindung sofort abgewiesen, und die App liefert die extraktive Zusammenfassung nach ${fmt(f1.jobMedianMs)} Millisekunden im Median; bei belegtem Slot nach ${fmt(busy?.jobMedianMs ?? 0)} Millisekunden. Verwirft die Firewall die Pakete, merkt die App das erst nach rund ${fmt((f2?.jobMedianMs ?? 0) / 1000)} Sekunden, und antwortet die Runtime erst nach der Frist, wartet sie die vollen ${fmt(fristS)} Sekunden. Alle Kriterien standen vor der ersten Reihe fest und sind erfüllt. Ein stummer Host ist also teurer als ein toter.`,
+    notiz: `Danke, Jonas. Er hat gefragt: Was passiert, wenn der zweite Host langsam ist oder ausfällt? Ich habe die Runtime im Labor gezielt gestört, jeweils unter derselben Beitrittswelle wie in 1A. Ist der Container gestoppt, wird die Verbindung sofort abgewiesen, und die App liefert die extraktive Zusammenfassung nach ${fmt(f1.jobMedianMs)} Millisekunden im Median; bei belegtem Slot nach ${fmt(busy?.jobMedianMs ?? 0)} Millisekunden. Verwirft die Firewall die Pakete, merkt die App das erst nach rund ${fmt((f2?.jobMedianMs ?? 0) / 1000)} Sekunden, und antwortet die Runtime erst nach der Frist, wartet sie die vollen ${fmt(fristS)} Sekunden. Alle Kriterien standen vor der ersten Reihe fest und sind erfüllt${faktor ? `; DROP dauert etwa ${fmt(Math.round(faktor / 100) * 100)}-mal so lang wie Stopp` : ''}. Ein stummer Host ist also teurer als ein toter.`,
     stichpunkte: [
-      'Jonas’ Frage: Was, wenn der zweite Host langsam ist oder ausfällt?',
+      '„Danke, Jonas.“ Seine Frage: Was, wenn der zweite Host langsam ist oder ausfällt?',
       `Stopp: Ersatz nach ${dauer(f1.jobMedianMs)}, Slot belegt ${dauer(busy?.jobMedianMs ?? 0)} (Median)`,
       `DROP: ${dauer(f2?.jobMedianMs ?? 0)}, Antwort nach der Frist: ${dauer(l3?.jobMedianMs ?? 0)}`,
       `Kriterien vorab (${sw.commit}) alle erfüllt${alleErsatzImBudget ? ', jeder Ersatz innerhalb der Frist' : ''}`,
@@ -219,7 +219,7 @@ export function folien1B34(
     id: 'M2',
     titel: `Kein Live-Fehler unter Störung, p95 bis +${fmt(maxDelta)} ms`,
     inhalt: flaeche(
-      `<table style="border-collapse:collapse;font-size:25px;width:100%">` +
+      `<table style="border-collapse:collapse;font-size:24px;width:100%">` +
         `<tr style="color:var(--gedaempft);font-size:var(--s-min)"><td>p95 in ms</td><td style="text-align:right;padding:0 12px"><b style="color:var(--tinte)">F1 Stopp</b><br>Referenz</td>${kandidaten.map(([, n]) => `<td style="text-align:right;padding:0 12px"><b style="color:var(--tinte)">${n}</b><br>gg. F1</td>`).join('')}</tr>` +
         AKTIONEN.map(
           ([a, name]) =>
@@ -230,11 +230,11 @@ export function folien1B34(
         ).join('') +
         `<tr style="border-top:var(--linie-min) solid var(--linie)"><td style="padding:6px 12px 6px 0;font-weight:700">Fehler</td>${[f1, ...kandidaten.map(([l]) => l)].map((l) => `<td class="mono" style="padding:6px 12px;text-align:right">${fmt(l.liveFehler)} / ${fmt(l.liveGeplant)}</td>`).join('')}</tr>` +
         `</table>` +
-        `<p style="margin:10px 0 0;font-size:var(--s-min);color:var(--gedaempft)">Bernstein: über ${fmt(sw.p95Faktor * 100)} % der Referenz (vorab festgelegt), absolut höchstens +${fmt(maxDelta, 1)} ms; serielle Reihen, Ursache nicht belegt. App-Host höchstens ${fmt(cpuMax)} % einer CPU, ${fmt(rssMax)} MiB</p>` +
-        `<p style="margin:auto 0 0;padding:14px 22px;border-left:6px solid var(--blau);background:var(--raster);font-size:26px;line-height:1.35"><b style="color:var(--blau)">Schritt 4:</b> Die zweite Rolle bleibt, wie ADR-0035 vorsieht. Gewinn: Keine Störung wurde zum Live-Fehler. Kosten: zweiter Host, Token, Firewall, Deployment, Überwachung, nicht in Stunden gemessen. Risiko: Ein stummer Host bindet jeden Auftrag bis zur Frist.</p>` +
-        `<p style="margin:12px 0 0;font-size:var(--s-min);color:var(--gedaempft)">Grenze: ein Rechner, kein Vergleich mit einem LLM auf dem App-Host; ein privates Netz belegt weder Autorisierung noch Datenschutzkonformität ${etikett('1B')}</p>`,
+        `<p class="vermerk">Bernstein: über ${fmt(sw.p95Faktor * 100)} % der Referenz (vorab festgelegt), absolut höchstens +${fmt(maxDelta, 1)} ms; serielle Reihen, Ursache nicht belegt</p>` +
+        `<p class="merksatz"><b>Schritt 4:</b> Die zweite Rolle bleibt, wie ADR-0035 vorsieht. Gewinn: Keine Störung wurde zum Live-Fehler. Kosten: zweiter Host, Token, Firewall, Deployment, Überwachung, nicht in Stunden gemessen. Risiko: Ein stummer Host bindet jeden Auftrag bis zur Frist.</p>` +
+        `<p class="beleg">Grenze: ein Rechner, kein Vergleich mit einem LLM auf dem App-Host; ein privates Netz belegt weder Autorisierung noch Datenschutz</p>`,
     ),
-    notiz: `Und die Live-Aktionen? In allen Störreihen scheiterte keine einzige: ${fmt(fehlerGesamt)} Fehler bei ${fmt(geplantGesamt)} Aktionen. Die vorab festgelegte Latenzregel, höchstens zehn Prozent über der Referenz, verfehlt aber jede Störreihe bei mindestens einer Aktion, um höchstens ${fmt(maxDelta, 1)} Millisekunden. Die Reihen liefen nacheinander auf einem Rechner; eine Ursache kann ich nicht belegen, und die Regel lasse ich stehen. Für Schritt 4 folgt: Die zweite Serverrolle bleibt, wie ADR-0035 sie vorsieht. Ihr Gewinn ist gemessen, keine Störung der Inferenz wurde zum Live-Fehler. Ihre Kosten sind ein zweiter Host mit Token, Firewall, Deployment und Überwachung; in Stunden gemessen habe ich sie nicht. Das Risiko: Ein stummer Host bindet jeden Auftrag bis zur Frist.`,
+    notiz: `Und die Live-Aktionen? In allen Störreihen scheiterte keine einzige: ${fmt(fehlerGesamt)} Fehler bei ${fmt(geplantGesamt)} Aktionen. Die vorab festgelegte Latenzregel, höchstens zehn Prozent über der Referenz, verfehlt aber jede Störreihe bei mindestens einer Aktion, um höchstens ${fmt(maxDelta, 1)} Millisekunden. Die Reihen liefen nacheinander auf einem Rechner; eine Ursache kann ich nicht belegen, und die Regel lasse ich stehen. Der App-Host brauchte dabei höchstens ${fmt(cpuMax)} Prozent einer CPU und ${fmt(rssMax)} Mebibyte. Für Schritt 4 folgt: Die zweite Serverrolle bleibt, wie ADR-0035 sie vorsieht. Ihr Gewinn ist gemessen, keine Störung der Inferenz wurde zum Live-Fehler. Ihre Kosten sind ein zweiter Host mit Token, Firewall, Deployment und Überwachung; in Stunden gemessen habe ich sie nicht. Das Risiko: Ein stummer Host bindet jeden Auftrag bis zur Frist.`,
     stichpunkte: [
       `${fmt(fehlerGesamt)} Live-Fehler bei ${fmt(geplantGesamt)} Aktionen, alle Reihen`,
       `Regel +${fmt(sw.p95Faktor * 100 - 100)} % je Reihe verfehlt (${verfehlt.join(', ')}), höchstens +${fmt(maxDelta, 1)} ms`,

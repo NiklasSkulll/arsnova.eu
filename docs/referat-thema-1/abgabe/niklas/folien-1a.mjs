@@ -24,7 +24,7 @@ import { LITERATUR_1A, kurzbeleg1A } from './literatur-1a.mjs';
 const S = 'schneider2026';
 /**
  * Inferenzdauer eines LLM-Auftrags in Jonas' Labor (1B-ergebnis.md: warm im Median 148,6 s, ThinkPad P50,
- * Commit 8e9d1317), auf Minuten gerundet; nur für die Brücke auf N10. Der Test prüft die Quelle.
+ * Commit 8e9d1317), auf Minuten gerundet; nur für die Übergabe an Jonas auf N10. Der Test prüft die Quelle.
  */
 export const LLM_MIN_WARM = Math.round(148.6 / 60 / 0.5) * 0.5;
 
@@ -130,7 +130,7 @@ export function folien1A(d) {
         'Welche Reserve hat der App-Host für optionale Analyse, ohne die Live-Signale zu verzögern?',
         '1A',
       ) +
-        `<p style="margin:0 0 34px;font-size:26px;font-weight:600">Niklas Schneider</p>` +
+        `<p style="margin:0 0 34px;font-size:28px;font-weight:600">Niklas Schneider</p>` +
         zweiSpalten(
           kernsatz(
             `Die Live-Last läuft fehlerfrei. Mit spaCy hält die vorab festgelegte Regel aber nicht, und der Nutzen ist nicht gemessen.`,
@@ -157,9 +157,9 @@ export function folien1A(d) {
         ) +
         `<p class="beleg">Labor: ein Rechner (WSL2, ${H.cpus} logische CPUs), Code ${mono(H.commit)} (v1.4.0), ${d.live.laeufe} Läufe am ${datum(d.vorab.ersterLauf)}2026</p>`,
     ),
-    notiz: `Danke, Jonas. Ich bleibe auf dem App-Host und frage: Welche Reserve hat er für optionale Analyse, ohne die Live-Signale zu verzögern? Geprüft habe ich das an der spaCy-Glättung der Wortwolke. Die Antwort vorweg: keine Freigabe. Alle ${fmt(d.live.geplant)} Live-Aktionen meiner Reihe kamen an, ohne einen Fehler. Mit spaCy verfehlen ${mitSpacyFehl} von ${mitSpacyGesamt} Vergleichen die vorher festgelegte Regel. Aber auch die Kontrolle ganz ohne spaCy verfehlt sie ${kontrolle.length} von ${d.h1.gesamt} Mal. Ich sage deshalb nicht, spaCy sei schädlich. Ich sage: Die Unschädlichkeit ist nicht belegt, und den Nutzen habe ich nicht gemessen.`,
+    notiz: `Ich beginne auf dem App-Host und frage: Welche Reserve hat er für optionale Analyse, ohne die Live-Signale zu verzögern? Geprüft habe ich das an der spaCy-Glättung der Wortwolke. Die Antwort vorweg: keine Freigabe. Alle ${fmt(d.live.geplant)} Live-Aktionen meiner Reihe kamen an, ohne einen Fehler. Mit spaCy verfehlen ${mitSpacyFehl} von ${mitSpacyGesamt} Vergleichen die vorher festgelegte Regel. Aber auch die Kontrolle ganz ohne spaCy verfehlt sie ${kontrolle.length} von ${d.h1.gesamt} Mal. Ich sage deshalb nicht, spaCy sei schädlich. Ich sage: Die Unschädlichkeit ist nicht belegt, und den Nutzen habe ich nicht gemessen.`,
     stichpunkte: [
-      'Danke, Jonas: Ich bleibe auf dem App-Host',
+      'Start auf dem App-Host (Teil 1 im Fahrplan)',
       'Leitfrage: Reserve für optionale Analyse, ohne Live-Signale zu verzögern?',
       `Antwort vorweg: keine Freigabe für spaCy`,
       `${fmt(d.live.geplant)} von ${fmt(d.live.geplant)} Live-Aktionen ok; mit spaCy ${mitSpacyFehl}/${mitSpacyGesamt} verfehlt, Kontrolle ohne spaCy ${kontrolle.length}/${d.h1.gesamt}`,
@@ -189,7 +189,7 @@ export function folien1A(d) {
     titel: 'Fünf Dienste teilen sich den App-Host',
     inhalt: flaeche(
       frage('Was konkurriert mit den Live-Aktionen um CPU und Speicher?', '1A') +
-        `<div style="display:grid;grid-template-columns:repeat(5,1fr);column-gap:18px;font-size:26px;line-height:1.3">` +
+        `<div style="display:grid;grid-template-columns:repeat(5,1fr);column-gap:18px;font-size:28px;line-height:1.3">` +
         k.dienste
           .map((s) => {
             const [n, rolle] = NAMEN[s.alias] ?? [s.alias, ''];
@@ -209,8 +209,8 @@ export function folien1A(d) {
           30,
         ) +
         `</div>` +
-        `<p style="margin:24px 0 0;font-size:25px;line-height:1.35;color:var(--text-2)">${k.optionalAus ? 'In allen Läufen aus: Encoder der semantischen Wortwolke und Q&amp;A-Klassifikation (8.9b). Der Kontextaufbau läuft in der App.' : ''}</p>` +
-        `<p style="margin:14px 0 0;font-size:25px;line-height:1.35;color:var(--text-2)">Kein LLM hier: Der 16-GB-Host trägt neben Baseline und Sidecars kein ~4-GB-Modell, Live-Pfade dürfen nie auf Inferenz warten. Deshalb ein zweiter Host ${etikett('1B')}.</p>`,
+        `<p class="sekundaer" style="margin-top:24px">${k.optionalAus ? 'In allen Läufen aus: Encoder der semantischen Wortwolke und Q&amp;A-Klassifikation (8.9b). Der Kontextaufbau läuft in der App.' : ''}</p>` +
+        `<p class="sekundaer" style="margin-top:12px">Kein LLM hier: Der 16-GB-Host trägt neben Baseline und Sidecars kein ~4-GB-Modell, Live-Pfade dürfen nie auf Inferenz warten. Deshalb ein zweiter Host ${etikett('1B')}.</p>`,
     ),
     notiz: `Auf dem App-Host laufen fünf Dienste. Backend, Datenbank und Redis haben kein Limit; spaCy hat wie in der Produktions-Compose eine CPU, ein Gibibyte und vierundsechzig Prozesse. Ein cgroup-Limit ist eine Obergrenze, keine Reservierung: Es hält spaCy klein, schützt aber nichts für die App. Den Encoder der semantischen Wortwolke und die Q&A-Klassifikation 8.9b habe ich in allen Läufen ausgeschaltet; der Kontextaufbau läuft in der App. Ein Sprachmodell gehört nach ADR-0035 nicht hierher: Der Host mit sechzehn Gigabyte trägt neben Baseline und Sidecars kein Modell mit etwa vier Gigabyte, und Live-Pfade dürfen nie auf Inferenz warten. Deshalb sagt mein spaCy-Befund nichts über ein LLM.`,
     stichpunkte: [
@@ -243,8 +243,8 @@ export function folien1A(d) {
     titel: 'Die Regel stand eine Woche vorher fest',
     inhalt: flaeche(
       frage('Wann ist spaCy für die Live-Aktionen unschädlich?', '1A') +
-        `<p style="margin:0 0 22px;font-size:25px;line-height:1.35;color:var(--text-2)"><b style="color:var(--tinte)">Fünf Varianten, je Block gemischt:</b> V0 ohne Analyse · V1 lexikalisch (Basis) · V2 spaCy ${fmt(k.spacy.V2.cpu)}&nbsp;CPU · V3 ${fmt(k.spacy.V3.cpu, 2)}&nbsp;CPU · V4 Proxy +${proxyS}&nbsp;s, Timeout ${timeoutS}&nbsp;s</p>` +
-        `<div style="font-size:31px;line-height:1.35;padding:18px 26px;border-left:6px solid var(--blau);background:var(--raster);margin:0 0 30px">Je Aktion und Block steigt der p95 gegenüber V1 um höchstens <b>${rel} %</b> <b>und</b> höchstens <b>${abs} ms</b>. Alle fünf Blöcke müssen bestehen; kein Ausreißer wird entfernt.</div>` +
+        `<p style="margin:0 0 22px;font-size:24px;line-height:1.35;color:var(--text-2)"><b style="color:var(--tinte)">Fünf Varianten, je Block gemischt:</b> V0 ohne Analyse · V1 lexikalisch (Basis) · V2 spaCy ${fmt(k.spacy.V2.cpu)}&nbsp;CPU · V3 ${fmt(k.spacy.V3.cpu, 2)}&nbsp;CPU · V4 Proxy +${proxyS}&nbsp;s, Timeout ${timeoutS}&nbsp;s</p>` +
+        `<div style="font-size:30px;line-height:1.35;padding:18px 26px;border-left:6px solid var(--blau);background:var(--raster);margin:0 0 30px">Je Aktion und Block steigt der p95 gegenüber V1 um höchstens <b>${rel} %</b> <b>und</b> höchstens <b>${abs} ms</b>. Alle fünf Blöcke müssen bestehen; kein Ausreißer wird entfernt.</div>` +
         // Zeitleiste der Vorab-Festlegung (Git)
         `<div style="display:grid;grid-template-columns:repeat(${kette.length},1fr);column-gap:24px">` +
         kette
@@ -252,14 +252,14 @@ export function folien1A(d) {
             ([tag, was, c], i) =>
               `<div style="border-top:6px solid ${i === kette.length - 1 ? 'var(--tinte)' : 'var(--blau)'};padding-top:12px">` +
               `<p class="kennzahl" style="margin:0;font-size:44px">${tag}</p>` +
-              `<p style="margin:8px 0 0;font-size:27px;line-height:1.3">${was}</p>` +
+              `<p style="margin:8px 0 0;font-size:28px;line-height:1.3">${was}</p>` +
               `<p class="mono" style="margin:6px 0 0;font-size:var(--s-min);color:var(--gedaempft)">${c}</p></div>`,
           )
           .join('') +
         `</div>` +
-        `<p class="beleg">p95, weil Nutzer auf die langsamen Anfragen warten. Dazu Fehlergrenze ${fmt(sw.fehler * 100, 1)} %, Quiz-p95 ≤ ${fmt(sw.quizZielMs)} ms, spaCy: Drosselung ≤ ${fmt(sw.drosselung * 100)} %, Speicher ≤ ${fmt(sw.speicher * 100)} % von 1 GiB, kein OOM</p>`,
+        `<p class="beleg">Dazu vorab: Fehler ≤ ${fmt(sw.fehler * 100, 1)} %, Quiz-p95 ≤ ${fmt(sw.quizZielMs)} ms, spaCy gedrosselt ≤ ${fmt(sw.drosselung * 100)} %, Speicher ≤ ${fmt(sw.speicher * 100)} % von 1 GiB, kein OOM</p>`,
     ),
-    notiz: `Fünf Varianten: V0 nur Live-Last, V1 mit lexikalischer Analyse als Basis, V2 spaCy mit einer CPU, V3 gedrosselt auf ein Viertel, V4 hinter einem Proxy, der länger wartet als der Timeout. Fünf Blöcke, je Block zufällig gemischt, verglichen wird nur im selben Block. Die Regel: Je Aktion und Block darf der p95 höchstens zehn Prozent und höchstens fünfzig Millisekunden steigen, und alle fünf Blöcke müssen bestehen. Sie steht seit dem siebten November in Git, eine Woche vor den Läufen. Offen gesagt: Eine erste vollständige Reihe auf dem älteren Code-Stand vom zwölften November verfehlte H1 und H2 ebenfalls. Gewertet wird die Wiederholung auf Version 1.4.0 mit unverändertem Vertrag, weil das Ergebnis für den aktuellen Stand gelten soll.`,
+    notiz: `Fünf Varianten: V0 nur Live-Last, V1 mit lexikalischer Analyse als Basis, V2 spaCy mit einer CPU, V3 gedrosselt auf ein Viertel, V4 hinter einem Proxy, der länger wartet als der Timeout. Fünf Blöcke, je Block zufällig gemischt, verglichen wird nur im selben Block. Die Regel: Je Aktion und Block darf der p95 höchstens zehn Prozent und höchstens fünfzig Millisekunden steigen, und alle fünf Blöcke müssen bestehen. Gemessen wird das p95, weil Nutzer auf die langsamen Anfragen warten. Die Regel steht seit dem siebten November in Git, eine Woche vor den Läufen. Offen gesagt: Eine erste vollständige Reihe auf dem älteren Code-Stand vom zwölften November verfehlte H1 und H2 ebenfalls. Gewertet wird die Wiederholung auf Version 1.4.0 mit unverändertem Vertrag, weil das Ergebnis für den aktuellen Stand gelten soll.`,
     stichpunkte: [
       `V0 ohne Analyse, V1 Basis, V2 ${fmt(k.spacy.V2.cpu)} CPU, V3 ${fmt(k.spacy.V3.cpu, 2)} CPU, V4 Proxy hinter Timeout; 5 Blöcke gemischt`,
       `Regel: p95 höchstens +${rel} % und +${abs} ms, je Aktion und Block; alle 5 Blöcke`,
@@ -322,7 +322,7 @@ export function folien1A(d) {
     inhalt: flaeche(
       `<p class="folie-frage">${explorativ} Was geschah im letzten Lauf (V3, Block 5)?</p>` +
         grafikBox(ausreisserSvg(d)) +
-        `<p class="beleg">Ursache offen: Rückstau der gedrosselten Analyse oder ein Ereignis auf Host und Datenbank. Gegen den Rückstau allein: V4 hatte ${fmt(d.v4.ersatzTimeout)} Timeouts ohne deutlichen Live-Effekt</p>`,
+        `<p class="beleg">Ursache offen: Rückstau der gedrosselten Analyse oder Ereignis auf Host und Datenbank; dagegen: V4 mit ${fmt(d.v4.ersatzTimeout)} Timeouts ohne Live-Effekt</p>`,
     ),
     notiz: `Was geschah im letzten Lauf? Nachträglich ausgewertet, deshalb das Etikett. Alle ${e.langsam.join} Beitritte über hundert Millisekunden liegen in einem Fenster von etwa zehn Sekunden; in den übrigen Läufen gibt es je Aktion höchstens ${e.langsamAndereMax} solchen Wert. [Weiter] Genau dort laufen die einzigen ${e.timeouts} Timeouts der gedrosselten Variante. [Weiter] Zugleich steigt die CPU der App auf ${fmt(e.appCpuMax)} Prozent einer CPU und die der Datenbank auf ${fmt(e.pgMax.max)} Prozent, sonst höchstens ${fmt(e.pgAndere[1])}. Die Ursache ist offen. Ein Rückstau der gedrosselten Analyse passt dazu, aber V4 hatte hunderte Timeouts ohne solchen Effekt; ebenso möglich ist ein Ereignis auf Host oder Datenbank. Für die Entscheidung ändert das nichts.`,
     stichpunkte: [
@@ -347,10 +347,7 @@ export function folien1A(d) {
     inhalt: flaeche(
       frage('Was sehen Lehrende, wenn spaCy langsam ist?', '1A') +
         grafikBox(analyseSvg(d)) +
-        `<p class="beleg">spaCy V2: ${spanne(d.v2.cpuProzent)} % einer CPU, ${spanne(d.v2.drosselProzent, 1)} % gedrosselt, Spitze ${spanne(d.v2.ramMiB)} MiB; V3: <span style="white-space:nowrap">${spanne(d.v3.drosselProzent)} %</span> gedrosselt. Labor: alle Container ${spanne(
-          d.labor.containerCpuProzent.map((x) => x / 100),
-          1,
-        )} CPU von ${H.cpus}, mindestens ${fmt(d.labor.minFreiGiBAb, 1)} GiB frei.<br>V4: Proxy leitete ${fmt(d.v4.weitergeleitet)} von je ${fmt(d.v4.empfangenJeLauf)} Anfragen weiter (Laufzeit inkl. Aufwärmen). ${fmt(d.v4.ersatzGegendruck)} Ersatzfälle als nicht erreichbar gemeldet, je Lauf genau ${fmt(d.v4.gegendruckJeLauf)} neben ${k.maxInFlight} offenen Anfragen, also die Gegendruckgrenze (${mono('SIDECAR_UNAVAILABLE')})</p>`,
+        `<p class="beleg">spaCy V2: ${spanne(d.v2.cpuProzent)} % einer CPU, ${spanne(d.v2.drosselProzent, 1)} % gedrosselt, Spitze ${spanne(d.v2.ramMiB)} MiB; V3: <span style="white-space:nowrap">${spanne(d.v3.drosselProzent)} %</span> gedrosselt · Details RN4</p>`,
     ),
     notiz: `Was sehen die Lehrenden? Die lexikalische Wortwolke ist in unter einer Zehntelsekunde da, mit spaCy im Normalbetrieb nach etwa einer halben Sekunde, gedrosselt nach zwei bis drei. spaCy selbst blieb dabei im Budget: rund ${fmt(d.v2.cpuProzent[0])} Prozent einer CPU, unter einem Prozent gedrosselt, etwa ${fmt(d.v2.ramMiB[0])} Mebibyte. Auf ein Viertel CPU begrenzt war es dagegen fast immer gedrosselt. In V4 greift nach rund fünf Sekunden der Timeout, und die App liefert den lexikalischen Ersatz; der Proxy hat keine Anfrage weitergeleitet, V4 prüft also Frist und Ersatz. ${fmt(d.v4.ersatzGegendruck)} Ersatzfälle meldet der Client als nicht erreichbar, je Lauf genau ${fmt(d.v4.gegendruckJeLauf)}: Das passt zur Grenze von zwei offenen Anfragen. Zur Reserve: Im Labor brauchte der ganze Stack weniger als eine halbe CPU von sechzehn, mindestens ${fmt(d.labor.minFreiGiBAb, 1)} Gibibyte blieben frei. Für den Zielhost habe ich das nicht gemessen.`,
     stichpunkte: [
@@ -371,7 +368,7 @@ export function folien1A(d) {
   const spalte = (kopf, farbe, punkte) =>
     `<div style="border-top:6px solid ${farbe};padding-top:12px">` +
     `<p style="margin:0 0 10px;font-weight:700;font-size:30px;color:${farbe}">${kopf}</p>` +
-    `<ul style="margin:0;padding-left:28px;font-size:27px;line-height:1.36">${punkte.map((p) => `<li style="margin:0 0 12px">${p}</li>`).join('')}</ul></div>`;
+    `<ul style="margin:0;padding-left:28px;font-size:28px;line-height:1.36">${punkte.map((p) => `<li style="margin:0 0 12px">${p}</li>`).join('')}</ul></div>`;
   neu({
     id: 'N10',
     titel: 'Entscheidung: lexikalische Wortwolke bleibt',
@@ -393,17 +390,17 @@ export function folien1A(d) {
           'Kein Rendering, keine Aussage zu einem LLM',
         ]) +
         `</div>` +
-        `<p style="margin:auto 0 0;padding:16px 24px;border-left:6px solid var(--blau);background:var(--raster);font-size:30px;line-height:1.35"><b style="color:var(--blau)">Zur Diskussion:</b> Wie kalibriert man eine Regel, die schon ohne spaCy ${kontrolle.length}-mal anschlägt?</p>` +
-        `<p style="margin:24px 0 0;font-size:28px;font-weight:700">Ein LLM rechnet im Labor rund ${fmt(LLM_MIN_WARM, 1)}&nbsp;min je Auftrag, deshalb der zweite Host. Und wenn er ausfällt? <span style="color:var(--blau)">→ ${etikett('1B')}</span></p>`,
+        `<p class="merksatz"><b>Zur Diskussion:</b> Wie kalibriert man eine Regel, die schon ohne spaCy ${kontrolle.length}-mal anschlägt?</p>` +
+        `<p class="uebergabe">Ein LLM rechnet rund ${fmt(LLM_MIN_WARM, 1)}&nbsp;min je Auftrag. Was, wenn wir die schwere Arbeit auslagern? <span class="uebergabe-ziel">→ Jonas ${etikett('1C')} ${etikett('1B')}</span></p>`,
     ),
-    notiz: `Meine Entscheidung ist die Gegenalternative aus dem Vertrag: keine Freigabe, spaCy bleibt aus, wie es die Produktionsvorlage ohnehin vorsieht. Das kostet im Betrieb nichts. Die Begründung: Die vorab festgelegte Regel ist verfehlt, und eine optionale Komponente muss ihre Unschädlichkeit belegen, nicht umgekehrt. Den Nutzen, zusammengeführte Wortformen, habe ich nicht gemessen; dagegen stehen Image, Modell, Limits und Überwachung. Ein Viertel CPU ist keine gleichwertige Einsparung. Die Grenzen: ein WSL2-Rechner mit dem Lastgenerator auf demselben Host und eine Beitrittswelle. Selbstkritisch: Die Regel war für p95-Werte um zwanzig Millisekunden zu empfindlich; für einen neuen Versuch würde ich sie an einem Vergleich ohne Änderung kalibrieren. Und spaCy ist klein: Ein Sprachmodell rechnet in Jonas' Labor rund zweieinhalb Minuten je Auftrag, deshalb steht es auf einem zweiten Host. Was passiert, wenn dieser Host ausfällt?`,
+    notiz: `Meine Entscheidung ist die Gegenalternative aus dem Vertrag: keine Freigabe, spaCy bleibt aus, wie es die Produktionsvorlage ohnehin vorsieht. Das kostet im Betrieb nichts. Die Begründung: Die vorab festgelegte Regel ist verfehlt, und eine optionale Komponente muss ihre Unschädlichkeit belegen, nicht umgekehrt. Den Nutzen, zusammengeführte Wortformen, habe ich nicht gemessen; dagegen stehen Image, Modell, Limits und Überwachung. Ein Viertel CPU ist keine gleichwertige Einsparung. Die Grenzen: ein WSL2-Rechner mit dem Lastgenerator auf demselben Host und eine Beitrittswelle. Selbstkritisch: Die Regel war für p95-Werte um zwanzig Millisekunden zu empfindlich; für einen neuen Versuch würde ich sie an einem Vergleich ohne Änderung kalibrieren. Und spaCy ist klein: Ein Sprachmodell rechnet in Jonas' Labor rund zweieinhalb Minuten je Auftrag, das trägt der App-Host nicht. Was, wenn wir diese schwere Arbeit auslagern? Das zeigt Jonas.`,
     stichpunkte: [
       'Keine Freigabe, NLP_ENABLED=false bleibt (Standard, kostet nichts)',
       `Regel verfehlt (${mitSpacyFehl}/${mitSpacyGesamt}), Beweislast bei der Option, Nutzen ungemessen`,
       'Budget 1 CPU / 1 GiB für neue Versuche; 0,25 CPU keine Einsparung',
       'Grenzen: ein WSL2-Host mit Generator, Beitrittswelle',
       'Selbstkritik: Regel zu empfindlich, künftig ohne Änderung kalibrieren',
-      `Brücke: LLM ≈ ${fmt(LLM_MIN_WARM, 1)} min je Auftrag → zweiter Host → Ausfall?`,
+      `„Was, wenn wir die schwere Arbeit auslagern?“ LLM ≈ ${fmt(LLM_MIN_WARM, 1)} min je Auftrag → Jonas`,
     ],
     zeitS: 65,
     kurzfassung: true,
@@ -424,14 +421,14 @@ export function folien1A(d) {
     id: 'RN3',
     titel: 'Reserve: Fünf Varianten, je Block gemischt',
     inhalt: flaeche(
-      `<table style="border-collapse:collapse;font-size:27px;width:100%;margin:0 0 12px">` +
+      `<table style="border-collapse:collapse;font-size:28px;width:100%;margin:0 0 12px">` +
         VAR.map(
           ([v, t, h]) =>
             `<tr style="border-top:var(--linie-min) solid var(--linie)"><td style="padding:7px 18px 7px 0;font-weight:700;width:80px">${v}</td><td style="padding:7px 0">${t}</td><td style="padding:7px 0 7px 18px;color:${h === 'Basis' ? 'var(--blau)' : 'var(--gedaempft)'};font-size:var(--s-min);font-weight:600;text-align:right">${h}</td></tr>`,
         ).join('') +
         `</table>` +
         grafikBox(profilSvg(d)) +
-        `<p class="beleg">${VARIANTEN.length} Varianten × 5 Blöcke = ${d.live.laeufe} Läufe; Reihenfolge je Block per Seed gemischt; Daten und Last in jedem Lauf gleich, Korpus vor und nach jedem Lauf geprüft</p>`,
+        `<p class="beleg">${VARIANTEN.length} Varianten × 5 Blöcke = ${d.live.laeufe} Läufe; Reihenfolge je Block per Seed gemischt; Daten und Last in jedem Lauf gleich</p>`,
     ),
     notiz: `Ich vergleiche fünf Varianten. V0 ist nur Live-Last. V1 ruft zusätzlich die Analyse auf, aber mit spaCy aus, also lexikalisch; das ist meine Basis. V2 ist spaCy im Normalbetrieb mit einer CPU, V3 gedrosselt auf ein Viertel CPU, und in V4 sitzt ein Proxy vor spaCy, der sechs Sekunden verzögert, länger als der Timeout von fünf Sekunden. Jeder Lauf hat dasselbe Profil: eine Minute Aufwärmen, dann fünf Minuten Messfenster mit fünfhundert Beitritten in neunzig Sekunden, und fünf Lehrende rufen alle zehn Sekunden die Analyse ab. Jede Variante läuft in fünf Blöcken, innerhalb eines Blocks in zufälliger Reihenfolge. Verglichen wird nur innerhalb desselben Blocks. So wird Laufrauschen sichtbar, statt sich in einem einzigen Lauf zu verstecken.`,
     stichpunkte: [
@@ -452,10 +449,10 @@ export function folien1A(d) {
     titel: 'Reserve: spaCy bleibt im Budget, bis CPU fehlt',
     inhalt: flaeche(
       grafikBox(ressourcenSvg(d)) +
-        `<p class="beleg">V2: ${spanne(d.v2.cpuProzent)} % einer CPU, ${spanne(d.v2.drosselProzent, 1)} % gedrosselt, Spitze ${spanne(d.v2.ramMiB)} MiB, kein OOM. Labor: alle Container zusammen ${spanne(
+        `<p class="beleg">Labor: alle Container zusammen ${spanne(
           d.labor.containerCpuProzent.map((x) => x / 100),
           1,
-        )} CPU von ${H.cpus}, mindestens ${fmt(d.labor.minFreiGiBAb, 1)} GiB frei</p>`,
+        )} CPU von ${H.cpus}, mindestens ${fmt(d.labor.minFreiGiBAb, 1)} GiB frei; spaCy V2 ohne OOM</p>`,
     ),
     notiz: `Wo stand spaCy selbst? Links der Anteil gedrosselter CPU-Perioden, rechts die Speicherspitze, ein Punkt je Block. Im Normalbetrieb braucht spaCy rund ${fmt(d.v2.cpuProzent[0])} Prozent einer CPU, wird in unter einem Prozent der Perioden gedrosselt und kommt auf etwa ${fmt(d.v2.ramMiB[0])} Mebibyte, weit unter der Schwelle. Gedrosselt auf ein Viertel CPU verbraucht es ${fmt(d.v3.cpuProzent[0])} bis ${fmt(d.v3.cpuProzent[1])} Prozent, also fast die ganze Quote, und wird in ${spanne(d.v3.drosselProzent)} Prozent der Perioden gedrosselt. Zur Reserve, nach der die Leitfrage fragt: Im Labor brauchten alle Container zusammen weniger als eine halbe CPU von sechzehn, und mindestens ${fmt(d.labor.minFreiGiBAb, 1)} Gibibyte blieben frei. Die Reserve ist also groß, schützt die Latenz aber nicht automatisch. Und für den Zielhost mit acht vCPU habe ich das nicht gemessen.`,
     stichpunkte: [
@@ -535,21 +532,22 @@ export function folien1A(d) {
     inhalt:
       `<p class="folie-frage">${explorativ} Wie empfindlich ist die Regel?</p>` +
       zweiSpalten(
-        `<table style="border-collapse:collapse;font-size:26px;width:100%">` +
+        `<table style="border-collapse:collapse;font-size:28px;width:100%">` +
           `<tr style="color:var(--gedaempft);font-size:var(--s-min)"><td></td><td style="text-align:right;padding:0 14px">V0</td><td style="text-align:right;padding:0 14px">V1</td><td style="text-align:right;padding:0 14px">V2</td><td style="text-align:right;padding-left:14px">V2 je Lauf</td></tr>` +
           AKTIONEN.map(aktionZeile).join('') +
-          `</table><p style="margin:14px 0 0;font-size:var(--s-min);color:var(--gedaempft)">p95 in ms, alle 5 Blöcke gepoolt (n = ${fmt(g.V1.join.n)}, Q&amp;A ${fmt(g.V1.qaSubmit.n)})</p>`,
+          `</table><p class="vermerk">p95 in ms, alle 5 Blöcke gepoolt (n = ${fmt(g.V1.join.n)}, Q&amp;A ${fmt(g.V1.qaSubmit.n)})</p>`,
         zahl({
           wert: `${kontrolle.length}`,
           einheit: `/ ${d.h1.gesamt}`,
           was: 'Treffer der Kontrolle ohne spaCy',
-          gruppe: `Wäre jeder Vergleich unabhängig, bestünde eine wirkungslose Komponente alle ${d.h1.gesamt} nur mit etwa ${fmt(zufallsChance * 100)} %`,
+          gruppe: 'nachträglich ausgewertet, grobe Rechnung',
           linie: 'var(--bernstein)',
           gross: 84,
-        }),
+        }) +
+          `<p class="sekundaer">Wären die Vergleiche unabhängig, bestünde eine wirkungslose Komponente alle ${d.h1.gesamt} nur mit etwa ${fmt(zufallsChance * 100)} %.</p>`,
         820,
       ) +
-      `<p class="beleg">Gepoolt weicht V2 von V1 um ${abwText} ms ab; die Lauf-p95 streuen innerhalb einer Variante stärker. Grobe Rechnung, kein vorab festgelegter Test</p>`,
+      `<p class="beleg">Gepoolt weicht V2 von V1 um ${abwText} ms ab; grobe Rechnung, kein vorab festgelegter Test</p>`,
     notiz: `Falls nach der Regel gefragt wird. Nachträglich ausgewertet: Gepoolt über alle fünf Blöcke weicht spaCy im Normalbetrieb um ${abwText} Millisekunden von der Basis ab, also praktisch nicht. Die Lauf-p95 streuen innerhalb derselben Variante stärker, beim Beitritt in V2 zwischen ${spanne(e.streuung.V2.join)} Millisekunden. Die Kontrolle ohne spaCy verfehlt die Regel ${kontrolle.length} von ${d.h1.gesamt} Mal. Wären die Vergleiche unabhängig, bestünde selbst eine wirkungslose Komponente alle ${d.h1.gesamt} nur mit etwa ${fmt(zufallsChance * 100)} Prozent. Für einen neuen Versuch würde ich die Regel deshalb an einem Vergleich ohne Änderung kalibrieren, für diesen Versuch gilt sie.`,
     stichpunkte: [
       `Nachträglich: gepoolt V2 − V1 = ${abwText} ms`,
@@ -566,7 +564,7 @@ export function folien1A(d) {
     titel: 'Reserve: Was die Messung nicht zeigt',
     inhalt: zweiSpalten(
       `<p style="margin:0 0 12px;font-weight:700;font-size:28px">Grenzen des Labors</p>` +
-        `<ul style="margin:0;padding-left:28px;font-size:25px;line-height:1.36">` +
+        `<ul style="margin:0;padding-left:28px;font-size:24px;line-height:1.36">` +
         [
           `Ein WSL2-Rechner mit ${H.cpus} logischen CPUs statt Zielhost mit 8 vCPU`,
           'Lastgenerator auf demselben Rechner: Latenz enthält Clientarbeit',
@@ -579,7 +577,7 @@ export function folien1A(d) {
           .join('') +
         `</ul>`,
       `<p style="margin:0 0 12px;font-weight:700;font-size:28px">Eigenanteil und KI</p>` +
-        `<ul style="margin:0;padding-left:28px;font-size:25px;line-height:1.36">` +
+        `<ul style="margin:0;padding-left:28px;font-size:24px;line-height:1.36">` +
         [
           'Niklas: Auftrag, Labor, reale Messung, Freigaben, Deutung',
           'OpenAI Codex: Umsetzung der Werkzeuge, Tests, Auswertung, Entwürfe',

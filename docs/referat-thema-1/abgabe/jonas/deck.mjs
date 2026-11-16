@@ -233,12 +233,14 @@ function jonasFolie(f, nr, gesamt, clipDaten) {
         // Im PDF (Druck-CSS der Vorlage) steht das Standbild an der Stelle des Videos.
         `<img class="clip-standbild" src="${standbild}" alt="Standbild: Ergebnis mit Hinweis" ` +
         `style="width:${CLIP_BREITE}px;aspect-ratio:848/800;object-fit:cover;border-radius:10px">` +
-        `<figcaption style="width:${CLIP_BREITE}px;margin-top:10px;font-size:var(--s-min);line-height:1.35;color:var(--gedaempft)">` +
-        `Laboraufnahme ${esc(info.datum)}: ${Math.round(info.wartezeitS)} s Wartezeit, auf ${info.raffungS} s gerafft. ` +
+        // Zwei Vermerke mit je einer Zeile (Designregel T); das Energieprofil steht nur im Protokoll.
+        `<figcaption style="width:${CLIP_BREITE}px">` +
+        `<p class="vermerk">Laboraufnahme ${esc(info.datum)}, ${Math.round(info.wartezeitS)} s auf ${info.raffungS} s gerafft</p>` +
+        `<p class="vermerk" style="margin-top:2px">` +
         (info.grund === 'timeout'
-          ? `Hier Abbruch nach ${Math.round(info.timeoutMs / 1000)} s (Timeout), nicht das Gate, gleicher Hinweis. `
-          : '') +
-        `Illustration, kein Nachweis.</figcaption>`,
+          ? `Abbruch nach ${Math.round(info.timeoutMs / 1000)} s (Timeout), nicht das Gate`
+          : 'Illustration, kein Nachweis') +
+        `</p></figcaption>`,
     );
     if (inhalt === vorher && f.inhalt.includes('data-clip')) {
       throw new Error(`${f.id}: Nachbau für den Clip nicht gefunden`);
@@ -259,6 +261,8 @@ function jonasFolie(f, nr, gesamt, clipDaten) {
     f.id === 'J10' ? `data-zoom-stufen="${esc(JSON.stringify(ZOOM_STUFEN))}"` : '',
     f.aufbau ? `data-aufbau="${Number(f.aufbau)}"` : '',
     f.autor ? `data-autor="${esc(f.autor)}"` : '',
+    // Titelfolie mit beiden Namen (und lokal den Matrikelnummern) steht auch in jedem Einzel-PDF.
+    f.id === 'GT' ? 'data-titelfolie' : '',
     `aria-label="${esc(`${fussNr.replace(' / ', ' von ')}: ${ohneTags(f.titel)}`)}"`,
   ]
     .filter(Boolean)
@@ -283,8 +287,8 @@ function niklasFolien(pngs, teil, kennung, titel) {
         html: (nr, gesamt) =>
           `<section class="folie" data-id="${kennung}" data-teil="niklas" aria-label="Folie ${nr} von ${gesamt}: Teil Niklas, ${esc(titel)}">` +
           `<h1 class="folie-titel">Teil Niklas</h1>` +
-          `<div class="folie-flaeche"><p class="niklas-platzhalter">${esc(titel)}<br>` +
-          `<span>Seiten aus Niklas' Folien-PDF folgen hier.</span></p></div>` +
+          `<div class="folie-flaeche"><div class="flaeche-inhalt"><p class="niklas-platzhalter">${esc(titel)}<br>` +
+          `<span>Seiten aus Niklas' Folien-PDF folgen hier.</span></p></div></div>` +
           `<div class="folie-fuss">${nr} / ${gesamt} · Niklas, ${esc(teil)}</div></section>`,
       },
     ];
@@ -298,8 +302,9 @@ function niklasFolien(pngs, teil, kennung, titel) {
 }
 
 /**
- * Baut das gemeinsame Deck: G0 (Jonas eröffnet), Jonas J1–J15 (Übergabe auf J15), Niklas 1A und
- * 1B 3–4, G9 (gemeinsames Fazit, spricht Niklas), Anhang (J16, Literatur 1A); Reservefolien danach
+ * Baut das gemeinsame Deck: GT (Titel) und G0 (Fahrplan), Niklas 1A (Übergabe auf N10), Jonas J1–J15
+ * (Übergabe auf J15), Niklas 1B 3–4, G9 (gemeinsames Fazit) und GD (Dank, Fragen), alle Rahmenfolien
+ * spricht Niklas; Anhang (J16, Literatur 1A); Reservefolien danach
  * (nur über `r` erreichbar). Native Niklas-Folien mit `anhang` kommen in den Anhang, mit
  * `teil: 'reserve'` in die Reserve (data-autor="niklas" für den Druckauszug).
  * @param {ReturnType<import('./folien.mjs').folien>} folien
@@ -317,13 +322,15 @@ export function baueDeck(
     throw new Error('baueDeck erzeugt nur eingebettete Decks (eingebettet: true).');
   }
   const nach = (pred) => folien.filter(pred);
-  const g0 = nach((f) => f.id === 'G0');
-  const g9 = nach((f) => f.id === 'G9');
-  // Anhang (J16, Literaturverzeichnis) steht nach G9, damit er die Übergabe an Niklas nicht unterbricht.
+  const rahmen = (id) => nach((f) => f.id === id);
+  const [gt, g0, g9, gd] = ['GT', 'G0', 'G9', 'GD'].map(rahmen);
+  // Anhang (J16, Literaturverzeichnis) steht nach dem Dank, damit er keine Übergabe unterbricht.
   const jonas = nach((f) => f.teil === 'jonas' && !f.anhang);
   const anhang = nach((f) => f.teil === 'jonas' && f.anhang);
   const reserve = nach((f) => f.teil === 'reserve');
-  if (g0.length !== 1 || g9.length !== 1) throw new Error('Rahmenfolien G0 und G9 fehlen');
+  if ([gt, g0, g9, gd].some((r) => r.length !== 1)) {
+    throw new Error('Rahmenfolien GT, G0, G9 und GD fehlen');
+  }
   if (clip && !(clipInfo && standbild)) {
     throw new Error('Clip braucht clipInfo (Datum, Profil, Zeiten) und ein Standbild für das PDF.');
   }
@@ -339,12 +346,16 @@ export function baueDeck(
     nativ(teil)
       ? teil.filter((f) => f.teil !== 'reserve' && !f.anhang).map((f) => ({ folie: f }))
       : niklasFolien(teil ?? [], ...rest);
+  // Vortragsreihenfolge (Design 2026-11-15, Abschnitt 3): Niklas eröffnet mit 1A, Jonas erzählt 1C und
+  // 1B 1–2 am Stück, Niklas schließt mit 1B 3–4 und dem gemeinsamen Fazit.
   const haupt = [
+    ...gt.map((f) => ({ folie: f })),
     ...g0.map((f) => ({ folie: f })),
-    ...jonas.map((f) => ({ folie: f })),
     ...teilVonNiklas(niklas.teil1, '1A', 'N1', '1A: Ressourcen auf dem App-Host'),
+    ...jonas.map((f) => ({ folie: f })),
     ...teilVonNiklas(niklas.teil2, '1B Schritte 3–4', 'N2', '1B Schritte 3–4: Störung und Aufwand'),
     ...g9.map((f) => ({ folie: f })),
+    ...gd.map((f) => ({ folie: f })),
     ...anhang.map((f) => ({ folie: f })),
     ...niklasNativ.filter((f) => f.anhang && f.teil !== 'reserve').map((f) => ({ folie: f })),
   ];

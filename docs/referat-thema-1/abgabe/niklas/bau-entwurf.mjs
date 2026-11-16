@@ -14,7 +14,13 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import process from 'node:process';
 import { parseArgs } from 'node:util';
 
-import { baueSprechnotizen, drucke, folienNiklas, sprungzieleNiklas } from '../jonas/bau.mjs';
+import {
+  baueSprechnotizen,
+  drucke,
+  folienNiklas,
+  pauseNiklas,
+  sprungzieleNiklas,
+} from '../jonas/bau.mjs';
 import { baueDeck } from '../jonas/deck.mjs';
 import { folien, ladeFolienDaten } from '../jonas/folien.mjs';
 import { niklasTeile } from './teile.mjs';
@@ -49,8 +55,9 @@ export function baueEntwurf() {
 export function notizenNiklas(alle, n1a, n1b) {
   return baueSprechnotizen(folienNiklas(alle, { teil1: n1a, teil2: n1b }), {
     person: 'Niklas',
-    quelle: '`abgabe/niklas/folien-1a.mjs`, `folien-1b34.mjs` und G9 in `folien.mjs`',
+    quelle: '`abgabe/niklas/folien-1a.mjs`, `folien-1b34.mjs` und GT, G0, G9, GD in `folien.mjs`',
     sprungziele: sprungzieleNiklas(alle, { teil1: n1a, teil2: n1b }),
+    pause: pauseNiklas(alle, { teil1: n1a, teil2: n1b }),
   });
 }
 

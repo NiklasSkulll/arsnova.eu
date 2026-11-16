@@ -89,20 +89,23 @@ function ladeAbhaengigkeit(name) {
 }
 
 /**
- * Redebudget je Person = Abbruchgrenze (Kursvorschlag 9 + 6; zweites Audit 2026-11-16): Der geplante Vortrag
- * selbst dauert höchstens 9:00 min, G0 und G9 eingeschlossen, damit etwa 6 min für die Diskussion bleiben.
+ * Redebudget je Person = Abbruchgrenze. Seit 2026-11-16 (Absprache der Gruppe) darf jede Person etwas über
+ * 9:00 min sprechen, höchstens etwa 10:30 min samt ihrem Anteil an den Rahmenfolien; der Rest der 15 min
+ * bleibt für die Diskussion.
  */
-const ABBRUCH_S = 9 * 60;
+const ABBRUCH_S = 10 * 60 + 30;
 const BUDGET_S = ABBRUCH_S;
 
 /**
- * Sprungplan für einen Abbruch nach etwa 9 min (Kursvorschlag 9 + 6): Die Zielfolien (Jonas J13 und J15,
- * Niklas N10, 1B 3–4 und G9) müssen gesprochen sein. Gezählt ab der ersten eigenen Folie (Stoppuhr
- * beim ersten Satz); spätester Sprung = 9:00 minus die Zeit der Zielfolien.
+ * Sprungplan für einen Abbruch nach etwa 10:30 min: Die Zielfolien (Jonas J13 und J15, Niklas N10, 1B 3–4,
+ * G9 und GD) müssen gesprochen sein. Gezählt wird nur die eigene Redezeit ab der ersten eigenen Folie
+ * (Stoppuhr beim ersten Satz, angehalten, solange die andere Person spricht); spätester Sprung = 10:30 minus
+ * die Zeit der Zielfolien.
  * @param {object[]} haupt eigene Hauptfolien in Vortragsreihenfolge
  * @param {string[]} ziele Kennungen, die gesprochen sein müssen (in Reihenfolge)
+ * @param {string} [pause] Hinweis, wenn die eigene Redezeit unterbrochen ist
  */
-function sprungplan(haupt, ziele) {
+function sprungplan(haupt, ziele, pause) {
   const zielFolien = haupt.filter((f) => ziele.includes(f.id));
   if (zielFolien.length !== ziele.length) throw new Error(`Sprungplan: ${ziele.join(', ')} fehlen`);
   const zielS = zielFolien.reduce((s, f) => s + f.zeitS, 0);
@@ -129,7 +132,8 @@ function sprungplan(haupt, ziele) {
         : 'Der Plan hat keinen Puffer. ') +
       `Wer bei ${mmss(spaetestens)} min noch vor ${erstes} steht, blättert mit Pfeil rechts ohne Kommentar bis ${erstes} ` +
       `und spricht ab dort weiter. Bei Zeitdruck von Anfang an nur die Folien mit der Marke „Kurzfassung“ ` +
-      `(${mmss(kurz)} min); sie enthält ${zielText}.`,
+      `(${mmss(kurz)} min); sie enthält ${zielText}.` +
+      (pause ? ` ${pause}` : ''),
   ];
   if (gesamt > BUDGET_S) {
     zeilen.push(
@@ -151,11 +155,12 @@ function stichpunkteBlock(f) {
  * Sprechnotizen: je Folie Kennung, Titel, Sekunden, kumulierte Zeit, Kurzfassung-Marke, Stichpunkte
  * (falls vorhanden) und Fließtext. Ohne Optionen die Fassung für Jonas (mit Sprungplan zu J13/J15).
  * @param {object[]} alle Folien in Vortragsreihenfolge, Reserve beliebig dazwischen
- * @param {{ person?: string, quelle?: string, sprungziele?: string[] }} [o]
+ * @param {{ person?: string, quelle?: string, sprungziele?: string[],
+ *   pause?: { nach: string, text: string } }} [o] pause: eigene Redezeit unterbrochen nach Folie `nach`
  */
 export function baueSprechnotizen(
   alle,
-  { person = 'Jonas', quelle = '`folien.mjs`', sprungziele = ['J13', 'J15'] } = {},
+  { person = 'Jonas', quelle = '`folien.mjs`', sprungziele = ['J13', 'J15'], pause } = {},
 ) {
   const ohneTags = (s) =>
     s
@@ -173,7 +178,7 @@ export function baueSprechnotizen(
       `Erzeugt aus ${quelle} (\`notiz\` = Fließtext, \`stichpunkte\`, \`zeitS\`, \`kurzfassung\`); nicht von Hand ändern. ` +
       'Vorgetragen wird aus den Stichpunkten; der Fließtext ist die ausformulierte Fassung zum Üben.',
     '',
-    ...(sprungziele?.length ? sprungplan(haupt, sprungziele) : []),
+    ...(sprungziele?.length ? sprungplan(haupt, sprungziele, pause?.text) : []),
   ];
   let kumuliert = 0;
   let kumuliertKurz = 0;
@@ -189,6 +194,7 @@ export function baueSprechnotizen(
       '',
       `_Quelle:_ ${f.quelle ?? ''}`,
       '',
+      ...(pause?.nach === f.id ? [`_Übergabe:_ ${pause.text}`, ''] : []),
     );
   }
   zeilen.push('# Reserve', '', 'Nur auf Nachfrage (Taste `r`), keine Zeit im Vortrag.', '');
@@ -206,12 +212,35 @@ export function baueSprechnotizen(
   return zeilen.join('\n');
 }
 
-/** Niklas' Zielfolien für den Sprungplan: N10 (Entscheidung 1A), 1B 3–4 und G9 (Fazit). */
+/** Niklas' Zielfolien für den Sprungplan: N10 (Entscheidung 1A), 1B 3–4, G9 (Fazit) und GD (Fragen). */
 export function sprungzieleNiklas(alle, niklas) {
   const teil2 = (niklas.teil2 ?? []).filter(
     (f) => typeof f === 'object' && f.teil !== 'reserve' && !f.anhang,
   );
-  return ['N10', ...teil2.map((f) => f.id), ...alle.filter((f) => f.id === 'G9').map((f) => f.id)];
+  return [
+    'N10',
+    ...teil2.map((f) => f.id),
+    ...alle.filter((f) => ['G9', 'GD'].includes(f.id)).map((f) => f.id),
+  ];
+}
+
+/**
+ * Unterbrechung in Niklas' Redezeit: Nach seiner letzten 1A-Folie spricht Jonas J1–J15 (ohne J16).
+ * @returns {{ nach: string, text: string }}
+ */
+export function pauseNiklas(alle, niklas) {
+  const teil1 = (niklas.teil1 ?? []).filter(
+    (f) => typeof f === 'object' && f.teil !== 'reserve' && !f.anhang,
+  );
+  const jonas = alle.filter((f) => f.teil === 'jonas' && !f.anhang);
+  const s = jonas.reduce((x, f) => x + f.zeitS, 0);
+  const nach = teil1.at(-1)?.id ?? 'N10';
+  return {
+    nach,
+    text:
+      `Nach ${nach} spricht Jonas (${jonas[0].id}–${jonas.at(-1).id}, etwa ${mmss(s)} min); ` +
+      'die Uhr für den Sprungplan läuft nur während der eigenen Folien.',
+  };
 }
 
 const htmlEsc = (t) =>
@@ -225,9 +254,10 @@ const htmlEsc = (t) =>
  * Titel und nur die Stichpunkte (Leitfaden F26: vorgetragen wird aus Stichworten). „[Weiter]“ und
  * „[Taste …]“ fett. Der Fließtext steht in den Sprechnotizen (Markdown).
  * @param {object[]} alle Folien der Person, Reserve beliebig dazwischen
- * @param {{ person: string, schriften: string }} o schriften: @font-face-Regeln (eingebettet)
+ * @param {{ person: string, schriften: string, pause?: { nach: string, text: string } }} o
+ *   schriften: @font-face-Regeln (eingebettet); pause: Übergabe an die andere Person nach Folie `nach`
  */
-export function baueSprechkarten(alle, { person, schriften }) {
+export function baueSprechkarten(alle, { person, schriften, pause }) {
   const ohneTags = (t) =>
     t
       .replace(/<[^>]+>/g, '')
@@ -248,7 +278,9 @@ export function baueSprechkarten(alle, { person, schriften }) {
     const punkte = f.stichpunkte?.length
       ? `<ul>${f.stichpunkte.map(punkt).join('')}</ul>`
       : `<p class="ohne">${htmlEsc(ohneTags(f.notiz))}</p>`;
-    return `<section class="karte"><h2>${kopf}</h2><h3>${htmlEsc(ohneTags(f.titel))}</h3>${punkte}</section>`;
+    const uebergabe =
+      mitZeit && pause?.nach === f.id ? `<p class="pause">${htmlEsc(pause.text)}</p>` : '';
+    return `<section class="karte"><h2>${kopf}</h2><h3>${htmlEsc(ohneTags(f.titel))}</h3>${punkte}</section>${uebergabe}`;
   };
   return (
     '<!doctype html><html lang="de"><head><meta charset="utf-8">' +
@@ -262,6 +294,7 @@ export function baueSprechkarten(alle, { person, schriften }) {
     'h2 .id{color:#0b5ea8}h3{margin:0.5mm 0 1mm;font-size:10.5pt;font-weight:700}' +
     'ul{margin:0;padding-left:4.5mm}li{margin:0 0 0.8mm}.weiter{color:#0b5ea8}' +
     '.ohne{margin:0;color:#3d4757}h1.reserve{margin-top:6mm;break-before:column}' +
+    '.pause{break-inside:avoid;margin:0 0 4.5mm;padding:1.5mm 3mm;border:0.4mm dashed #c9d2de;color:#3d4757;font-style:italic}' +
     '</style></head><body>' +
     `<h1>Sprechkarten ${htmlEsc(person)}</h1>` +
     `<p class="kopf">Gesamt ${mmss(gesamt)} min · Kurzfassung (K) ${mmss(kurz)} min · „ab“ = Startzeit in der Langfassung · Fließtext und Sprungplan: Sprechnotizen</p>` +
@@ -273,20 +306,26 @@ export function baueSprechkarten(alle, { person, schriften }) {
   );
 }
 
-/** Folien, die Niklas spricht: G9 (gemeinsames Fazit) und seine Teile samt Reserve, ohne Literatur. */
+/**
+ * Folien, die Niklas spricht, in Vortragsreihenfolge: GT und G0 (Titel, Fahrplan), 1A, 1B 3–4, G9 und GD
+ * (Fazit, Dank), dann seine Reserve; ohne Literatur.
+ */
 export function folienNiklas(alle, niklas) {
   const eigene = [...(niklas.teil1 ?? []), ...(niklas.teil2 ?? [])].filter(
     (f) => typeof f === 'object' && !f.anhang,
   );
-  const g9 = alle.filter((f) => f.sprecher === 'niklas');
+  const rahmen = alle.filter((f) => f.sprecher === 'niklas');
+  const vorn = rahmen.filter((f) => ['GT', 'G0'].includes(f.id));
+  const hinten = rahmen.filter((f) => !vorn.includes(f));
   return [
+    ...vorn,
     ...eigene.filter((f) => f.teil !== 'reserve'),
-    ...g9,
+    ...hinten,
     ...eigene.filter((f) => f.teil === 'reserve'),
   ];
 }
 
-/** Folien, die Jonas spricht: alles aus folien() außer G9. */
+/** Folien, die Jonas spricht: alles aus folien() außer den Rahmenfolien, die Niklas spricht. */
 export const folienJonas = (alle) => alle.filter((f) => f.sprecher !== 'niklas');
 
 export async function drucke(browser, url, pdfPfad) {
@@ -433,13 +472,18 @@ async function main() {
       );
     const kartenBrowser = await chromium.launch();
     try {
-      for (const [datei, person, liste] of [
+      for (const [datei, person, liste, pause] of [
         ['sprechkarten-jonas.pdf', 'Jonas', folienJonas(alle)],
-        ['sprechkarten-niklas.pdf', 'Niklas', folienNiklas(alle, niklas)],
+        [
+          'sprechkarten-niklas.pdf',
+          'Niklas',
+          folienNiklas(alle, niklas),
+          pauseNiklas(alle, niklas),
+        ],
       ]) {
         const seite = await kartenBrowser.newPage();
         try {
-          await seite.setContent(baueSprechkarten(liste, { person, schriften }));
+          await seite.setContent(baueSprechkarten(liste, { person, schriften, pause }));
           await seite.evaluate(() => document.fonts.ready);
           await seite.pdf({ path: join(ausgabe, datei), preferCSSPageSize: true });
         } finally {
@@ -459,8 +503,10 @@ async function main() {
       await format(
         baueSprechnotizen(folienNiklas(alle, niklas), {
           person: 'Niklas',
-          quelle: '`abgabe/niklas/folien-1a.mjs`, `folien-1b34.mjs` und G9 in `folien.mjs`',
+          quelle:
+            '`abgabe/niklas/folien-1a.mjs`, `folien-1b34.mjs` und GT, G0, G9, GD in `folien.mjs`',
           sprungziele: sprungzieleNiklas(alle, niklas),
+          pause: pauseNiklas(alle, niklas),
         }),
         { ...formatierung, parser: 'markdown' },
       ),
@@ -518,7 +564,7 @@ async function main() {
       niklas: { teil1: nikEintrag(niklasQuellen.teil1), teil2: nikEintrag(niklasQuellen.teil2) },
       folien: {
         gemeinsamesDeck: ausgaben.find((a) => a.datei === 'gemeinsames-deck.pdf').seiten,
-        jonasUndReserve: alle.filter((f) => f.teil === 'jonas' || f.teil === 'reserve').length,
+        jonasUndReserve: ausgaben.find((a) => a.datei === 'jonas-folien.pdf').seiten,
         niklasUndReserve: ausgaben.find((a) => a.datei === 'niklas-folien.pdf').seiten,
       },
       eingaben: eingaben.map(eingabeEintrag),
