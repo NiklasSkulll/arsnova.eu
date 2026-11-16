@@ -527,7 +527,7 @@ test('Wegmarke: 1A auf eigenem Weg, je Folie die erwartete Station; 1B 3–4 auf
   const { MARKEN, STOERUNG_ZEICHEN } = await import('../jonas/wegkarte.mjs');
   const marken = Object.fromEntries([...haupt1A, ...n1b].map((f) => [f.id, f.marke]));
   assert.deepEqual(marken, {
-    N1: '1a-spacy',
+    N1: '1a-weg',
     N2: '1a-app',
     N3: '1a-spacy',
     N4: '1a-regel',
@@ -542,9 +542,10 @@ test('Wegmarke: 1A auf eigenem Weg, je Folie die erwartete Station; 1B 3–4 auf
     M2: '1b-alle',
   });
   // erwartete Station bzw. Strecke je Marke
-  const ort = (m) => MARKEN[m].station ?? MARKEN[m].abschnitte.map((a) => a.name).join('+');
+  const ort = (m) =>
+    MARKEN[m].station ?? MARKEN[m].abschnitte?.map((a) => a.name).join('+') ?? 'ganzer Weg';
   assert.deepEqual(Object.fromEntries(Object.entries(marken).map(([id, m]) => [id, ort(m)])), {
-    N1: 'spacy',
+    N1: 'ganzer Weg',
     N2: 'app',
     N3: 'spacy',
     N4: 'haupt+zweig',

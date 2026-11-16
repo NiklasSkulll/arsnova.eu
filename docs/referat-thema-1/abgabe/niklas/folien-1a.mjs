@@ -167,8 +167,9 @@ export function folien1A(d) {
     ],
     zeitS: 50,
     kurzfassung: true,
-    // Wegmarke (jonas/wegkarte.mjs MARKEN): Antwort zuerst zur spaCy-Glättung, also die Station spaCy.
-    marke: '1a-spacy',
+    // Wegmarke (jonas/wegkarte.mjs MARKEN): Einstieg mit der Antwort, daher der ganze Weg ohne Hervorhebung;
+    // danach wandert die Markierung ohne Rücksprung: App (N2) → spaCy (N3) → Regel/Live → Ersatz → Wortwolke.
+    marke: '1a-weg',
     quelle: q(
       `${H.datei} (live.*.planned/succeeded, hypotheses.H1/H2); Leitfrage: Prüfungsdokument Abschn. 4.3, Gruppenauftrag 1A`,
     ),

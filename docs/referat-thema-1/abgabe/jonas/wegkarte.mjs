@@ -330,6 +330,7 @@ export function wegMini({ aktiv = null, wandernd = false } = {}) {
  */
 export const MARKEN = Object.freeze({
   auftrag: { weg: 'auftrag', teil: ['1C', '1B'], text: 'Weg eines Auftrags' },
+  '1a-weg': { weg: '1a', teil: ['1A'], text: 'Weg der Analyse' },
   '1a-app': { weg: '1a', teil: ['1A'], station: 'app', text: 'App-Host' },
   '1a-spacy': { weg: '1a', teil: ['1A'], station: 'spacy', text: 'spaCy' },
   '1a-live': { weg: '1a', teil: ['1A'], abschnitte: [{ name: 'haupt' }], text: 'Live-Pfad' },

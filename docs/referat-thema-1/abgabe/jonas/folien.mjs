@@ -2252,6 +2252,12 @@ export function folien(daten) {
   // G9 nennt auch Niklas' Ergebnisse (1A, 1B 3–4); sein Eintrag steht in seinem Verzeichnis (NL).
   const g9 = F.find((f) => f.id === 'G9');
   g9.fuss += '; Schneider, 2026, Ordner evidenz/1A und evidenz/1B';
+  // Ruhiger Marker (Feinschliff 2026-11-16): Jonas' Hauptfolien ohne eigene Station zeigen den ganzen Weg
+  // ohne Hervorhebung wie J1, damit der Platz oben links nicht zwischen Folien leer wird und wieder erscheint.
+  for (const id of ['J2', 'J4', 'J13b', 'J15']) {
+    const f = F.find((x) => x.id === id);
+    if (f && !f.station && !f.marke) f.marke = 'auftrag';
+  }
   const gd = F.find((f) => f.id === 'GD');
   gd.fuss += '; Schneider, 2026, Ordner evidenz/1A';
   // Vortragsreihenfolge (Redezeit 15 min je Person, Absprache 2026-11-16): aus der Reserve geholte Folien an
