@@ -180,9 +180,13 @@
         max-width: 100%;
         height: 100%;
       }
+      /* Kopfgrammatik (README „Designregeln“, layout-pruefung.mjs kopfBefunde): Zeile 1 Wegkarte mit Ort und
+   Etikett, Zeile 2 Titel, Zeile 3 Fragezeile in festem Abstand zum Titel: zuerst das Etikett des Auftrags,
+   dann die Frage, danach höchstens ein gedämpfter Status. Die Autorzeile (nur N1, J1) folgt darunter.
+   Beide stehen im Kopf (deck.mjs), nicht in der zentrierten Fläche. */
       .folie-frage {
         flex: none;
-        margin: 0 0 24px;
+        margin: 18px 0 0;
         color: var(--text-2);
         font-size: 30px;
         font-weight: 600;
@@ -191,6 +195,25 @@
       .folie-frage .etikett {
         margin-right: 10px;
         vertical-align: 3px;
+      }
+      .folie-frage .status {
+        display: inline-block;
+        margin-left: 14px;
+        padding: 2px 12px;
+        border-radius: 6px;
+        background: var(--raster);
+        color: var(--text-2);
+        font-size: var(--s-min);
+        font-weight: 600;
+        vertical-align: 3px;
+      }
+      .folie-autor {
+        flex: none;
+        margin: 10px 0 0;
+        color: var(--tinte);
+        font-size: var(--s-text);
+        font-weight: 600;
+        line-height: 1.3;
       }
       /* Vermerke: Beleg unten in der Fläche, Bildunterschrift, Hinweis unter einer Tabelle. Kleiner und gedämpft,
    höchstens eine Zeile (Designregel T); Einzelheiten stehen in der Sprechnotiz (`quelle`) oder in der Reserve. */
@@ -627,14 +650,15 @@
       .weg-marke .weg-punkt {
         transform: translate(-50%, -50%);
       }
-      .weg-stufen {
+      /* Störungszeichen (1B 3–4) auf der Karte über der Senke zum zweiten Host; je Aufbaustufe ein Satz */
+      .weg-zeichen-ort {
+        position: absolute;
         display: grid;
+        transform: translateX(-50%);
       }
       .weg-stufe {
         grid-area: 1 / 1;
-        display: flex;
-        align-items: center;
-        gap: 10px;
+        justify-self: center;
       }
       .weg-zeichen-reihe {
         display: flex;
@@ -643,20 +667,6 @@
       }
       .weg-zeichen {
         display: block;
-      }
-      /* Folie neben dem Weg (J11): Vermerk an der Stelle der Wegkarte */
-      .weg-exkurs {
-        position: absolute;
-        left: var(--rand);
-        top: 30px;
-        margin: 0;
-        padding: 0 14px;
-        border: var(--linie-min) dashed var(--linie);
-        border-radius: 999px;
-        color: var(--gedaempft);
-        font-size: var(--s-min);
-        font-weight: 600;
-        line-height: 32px;
       }
       .weg-punkt {
         position: absolute;
@@ -994,6 +1004,7 @@
         class="folie"
         data-id="N1"
         data-teil="niklas"
+        data-hauptfolie
         aria-label="4 von 39: Keine Freigabe für die spaCy-Glättung"
       >
         <div
@@ -1101,13 +1112,13 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">Keine Freigabe für die spaCy-Glättung</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1a">1A</span>Welche Reserve hat der App-Host für optionale
+          Analyse, ohne die Live-Signale zu verzögern?
+        </p>
+        <p class="folie-autor">Niklas Schneider</p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
-            <p class="folie-frage">
-              <span class="etikett etikett-1a">1A</span>Welche Reserve hat der App-Host für
-              optionale Analyse, ohne die Live-Signale zu verzögern?
-            </p>
-            <p style="margin: 0 0 34px; font-size: 28px; font-weight: 600">Niklas Schneider</p>
             <div style="display: grid; grid-template-columns: 760px 1fr; column-gap: 70px">
               <div>
                 <p
@@ -1181,6 +1192,7 @@
         class="folie"
         data-id="N2"
         data-teil="niklas"
+        data-hauptfolie
         aria-label="5 von 39: Fünf Dienste teilen sich den App-Host"
       >
         <div
@@ -1290,12 +1302,12 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">Fünf Dienste teilen sich den App-Host</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1a">1A</span>Was konkurriert mit den Live-Aktionen um CPU und
+          Speicher?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
-            <p class="folie-frage">
-              <span class="etikett etikett-1a">1A</span>Was konkurriert mit den Live-Aktionen um CPU
-              und Speicher?
-            </p>
             <div
               style="
                 display: grid;
@@ -1446,6 +1458,7 @@
         class="folie"
         data-id="N3"
         data-teil="niklas"
+        data-hauptfolie
         aria-label="6 von 39: Fünf Varianten, je Block gemischt"
       >
         <div
@@ -1555,6 +1568,9 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">Fünf Varianten, je Block gemischt</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1a">1A</span>Welche Varianten vergleicht die Messreihe?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
             <table
@@ -1652,13 +1668,14 @@
         class="folie"
         data-id="N4"
         data-teil="niklas"
+        data-hauptfolie
         aria-label="7 von 39: Die Regel stand eine Woche vorher fest"
       >
         <div
           class="weg-mini weg-marke"
           data-marke="1a-regel"
           role="img"
-          aria-label="Ort auf dem Weg: Live-Pfad gegen Analyse (1A)"
+          aria-label="Ort auf dem Weg: Live-Pfad (1A)"
         >
           <svg
             class="weg-mini-karte"
@@ -1784,8 +1801,7 @@
             />
           </svg>
           <p class="weg-beschriftung" aria-hidden="true">
-            <span class="weg-name">Live-Pfad gegen Analyse</span
-            ><span class="etikett etikett-1a">1A</span>
+            <span class="weg-name">Live-Pfad</span><span class="etikett etikett-1a">1A</span>
           </p>
         </div>
         <ol class="teilleiste" aria-label="Teil des Vortrags: 1A, Niklas">
@@ -1795,12 +1811,12 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">Die Regel stand eine Woche vorher fest</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1a">1A</span>Wann ist spaCy für die Live-Aktionen
+          unschädlich?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
-            <p class="folie-frage">
-              <span class="etikett etikett-1a">1A</span>Wann ist spaCy für die Live-Aktionen
-              unschädlich?
-            </p>
             <p style="margin: 0 0 22px; font-size: 24px; line-height: 1.35; color: var(--text-2)">
               <b style="color: var(--tinte)">Fünf Varianten, je Block gemischt:</b> V0 ohne Analyse
               · V1 lexikalisch (Basis) · V2 spaCy 1&nbsp;CPU · V3 0,25&nbsp;CPU · V4 Proxy
@@ -1884,6 +1900,7 @@
         class="folie"
         data-id="N5"
         data-teil="niklas"
+        data-hauptfolie
         aria-label="8 von 39: Alle 40.000 Live-Aktionen kamen an"
       >
         <div
@@ -2008,6 +2025,9 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">Alle 40.000 Live-Aktionen kamen an</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1a">1A</span>Kommen die Live-Aktionen unter Analyse-Last an?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
             <div class="grafik-box">
@@ -2028,6 +2048,7 @@
         class="folie"
         data-id="N6"
         data-teil="niklas"
+        data-hauptfolie
         data-aufbau="3"
         aria-label="9 von 39: Deutlich verletzt wird die Regel nur einmal"
       >
@@ -2035,7 +2056,7 @@
           class="weg-mini weg-marke"
           data-marke="1a-regel"
           role="img"
-          aria-label="Ort auf dem Weg: Live-Pfad gegen Analyse (1A)"
+          aria-label="Ort auf dem Weg: Live-Pfad (1A)"
         >
           <svg
             class="weg-mini-karte"
@@ -2161,8 +2182,7 @@
             />
           </svg>
           <p class="weg-beschriftung" aria-hidden="true">
-            <span class="weg-name">Live-Pfad gegen Analyse</span
-            ><span class="etikett etikett-1a">1A</span>
+            <span class="weg-name">Live-Pfad</span><span class="etikett etikett-1a">1A</span>
           </p>
         </div>
         <ol class="teilleiste" aria-label="Teil des Vortrags: 1A, Niklas">
@@ -2172,6 +2192,10 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">Deutlich verletzt wird die Regel nur einmal</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1a">1A</span>Hält die vorab festgelegte Regel in jedem
+          Vergleich?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
             <div class="grafik-box">
@@ -2187,13 +2211,14 @@
         class="folie"
         data-id="N6b"
         data-teil="niklas"
+        data-hauptfolie
         aria-label="10 von 39: Die Regel schlägt auch ohne Wirkung an"
       >
         <div
           class="weg-mini weg-marke"
           data-marke="1a-regel"
           role="img"
-          aria-label="Ort auf dem Weg: Live-Pfad gegen Analyse (1A)"
+          aria-label="Ort auf dem Weg: Live-Pfad (1A)"
         >
           <svg
             class="weg-mini-karte"
@@ -2319,8 +2344,7 @@
             />
           </svg>
           <p class="weg-beschriftung" aria-hidden="true">
-            <span class="weg-name">Live-Pfad gegen Analyse</span
-            ><span class="etikett etikett-1a">1A</span>
+            <span class="weg-name">Live-Pfad</span><span class="etikett etikett-1a">1A</span>
           </p>
         </div>
         <ol class="teilleiste" aria-label="Teil des Vortrags: 1A, Niklas">
@@ -2330,14 +2354,14 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">Die Regel schlägt auch ohne Wirkung an</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1a">1A</span>Wie empfindlich ist die Regel?<span
+            class="status"
+            >nachträglich ausgewertet</span
+          >
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
-            <p class="folie-frage">
-              <span class="etikett" style="background: var(--raster); color: var(--text-2)"
-                >nachträglich ausgewertet</span
-              >
-              Wie empfindlich ist die Regel?
-            </p>
             <div style="display: grid; grid-template-columns: 820px 1fr; column-gap: 70px">
               <div>
                 <table style="border-collapse: collapse; font-size: 28px; width: 100%">
@@ -2437,6 +2461,7 @@
         class="folie"
         data-id="N7"
         data-teil="niklas"
+        data-hauptfolie
         data-aufbau="2"
         aria-label="11 von 39: Der Ausreißer dauerte rund zehn Sekunden"
       >
@@ -2445,7 +2470,7 @@
           data-marke="1a-wirkung"
           data-aktiv="spacy"
           role="img"
-          aria-label="Ort auf dem Weg: spaCy · Wirkung auf Live-Pfad (1A)"
+          aria-label="Ort auf dem Weg: spaCy (1A); Ausschlag: Wirkung auf den Live-Pfad"
         >
           <svg
             class="weg-mini-karte"
@@ -2546,8 +2571,7 @@
           </svg>
           <div class="weg-punkt" style="left: 288px; top: 40px"></div>
           <p class="weg-beschriftung" aria-hidden="true">
-            <span class="weg-name">spaCy · Wirkung auf Live-Pfad</span
-            ><span class="etikett etikett-1a">1A</span>
+            <span class="weg-name">spaCy</span><span class="etikett etikett-1a">1A</span>
           </p>
         </div>
         <ol class="teilleiste" aria-label="Teil des Vortrags: 1A, Niklas">
@@ -2557,14 +2581,14 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">Der Ausreißer dauerte rund zehn Sekunden</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1a">1A</span>Was geschah im letzten Lauf (V3, Block 5)?<span
+            class="status"
+            >nachträglich ausgewertet</span
+          >
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
-            <p class="folie-frage">
-              <span class="etikett" style="background: var(--raster); color: var(--text-2)"
-                >nachträglich ausgewertet</span
-              >
-              Was geschah im letzten Lauf (V3, Block 5)?
-            </p>
             <div class="grafik-box">
               <!-- prettier-ignore --><svg viewBox="0 0 1380 620" role="img" aria-label="Letzter Lauf V3, Block 5: 50 langsame Beitritte in etwa 10 Sekunden, zeitgleich die 3 Timeouts der Analyse und CPU-Spitzen von App und PostgreSQL."><rect width="1380" height="620" fill="#ffffff"/><g data-ab="1" class="aufbau-band"><rect x="625.47" y="10" width="60.72" height="540" rx="6" fill="#fdecea"/><text x="655.83" y="34" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="24" font-weight="700" fill="#b42318" text-anchor="middle">≈ 10 s</text></g><line x1="300" y1="20" x2="300" y2="540" stroke="#e8edf3" stroke-width="2"/><text x="300" y="574" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">0 s</text><line x1="396.67" y1="20" x2="396.67" y2="540" stroke="#e8edf3" stroke-width="2"/><text x="396.67" y="574" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">20 s</text><line x1="493.33" y1="20" x2="493.33" y2="540" stroke="#e8edf3" stroke-width="2"/><text x="493.33" y="574" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">40 s</text><line x1="590" y1="20" x2="590" y2="540" stroke="#e8edf3" stroke-width="2"/><text x="590" y="574" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">60 s</text><line x1="686.67" y1="20" x2="686.67" y2="540" stroke="#e8edf3" stroke-width="2"/><text x="686.67" y="574" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">80 s</text><line x1="783.33" y1="20" x2="783.33" y2="540" stroke="#e8edf3" stroke-width="2"/><text x="783.33" y="574" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">100 s</text><line x1="880" y1="20" x2="880" y2="540" stroke="#e8edf3" stroke-width="2"/><text x="880" y="574" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">120 s</text><text x="0" y="130" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">Beitritte</text><text x="0" y="160" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#566173">Latenz je Beitritt</text><line x1="300" y1="230" x2="880" y2="230" stroke="#e8edf3" stroke-width="2"/><text x="288" y="238" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="end">0 ms</text><line x1="300" y1="142.5" x2="880" y2="142.5" stroke="#e8edf3" stroke-width="2"/><line x1="300" y1="55" x2="880" y2="55" stroke="#e8edf3" stroke-width="2"/><text x="288" y="63" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="end">1.000 ms</text><circle cx="300" cy="219.86" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="300.87" cy="223.42" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="301.74" cy="223.6" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="302.61" cy="225.83" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="303.48" cy="223.94" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="304.35" cy="223.08" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="305.22" cy="225.36" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="306.09" cy="226.24" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="306.96" cy="226.2" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="307.83" cy="225.81" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="308.7" cy="226.92" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="309.57" cy="226.51" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="310.44" cy="226.53" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="311.31" cy="226.39" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="312.18" cy="226.49" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="313.05" cy="226.3" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="313.92" cy="226.26" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="314.79" cy="226.12" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="315.66" cy="226.96" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="316.53" cy="226.67" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="317.4" cy="226.94" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="318.27" cy="226.55" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="319.14" cy="226.67" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="320.01" cy="226.27" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="320.88" cy="226.11" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="321.75" cy="226.54" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="322.62" cy="226.46" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="323.49" cy="226.45" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="324.36" cy="219.25" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="325.23" cy="221.42" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="326.1" cy="226.71" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="326.97" cy="226.57" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="327.84" cy="222" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="328.71" cy="226.42" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="329.58" cy="224.78" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="330.45" cy="226.88" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="331.32" cy="226.12" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="332.19" cy="226.52" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="333.06" cy="225.62" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="333.93" cy="226.36" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="334.8" cy="226.55" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="335.67" cy="226.75" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="336.54" cy="222.48" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="337.41" cy="219.84" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="338.28" cy="225.53" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="339.15" cy="226.64" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="340.02" cy="226.65" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="340.89" cy="226.54" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="341.76" cy="226.68" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="342.63" cy="226.75" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="343.5" cy="224.72" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="344.37" cy="222.09" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="345.24" cy="224.64" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="346.11" cy="226.6" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="346.98" cy="220.47" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="347.85" cy="226.47" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="348.72" cy="226.7" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="349.59" cy="225.9" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="350.46" cy="226.92" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="351.33" cy="220.87" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="352.2" cy="226.87" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="353.07" cy="226.67" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="353.94" cy="226.53" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="354.81" cy="226.92" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="355.68" cy="226.68" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="356.55" cy="222" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="357.42" cy="226.83" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="358.29" cy="226.56" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="359.16" cy="220.88" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="360.03" cy="226.85" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="360.9" cy="226.75" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="361.77" cy="226.56" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="362.64" cy="226.59" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="363.51" cy="226.46" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="364.38" cy="226.77" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="365.25" cy="226.61" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="366.12" cy="223.46" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="366.99" cy="223.4" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="367.86" cy="225.78" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="368.73" cy="226.82" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="369.6" cy="226.44" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="370.47" cy="226.84" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="371.34" cy="226.58" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="372.21" cy="226.65" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="373.08" cy="226.72" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="373.95" cy="226.76" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="374.82" cy="226.7" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="375.69" cy="225.98" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="376.56" cy="226.66" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="377.43" cy="226.84" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="378.3" cy="226.8" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="379.17" cy="221.87" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="380.04" cy="226.64" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="380.91" cy="219.7" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="381.78" cy="226.67" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="382.65" cy="226.78" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="383.52" cy="226.65" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="384.39" cy="226.82" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="385.26" cy="226.61" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="386.13" cy="226.64" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="387" cy="225.21" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="387.87" cy="226.58" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="388.74" cy="226.67" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="389.61" cy="226.65" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="390.48" cy="226.83" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="391.35" cy="226.88" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="392.22" cy="226.78" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="393.09" cy="226.54" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="393.96" cy="226.59" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="394.83" cy="226.46" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="395.7" cy="226.81" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="396.57" cy="226.49" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="397.44" cy="226.62" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="398.31" cy="225.97" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="399.18" cy="226.11" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="400.05" cy="219.95" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="400.92" cy="226.87" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="401.79" cy="226.05" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="402.66" cy="224.84" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="403.53" cy="226.68" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="404.4" cy="226.84" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="405.27" cy="226.59" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="406.14" cy="226.67" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="407.01" cy="226.78" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="407.88" cy="220.78" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="408.75" cy="226.3" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="409.62" cy="226.79" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="410.49" cy="226.52" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="411.36" cy="226.44" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="412.23" cy="226.55" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="413.1" cy="226.84" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="413.97" cy="226.99" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="414.84" cy="226.72" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="415.71" cy="221.96" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="416.58" cy="226.33" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="417.45" cy="226.91" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="418.32" cy="226.76" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="419.19" cy="226.72" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="420.06" cy="226.72" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="420.93" cy="223.02" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="421.8" cy="225.8" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="422.67" cy="226.67" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="423.54" cy="226.76" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="424.41" cy="226.85" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="425.28" cy="225.77" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="426.15" cy="226.63" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="427.02" cy="226.6" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="427.89" cy="226.34" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="428.76" cy="226.78" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="429.63" cy="226.31" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="430.5" cy="226.9" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="431.37" cy="226.86" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="432.24" cy="226.47" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="433.11" cy="226.84" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="433.98" cy="226.87" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="434.85" cy="226.59" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="435.72" cy="226.74" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="436.59" cy="226.63" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="437.46" cy="226.82" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="438.33" cy="219.29" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="439.2" cy="226.85" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="440.07" cy="225.11" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="440.94" cy="226.23" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="441.81" cy="226.74" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="442.68" cy="226.47" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="443.55" cy="226.3" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="444.42" cy="226.94" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="445.29" cy="226.71" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="446.16" cy="226.62" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="447.03" cy="225.86" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="447.9" cy="226.64" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="448.77" cy="218.43" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="449.64" cy="226.63" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="450.51" cy="226.63" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="451.38" cy="226.82" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="452.25" cy="226.67" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="453.12" cy="226.51" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="453.99" cy="226.26" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="454.86" cy="226.78" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="455.73" cy="226.85" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="456.6" cy="226.7" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="457.47" cy="226.63" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="458.34" cy="226.6" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="459.21" cy="226.8" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="460.08" cy="217.98" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="460.95" cy="226.81" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="461.82" cy="226.71" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="462.69" cy="226.65" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="463.56" cy="226.72" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="464.43" cy="226.84" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="465.3" cy="226.66" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="466.17" cy="226.92" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="467.04" cy="226.44" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="467.91" cy="226.66" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="468.78" cy="227.05" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="469.65" cy="226.85" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="470.52" cy="226.84" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="471.39" cy="222.97" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="472.26" cy="226.9" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="473.13" cy="226.45" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="474" cy="225.61" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="474.87" cy="226.7" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="475.74" cy="226.17" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="476.61" cy="226.59" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="477.48" cy="226.6" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="478.35" cy="226.76" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="479.22" cy="226.85" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="480.09" cy="226.42" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="480.96" cy="226.8" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="481.83" cy="226.8" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="482.7" cy="226.76" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="483.57" cy="226.72" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="484.44" cy="226.09" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="485.31" cy="226.8" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="486.18" cy="226.31" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="487.05" cy="226.82" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="487.92" cy="226.85" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="488.79" cy="219.3" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="489.66" cy="221.49" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="490.53" cy="226.89" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="491.4" cy="226.94" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="492.27" cy="224.72" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="493.14" cy="226.78" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="494.01" cy="226.76" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="494.88" cy="226.75" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="495.75" cy="220.02" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="496.62" cy="227.08" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="497.49" cy="224.43" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="498.36" cy="226.77" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="499.23" cy="225.74" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="500.1" cy="224.63" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="500.97" cy="227.15" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="501.84" cy="225.84" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="502.71" cy="226.52" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="503.58" cy="219.29" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="504.45" cy="226.86" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="505.32" cy="226.76" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="506.19" cy="225.93" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="507.06" cy="226.79" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="507.93" cy="222.19" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="508.8" cy="226.8" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="509.67" cy="226.8" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="510.54" cy="226.68" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="511.41" cy="227.21" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="512.28" cy="217.05" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="513.15" cy="226.97" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="514.02" cy="226.82" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="514.89" cy="226.84" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="515.76" cy="226.88" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="516.63" cy="226.73" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="517.5" cy="226.32" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="518.37" cy="226.87" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="519.24" cy="226.8" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="520.11" cy="225.42" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="520.98" cy="218.34" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="521.85" cy="225.06" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="522.72" cy="226.75" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="523.59" cy="226.61" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="524.46" cy="226.55" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="525.33" cy="226.67" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="526.2" cy="226.55" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="527.07" cy="226.01" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="527.94" cy="226.8" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="528.81" cy="226.01" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="529.68" cy="220.55" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="530.55" cy="226.86" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="531.42" cy="226.89" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="532.29" cy="226.62" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="533.16" cy="226.25" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="534.03" cy="226.46" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="534.9" cy="226.91" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="535.77" cy="226.89" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="536.64" cy="220.31" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="537.51" cy="226.86" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="538.38" cy="226.92" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="539.25" cy="226.58" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="540.12" cy="226.91" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="540.99" cy="226.6" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="541.86" cy="226.79" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="542.73" cy="226.68" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="543.6" cy="226.61" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="544.47" cy="226.81" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="545.34" cy="226.68" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="546.21" cy="226.71" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="547.08" cy="226.85" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="547.95" cy="226.86" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="548.82" cy="226.7" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="549.69" cy="226.57" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="550.56" cy="226.91" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="551.43" cy="226.82" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="552.3" cy="226.87" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="553.17" cy="226.95" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="554.04" cy="226.75" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="554.91" cy="226.74" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="555.78" cy="226.9" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="556.65" cy="226.86" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="557.52" cy="226.79" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="558.39" cy="226.65" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="559.26" cy="226.62" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="560.13" cy="226.9" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="561" cy="225.19" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="561.87" cy="226.86" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="562.74" cy="226.76" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="563.61" cy="226.67" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="564.48" cy="226.02" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="565.35" cy="226.47" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="566.22" cy="226.83" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="567.09" cy="226.6" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="567.96" cy="217.14" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="568.83" cy="226.71" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="569.7" cy="226.8" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="570.57" cy="226.79" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="571.44" cy="226.65" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="572.31" cy="226.83" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="573.18" cy="226.59" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="574.05" cy="226.79" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="574.92" cy="226.47" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="575.79" cy="226.64" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="576.66" cy="226.58" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="577.53" cy="226.85" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="578.4" cy="226.93" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="579.27" cy="226.91" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="580.14" cy="226.99" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="581.01" cy="226.81" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="581.88" cy="226.95" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="582.75" cy="226.88" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="583.62" cy="226.48" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="584.49" cy="226.8" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="585.36" cy="226.89" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="586.23" cy="226.89" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="587.1" cy="227.07" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="587.97" cy="226.92" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="588.84" cy="227.04" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="589.71" cy="226.84" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="590.58" cy="226.83" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="591.45" cy="226.88" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="592.32" cy="226.77" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="593.19" cy="226.71" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="594.06" cy="226.82" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="594.93" cy="226.79" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="595.8" cy="226.72" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="596.67" cy="226.61" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="597.54" cy="226.87" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="598.41" cy="226.76" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="599.28" cy="226.88" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="600.15" cy="226.66" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="601.02" cy="226.86" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="601.89" cy="226.78" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="602.76" cy="226.7" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="603.63" cy="226.77" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="604.5" cy="226.9" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="605.37" cy="226.69" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="606.24" cy="226.63" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="607.11" cy="226.72" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="607.98" cy="226.64" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="608.85" cy="226.81" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="609.72" cy="226.91" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="610.59" cy="225.99" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="611.46" cy="226.74" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="612.33" cy="226.91" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="613.2" cy="226.91" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="614.07" cy="226.76" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="614.94" cy="226.5" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="615.81" cy="226.79" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="616.68" cy="226.9" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="617.55" cy="226.9" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="618.42" cy="226.81" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="619.29" cy="226.77" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="620.16" cy="226.84" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="621.03" cy="226.82" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="621.9" cy="226.9" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="622.77" cy="226.75" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="623.64" cy="226.6" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="624.51" cy="226.78" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="625.38" cy="226.82" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="626.25" cy="226.92" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="627.12" cy="226.54" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="627.99" cy="225.74" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="628.86" cy="226.52" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="629.73" cy="226.75" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="630.6" cy="226.08" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="631.47" cy="212.08" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="632.34" cy="199.64" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="633.21" cy="148.84" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="634.08" cy="95.54" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="634.95" cy="74.79" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="635.82" cy="92.96" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="636.69" cy="115.27" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="637.56" cy="136.98" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="638.43" cy="145.95" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="639.3" cy="189.51" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="640.17" cy="139.54" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="641.04" cy="195.09" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="641.91" cy="221.71" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="642.78" cy="223.85" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="643.65" cy="223.89" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="644.52" cy="206.31" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="645.39" cy="209.48" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="646.26" cy="202.42" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="647.13" cy="205.62" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="648" cy="199.37" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="648.87" cy="124.17" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="649.74" cy="97.21" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="650.61" cy="108.24" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="651.48" cy="147.22" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="652.35" cy="44.94" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="653.22" cy="145.08" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="654.09" cy="51.64" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="654.96" cy="62.73" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="655.83" cy="114.9" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="656.7" cy="127.1" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="657.57" cy="127.57" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="658.44" cy="148.64" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="659.31" cy="169.39" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="660.18" cy="190.52" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="661.05" cy="204.22" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="661.92" cy="177.29" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="662.79" cy="191.55" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="663.66" cy="211.31" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="664.53" cy="201.55" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="665.4" cy="198.24" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="666.27" cy="206.16" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="667.14" cy="209.7" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="668.01" cy="220.62" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="668.88" cy="209.19" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="669.75" cy="207.57" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="670.62" cy="218.97" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="671.49" cy="215.97" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="672.36" cy="183.87" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="673.23" cy="178.78" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="674.1" cy="201.35" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="674.97" cy="192.88" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="675.84" cy="198.92" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="676.71" cy="213.99" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="677.58" cy="210.33" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="678.45" cy="192.31" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="679.32" cy="208.25" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="680.19" cy="208.94" r="6" fill="#b42318" fill-opacity="0.9"/><circle cx="681.06" cy="215.68" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="681.93" cy="224.32" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="682.8" cy="221.78" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="683.67" cy="224.78" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="684.54" cy="224.72" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="685.41" cy="224" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="686.28" cy="226.28" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="687.15" cy="225.97" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="688.02" cy="226.27" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="688.89" cy="222.08" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="689.76" cy="225.51" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="690.63" cy="225.11" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="691.5" cy="225.3" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="692.37" cy="225.7" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="693.24" cy="226.57" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="694.11" cy="226.78" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="694.98" cy="226.48" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="695.85" cy="226.35" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="696.72" cy="226.23" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="697.59" cy="225.91" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="698.46" cy="226.2" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="699.33" cy="226.69" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="700.2" cy="226.45" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="701.07" cy="226.39" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="701.94" cy="226.23" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="702.81" cy="225.65" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="703.68" cy="226.65" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="704.55" cy="226.15" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="705.42" cy="226.34" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="706.29" cy="226.04" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="707.16" cy="226.17" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="708.03" cy="226.6" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="708.9" cy="226.74" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="709.77" cy="226.58" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="710.64" cy="226.57" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="711.51" cy="226.3" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="712.38" cy="226.98" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="713.25" cy="225.66" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="714.12" cy="224.68" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="714.99" cy="226.71" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="715.86" cy="225.72" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="716.73" cy="226.35" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="717.6" cy="226.29" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="718.47" cy="226.37" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="719.34" cy="226.47" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="720.21" cy="225.39" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="721.08" cy="226.77" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="721.95" cy="225.9" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="722.82" cy="226.57" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="723.69" cy="226.25" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="724.56" cy="226.86" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="725.43" cy="226.13" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="726.3" cy="226.72" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="727.17" cy="227" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="728.04" cy="225.72" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="728.91" cy="226.74" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="729.78" cy="226.63" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="730.65" cy="226.58" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="731.52" cy="226.64" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="732.39" cy="226.5" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="733.26" cy="226.8" r="4" fill="#566173" fill-opacity="0.4"/><circle cx="734.13" cy="226.77" r="4" fill="#566173" fill-opacity="0.4"/><text x="745" y="216" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#566173">Welle endet</text><text x="914" y="60" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="24" font-weight="700" fill="#b42318">50 Beitritte über 100 ms</text><text x="914" y="92" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">übrige 24 Läufe: je Aktion höchstens 1</text><g data-ab="1" class="aufbau-text"><text x="0" y="320" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">Analyse</text><text x="0" y="350" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#566173">5 Lehrende</text><rect x="300.01" y="290" width="8.23" height="16" rx="3" fill="#c9d2de"/><rect x="309.68" y="312" width="8.15" height="16" rx="3" fill="#c9d2de"/><rect x="319.34" y="334" width="9.33" height="16" rx="3" fill="#c9d2de"/><rect x="329.02" y="356" width="8" height="16" rx="3" fill="#c9d2de"/><rect x="338.68" y="378" width="8" height="16" rx="3" fill="#c9d2de"/><rect x="348.34" y="290" width="8" height="16" rx="3" fill="#c9d2de"/><rect x="358" y="312" width="9.11" height="16" rx="3" fill="#c9d2de"/><rect x="367.67" y="334" width="9.18" height="16" rx="3" fill="#c9d2de"/><rect x="377.34" y="356" width="8.19" height="16" rx="3" fill="#c9d2de"/><rect x="387.01" y="378" width="8.23" height="16" rx="3" fill="#c9d2de"/><rect x="396.67" y="290" width="8" height="16" rx="3" fill="#c9d2de"/><rect x="406.43" y="312" width="9.48" height="16" rx="3" fill="#c9d2de"/><rect x="416.01" y="334" width="8" height="16" rx="3" fill="#c9d2de"/><rect x="425.67" y="356" width="8.22" height="16" rx="3" fill="#c9d2de"/><rect x="435.35" y="378" width="8.23" height="16" rx="3" fill="#c9d2de"/><rect x="445.01" y="290" width="11.04" height="16" rx="3" fill="#c9d2de"/><rect x="454.67" y="312" width="11.48" height="16" rx="3" fill="#c9d2de"/><rect x="464.34" y="334" width="10.56" height="16" rx="3" fill="#c9d2de"/><rect x="474.01" y="356" width="9.15" height="16" rx="3" fill="#c9d2de"/><rect x="483.69" y="378" width="8.68" height="16" rx="3" fill="#c9d2de"/><rect x="493.34" y="290" width="8.57" height="16" rx="3" fill="#c9d2de"/><rect x="503.07" y="312" width="8.05" height="16" rx="3" fill="#c9d2de"/><rect x="512.75" y="334" width="9.58" height="16" rx="3" fill="#c9d2de"/><rect x="522.34" y="356" width="11.09" height="16" rx="3" fill="#c9d2de"/><rect x="532.02" y="378" width="10.55" height="16" rx="3" fill="#c9d2de"/><rect x="541.67" y="290" width="9.09" height="16" rx="3" fill="#c9d2de"/><rect x="551.34" y="312" width="8.19" height="16" rx="3" fill="#c9d2de"/><rect x="561" y="334" width="8" height="16" rx="3" fill="#c9d2de"/><rect x="570.67" y="356" width="8" height="16" rx="3" fill="#c9d2de"/><rect x="580.34" y="378" width="8" height="16" rx="3" fill="#c9d2de"/><rect x="590.01" y="290" width="8" height="16" rx="3" fill="#c9d2de"/><rect x="599.67" y="312" width="8.62" height="16" rx="3" fill="#c9d2de"/><rect x="609.35" y="334" width="8" height="16" rx="3" fill="#c9d2de"/><rect x="619" y="356" width="8" height="16" rx="3" fill="#c9d2de"/><rect x="628.7" y="378" width="16.18" height="16" rx="3" fill="#c9d2de"/><rect x="638.34" y="290" width="25.05" height="16" rx="3" fill="#b42318"/><rect x="648" y="312" width="24.72" height="16" rx="3" fill="#b42318"/><rect x="657.77" y="334" width="8" height="16" rx="3" fill="#b45309"/><rect x="667.35" y="356" width="24.58" height="16" rx="3" fill="#b42318"/><rect x="677.01" y="378" width="8" height="16" rx="3" fill="#b45309"/><rect x="686.67" y="290" width="8" height="16" rx="3" fill="#b45309"/><rect x="696.36" y="312" width="8.56" height="16" rx="3" fill="#c9d2de"/><rect x="706.02" y="334" width="8.18" height="16" rx="3" fill="#c9d2de"/><rect x="715.67" y="356" width="8" height="16" rx="3" fill="#c9d2de"/><rect x="725.35" y="378" width="8" height="16" rx="3" fill="#c9d2de"/><rect x="735.02" y="290" width="8" height="16" rx="3" fill="#c9d2de"/><rect x="744.71" y="312" width="8" height="16" rx="3" fill="#c9d2de"/><rect x="754.34" y="334" width="9.13" height="16" rx="3" fill="#c9d2de"/><rect x="764.01" y="356" width="8" height="16" rx="3" fill="#c9d2de"/><rect x="773.68" y="378" width="8" height="16" rx="3" fill="#c9d2de"/><rect x="783.35" y="290" width="8" height="16" rx="3" fill="#c9d2de"/><rect x="793" y="312" width="8" height="16" rx="3" fill="#c9d2de"/><rect x="802.7" y="334" width="8" height="16" rx="3" fill="#c9d2de"/><rect x="812.34" y="356" width="8.2" height="16" rx="3" fill="#c9d2de"/><rect x="822" y="378" width="8" height="16" rx="3" fill="#c9d2de"/><rect x="831.67" y="290" width="8.61" height="16" rx="3" fill="#c9d2de"/><rect x="841.34" y="312" width="8" height="16" rx="3" fill="#c9d2de"/><rect x="851" y="334" width="8" height="16" rx="3" fill="#c9d2de"/><rect x="860.68" y="356" width="8" height="16" rx="3" fill="#c9d2de"/><rect x="870.35" y="378" width="8" height="16" rx="3" fill="#c9d2de"/><text x="914" y="314" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="24" font-weight="700" fill="#b42318">die einzigen 3 Timeouts von V3</text><text x="914" y="346" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#9a4a0b">danach sofort Ersatz: 2 Anfragen offen</text></g><g data-ab="2" class="aufbau-text"><text x="0" y="460" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">CPU</text><text x="0" y="490" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#566173">% einer CPU</text><line x1="300" y1="485" x2="880" y2="485" stroke="#e8edf3" stroke-width="2"/><text x="288" y="493" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="end">50 %</text><path d="M309.68 526.94L319.34 524.26L329.02 524.2L338.68 522.2L348.34 522.54L358.01 523.61L367.68 522.93L377.34 526.86L387 525.29L396.67 521.31L406.44 519.38L416.01 525.52L425.68 527.42L435.35 526.46L445.01 522.98L454.67 523.58L464.34 522.33L474.01 525.21L483.69 526.51L493.34 522.64L503.07 524.43L512.75 522.02L522.34 524.61L532.02 525.72L541.68 523.34L551.35 526.56L561 524.33L570.67 528.03L580.34 528.57L590.01 526.27L599.67 528.6L609.35 526.44L619 528.28L628.7 528.33L638.34 499.37L648.01 500.88L657.78 513.09L667.34 502.34L677.01 512.96L686.68 511.23L696.37 524.92L706.02 525.23L715.67 522.05L725.36 525.78L735.02 525.83L744.71 535.88L754.35 539.36L764.01 537.61L773.68 539.57L783.36 537.63L793 539.51L802.71 539.55L812.33 537.77L822.01 539.61L831.67 537.17L841.35 539.1L851.01 539.62L860.68 537.67L870.35 539.59" fill="none" stroke="#566173" stroke-width="3"/><path d="M309.68 521.23L319.34 512.8L329.02 508.48L338.68 512.95L348.34 505.51L358.01 503.45L367.68 510.37L377.34 513.68L387 512.28L396.67 510.54L406.44 504.91L416.01 512.62L425.68 515.97L435.35 514.18L445.01 509.55L454.67 500.08L464.34 509.11L474.01 511.15L483.69 513.74L493.34 508.63L503.07 501.48L512.75 510.68L522.34 502.33L532.02 513.99L541.68 513.29L551.35 513.57L561 511.55L570.67 507.85L580.34 517.71L590.01 516.45L599.67 518.83L609.35 517.86L619 517.87L628.7 509.45L638.34 512.52L648.01 481.1L657.78 506.91L667.34 466.95L677.01 472.51L686.68 460.22L696.37 508.96L706.02 508.62L715.67 512.61L725.36 514.69L735.02 516.76L744.71 526.83L754.35 535.87L764.01 523.37L773.68 535.87L783.36 536.55L793 535.07L802.71 536.34L812.33 535.84L822.01 536.02L831.67 535.12L841.35 536.27L851.01 524.01L860.68 536.08L870.35 536.12" fill="none" stroke="#16202c" stroke-width="3"/><text x="696.68" y="464.22" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#16202c">App</text><text x="628.34" y="495.37" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#566173" text-anchor="end">DB</text><text x="914" y="454" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="24" font-weight="700" fill="#16202c">App bis 73 %, DB bis 37 %</text><text x="914" y="486" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">DB in allen übrigen Läufen ≤ 27 %</text></g><text x="300" y="616" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#566173">Sekunden im Messfenster · Zeit je Beitritt ≈ Ankunft (Näherung)</text></svg>
             </div>
@@ -2583,6 +2607,7 @@
         class="folie"
         data-id="N8"
         data-teil="niklas"
+        data-hauptfolie
         aria-label="12 von 39: spaCy bleibt im Budget, bis CPU fehlt"
       >
         <div
@@ -2692,6 +2717,9 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">spaCy bleibt im Budget, bis CPU fehlt</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1a">1A</span>Wie viel CPU und Speicher braucht spaCy selbst?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
             <div class="grafik-box">
@@ -2712,6 +2740,7 @@
         class="folie"
         data-id="N9"
         data-teil="niklas"
+        data-hauptfolie
         aria-label="13 von 39: Nach 5 s liefert die App den Ersatz"
       >
         <div
@@ -2821,11 +2850,11 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">Nach 5 s liefert die App den Ersatz</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1a">1A</span>Was sehen Lehrende, wenn spaCy langsam ist?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
-            <p class="folie-frage">
-              <span class="etikett etikett-1a">1A</span>Was sehen Lehrende, wenn spaCy langsam ist?
-            </p>
             <div class="grafik-box">
               <!-- prettier-ignore --><svg viewBox="0 0 1380 470" role="img" aria-label="Analysedauer je Block: lexikalisch unter 0,1 s, spaCy normal etwa 0,5 s, gedrosselt 2 bis 3 s, hinter dem Proxy Ersatz nach etwa 5 s."><rect width="1380" height="470" fill="#ffffff"/><line x1="430" y1="50" x2="430" y2="406" stroke="#e8edf3" stroke-width="2"/><text x="430" y="440" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">0,01 s</text><line x1="730" y1="50" x2="730" y2="406" stroke="#e8edf3" stroke-width="2"/><text x="730" y="440" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">0,1 s</text><line x1="1030" y1="50" x2="1030" y2="406" stroke="#e8edf3" stroke-width="2"/><text x="1030" y="440" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">1 s</text><line x1="1330" y1="50" x2="1330" y2="406" stroke="#e8edf3" stroke-width="2"/><text x="1330" y="440" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">10 s</text><line x1="430" y1="406" x2="1330" y2="406" stroke="#c9d2de" stroke-width="2"/><line x1="1239.69" y1="40" x2="1239.69" y2="406" stroke="#b42318" stroke-width="3" stroke-dasharray="8 6"/><text x="1229.69" y="34" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="600" fill="#b42318" text-anchor="end">Timeout 5 s</text><line x1="1263.45" y1="70" x2="1263.45" y2="406" stroke="#16202c" stroke-width="2" stroke-dasharray="3 5"/><text x="1271.45" y="64" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#16202c">Proxy 6 s</text><text x="0" y="92" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">V1 · spaCy aus</text><text x="0" y="120" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#566173">Ergebnis: lexikalisch</text><circle cx="613.24" cy="84" r="11" fill="#566173" fill-opacity="0.75"/><circle cx="601.41" cy="84" r="11" fill="#566173" fill-opacity="0.75"/><circle cx="621.4" cy="84" r="11" fill="#566173" fill-opacity="0.75"/><circle cx="615.03" cy="84" r="11" fill="#566173" fill-opacity="0.75"/><circle cx="610.37" cy="84" r="11" fill="#566173" fill-opacity="0.75"/><text x="641.4" y="92" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#16202c">37–43 ms</text><text x="0" y="176" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">V2 · spaCy 1 CPU</text><text x="0" y="204" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#566173">Ergebnis: spaCy</text><circle cx="939.27" cy="168" r="11" fill="#0b5ea8" fill-opacity="0.75"/><circle cx="934.35" cy="168" r="11" fill="#0b5ea8" fill-opacity="0.75"/><circle cx="929.93" cy="168" r="11" fill="#0b5ea8" fill-opacity="0.75"/><circle cx="932.58" cy="168" r="11" fill="#0b5ea8" fill-opacity="0.75"/><circle cx="933.76" cy="168" r="11" fill="#0b5ea8" fill-opacity="0.75"/><text x="959.27" y="176" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#16202c">464–498 ms</text><text x="0" y="260" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">V3 · spaCy 0,25 CPU</text><text x="0" y="288" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#566173">Ergebnis: spaCy</text><circle cx="1167.32" cy="252" r="11" fill="#0b5ea8" fill-opacity="0.75"/><circle cx="1152.5" cy="252" r="11" fill="#0b5ea8" fill-opacity="0.75"/><circle cx="1132.88" cy="252" r="11" fill="#0b5ea8" fill-opacity="0.75"/><circle cx="1180.68" cy="252" r="11" fill="#0b5ea8" fill-opacity="0.75"/><circle cx="1157.84" cy="252" r="11" fill="#0b5ea8" fill-opacity="0.75"/><text x="1112.88" y="260" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#16202c" text-anchor="end">2,2–3,2 s</text><text x="0" y="344" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">V4 · Proxy vor spaCy</text><text x="0" y="372" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#566173">Ergebnis: Ersatz</text><circle cx="1240.92" cy="336" r="11" fill="#b45309" fill-opacity="0.75"/><circle cx="1240.83" cy="336" r="11" fill="#b45309" fill-opacity="0.75"/><circle cx="1241.04" cy="336" r="11" fill="#b45309" fill-opacity="0.75"/><circle cx="1241.33" cy="336" r="11" fill="#b45309" fill-opacity="0.75"/><circle cx="1241.28" cy="336" r="11" fill="#b45309" fill-opacity="0.75"/><text x="1220.83" y="344" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#9a4a0b" text-anchor="end">5,0–5,1 s</text><text x="430" y="466" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#566173">Analysedauer, p95 je Block · Log-Achse, je Strich × 10</text></svg>
             </div>
@@ -2844,6 +2873,7 @@
         class="folie"
         data-id="N10"
         data-teil="niklas"
+        data-hauptfolie
         aria-label="14 von 39: Entscheidung: lexikalische Wortwolke bleibt"
       >
         <div
@@ -2953,6 +2983,9 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">Entscheidung: lexikalische Wortwolke bleibt</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1a">1A</span>Was folgt daraus für den Betrieb?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 44px">
@@ -3026,6 +3059,7 @@
         class="folie"
         data-id="J1"
         data-teil="jonas"
+        data-hauptfolie
         aria-label="15 von 39: Ein Klick. 152 Sekunden. Keine Modellantwort."
       >
         <div
@@ -3109,18 +3143,21 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">Ein Klick. 152 Sekunden. Keine Modellantwort.</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1c">1C</span><span class="etikett etikett-1b">1B</span>Was
+          erlebt die Lehrperson bei einem einzelnen Auftrag?
+        </p>
+        <p class="folie-autor">Jonas Weirauch</p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
-            <p style="margin: 0 0 10px; font-size: 30px; line-height: 1.3; color: var(--text-2)">
+            <p
+              class="sekundaer"
+              style="margin: 0 0 var(--abstand-gruppe); font-size: var(--s-text)"
+            >
               Ein echter Auftrag der Q&amp;A-Zusammenfassung mit synthetischen Daten, verfolgt vom
-              Klick der Lehrperson bis zum Ergebnis. Labor auf einem Laptop, Inferenz auf der CPU.
-            </p>
-            <p style="margin: 0 0 44px; font-size: 28px; font-weight: 600">
-              Jonas Weirauch
-              <span class="zusatz"
-                >· gemessen auf Code nach v1.4.0 (1B: <span class="nowrap">v1.4.0-184</span>, 1C:
-                <span class="nowrap">v1.4.0-14</span>)</span
-              >
+              Klick der Lehrperson bis zum Ergebnis. Labor auf einem Laptop, Inferenz auf der CPU,
+              Code nach v1.4.0 (1B: <span class="nowrap">v1.4.0-184</span>, 1C:
+              <span class="nowrap">v1.4.0-14</span>).
             </p>
             <div
               style="
@@ -3160,6 +3197,7 @@
         class="folie"
         data-id="J2"
         data-teil="jonas"
+        data-hauptfolie
         aria-label="16 von 39: Zwei Hosts nachgebaut, Produktionscode unverändert"
       >
         <div
@@ -3243,12 +3281,12 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">Zwei Hosts nachgebaut, Produktionscode unverändert</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1b">1B</span>Lässt sich das Zwei-Host-Release nachbauen, ohne
+          Produktionscode zu ändern?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
-            <p class="folie-frage">
-              <span class="etikett etikett-1b">1B</span>Lässt sich das Zwei-Host-Release nachbauen,
-              ohne Produktionscode zu ändern?
-            </p>
             <div
               style="
                 flex: 1 1 auto;
@@ -3388,8 +3426,83 @@
         data-teil="jonas"
         data-station="klick"
         data-eigener-weg
+        data-hauptfolie
         aria-label="17 von 39: Host nach 67 ms frei, Inferenz 151 s"
       >
+        <div
+          class="weg-mini weg-marke"
+          data-marke="auftrag"
+          role="img"
+          aria-label="Ort auf dem Weg: Weg eines Auftrags (1C, 1B)"
+        >
+          <svg
+            class="weg-mini-karte"
+            data-weg="auftrag"
+            viewBox="0 0 450 52"
+            width="450"
+            height="52"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path
+              d="M20 15L138.8 15C167.6 15 167.6 40 196.4 40L254 40C282.8 40 282.8 15 311.6 15L434 15"
+              fill="none"
+              stroke="var(--blau)"
+              stroke-width="3"
+              stroke-linecap="round"
+            />
+            <circle
+              data-station="klick"
+              cx="20"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="kontext"
+              cx="99.3"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="netz"
+              cx="167.6"
+              cy="27.5"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--bernstein)"
+              stroke-width="3"
+            />
+            <circle data-station="inferenz" cx="225.2" cy="40" r="9" fill="var(--bernstein)" />
+            <circle
+              data-station="nachpruefung"
+              cx="344.04"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--petrol)"
+              stroke-width="3"
+            />
+            <circle
+              data-station="gate"
+              cx="434"
+              cy="15"
+              r="6.5"
+              fill="#fff"
+              stroke="var(--rot)"
+              stroke-width="3"
+            />
+          </svg>
+          <p class="weg-beschriftung" aria-hidden="true">
+            <span class="weg-name">Weg eines Auftrags</span
+            ><span class="etikett etikett-1c">1C</span><span class="etikett etikett-1b">1B</span>
+          </p>
+        </div>
         <ol class="teilleiste" aria-label="Teil des Vortrags: 1C, 1B 1–2, Jonas">
           <li>1A</li>
           <li data-aktiv aria-current="step">1C, 1B 1–2</li>
@@ -3397,6 +3510,11 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">Host nach 67 ms frei, Inferenz 151 s</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1c">1C</span
+          ><span class="etikett etikett-1b">1B</span>Welchen Weg nimmt ein Auftrag über die zwei
+          Hosts?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
             <div class="grafik-box">
@@ -3417,6 +3535,7 @@
         class="folie"
         data-id="J4"
         data-teil="jonas"
+        data-hauptfolie
         aria-label="18 von 39: Erst die Hypothese, dann die Messung"
       >
         <div
@@ -3500,6 +3619,10 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">Erst die Hypothese, dann die Messung</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1c">1C</span><span class="etikett etikett-1b">1B</span>Wie
+          belastbar sind die Messungen?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
             <div
@@ -3616,6 +3739,7 @@
         data-id="J5"
         data-teil="jonas"
         data-station="klick"
+        data-hauptfolie
         aria-label="19 von 39: Der Host wartet nicht auf das Modell"
       >
         <div
@@ -3699,12 +3823,11 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">Der Host wartet nicht auf das Modell</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1c">1C</span>Blockiert ein langsames Modell die Lehrperson?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
-            <p class="folie-frage">
-              <span class="etikett etikett-1c">1C</span>Blockiert ein langsames Modell die
-              Lehrperson?
-            </p>
             <div style="display: grid; grid-template-columns: 760px 1fr; column-gap: 70px">
               <div>
                 <ul style="margin: 0; padding-left: 30px; font-size: 28px; line-height: 1.38">
@@ -3774,6 +3897,7 @@
         data-id="J5b"
         data-teil="jonas"
         data-station="kontext"
+        data-hauptfolie
         aria-label="20 von 39: Jeder Kontextaufbau prüft die Rechte erneut"
       >
         <div
@@ -3857,11 +3981,11 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">Jeder Kontextaufbau prüft die Rechte erneut</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1c">1C</span>Wer darf welchen Teil des Kontexts sehen?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
-            <p class="folie-frage">
-              <span class="etikett etikett-1c">1C</span>Wer darf welchen Teil des Kontexts sehen?
-            </p>
             <table
               class="eng"
               style="border-collapse: collapse; font-size: 22px; line-height: 1.25; width: 100%"
@@ -3954,6 +4078,7 @@
         data-id="J6"
         data-teil="jonas"
         data-station="kontext"
+        data-hauptfolie
         aria-label="21 von 39: Was die Vorschau zeigt, kommt an"
       >
         <div
@@ -4037,12 +4162,12 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">Was die Vorschau zeigt, kommt an</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1c">1C</span>Bekommt die Runtime genau das, was die
+          Lehrperson in der Vorschau sieht?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
-            <p class="folie-frage">
-              <span class="etikett etikett-1c">1C</span>Bekommt die Runtime genau das, was die
-              Lehrperson in der Vorschau sieht?
-            </p>
             <div style="display: grid; grid-template-columns: 780px 1fr; column-gap: 70px">
               <div>
                 <ul style="margin: 0; padding-left: 30px; font-size: 28px; line-height: 1.38">
@@ -4112,6 +4237,7 @@
         data-id="J7"
         data-teil="jonas"
         data-station="kontext"
+        data-hauptfolie
         data-aufbau="1"
         aria-label="22 von 39: Sicher geschätzt, aber Platz verschenkt"
       >
@@ -4196,12 +4322,12 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">Sicher geschätzt, aber Platz verschenkt</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1c">1C</span>Wie viel vom Kontextfenster nutzt der Kontext
+          wirklich?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
-            <p class="folie-frage">
-              <span class="etikett etikett-1c">1C</span>Wie viel vom Kontextfenster nutzt der
-              Kontext wirklich?
-            </p>
             <ul style="margin: 0; padding-left: 30px; font-size: 28px; line-height: 1.38">
               <li style="margin: 0 0 12px">
                 Das Budget zählt jedes UTF-8-Byte als ein Token: in keinem Lauf lief das Fenster
@@ -4298,6 +4424,7 @@
         data-id="J8"
         data-teil="jonas"
         data-station="netz"
+        data-hauptfolie
         aria-label="23 von 39: Gemessen am Draht, auf beiden Hosts"
       >
         <div
@@ -4381,12 +4508,12 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">Gemessen am Draht, auf beiden Hosts</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1b">1B</span>Wie trennt man Netz und Inferenz, ohne
+          Produktionscode zu ändern?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
-            <p class="folie-frage">
-              <span class="etikett etikett-1b">1B</span>Wie trennt man Netz und Inferenz, ohne
-              Produktionscode zu ändern?
-            </p>
             <div style="display: grid; grid-template-columns: 680px 1fr; column-gap: 40px">
               <div>
                 <!-- prettier-ignore --><svg viewBox="0 0 680 380" width="680" height="380" role="img" aria-label="Messpunkte t0 bis t3 am app-host und am llm-host"><line x1="110" y1="50" x2="110" y2="370" style="stroke:var(--blau);stroke-width:4"/><line x1="520" y1="50" x2="520" y2="370" style="stroke:var(--bernstein);stroke-width:4"/><text x="110" y="34" text-anchor="middle" style="font:700 26px var(--f-text);fill:var(--tinte)">app-host</text><text x="520" y="34" text-anchor="middle" style="font:700 26px var(--f-text);fill:var(--tinte)">llm-host</text><line x1="110" y1="80" x2="510" y2="120" style="stroke:var(--tinte);stroke-width:3"/><path d="M510,120 l-16,-9 l2,16 z" style="fill:var(--tinte)"/><rect x="508" y="130" width="24" height="170" rx="4" style="fill:var(--bernstein)"/><text x="548" y="222" style="font:600 24px var(--f-text);fill:var(--bernstein-text)">Inferenz</text><line x1="520" y1="310" x2="120" y2="350" style="stroke:var(--tinte);stroke-width:3"/><path d="M120,350 l16,-11 l1,16 z" style="fill:var(--tinte)"/><circle cx="110" cy="80" r="9" style="fill:var(--bernstein)"/><text x="90" y="89" text-anchor="end" style="font:600 28px var(--f-mono);fill:var(--bernstein-text)">t<tspan dx="-2" dy="6" style="font-size:22px">0</tspan></text><circle cx="520" cy="120" r="9" style="fill:var(--bernstein)"/><text x="540" y="129" text-anchor="start" style="font:600 28px var(--f-mono);fill:var(--bernstein-text)">t<tspan dx="-2" dy="6" style="font-size:22px">1</tspan></text><circle cx="520" cy="310" r="9" style="fill:var(--bernstein)"/><text x="540" y="319" text-anchor="start" style="font:600 28px var(--f-mono);fill:var(--bernstein-text)">t<tspan dx="-2" dy="6" style="font-size:22px">2</tspan></text><circle cx="110" cy="350" r="9" style="fill:var(--bernstein)"/><text x="90" y="359" text-anchor="end" style="font:600 28px var(--f-mono);fill:var(--bernstein-text)">t<tspan dx="-2" dy="6" style="font-size:22px">3</tspan></text></svg>
@@ -4440,6 +4567,7 @@
         data-id="J8b"
         data-teil="jonas"
         data-station="netz"
+        data-hauptfolie
         aria-label="24 von 39: Strecke und lokal: kein Unterschied messbar"
       >
         <div
@@ -4523,12 +4651,12 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">Strecke und lokal: kein Unterschied messbar</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1b">1B</span>Ist die Strecke zwischen den Hosts langsamer als
+          ein Aufruf im selben Host?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
-            <p class="folie-frage">
-              <span class="etikett etikett-1b">1B</span>Ist die Strecke zwischen den Hosts langsamer
-              als ein Aufruf im selben Host?
-            </p>
             <div style="display: grid; grid-template-columns: 760px 1fr; column-gap: 70px">
               <div>
                 <ul style="margin: 0; padding-left: 30px; font-size: 28px; line-height: 1.38">
@@ -4573,6 +4701,7 @@
         data-id="J9"
         data-teil="jonas"
         data-station="inferenz"
+        data-hauptfolie
         data-aufbau="2"
         aria-label="25 von 39: Die Zeit steckt in der Inferenz"
       >
@@ -4657,11 +4786,11 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">Die Zeit steckt in der Inferenz</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1b">1B</span>Wie verteilt sich die Zeit eines Auftrags?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
-            <p class="folie-frage">
-              <span class="etikett etikett-1b">1B</span>Wie verteilt sich die Zeit eines Auftrags?
-            </p>
             <div class="grafik-box">
               <!-- prettier-ignore --><svg viewBox="0 0 1380 560" role="img" aria-label="Zeitzerlegung eines Summary-Auftrags als Punkte auf logarithmischer Achse: Netz 0,43 ms, Transport (Netz plus Server ohne Inferenz) 17,8 ms, Adapter 101 ms (Mediane über alle 10 Aufträge), Inferenz 148,3 s (Median warm, n = 9); Bezugsmarke: Auftrag kalt 200,5 s (Median aus 5 Läufen mit frischer Runtime, Nachtrag). Inferenzanteil 99,92 %. Alle drei Schwellen erfüllt."><rect width="1380" height="560" fill="#ffffff"/><line x1="250" y1="60" x2="250" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="250" y="486" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="middle">0,1 ms</text><line x1="404.29" y1="60" x2="404.29" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="404.29" y="486" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="middle">1 ms</text><line x1="558.57" y1="60" x2="558.57" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="558.57" y="486" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="middle">10 ms</text><line x1="712.86" y1="60" x2="712.86" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="712.86" y="486" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="middle">100 ms</text><line x1="867.14" y1="60" x2="867.14" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="867.14" y="486" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="middle">1 s</text><line x1="1021.43" y1="60" x2="1021.43" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="1021.43" y="486" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="middle">10 s</text><line x1="1175.71" y1="60" x2="1175.71" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="1175.71" y="486" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="middle">100 s</text><line x1="1330" y1="60" x2="1330" y2="450" stroke="#c9d2de" stroke-width="2"/><text x="1330" y="486" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="middle">1000 s</text><g data-ab="2"><line data-bezug="kalt" x1="1222.34" y1="60" x2="1222.34" y2="450" stroke="#b45309" stroke-width="3" stroke-dasharray="10 7"/><text x="1234.34" y="26" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#9a4a0b" text-anchor="end">T_job kalt 200,5 s</text><text x="1234.34" y="52" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="end">Median, n = 5</text></g><text x="226" y="133.75" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="400" fill="#16202c" text-anchor="end">Netz</text><text x="226" y="163.75" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="end">Median, alle 10</text><line x1="250" y1="129.75" x2="1330" y2="129.75" stroke="#e8edf3" stroke-width="2"/><line x1="666.41" y1="103.75" x2="666.41" y2="155.75" stroke="#16202c" stroke-width="3" stroke-dasharray="8 6"/><g data-ab="1"><path d="M680.41,126.75 l6,7 l12,-14" fill="none" stroke="#16202c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></g><text x="710.41" y="137.75" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#16202c" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">Schwelle 50 ms</text><g data-ab="1"><circle data-punkt="Netz" cx="347.66" cy="129.75" r="11" fill="#e9b47a" stroke="#b45309" stroke-width="3"/><text x="369.66" y="115.75" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="26" font-weight="600" fill="#16202c" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">0,43 ms</text></g><text x="226" y="225.25" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="400" fill="#16202c" text-anchor="end">Transport</text><text x="226" y="255.25" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="end">Median, alle 10</text><line x1="250" y1="221.25" x2="1330" y2="221.25" stroke="#e8edf3" stroke-width="2"/><g data-ab="1"><circle data-punkt="Transport" cx="597.29" cy="221.25" r="11" fill="#e9b47a" stroke="#b45309" stroke-width="3"/><text x="619.29" y="207.25" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="26" font-weight="600" fill="#16202c" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">17,8 ms</text><rect x="613.29" y="235.45" width="394.8" height="26.4" fill="#ffffff"/><text x="619.29" y="255.25" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#3d4757">(Netz + Server ohne Inferenz)</text></g><text x="226" y="316.75" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="400" fill="#16202c" text-anchor="end">Adapter</text><text x="226" y="346.75" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="end">Median, alle 10</text><line x1="250" y1="312.75" x2="1330" y2="312.75" stroke="#e8edf3" stroke-width="2"/><line x1="913.59" y1="286.75" x2="913.59" y2="338.75" stroke="#16202c" stroke-width="3" stroke-dasharray="8 6"/><g data-ab="1"><path d="M927.59,309.75 l6,7 l12,-14" fill="none" stroke="#16202c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></g><text x="957.59" y="320.75" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#16202c" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">Schwelle 2 s</text><g data-ab="1"><circle data-punkt="Adapter" cx="713.82" cy="312.75" r="11" fill="#e9b47a" stroke="#b45309" stroke-width="3"/><text x="735.82" y="298.75" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="26" font-weight="600" fill="#16202c" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">101 ms</text></g><text x="226" y="408.25" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="700" fill="#16202c" text-anchor="end">Inferenz</text><text x="226" y="438.25" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="end">warm, n = 9</text><line x1="250" y1="404.25" x2="1330" y2="404.25" stroke="#e8edf3" stroke-width="2"/><g data-ab="2"><circle data-punkt="Inferenz" cx="1202.13" cy="404.25" r="14" fill="#b45309" stroke="#b45309" stroke-width="3"/><text x="1174.13" y="413.25" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="28" font-weight="700" fill="#16202c" text-anchor="end" stroke="#ffffff" stroke-width="6" stroke-linejoin="round" paint-order="stroke">148,3 s</text><rect x="508.13" y="350.45" width="672" height="26.4" fill="#ffffff"/><text x="1174.13" y="370.25" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#3d4757" text-anchor="end">Anteil 99,92 % (Median, alle 10) · Schwelle ≥ 95 %</text><path d="M1198.13,359.25 l6,7 l12,-14" fill="none" stroke="#16202c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></g><line x1="250" y1="450" x2="1330" y2="450" stroke="#566173" stroke-width="2"/><text x="0" y="542" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="24" font-weight="400" fill="#3d4757">Log-Achse, je Strich ×10 · Schwellen vorab (ADR 1B-008) · Anteil: langsame CPU, am PC ebenfalls über 99 %</text></svg>
             </div>
@@ -4678,6 +4807,7 @@
         data-teil="jonas"
         data-station="inferenz"
         data-zoom-stufen="[0,0.421,0.67,1]"
+        data-hauptfolie
         aria-label="26 von 39: Das Netz ist 0,3 mm auf 105 m"
       >
         <div
@@ -4761,12 +4891,12 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">Das Netz ist 0,3 mm auf 105 m</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1b">1B</span>Wie groß ist das Netz im Verhältnis zum ganzen
+          Auftrag?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
-            <p class="folie-frage">
-              <span class="etikett etikett-1b">1B</span>Wie groß ist das Netz im Verhältnis zum
-              ganzen Auftrag?
-            </p>
             <div class="grafik-box">
               <!-- prettier-ignore --><svg viewBox="0 0 1380 560" role="img" aria-label="Wäre der Auftrag ein Fußballfeld: 105 m entsprechen 148,6 s (T_job, Median warm, n = 9). Die Inferenz belegt 104,9 m, der Transport 1,3 cm, davon das Netz 0,3 mm (Netz und Transport als Median über alle 10 Aufträge)."><rect width="1380" height="560" fill="#ffffff"/><g data-zoom-von="0" data-zoom-bis="0.9" opacity="0"><text x="1380" y="28" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#566173" text-anchor="end">Maßstab: ganzes Feld 105 m = 148,6 s</text></g><g data-zoom-von="0.96" data-zoom-bis="1" opacity="1"><text x="1380" y="28" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#566173" text-anchor="end">Ausschnitt: 1,5 mm an der Torlinie, die Inferenz liegt links außerhalb · ganzes Feld 105 m = 148,6 s</text></g><!-- prettier-ignore --><svg class="kamera" x="0" y="44" width="1380" height="290" viewBox="-0.9 6999.842391 1.5 0.315217" preserveAspectRatio="xMidYMid meet" overflow="hidden" data-zoom="1" data-w0="112000" data-w1="1.5" data-sx0="0.96875" data-sy0="0.797414" data-sx1="0.6" data-sy1="0.5" data-anker-y="7000"><rect x="-120000" y="-30000" width="140000" height="60000" fill="#245f3d"/><rect x="-105000" y="-10000" width="105000" height="20000" fill="#2f7a4f"/><rect x="-99750" y="-10000" width="5250" height="20000" fill="#2a7147"/><rect x="-89250" y="-10000" width="5250" height="20000" fill="#2a7147"/><rect x="-78750" y="-10000" width="5250" height="20000" fill="#2a7147"/><rect x="-68250" y="-10000" width="5250" height="20000" fill="#2a7147"/><rect x="-57750" y="-10000" width="5250" height="20000" fill="#2a7147"/><rect x="-47250" y="-10000" width="5250" height="20000" fill="#2a7147"/><rect x="-36750" y="-10000" width="5250" height="20000" fill="#2a7147"/><rect x="-26250" y="-10000" width="5250" height="20000" fill="#2a7147"/><rect x="-15750" y="-10000" width="5250" height="20000" fill="#2a7147"/><rect x="-5250" y="-10000" width="5250" height="20000" fill="#2a7147"/><rect x="-105000" y="-10000" width="105000" height="20000" fill="none" stroke="#ffffff" stroke-width="4" stroke-opacity="0.9" vector-effect="non-scaling-stroke"/><line x1="-52500" y1="-10000" x2="-52500" y2="10000" fill="none" stroke="#ffffff" stroke-width="4" stroke-opacity="0.9" vector-effect="non-scaling-stroke"/><circle cx="-52500" cy="0" r="4500" fill="none" stroke="#ffffff" stroke-width="4" stroke-opacity="0.9" vector-effect="non-scaling-stroke"/><rect x="-105000" y="-5500" width="16500" height="11000" fill="none" stroke="#ffffff" stroke-width="4" stroke-opacity="0.9" vector-effect="non-scaling-stroke"/><rect x="-16500" y="-5500" width="16500" height="11000" fill="none" stroke="#ffffff" stroke-width="4" stroke-opacity="0.9" vector-effect="non-scaling-stroke"/><rect x="-105000" y="-2600" width="5500" height="5200" fill="none" stroke="#ffffff" stroke-width="4" stroke-opacity="0.9" vector-effect="non-scaling-stroke"/><rect x="-5500" y="-2600" width="5500" height="5200" fill="none" stroke="#ffffff" stroke-width="4" stroke-opacity="0.9" vector-effect="non-scaling-stroke"/><line x1="-105000" y1="7000" x2="-85.053951" y2="7000" stroke="#ffffff" stroke-width="22" vector-effect="non-scaling-stroke"/><line x1="-105000" y1="7000" x2="-85.053951" y2="7000" stroke="#b45309" stroke-width="14" vector-effect="non-scaling-stroke"/><g data-strecke="rest"><line x1="-85.053951" y1="7000" x2="-12.594641" y2="7000" stroke="#ffffff" stroke-width="22" vector-effect="non-scaling-stroke"/><line x1="-85.053951" y1="7000" x2="-12.594641" y2="7000" stroke="#566173" stroke-width="14" vector-effect="non-scaling-stroke"/></g><line x1="-12.594641" y1="7000" x2="0" y2="7000" stroke="#ffffff" stroke-width="22" vector-effect="non-scaling-stroke"/><line x1="-12.594641" y1="7000" x2="0" y2="7000" stroke="#16202c" stroke-width="14" vector-effect="non-scaling-stroke"/><line x1="-0.303521" y1="7000" x2="0" y2="7000" stroke="#ffffff" stroke-width="22" vector-effect="non-scaling-stroke"/><line x1="-0.303521" y1="7000" x2="0" y2="7000" stroke="#7cc0ff" stroke-width="14" vector-effect="non-scaling-stroke"/><g transform="translate(-85.053951 7000) scale(0.720697)" data-zoom-von="0.32" data-zoom-bis="0.52" opacity="0"><text x="-14" y="-26" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="26" font-weight="600" fill="#ffffff" text-anchor="end" stroke="#245f3d" stroke-width="6" stroke-linejoin="round" paint-order="stroke">Inferenz endet hier</text><line x1="0" y1="-22" x2="0" y2="22" stroke="#ffffff" stroke-width="3"/></g><g transform="translate(-12.594641 7000) scale(0.720697)" data-zoom-von="0.32" data-zoom-bis="0.52" opacity="0"><text x="-8" y="52" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#ffffff" text-anchor="end" stroke="#245f3d" stroke-width="6" stroke-linejoin="round" paint-order="stroke">übrige Jobzeit · 7,2 cm</text></g><g transform="translate(-87000 7000) scale(81.15942)" data-zoom-von="0" data-zoom-bis="0.12" opacity="0"><text x="16" y="-24" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="26" font-weight="600" fill="#ffffff" stroke="#245f3d" stroke-width="6" stroke-linejoin="round" paint-order="stroke">Inferenz · 104,9 m</text></g><g transform="translate(-12.594641 7000) scale(0.04409)" data-zoom-von="0.58" data-zoom-bis="0.76" opacity="0"><text x="12" y="-26" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#ffffff" stroke="#245f3d" stroke-width="6" stroke-linejoin="round" paint-order="stroke">Transport 1,3 cm</text></g><g transform="translate(-12.594641 7000) scale(0.04409)" data-zoom-von="0.58" data-zoom-bis="0.76" opacity="0"><line x1="0" y1="-22" x2="0" y2="22" stroke="#ffffff" stroke-width="3"/></g><g transform="translate(-0.303521 7000) scale(0.001522)" data-zoom-von="0.92" data-zoom-bis="1" opacity="1"><line x1="0" y1="-22" x2="0" y2="22" stroke="#ffffff" stroke-width="3"/></g><g transform="translate(0 7000) scale(0.001522)" data-zoom-von="0.92" data-zoom-bis="1" opacity="1"><text x="-26" y="-30" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="28" font-weight="600" fill="#ffffff" text-anchor="end" stroke="#245f3d" stroke-width="6" stroke-linejoin="round" paint-order="stroke">davon Netz · 0,3 mm</text></g><g transform="translate(-0.88 7000) scale(0.001522)" data-zoom-von="0.92" data-zoom-bis="1" opacity="1"><text x="0" y="52" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#ffffff" stroke="#245f3d" stroke-width="6" stroke-linejoin="round" paint-order="stroke">Transport · 1,3 cm, reicht links weiter</text></g><g transform="translate(0 7000) scale(0.001522)" data-zoom-von="0.92" data-zoom-bis="1" opacity="1"><text x="16" y="52" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#ffffff" stroke="#245f3d" stroke-width="6" stroke-linejoin="round" paint-order="stroke">Torlinie = Auftragsende</text></g></svg><rect x="1" y="45" width="1378" height="288" fill="none" stroke="#245f3d" stroke-width="2"/><g data-uebersicht data-zoom-von="0.05" data-zoom-bis="1" opacity="1"><rect x="1034" y="56" width="336" height="113.25" rx="6" fill="#16202c" fill-opacity="0.72"/><text x="1042" y="84" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="600" fill="#ffffff">Übersicht: ganzes Feld</text><!-- prettier-ignore --><svg x="1042" y="94" width="320" height="67.25" viewBox="-108500 -11768.115942 112000 23536.231884"><rect x="-105000" y="-10000" width="105000" height="20000" fill="#2f7a4f"/><rect x="-105000" y="-10000" width="105000" height="20000" fill="none" stroke="#ffffff" stroke-width="2" stroke-opacity="0.85" vector-effect="non-scaling-stroke"/><line x1="-52500" y1="-10000" x2="-52500" y2="10000" fill="none" stroke="#ffffff" stroke-width="2" stroke-opacity="0.85" vector-effect="non-scaling-stroke"/><line x1="-105000" y1="7000" x2="-85.053951" y2="7000" stroke="#b45309" stroke-width="3" vector-effect="non-scaling-stroke"/><rect data-lupe x="-2240.15" y="6529.275362" width="4480" height="941.449275" fill="#ffffff" fill-opacity="0.18" stroke="#ffffff" stroke-width="2" vector-effect="non-scaling-stroke"/></svg></g><g data-zoom-von="0.96" data-zoom-bis="1" opacity="1"><path d="M24,74v14M24,81h92M116,74v14" fill="none" stroke="#ffffff" stroke-width="3"/><text x="130" y="89" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="600" fill="#ffffff">0,1 mm</text></g><g data-spalte="inferenz"><text x="-2" y="438" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="80" font-weight="700" fill="#b45309" style="font-variant-numeric:tabular-nums;letter-spacing:-1px">104,9 m</text><rect x="0" y="463" width="40" height="14" rx="2" fill="#b45309"/><text x="54" y="480" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="28" font-weight="400" fill="#3d4757">Inferenz · Anteil 99,92 %</text></g><g data-spalte="transport" data-zoom-von="0.58" data-zoom-bis="1" opacity="1"><text x="588" y="438" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="80" font-weight="700" fill="#16202c" style="font-variant-numeric:tabular-nums;letter-spacing:-1px">1,3 cm</text><rect x="590" y="463" width="40" height="14" rx="2" fill="#16202c"/><text x="644" y="480" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="28" font-weight="400" fill="#3d4757">Transport · 17,8 ms</text></g><g data-spalte="netz" data-zoom-von="0.92" data-zoom-bis="1" opacity="1"><text x="1028" y="438" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="80" font-weight="700" fill="#0b5ea8" style="font-variant-numeric:tabular-nums;letter-spacing:-1px">0,3 mm</text><rect x="1031" y="464" width="38" height="12" rx="2" fill="#7cc0ff" stroke="#0b5ea8" stroke-width="2"/><text x="1084" y="480" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="28" font-weight="400" fill="#3d4757">davon Netz · 0,43 ms</text></g><text x="0" y="544" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#566173">105 m = T_job, Median warm, n = 9 (Spanne 148,1–158,3 s, ein Lauf) · sonst Median, alle 10 · langsame CPU</text></svg>
             </div>
@@ -4782,6 +4912,7 @@
         data-id="J10a"
         data-teil="jonas"
         data-station="inferenz"
+        data-hauptfolie
         aria-label="27 von 39: Frisch gestartet: 200,5 s statt 148,6 s"
       >
         <div
@@ -4865,12 +4996,12 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">Frisch gestartet: 200,5 s statt 148,6 s</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1b">1B</span>Gilt die Aussage auch mit frisch gestarteter
+          Runtime?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
-            <p class="folie-frage">
-              <span class="etikett etikett-1b">1B</span>Gilt die Aussage auch mit frisch gestarteter
-              Runtime?
-            </p>
             <div style="display: grid; grid-template-columns: 760px 1fr; column-gap: 70px">
               <div>
                 <ul style="margin: 0; padding-left: 30px; font-size: 28px; line-height: 1.38">
@@ -4918,6 +5049,7 @@
         data-id="J10b"
         data-teil="jonas"
         data-station="inferenz"
+        data-hauptfolie
         aria-label="28 von 39: Runtime gestoppt: Ersatz nach 88,5 ms"
       >
         <div
@@ -5001,12 +5133,11 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">Runtime gestoppt: Ersatz nach 88,5 ms</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1b">1B</span>Was passiert bei gestopptem Runtime-Container?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
-            <p class="folie-frage">
-              <span class="etikett etikett-1b">1B</span>Was passiert bei gestopptem
-              Runtime-Container?
-            </p>
             <div style="display: grid; grid-template-columns: 760px 1fr; column-gap: 70px">
               <div>
                 <ul style="margin: 0; padding-left: 30px; font-size: 28px; line-height: 1.38">
@@ -5052,6 +5183,7 @@
         data-id="J11"
         data-teil="jonas"
         data-station="inferenz"
+        data-hauptfolie
         aria-label="29 von 39: 90 s Timeout ab Werk sind auf der CPU zu kurz"
       >
         <div
@@ -5135,12 +5267,12 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">90 s Timeout ab Werk sind auf der CPU zu kurz</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1c">1C</span>Reicht die Konfiguration ab Werk für Inferenz
+          auf der CPU?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
-            <p class="folie-frage">
-              <span class="etikett etikett-1c">1C</span>Reicht die Konfiguration ab Werk für
-              Inferenz auf der CPU?
-            </p>
             <div style="display: grid; grid-template-columns: 680px 1fr; column-gap: 60px">
               <div>
                 <!-- prettier-ignore --><svg viewBox="0 0 680 250" width="680" height="250" role="img" aria-label="Inferenzzeiten auf beiden Laborrechnern gegen den Timeout ab Werk v1.4.0"><text x="0" y="30" style="font:400 24px var(--f-text);fill:var(--tinte)">Kalibrierung <tspan style="font:400 22px var(--f-text);fill:var(--gedaempft)">PC</tspan></text><rect x="0" y="44" width="314.1" height="44" rx="4" style="fill:var(--petrol)"/><text x="326.1" y="75" style="font:600 26px var(--f-mono);fill:var(--tinte)">98,7 s</text><line x1="286.4" y1="38" x2="286.4" y2="94" style="stroke:var(--rot);stroke-width:4"/><text x="0" y="140" style="font:400 24px var(--f-text);fill:var(--tinte)">Inferenz, Median <tspan style="font:400 22px var(--f-text);fill:var(--gedaempft)">Laptop, 9f230abc</tspan></text><rect x="0" y="154" width="520" height="44" rx="4" style="fill:var(--petrol)"/><text x="532" y="185" style="font:600 26px var(--f-mono);fill:var(--tinte)">163,4 s</text><line x1="286.4" y1="148" x2="286.4" y2="204" style="stroke:var(--rot);stroke-width:4"/><line x1="286.4" y1="204" x2="286.4" y2="222" style="stroke:var(--rot);stroke-width:4"/><text x="286.4" y="246" text-anchor="middle" style="font:700 24px var(--f-text);fill:var(--rot)">Timeout ab Werk v1.4.0: 90 s</text></svg>
@@ -5203,6 +5335,7 @@
         data-id="J12"
         data-teil="jonas"
         data-station="nachpruefung"
+        data-hauptfolie
         data-aufbau="2"
         aria-label="30 von 39: Nachprüfung: wenig Zeit, unter Voting riskant"
       >
@@ -5287,12 +5420,12 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">Nachprüfung: wenig Zeit, unter Voting riskant</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1c">1C</span>Was, wenn sich die Daten ändern, während das
+          Modell rechnet?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
-            <p class="folie-frage">
-              <span class="etikett etikett-1c">1C</span>Was, wenn sich die Daten ändern, während das
-              Modell rechnet?
-            </p>
             <div style="flex: none">
               <!-- prettier-ignore --><svg viewBox="0 0 1380 250" role="img" aria-label="Zeitleiste von Auftrag 2: Host frei nach 67 ms, Inferenz 150,8 s, danach Nachprüfung. Kommt während der Inferenz eine Stimme an (Zeitpunkt gedacht), ändert sich der Hash, und die Antwort wird verworfen."><rect width="1380" height="250" fill="#ffffff"/><text x="0" y="92" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173">app-host</text><text x="0" y="180" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173">llm-host</text><line x1="180" y1="84" x2="1300" y2="84" stroke="#c9d2de" stroke-width="3"/><line x1="180" y1="206" x2="180" y2="216" stroke="#566173" stroke-width="2"/><text x="180" y="238" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">0 s</text><line x1="390" y1="206" x2="390" y2="216" stroke="#566173" stroke-width="2"/><text x="390" y="238" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">30 s</text><line x1="600" y1="206" x2="600" y2="216" stroke="#566173" stroke-width="2"/><text x="600" y="238" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">60 s</text><line x1="810" y1="206" x2="810" y2="216" stroke="#566173" stroke-width="2"/><text x="810" y="238" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">90 s</text><line x1="1020" y1="206" x2="1020" y2="216" stroke="#566173" stroke-width="2"/><text x="1020" y="238" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">120 s</text><line x1="1230" y1="206" x2="1230" y2="216" stroke="#566173" stroke-width="2"/><text x="1230" y="238" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">150 s</text><circle cx="180" cy="84" r="10" fill="#0f766e"/><text x="180" y="128" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#16202c">Klick: Kontext, Host frei nach 67 ms</text><rect x="182.8" y="150" width="1052.5" height="44" rx="6" fill="#b45309"/><text x="707.65" y="180" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="24" font-weight="700" fill="#ffffff" text-anchor="middle">Inferenz 150,8 s</text><circle cx="1238.6" cy="84" r="10" fill="#0f766e"/><text x="1238.6" y="58" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#16202c" text-anchor="end">Nachprüfung: Hash vergleichen</text><g data-ab="1"><path d="M390,70 l12,14 l-12,14 l-12,-14 z" fill="#16202c"/><text x="410" y="58" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="600" fill="#16202c">eine Stimme kommt an (Zeitpunkt gedacht)</text></g><g data-ab="2"><rect x="182.8" y="150" width="1052.5" height="44" rx="6" fill="#fbefe0" stroke="#b45309" stroke-width="2"/><text x="707.65" y="180" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="24" font-weight="700" fill="#9a4a0b" text-anchor="middle">Inferenz 150,8 s, Antwort verworfen</text><path d="M1224.6,70 l28,28 M1252.6,70 l-28,28" stroke="#b42318" stroke-width="5" stroke-linecap="round"/><text x="1238.6" y="128" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#b42318" text-anchor="end">Hash anders: source_changed, Antwort verworfen</text></g></svg>
             </div>
@@ -5348,6 +5481,7 @@
         data-id="J13"
         data-teil="jonas"
         data-station="gate"
+        data-hauptfolie
         data-aufbau="2"
         aria-label="31 von 39: 38 geprüfte Antworten, keine besteht das Gate"
       >
@@ -5432,6 +5566,10 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">38 geprüfte Antworten, keine besteht das Gate</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1c">1C</span><span class="etikett etikett-1b">1B</span>Warum
+          kommt keine Modellantwort an?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
             <div style="display: grid; grid-template-columns: 1fr auto; column-gap: 56px">
@@ -5555,6 +5693,7 @@
         class="folie"
         data-id="J13b"
         data-teil="jonas"
+        data-hauptfolie
         aria-label="32 von 39: Cloud-Sicht: Bulkhead ja, Elastizität nein"
       >
         <div
@@ -5638,6 +5777,10 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">Cloud-Sicht: Bulkhead ja, Elastizität nein</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1c">1C</span><span class="etikett etikett-1b">1B</span>Was
+          heißt das aus Sicht des Cloud Computing?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
             <div style="display: grid; grid-template-columns: 700px 1fr; column-gap: 44px">
@@ -5770,6 +5913,7 @@
         class="folie"
         data-id="J15"
         data-teil="jonas"
+        data-hauptfolie
         data-aufbau="2"
         aria-label="33 von 39: Entkopplung bleibt, Gate neu abstimmen"
       >
@@ -5854,6 +5998,10 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">Entkopplung bleibt, Gate neu abstimmen</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1c">1C</span><span class="etikett etikett-1b">1B</span>Was
+          bleibt, und was sollte sich ändern?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 44px">
@@ -5930,6 +6078,7 @@
         class="folie"
         data-id="M1"
         data-teil="niklas"
+        data-hauptfolie
         data-aufbau="3"
         aria-label="34 von 39: Ersatz kommt immer, ein stummer Host kostet Minuten"
       >
@@ -5937,7 +6086,7 @@
           class="weg-mini weg-marke"
           data-marke="1b-stoerung"
           role="img"
-          aria-label="Ort auf dem Weg: Zweiter Host · Normalbetrieb, dann Zweiter Host · Stopp, Slot belegt, dann Zweiter Host · DROP, dann Zweiter Host · zu spät (1B)"
+          aria-label="Ort auf dem Weg: Zweiter Host (1B); Störungen: Stopp, Slot belegt, DROP, zu spät"
         >
           <svg
             class="weg-mini-karte"
@@ -6017,92 +6166,89 @@
               fill="#fff"
               stroke="var(--rot)"
               stroke-width="3"
-            />
-          </svg>
+            /></svg
+          ><span class="weg-zeichen-ort" style="left: 225.2px; top: 2px"
+            ><span class="weg-stufe" data-ab="0" data-bis="0"
+              ><span class="weg-zeichen-reihe"></span></span
+            ><span class="weg-stufe" data-ab="1" data-bis="1"
+              ><span class="weg-zeichen-reihe"
+                ><svg
+                  class="weg-zeichen"
+                  data-zeichen="stopp"
+                  viewBox="0 0 22 22"
+                  width="22"
+                  height="22"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <rect x="5" y="5" width="12" height="12" rx="2" fill="currentColor" /></svg
+                ><svg
+                  class="weg-zeichen"
+                  data-zeichen="belegt"
+                  viewBox="0 0 22 22"
+                  width="22"
+                  height="22"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <circle
+                    cx="11"
+                    cy="11"
+                    r="7.5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  />
+                  <path d="M6.5 11h9" stroke="currentColor" stroke-width="3" /></svg></span></span
+            ><span class="weg-stufe" data-ab="2" data-bis="2"
+              ><span class="weg-zeichen-reihe"
+                ><svg
+                  class="weg-zeichen"
+                  data-zeichen="drop"
+                  viewBox="0 0 22 22"
+                  width="22"
+                  height="22"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    d="M2.5 11h11M9.5 6.5l4.5 4.5-4.5 4.5M18.5 4v14"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  /></svg></span></span
+            ><span class="weg-stufe" data-ab="3"
+              ><span class="weg-zeichen-reihe"
+                ><svg
+                  class="weg-zeichen"
+                  data-zeichen="spaet"
+                  viewBox="0 0 22 22"
+                  width="22"
+                  height="22"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <circle
+                    cx="11"
+                    cy="11"
+                    r="7.5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  />
+                  <path
+                    d="M11 6.5V11l3.2 2.2"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  /></svg></span></span
+          ></span>
           <p class="weg-beschriftung" aria-hidden="true">
-            <span class="weg-stufen"
-              ><span class="weg-stufe" data-ab="0" data-bis="0"
-                ><span class="weg-name">Zweiter Host · Normalbetrieb</span></span
-              ><span class="weg-stufe" data-ab="1" data-bis="1"
-                ><span class="weg-name">Zweiter Host · Stopp, Slot belegt</span
-                ><span class="weg-zeichen-reihe"
-                  ><svg
-                    class="weg-zeichen"
-                    data-zeichen="stopp"
-                    viewBox="0 0 22 22"
-                    width="22"
-                    height="22"
-                    aria-hidden="true"
-                    focusable="false"
-                  >
-                    <rect x="5" y="5" width="12" height="12" rx="2" fill="currentColor" /></svg
-                  ><svg
-                    class="weg-zeichen"
-                    data-zeichen="belegt"
-                    viewBox="0 0 22 22"
-                    width="22"
-                    height="22"
-                    aria-hidden="true"
-                    focusable="false"
-                  >
-                    <circle
-                      cx="11"
-                      cy="11"
-                      r="7.5"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2.5"
-                    />
-                    <path d="M6.5 11h9" stroke="currentColor" stroke-width="3" /></svg></span></span
-              ><span class="weg-stufe" data-ab="2" data-bis="2"
-                ><span class="weg-name">Zweiter Host · DROP</span
-                ><span class="weg-zeichen-reihe"
-                  ><svg
-                    class="weg-zeichen"
-                    data-zeichen="drop"
-                    viewBox="0 0 22 22"
-                    width="22"
-                    height="22"
-                    aria-hidden="true"
-                    focusable="false"
-                  >
-                    <path
-                      d="M2.5 11h11M9.5 6.5l4.5 4.5-4.5 4.5M18.5 4v14"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    /></svg></span></span
-              ><span class="weg-stufe" data-ab="3"
-                ><span class="weg-name">Zweiter Host · zu spät</span
-                ><span class="weg-zeichen-reihe"
-                  ><svg
-                    class="weg-zeichen"
-                    data-zeichen="spaet"
-                    viewBox="0 0 22 22"
-                    width="22"
-                    height="22"
-                    aria-hidden="true"
-                    focusable="false"
-                  >
-                    <circle
-                      cx="11"
-                      cy="11"
-                      r="7.5"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2.5"
-                    />
-                    <path
-                      d="M11 6.5V11l3.2 2.2"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    /></svg></span></span></span
-            ><span class="etikett etikett-1b">1B</span>
+            <span class="weg-name">Zweiter Host</span><span class="etikett etikett-1b">1B</span>
           </p>
         </div>
         <ol class="teilleiste" aria-label="Teil des Vortrags: 1B 3–4, Niklas">
@@ -6112,12 +6258,12 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">Ersatz kommt immer, ein stummer Host kostet Minuten</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1b">1B</span>Wie schnell liefert die App den Ersatz, wenn die
+          Inferenz gestört ist?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
-            <p class="folie-frage">
-              <span class="etikett etikett-1b">1B</span>Wie schnell liefert die App den Ersatz, wenn
-              die Inferenz gestört ist?
-            </p>
             <div class="grafik-box">
               <!-- prettier-ignore --><svg viewBox="0 0 1380 520" role="img" aria-label="Zeit bis zur extraktiven Ersatzzusammenfassung je Auftrag: gestoppte Runtime und belegter Slot unter 0,2 s, verworfene Pakete etwa 135 s, Antwort nach der Frist 300 s."><rect width="1380" height="520" fill="#ffffff"/><line x1="470" y1="40" x2="470" y2="420" stroke="#e8edf3" stroke-width="2"/><text x="470" y="454" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">10 ms</text><line x1="642" y1="40" x2="642" y2="420" stroke="#e8edf3" stroke-width="2"/><text x="642" y="454" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">0,1 s</text><line x1="814" y1="40" x2="814" y2="420" stroke="#e8edf3" stroke-width="2"/><text x="814" y="454" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">1 s</text><line x1="986" y1="40" x2="986" y2="420" stroke="#e8edf3" stroke-width="2"/><text x="986" y="454" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">10 s</text><line x1="1158" y1="40" x2="1158" y2="420" stroke="#e8edf3" stroke-width="2"/><text x="1158" y="454" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">100 s</text><line x1="1330" y1="40" x2="1330" y2="420" stroke="#e8edf3" stroke-width="2"/><text x="1330" y="454" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">1000 s</text><line x1="470" y1="420" x2="1330" y2="420" stroke="#c9d2de" stroke-width="2"/><line x1="1240.06" y1="30" x2="1240.06" y2="420" stroke="#b42318" stroke-width="3" stroke-dasharray="8 6"/><text x="1230.06" y="24" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="600" fill="#b42318" text-anchor="end">Frist 300 s</text><text x="0" y="82" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">Normal</text><text x="0" y="108" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#566173">Inferenz, Antwort verworfen</text><circle cx="1162.36" cy="74" r="10" fill="#566173" fill-opacity="0.7"/><circle cx="1129" cy="74" r="10" fill="#566173" fill-opacity="0.7"/><circle cx="1128.68" cy="74" r="10" fill="#566173" fill-opacity="0.7"/><circle cx="1128.56" cy="74" r="10" fill="#566173" fill-opacity="0.7"/><circle cx="1128.76" cy="74" r="10" fill="#566173" fill-opacity="0.7"/><circle cx="1128.93" cy="74" r="10" fill="#566173" fill-opacity="0.7"/><circle cx="1128.58" cy="74" r="10" fill="#566173" fill-opacity="0.7"/><circle cx="1131.78" cy="74" r="10" fill="#566173" fill-opacity="0.7"/><circle cx="1128.67" cy="74" r="10" fill="#566173" fill-opacity="0.7"/><circle cx="1128.61" cy="74" r="10" fill="#566173" fill-opacity="0.7"/><text x="1110.56" y="82" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#16202c" text-anchor="end">Median 67,6 s</text><g data-ab="1" data-stoerung="f1"><text x="0" y="154" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">F1 Stopp</text><text x="0" y="180" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#566173">Container gestoppt, Verbindung abgewiesen</text><circle cx="600.01" cy="146" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="660.44" cy="146" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="587.17" cy="146" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="578.96" cy="146" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="653.73" cy="146" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="585.6" cy="146" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="585.6" cy="146" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="583.99" cy="146" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="587.17" cy="146" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="698.13" cy="146" r="10" fill="#0b5ea8" fill-opacity="0.7"/><text x="716.13" y="154" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#16202c">Median 48 ms</text></g><g data-ab="1" data-stoerung="busy"><text x="0" y="226" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">Slot belegt</text><text x="0" y="252" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#566173">Runtime antwortet 503</text><circle cx="588.71" cy="218" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="649.8" cy="218" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="639.72" cy="218" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="646.35" cy="218" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="613.19" cy="218" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="654.99" cy="218" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="588.71" cy="218" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="678.5" cy="218" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="585.6" cy="218" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="633.3" cy="218" r="10" fill="#0b5ea8" fill-opacity="0.7"/><text x="696.5" y="226" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#16202c">Median 93 ms</text></g><g data-ab="2" data-stoerung="f2"><text x="0" y="298" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">F2 DROP</text><text x="0" y="324" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#566173">Firewall verwirft, keine Antwort</text><circle cx="1179.33" cy="290" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="1180.27" cy="290" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="1181.14" cy="290" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="1179.78" cy="290" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="1180.7" cy="290" r="10" fill="#b45309" fill-opacity="0.7"/><text x="1161.33" y="298" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#9a4a0b" text-anchor="end">Median 134,7 s</text></g><g data-ab="3" data-stoerung="l3"><text x="0" y="370" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">L3 zu spät</text><text x="0" y="396" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#566173">Antwort erst nach der Frist</text><circle cx="1240.09" cy="362" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="1240.09" cy="362" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="1240.08" cy="362" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="1240.08" cy="362" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="1240.08" cy="362" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="1240.08" cy="362" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="1240.09" cy="362" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="1240.08" cy="362" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="1240.08" cy="362" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="1240.08" cy="362" r="10" fill="#b45309" fill-opacity="0.7"/><text x="1222.08" y="370" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#9a4a0b" text-anchor="end">Median 300,1 s</text></g><text x="470" y="516" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#566173">Zeit bis zum Ersatz je Auftrag (Job-Zeit) · Log-Achse, je Strich × 10</text></svg>
             </div>
@@ -6140,13 +6286,14 @@
         class="folie"
         data-id="M2"
         data-teil="niklas"
+        data-hauptfolie
         aria-label="35 von 39: Kein Live-Fehler unter Störung, p95 bis +8 ms"
       >
         <div
           class="weg-mini weg-marke"
           data-marke="1b-alle"
           role="img"
-          aria-label="Ort auf dem Weg: Zweiter Host · alle Störungen (1B)"
+          aria-label="Ort auf dem Weg: Zweiter Host (1B); Störungen: Stopp, Slot belegt, DROP, zu spät"
         >
           <svg
             class="weg-mini-karte"
@@ -6226,10 +6373,8 @@
               fill="#fff"
               stroke="var(--rot)"
               stroke-width="3"
-            />
-          </svg>
-          <p class="weg-beschriftung" aria-hidden="true">
-            <span class="weg-name">Zweiter Host · alle Störungen</span
+            /></svg
+          ><span class="weg-zeichen-ort" style="left: 225.2px; top: 2px"
             ><span class="weg-zeichen-reihe"
               ><svg
                 class="weg-zeichen"
@@ -6301,7 +6446,9 @@
                   stroke-linecap="round"
                   stroke-linejoin="round"
                 /></svg></span
-            ><span class="etikett etikett-1b">1B</span>
+          ></span>
+          <p class="weg-beschriftung" aria-hidden="true">
+            <span class="weg-name">Zweiter Host</span><span class="etikett etikett-1b">1B</span>
           </p>
         </div>
         <ol class="teilleiste" aria-label="Teil des Vortrags: 1B 3–4, Niklas">
@@ -6311,6 +6458,10 @@
           <li>Fazit</li>
         </ol>
         <h1 class="folie-titel">Kein Live-Fehler unter Störung, p95 bis +8 ms</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1b">1B</span>Leiden die Live-Aktionen, wenn der zweite Host
+          gestört ist?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
             <table style="border-collapse: collapse; font-size: 24px; width: 100%">
@@ -6929,12 +7080,11 @@
         aria-label="Reserve R1: Reserve: Kalibrierung des Timeouts"
       >
         <h1 class="folie-titel">Reserve: Kalibrierung des Timeouts</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1c">1C</span>Warum liefen die Labore mit 300 s statt 90 s?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
-            <p class="folie-frage">
-              <span class="etikett etikett-1c">1C</span>Warum liefen die Labore mit 300 s statt 90
-              s?
-            </p>
             <div style="display: grid; grid-template-columns: 820px 1fr; column-gap: 70px">
               <div>
                 <ul style="margin: 0; padding-left: 30px; font-size: 24px; line-height: 1.38">
@@ -7353,11 +7503,11 @@
         aria-label="Reserve R11: Reserve: Was der Betrieb nicht sieht"
       >
         <h1 class="folie-titel">Reserve: Was der Betrieb nicht sieht</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1b">1B</span>Was davon steht im Log der App?
+        </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
-            <p class="folie-frage">
-              <span class="etikett etikett-1b">1B</span>Was davon steht im Log der App?
-            </p>
             <div style="display: grid; grid-template-columns: 820px 1fr; column-gap: 70px">
               <div>
                 <table style="border-collapse: collapse; font-size: 28px; width: 100%">
