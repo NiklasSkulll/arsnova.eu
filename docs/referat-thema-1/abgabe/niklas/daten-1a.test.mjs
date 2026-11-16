@@ -59,3 +59,112 @@ test('Herkunft: Baseline-Commit und Hash der Auswertung', () => {
   assert.match(d.herkunft.auswertungSha, /^[0-9a-f]{16}$/);
   assert.equal(d.herkunft.cpus, 16);
 });
+
+// ---------------------------------------------------------------- Nachrechnung aus Rohdaten
+
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+import {
+  AKTIONEN,
+  KETTE_1A,
+  REIHE_1A,
+  VERTRAG_1A,
+  ladeDaten1A as laden,
+  rang,
+} from './daten-1a.mjs';
+
+const roh = (v, b) =>
+  JSON.parse(readFileSync(join(ROOT, REIHE_1A, v, `block-0${b}`, 'lauf.json'), 'utf8'));
+
+test('Nachrechnung: alle 100 Lauf-p95 (Nearest Rank) aus den Rohstichproben = Auswertung', () => {
+  let n = 0;
+  for (const l of d.laufP95) {
+    const r = roh(l.variante, l.block);
+    for (const [k] of AKTIONEN) {
+      assert.equal(rang(r.live.actions[k].latency.durationSamplesMs, 0.95), l.p95[k]);
+      n++;
+    }
+  }
+  assert.equal(n, 100);
+});
+
+test('Nachrechnung: alle 80 Vergleiche nach der Regel (≤ 1,10 × Basis und ≤ +50 ms) = Auswertung', () => {
+  for (const c of d.vergleiche) {
+    const rel = c.kandidatMs <= c.basisMs * (1 + d.schwellen.relativ);
+    const abs = c.kandidatMs - c.basisMs <= d.schwellen.absolutMs;
+    assert.equal(rel, c.relativBestanden);
+    assert.equal(abs, c.absolutBestanden);
+    assert.equal(rel && abs, c.bestanden);
+  }
+  assert.equal(d.vergleiche.filter((x) => !x.bestanden).length, 11);
+});
+
+test('gleiche Daten in jedem Lauf, Vertragshash in allen Manifesten', () => {
+  assert.deepEqual(d.gleicheDaten, {
+    fixture: true,
+    korpusUnveraendert: true,
+    vertragInAllenLaeufen: true,
+  });
+});
+
+test('Vorab-Festlegung: Schwellen stehen schon im Vertrag v1, Daten aus Git, Läufe danach', () => {
+  const v1 = execFileSync(
+    'git',
+    ['show', `${KETTE_1A[0].commit}:docs/referat-thema-1/${VERTRAG_1A}`],
+    {
+      cwd: ROOT,
+      encoding: 'utf8',
+    },
+  );
+  assert.match(
+    v1,
+    /candidateP95 <= baselineP95 \* 1\.10` \*\*and\*\* `candidateP95 - baselineP95 <= 50 ms`/,
+  );
+  assert.match(v1, /p95 `<= 1000 ms`/);
+  assert.equal(d.vorab.kette[0].datum.slice(0, 10), '2026-11-07');
+  assert.ok(d.vorab.kette.every((k) => Date.parse(k.datum) < Date.parse(d.vorab.ersterLauf)));
+  assert.equal(d.vorab.tageVorher, 7); // 7 Tage 20 Stunden: „eine Woche vorher“
+});
+
+test('Konfiguration aus den Laufmanifesten: Limits, Timeout, Proxy, Gegendruck', () => {
+  assert.deepEqual(d.konfig.spacy.V2, { cpu: 1, speicherGiB: 1, pids: 64 });
+  assert.equal(d.konfig.spacy.V3.cpu, 0.25);
+  assert.equal(d.konfig.timeoutMs, 5000);
+  assert.equal(d.v4.verzoegerungMs, 6000);
+  assert.equal(d.konfig.maxInFlight, 2);
+  assert.equal(d.v4.ersatzTimeout + d.v4.ersatzGegendruck, d.v4.ersatz);
+  const app = d.konfig.dienste.find((s) => s.alias === 'app');
+  assert.equal(app.cpu, null, 'App ohne Limit');
+  // Jeder Lauf einer Variante hat dieselbe spaCy-Konfiguration
+  for (const v of ['V2', 'V3', 'V4']) {
+    for (let b = 1; b <= 5; b++) {
+      assert.equal(roh(v, b).manifest.services.spacy.cpuLimit, d.konfig.spacy[v].cpu, `${v}/${b}`);
+    }
+  }
+});
+
+test('explorativ V3/Block 5: ein Fenster von etwa 10 s, die einzigen Timeouts, DB-Spitze', () => {
+  const e = d.explorativ;
+  assert.equal(e.laufNr, 25, 'letzter Lauf der Reihe');
+  assert.equal(e.langsam.join, 50);
+  assert.equal(e.langsamAndereMax, 1);
+  assert.equal(e.fensterS, 10);
+  assert.equal(e.timeouts, d.v3.timeouts, 'alle Timeouts von V3 in diesem Lauf');
+  assert.ok(e.timeoutStartS.every((s) => s >= e.fenster[0] && s <= e.fenster[1]));
+  assert.ok(e.pgMax.max > e.pgAndere[1]);
+  assert.ok(e.wsP95 > e.wsP95Andere[1]);
+  assert.ok(e.lastMax < 2, 'Hostlast gering');
+});
+
+test('Laborreserve und gepoolte p95 (nachträglich)', () => {
+  assert.ok(d.labor.containerCpuProzent[1] < 50);
+  assert.ok(d.labor.minFreiGiB > 11.6);
+  assert.equal(d.labor.swapUnberuehrt, true);
+  assert.equal(d.explorativ.gepoolt.V1.join.n, 2500);
+  assert.ok(
+    Math.abs(d.explorativ.gepoolt.V2.qaSubmit.p95 - d.explorativ.gepoolt.V1.qaSubmit.p95) < 0.2,
+  );
+  assert.deepEqual(laden(ROOT).explorativ.gepoolt, d.explorativ.gepoolt, 'deterministisch');
+});
