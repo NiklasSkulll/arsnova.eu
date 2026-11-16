@@ -1,6 +1,6 @@
 # Sprechnotizen Jonas
 
-Gesamt 10:30 min, Kurzfassung 6:05 min (Folien mit der Marke „Kurzfassung“). Erzeugt aus `folien.mjs` (`notiz`, `zeitS`, `kurzfassung`); nicht von Hand ändern.
+Gesamt 10:00 min, Kurzfassung 6:05 min (Folien mit der Marke „Kurzfassung“). Erzeugt aus `folien.mjs` (`notiz` = Fließtext, `stichpunkte`, `zeitS`, `kurzfassung`); nicht von Hand ändern. Vorgetragen wird aus den Stichpunkten; der Fließtext ist die ausformulierte Fassung zum Üben.
 
 ## Sprungplan
 
@@ -8,7 +8,7 @@ Ab J1 gezählt beginnt J13 in der Langfassung bei 7:30 min. J13 und J15 brauchen
 
 ## G0 Thema 1: KI-Inferenz im Moderationskompass (30 s, kumuliert 0:30)
 
-Entwurf für Niklas und mich. Unser Thema ist die KI-Inferenz für den Moderationskompass. Die Leitfrage: Wie wirksam trennt die Architektur von Release 1.3 Anwendung, Kontextaufbau und private Inferenz unter realer Last? Reale Last haben wir nicht erzeugt, unsere Läufe sind sequenziell; das ist eine Grenze. Niklas beginnt mit dem App-Host, ich verfolge dann einen echten Auftrag über beide Hosts, und Niklas schließt mit Störungen und dem Aufwand der zweiten Serverrolle.
+Unser Thema ist die KI-Inferenz für den Moderationskompass. Die Leitfrage: Wie wirksam trennt die Architektur von Release 1.3 Anwendung, Kontextaufbau und private Inferenz unter realer Last? Reale Last haben wir nur als Labormodell, meine Läufe sind sequenziell; das ist eine Grenze. Ich verfolge zuerst einen echten Auftrag über beide Hosts. Danach prüft Niklas, wie viel Zusatzarbeit der App-Host selbst verträgt und was passiert, wenn der zweite Host gestört ist.
 
 _Quelle:_ Prüfungsdokument Abschnitt 4.3 (Thema 1, Aufträge 1A–1C); 01-aufteilung.md; Design Abschnitt 3
 
@@ -86,17 +86,11 @@ _Quelle:_ evidenz/1B/messung/2026-11-15-abgelehnte-antwort.json (Auftrag 2); Lau
 
 ## J15 Entkopplung bleibt, Gate neu abstimmen (40 s, kumuliert 9:55, **Kurzfassung** 6:05)
 
-Was bleibt: die Entkopplung über die Queue, die Nachprüfung, die Validierung und die Gleichheit von Vorschau und Nutzlast; in 1B die Topologie, sie kostet keine relevante Zeit. Empfohlen, nicht umgesetzt: Instruktion und Gate gemeinsam abstimmen, den Timeout je Inferenz-Host kalibrieren, den Cache begrenzen. Offen ist, wie oft eine Stimme unter Voting die Antwort verwirft. Meine Frage an Sie: Prüft das Gate das Richtige? Und damit an Niklas: Was passiert, wenn der zweite Host ausfällt?
+Was bleibt: die Entkopplung über die Queue, die Nachprüfung, die Validierung und die Gleichheit von Vorschau und Nutzlast; in 1B die Topologie, sie kostet keine relevante Zeit. Empfohlen, nicht umgesetzt: Instruktion und Gate gemeinsam abstimmen, den Timeout je Inferenz-Host kalibrieren, den Cache begrenzen. Offen ist, wie oft eine Stimme unter Voting die Antwort verwirft. Meine Frage an Sie: Prüft das Gate das Richtige? Und damit an Niklas: Was verträgt der App-Host selbst neben der Live-Last?
 
 _Quelle:_ 1C-ergebnis.md, Abschnitt 5, ADRs 1C-010 bis 1C-024, Abschnitt Folgen (Laptop und PC · 9f230abc; Laptop · def56700); 1B-ergebnis.md, Entscheidung (ThinkPad P50 · 8e9d1317)
 
-## G9 Kurzfazit Thema 1 (30 s, kumuliert 10:25)
-
-Entwurf für das gemeinsame Kurzfazit, mit Niklas abzustimmen: je Auftrag ein Satz, dann ein gemeinsamer Satz zur Leitfrage.
-
-_Quelle:_ 1B-ergebnis.md, 1C-ergebnis.md (Kurzantwort, Verlauf 9f230abc); 1A von Niklas
-
-## J16 Literaturverzeichnis (5 s, kumuliert 10:30)
+## J16 Literaturverzeichnis (5 s, kumuliert 10:00)
 
 Das vollständige Literaturverzeichnis nach dem IU-Zitierleitfaden; dieselben Einträge wie im Handout.
 

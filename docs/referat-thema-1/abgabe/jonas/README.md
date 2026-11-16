@@ -12,9 +12,11 @@ node docs/referat-thema-1/abgabe/jonas/bau.mjs [--niklas1 <pdf>] [--niklas2 <pdf
   [--niklas1-stand <text>] [--niklas2-stand <text>] [--ausgabe <ordner>]
 ```
 
-Ohne Argumente landen die Ausgaben in `ausgabe/` neben dieser Datei. Niklas' Teil 1A kommt standardmäßig
-aus `abgabe/1A-folien.pdf` (falls vorhanden), sonst steht eine Platzhalterfolie im Deck. Niklas' Teil 1B 3–4
-gibt es nur mit `--niklas2`. Die `--niklasN-stand`-Texte landen im Manifest (zum Beispiel Zweig und Commit).
+Ohne Argumente landen die Ausgaben in `ausgabe/` neben dieser Datei. Niklas' Teile (1A, 1B 3–4) kommen
+standardmäßig nativ aus [`../niklas/`](../niklas/README.md); dazu entstehen `niklas-folien.pdf` und
+`sprechnotizen-niklas.md`. Reihenfolge im Deck: G0 (Jonas eröffnet), J1–J15, Niklas 1A und 1B 3–4, G9
+(gemeinsames Fazit, spricht Niklas), Literatur (J16, NL), Reserve. `--niklas1`/`--niklas2` ersetzen einen
+Teil durch die Seiten eines PDFs (Rückfallweg); die `--niklasN-stand`-Texte landen dann im Manifest.
 
 Tests: `node --test docs/referat-thema-1/abgabe/jonas/*.test.mjs`.
 

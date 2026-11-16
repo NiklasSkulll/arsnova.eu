@@ -3,13 +3,17 @@
   "bauskript": "docs/referat-thema-1/abgabe/jonas/bau.mjs",
   "niklas": {
     "teil1": {
-      "quelle": "Datei 1A-folien.pdf",
-      "stand": "main nach Merge von PR #24",
-      "sha256": "8db5e854dee4df3cf64acc7eface52c5524571b98eb5a515ebf3a556cbfe32b7"
+      "quelle": "nativ: abgabe/niklas/ (folien-1a.mjs, folien-1b34.mjs)",
+      "stand": null,
+      "sha256": null
     },
-    "teil2": { "quelle": "Platzhalter (Teil noch nicht geliefert)", "stand": null, "sha256": null }
+    "teil2": {
+      "quelle": "nativ: abgabe/niklas/ (folien-1a.mjs, folien-1b34.mjs)",
+      "stand": null,
+      "sha256": null
+    }
   },
-  "folien": { "gemeinsamesDeck": 16, "jonasUndReserve": 28 },
+  "folien": { "gemeinsamesDeck": 47, "jonasUndReserve": 28, "niklasUndReserve": 17 },
   "eingaben": [
     {
       "pfad": "docs/referat-thema-1/evidenz/1B/messung/2026-11-13-lauf.json",
@@ -113,15 +117,15 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/abgabe-lokal.mjs",
-      "sha256": "5d8ee3e6a0ce327327738f3097d1d4e176605fb7234325a2d93009e2925f6b90"
+      "sha256": "0061ddd6dbf19bff2310a815b17599a67faace06ce3babeb50f4232bd526e80c"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/bau.mjs",
-      "sha256": "4d3820022938788d0ee4ff35f5cbc1b4f3abd0add60a3a0929cf48c364ccfc7c"
+      "sha256": "99a455d6405c0f852b54c63fba83809b56368dd5c5557ea078daefb8df74523c"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/deck-vorlage.html",
-      "sha256": "4bbfe5275f56c336861d19e6d8d22127ef7eb794c63fb298f0646e6c9e95959e"
+      "sha256": "d2df2828ef533b06bcea17f69d145227bed1bcfa8cb3f73b273e2e14039fc376"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/deck.js",
@@ -129,11 +133,11 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/deck.mjs",
-      "sha256": "2aece6884794fad4c7b51cf695ae6130a1b942ce24c33a460d48252b4d9b76ab"
+      "sha256": "8c60adc1b9af2918f9100203df8037645135c57d2928666822c23e242f72584d"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/folien.mjs",
-      "sha256": "7670ccf385a39e17c9041126ec995d7b9fcf883ac5455e8e82ada71a60d92c17"
+      "sha256": "166556b622356e5525b19f3ef743150af8cc924aa2c93097b00620e44fb31f7f"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/grafik.mjs",
@@ -165,7 +169,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/stil.css",
-      "sha256": "d58b76732293ca9db8d831f88e852728fe283176aa74dad4e87f66e9ac629971"
+      "sha256": "9def52c8e4fad407c94e225813e05aec35b5774792341dc75212ae0dcc17558c"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/zahlen.mjs",
@@ -216,32 +220,295 @@
       "sha256": "473611cff3da188962549e4e88f7c26cd747cb49a2f949ae1865cfe7f3feed27"
     },
     {
-      "pfad": "docs/referat-thema-1/abgabe/1A-folien.pdf",
-      "sha256": "8db5e854dee4df3cf64acc7eface52c5524571b98eb5a515ebf3a556cbfe32b7"
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/auswertung/auswertung.json",
+      "sha256": "a3bebdf236cfb3b6ae993049ebd96dbd72e2bde908e63fd5f6a6e99a9df8b82a"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/plan.json",
+      "sha256": "f303cc0389a16d1d073b9f8190d00c45385fb8d9ca23e01f422725928dca09c9"
+    },
+    {
+      "pfad": "docs/referat-thema-1/1A-experiment-contract.md",
+      "sha256": "f7d3eba4b82a3f3a47c914665ac8a7be4988b9061deff6b857a79d2fcf766ab7"
+    },
+    {
+      "pfad": "apps/backend/src/lib/spacyClient.ts",
+      "sha256": "ce6f2dd675fbcc4c97671dfd27e8060d3dcd7537ca062467c29fee355d9758a4"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V1/block-01/lauf.json",
+      "sha256": "630c473d5507830ca809e1ef68afbc5711a3b6acb7be6f824e0236074a222304"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V1/block-01/ressourcen.json.gz",
+      "sha256": "0aba5c4736f0496b98681548c1e152baa382b0292a234f3d426a8dd7e17a3a65"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V4/block-01/lauf.json",
+      "sha256": "4703dfa59e63fc90a9d14eddbefec22400ce2dd598fc9654b97d577511f191d1"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V4/block-01/ressourcen.json.gz",
+      "sha256": "640659c2ddb16168c8039fdd892684a650e660363458b3191ef8185c7ddb913d"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V2/block-01/lauf.json",
+      "sha256": "24f731078bddd4e0a9c7405f3761b7b078ad8bd6a6e83eb538d6e06a948b3c4f"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V2/block-01/ressourcen.json.gz",
+      "sha256": "0db58501698be44287fe008fee5ed81c39b5632fc0cf6a6a56618dfa8e87ff97"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V3/block-01/lauf.json",
+      "sha256": "cd8f999bd08d23a3b772332ed7f628be99b478e522edd1db11a6f7a8dd967e89"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V3/block-01/ressourcen.json.gz",
+      "sha256": "26c27fcdd08f72fea59e3eba17473af27a348b264b263b250357da75355a7805"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V0/block-01/lauf.json",
+      "sha256": "51fa926e323f9251374726fa83070072edc82ebfd7f0e5020cc0b62fff7b154d"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V0/block-01/ressourcen.json.gz",
+      "sha256": "496dde3c440e5d63135a2285946a1327703ba58b5bcad46d26704a1dd70de627"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V4/block-02/lauf.json",
+      "sha256": "478194e1d502695de4aedaa1eb785961767c43699aa3872e5580ca9004f80499"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V4/block-02/ressourcen.json.gz",
+      "sha256": "809e370501110fe38bbd53fa27df579b84997424b27829b04e2af496ad410288"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V1/block-02/lauf.json",
+      "sha256": "86e7972e9363a98cdbfa5a47d6a83b94b8597087d0e91afbf9eb732c4dbeaa4e"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V1/block-02/ressourcen.json.gz",
+      "sha256": "7eb0afa1d68cc31139f0b3a4b1a0eeaa301605191510a6c197b98dd87abd69c7"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V3/block-02/lauf.json",
+      "sha256": "b5387ab5a1a2d2e57b16e5aac1476d99e9df9adef324fc3055658427d3cb6ed6"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V3/block-02/ressourcen.json.gz",
+      "sha256": "fe9f09d98d7e2b08fd79ef55f4d86bf1d4ee6ad13db89cede13688b35d26d230"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V0/block-02/lauf.json",
+      "sha256": "8cd82822f2a6f8a0125c71834393d2f4c2059958b00e27b7e704cb9254bb91e3"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V0/block-02/ressourcen.json.gz",
+      "sha256": "37c87f33ad6157e757bae1aae23224e00fc7ffe6b01c7032edde87caaa752bd9"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V2/block-02/lauf.json",
+      "sha256": "69e0a76b7f37c3aa13cf78eff288e4402fc4c3800e4434a9cc1796f115605f99"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V2/block-02/ressourcen.json.gz",
+      "sha256": "e660bca4f913336caee0845248a4ccebd5d3e14aae02696457b6ba9d7ff71227"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V4/block-03/lauf.json",
+      "sha256": "e7c3c580a1bb3abc8bc94d262c8756ed8260177b34539901c82a47df12cc5404"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V4/block-03/ressourcen.json.gz",
+      "sha256": "c35d75e3e36cb506f155c3259e2cd753a09506c881e2c6590d1cd8b4e62173a5"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V3/block-03/lauf.json",
+      "sha256": "99e61554392f08305efacb47fd00dda90ad1a592a5d5bb13a9922e0491a854e0"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V3/block-03/ressourcen.json.gz",
+      "sha256": "fa6c770a0f8ae1bddb28d2f9e0052cf6cfb7c4fa5c99ca516f7b5948ad8af6c8"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V1/block-03/lauf.json",
+      "sha256": "9d9e7d47db079546b7e59616f47d2c2b001e8dc74b75a7d265c4bd7ec92dc852"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V1/block-03/ressourcen.json.gz",
+      "sha256": "d9dbeaecfa87f1dfb7a9412cc2c17846954c85ecd9409be414e26860723dee92"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V0/block-03/lauf.json",
+      "sha256": "b50831c6f47d010be4cc8d62c398e23c4fd2209d6af0248dcebaca90e2febe72"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V0/block-03/ressourcen.json.gz",
+      "sha256": "af08db140e5987ba70b4b77201297613340713634e7a5b180e7525b1bfaffb8b"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V2/block-03/lauf.json",
+      "sha256": "83f89e2c1ca9bcdca376a66af2da6e546aee5b7e85fb6dbb39df476241e2a17d"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V2/block-03/ressourcen.json.gz",
+      "sha256": "3a112017c1345a72655c3ba558f4d1b57a853a427efd2b8825072b9019f544f6"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V3/block-04/lauf.json",
+      "sha256": "9b52cbb553234ae15b44c0d87b9fabf20a7165cb44848dbd33f5e9ca950cbe54"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V3/block-04/ressourcen.json.gz",
+      "sha256": "f5f941ab26f19a2f1e8a1c4ebfc2b6d3a4110e86afe5912ae0eede2d238404a8"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V4/block-04/lauf.json",
+      "sha256": "240d3705cf870a6ae57effb5e15a49adc6f61c3f289d6eaf011cb1281638735f"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V4/block-04/ressourcen.json.gz",
+      "sha256": "8d2905df70dc8b774f75a23a65fa5fabae7fa81951e66248e8bac8b1d96246af"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V0/block-04/lauf.json",
+      "sha256": "63510360ef8197a5a45415c06cb9391826c2c2c6b9fac205e4a523d845732f58"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V0/block-04/ressourcen.json.gz",
+      "sha256": "fcb1551678622937f3b19fb0708505a67096ddf603217bf3db335a9d60f67ccd"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V2/block-04/lauf.json",
+      "sha256": "79d2c2b29a30f69f66fc93523d31240b93a03b88cf492ae1f3b7be9afd5396ee"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V2/block-04/ressourcen.json.gz",
+      "sha256": "62d30f5a12dd2305ca21c165eaf3f28afdbafb423da6c57d549c5650b2345e0f"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V1/block-04/lauf.json",
+      "sha256": "f55bbe6130639bc8f189514786026ee427b14ee03fb47fa3cc96ca3e18b2f717"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V1/block-04/ressourcen.json.gz",
+      "sha256": "07c2df09004a2bd6481081977645f0e215ed7d9c14440fc28b571b84f8f9e8b3"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V2/block-05/lauf.json",
+      "sha256": "efbf6e84bf4f39bd6c2b2c39b85086af2f67c04ae05aeb831d5ce181bb8834a6"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V2/block-05/ressourcen.json.gz",
+      "sha256": "721df1c9d315fe8eb32fb8fb55aaee7b889d6f882b9b579d18d65e4087f51ac0"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V4/block-05/lauf.json",
+      "sha256": "037f5cc5ec5bc25ee1fd0d21dd75b9822764cc1c8002b939a7096694c8195f41"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V4/block-05/ressourcen.json.gz",
+      "sha256": "16747f2fff70f05a8055198a947181f31b9e2098dbc3529494e4fd71d833bcc6"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V0/block-05/lauf.json",
+      "sha256": "4c6e2faf5221d8846f8a78f1e39c2c860c4aeb6e5eaf1b91d4b1b9e34912c811"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V0/block-05/ressourcen.json.gz",
+      "sha256": "ed033059e048e6e84648e6c6cdebc42efa27e6994a5c09868d95c43a03b500cb"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V1/block-05/lauf.json",
+      "sha256": "323dbd8ebaa882cf61cb651792bf665b3f4563befdc695076ebf83c6ff263b89"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V1/block-05/ressourcen.json.gz",
+      "sha256": "0fb3af566168652ed058e8202a4e17bb75d41a724780eccd668daa970c62c4a4"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V3/block-05/lauf.json",
+      "sha256": "72fa68d92bbc472313d59a2a58e1b998cd3a8bbc41306e327dce74a7bc36f365"
+    },
+    {
+      "pfad": "docs/referat-thema-1/evidenz/1A/reihe-main-a19ca70f-20261115-122547/V3/block-05/ressourcen.json.gz",
+      "sha256": "6f5c0df08d7486e27b7e14fa3441714c575a0e9f33d4be6e8e7a0a9615ec1d5b"
+    },
+    {
+      "pfad": "scripts/load/lib/artillery-live-messungen.mjs",
+      "sha256": "343ebed073757b6a699cd9a77d47d0d61650e8ef40a9172ff2db0adb075f005d"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/niklas/bau-entwurf.mjs",
+      "sha256": "a472a7e7002397a6b351292fcb3610f74013abd544483091404e9cb97d619540"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/niklas/daten-1a.mjs",
+      "sha256": "d9f21d8234a51dc1fe61fb0409f6493605ae5717714ada9a44d54f6ea95ce1f9"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/niklas/daten-1b34.mjs",
+      "sha256": "56db0ef9c085a5e23b17950fa6e26648bc0efe3cd97521435bbcb53f8c2aa585"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/niklas/folien-1a.mjs",
+      "sha256": "d13f4417b6eabf284d55a0e408fe97fac0c896f3fe8e7f6784821a2e9ef6257a"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/niklas/folien-1b34.mjs",
+      "sha256": "c72c022ec200cb5b83ffadfbe9dfd670994423745377415b3dcfbc13e1f9bffe"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/niklas/grafik-1a.mjs",
+      "sha256": "e937c14c53b9762e8d8eff9a625bfdec7eccc59009ef1b0985153fc94a466b86"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/niklas/handout-latex-1a.mjs",
+      "sha256": "04ec0d275fad12f1a513f264d01868429b660ee7887b004ac0acf6fe5dfd8229"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/niklas/literatur-1a.mjs",
+      "sha256": "e6c969f8e5c099e6e97305e22697a99562cd2c13cf2d3df9e24ba0b89f864179"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/niklas/teile.mjs",
+      "sha256": "7594fa7ccba4fd0cf3d21429670dec546f3840bd82f7857922155b3e96d17082"
     }
   ],
   "ausgaben": [
     {
       "datei": "jonas-deck.html",
-      "bytes": 3120230,
-      "sha256": "c652a9155e6db34753b21dd363bc1fd95b1ac3dea2f51f3a41ea4a19c11b6418"
+      "bytes": 1770738,
+      "sha256": "8060329d126e2c570f20f572871c6ab89d63bc1941a275aa3b608da13ae9a4b5"
     },
     {
       "datei": "gemeinsames-deck.pdf",
-      "bytes": 1760853,
-      "sha256": "7383891d076787507a3f3eec0303e844a7b5fa3abaca8fb4a06f53c1f29bf1b3",
-      "seiten": 40
+      "bytes": 1131203,
+      "sha256": "d83c6ca0ed7cddd0172d9f49406d540c0386eb8a59d34ddbc295ca747664aba8",
+      "seiten": 47
     },
     {
       "datei": "jonas-folien.pdf",
-      "bytes": 760942,
-      "sha256": "03619c6af08b95886264601d754c94f51e0275084392e1e098c5ffecf525a1dc",
+      "bytes": 760957,
+      "sha256": "a6ebfdf53784b9ba4942a1616970f0afbe08305c4c6fe44af74ee257704d95e6",
       "seiten": 28
     },
     {
+      "datei": "niklas-folien.pdf",
+      "bytes": 403469,
+      "sha256": "aed714dc46bcfa1c97150071368e263e169fde24e151df9dea0cc7e7f2c0c99b",
+      "seiten": 17
+    },
+    {
       "datei": "sprechnotizen.md",
-      "bytes": 23130,
-      "sha256": "150a6531b5c5f742056e1d2dd0b0674fe3ea0a57ac8c23781565ab241d31f93e"
+      "bytes": 22993,
+      "sha256": "e69bbc5fe7c79e7a9ad75cfe5830040c0d181624f7e85aee8a9a800a98dd976c"
+    },
+    {
+      "datei": "sprechnotizen-niklas.md",
+      "bytes": 22521,
+      "sha256": "a56a3e0c1332ab89e2e47e7547f0adbc11f6530a949acd9ca7710f3e2b8f3720"
     }
   ]
 }
