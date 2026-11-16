@@ -3,7 +3,7 @@
 - **Stand:** 2026-11-16, Entwurf der KI (Claude Code) aus dem zweiten Audit · Prüfung durch den Autor: offen
 - **Zweck:** nur zum Üben, nicht Teil der Abgabe. Die Diskussion zählt 40 % der Note ([Prüfungsdokument 6](../../../didaktik/CLOUD-COMPUTING-REFERAT-PRUEFUNG.md#6-bewertung)); der Diskussionskern zu 1A ist „Ressourcenisolation, Containergrenzen und Ursache einer gemessenen Live-Verzögerung“ (Gruppenauftrag 1A).
 - **Grundlage:** [1A-Auswertung](../../1A-auswertung.md), [Versuchsvertrag](../../1A-experiment-contract.md), [Vorabnachtrag](../../specs/2026-11-14-1a-messreihe-main-a19ca70f.md), die gewertete [Reihe vom 15.11.2026](../../evidenz/1A/reihe-main-a19ca70f-20261115-122547/), Niklas’ Störreihen zu 1B (`evidenz/1B/messung/2026-11-1{5,6}-lauf-*-summary.json`) und die Folien N1–N10, M1–M2 ([`folien-1a.mjs`](folien-1a.mjs), [`folien-1b34.mjs`](folien-1b34.mjs)).
-- **Regeln:** Zuerst die **Kurzantwort** (höchstens drei Sätze), Nachlegen nur auf Nachfrage. Jede Zahl gilt für Niklas’ WSL2-Rechner (16 logische CPUs, App-Commit `a19ca70f`, v1.4.0) bzw. für 1B für den i7-10700K mit zwei Hyper-V-VMs (Commits `5e758d0a`, `2b39b9df`). Was die Daten nicht hergeben, sage ich als offen, nicht als Ergebnis.
+- **Regeln:** Zuerst die **Kurzantwort** (höchstens drei Sätze), Nachlegen nur auf Nachfrage. Jede Zahl gilt für Niklas’ WSL2-Rechner (16 logische CPUs, App-Commit `a19ca70f`, nach v1.4.0) bzw. für 1B für den i7-10700K mit zwei Hyper-V-VMs (Commits `5e758d0a`, `2b39b9df`). Was die Daten nicht hergeben, sage ich als offen, nicht als Ergebnis.
 
 ## Die fünf wahrscheinlichsten Fragen
 
@@ -19,7 +19,7 @@
 
 _Variante:_ „Haben Sie so lange gemessen, bis es passt?“
 
-**Kurzantwort:** Die erste vollständige Reihe lief am 12.11. auf dem älteren Stand `8f91e041` und verfehlte H1 und H2 ebenfalls (4 von 20 und 6 von 40), also dasselbe Urteil. Wiederholt habe ich, weil der Fork auf v1.4.0 (`a19ca70f`) aktualisiert wurde und das Ergebnis für den aktuellen Stand gelten soll. Vertrag, Schwellen, Seed und Fixture blieben gleich, der Vertrags-Hash steht in jedem Laufmanifest, und der Nachtrag ist vor dem Vorlauf committet.
+**Kurzantwort:** Die erste vollständige Reihe lief am 12.11. auf dem älteren Stand `8f91e041` und verfehlte H1 und H2 ebenfalls (4 von 20 und 6 von 40), also dasselbe Urteil. Wiederholt habe ich, weil der Fork auf einen Stand nach v1.4.0 (`a19ca70f`) aktualisiert wurde und das Ergebnis für den aktuellen Stand gelten soll. Vertrag, Schwellen, Seed und Fixture blieben gleich, der Vertrags-Hash steht in jedem Laufmanifest, und der Nachtrag ist vor dem Vorlauf committet.
 
 **Nachlegen:** In der ersten Reihe gab es keinen großen V3-Effekt und keine Verletzung über 50 ms; die Ausschläge lagen vor allem in Block 1, über V2 bis V4 zugleich. Das stützt, dass V3/Block 5 der zweiten Reihe ein Einzelereignis ist und die Regel auf Laufrauschen anspricht. Die alte Reihe steht nicht mehr im Arbeitsbaum, ist aber über Git vollständig nachvollziehbar.
 
@@ -31,7 +31,7 @@ Beleg: Daten `35271586` (12.11.), Auswertung `97bfcfc9` (14.11., 12:41; H1 4/20,
 
 **Nachlegen:** Gepoolt über alle fünf Blöcke unterscheidet sich V2 von V1 je Aktion nur um −5,5 bis +0,1 ms, während der Beitritts-p95 von V2 schon von Block zu Block zwischen 31 und 58 ms schwankt (nachträglich ausgewertet). Die Entscheidung stützt sich auf die Beweislast der Option, auf den klaren V3-Effekt bei CPU-Mangel und auf den ungemessenen Nutzen. Für eine neue Reihe würde ich die Regel an einem A/A-Vergleich kalibrieren und eine Mindesteffektgröße (etwa +10 ms) mit Bootstrap-Konfidenzintervall über die Blöcke nutzen (Papadopoulos et al., 2021, Kap. 2.3, P1, P5).
 
-Beleg: `auswertung.json` (`comparisons[variant=V1]`, `hypotheses.H1`), Reservefolie RN1, [1A-Auswertung, Live-Aktionen und Hypothesen](../../1A-auswertung.md#live-aktionen-und-hypothesen)
+Beleg: `auswertung.json` (`comparisons[variant=V1]`, `hypotheses.H1`), Folie N6b, [1A-Auswertung, Live-Aktionen und Hypothesen](../../1A-auswertung.md#live-aktionen-und-hypothesen)
 
 ### F3. Warum p95 und nicht Mittelwert oder p99, und wie stabil ist ein p95 aus nur 100 Q&A-Stichproben?
 
@@ -65,7 +65,7 @@ _Variante:_ „Wie würden Sie die App schützen?“
 
 **Nachlegen:** Den Live-Pfad schützen hier Frist und Gegendruckgrenze: Nach 5 s liefert die App den lexikalischen Ersatz, und bei zwei offenen Anfragen lehnt der Client sofort ab. Für ein LLM, das viele Kerne minutenlang auslastet, reicht das nicht; deshalb sieht ADR-0035 dafür einen zweiten Host vor. App, PostgreSQL und Redis laufen in der Produktions-Compose ohne Limits.
 
-Beleg: Folien N2, N9, RN4; `docker-compose.prod.yml`; [ADR-0035, Abschn. 2.1](../../../architecture/decisions/0035-self-hosted-llm-runtime-llama-cpp-over-ollama.md)
+Beleg: Folien N2, N8, N9; `docker-compose.prod.yml`; [ADR-0035, Abschn. 2.1](../../../architecture/decisions/0035-self-hosted-llm-runtime-llama-cpp-over-ollama.md)
 
 ### F7. `SIDECAR_UNAVAILABLE` heißt doch, spaCy war weg?
 

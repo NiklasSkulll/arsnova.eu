@@ -194,7 +194,7 @@ Beleg: [ADR 1C-018](../../adr/1C-018-quality-gate-verwirft-echte-antworten.md#ko
 
 ### F34. 1C-019 sagt 19 von 20 `full-context`, 1C-018 sagt 0 von 20. Was gilt?
 
-_(neu)_ Beides, aber für verschiedene Codestände: 19 von 20 gilt für `main@9f230abc` (Laptop und PC), mit Instruktion v2 und ohne Quality-Gate. Derselbe Upstream-Commit `12f1d8e4` brachte Instruktion v5 und das Gate, `a998ada0` weitete das Gate aus (PR #643); welcher Teil wie viel bewirkt, ist nicht getrennt gemessen, und auf `def56700` endete kein Auftrag mehr `full-context` (Laptop). Beide Gate-Commits sind nicht in `v1.3.0`, aber in `v1.4.0`, und die Pfaddateien sind zwischen `v1.4.0` und `def56700` byte-gleich; der Befund betrifft also das Release 1.4.0, nicht 1.3. Für die Diskussion: Ein Upgrade hat das Ergebnis gekippt (Instruktion und Gate zugleich), und upstream prüft nicht, ob das ausgelieferte Modell die verlangte Form trifft (ADR 1C-018, Kontext).
+_(neu)_ Beides, aber für verschiedene Codestände: 19 von 20 gilt für `main@9f230abc` (Laptop und PC), mit Instruktion v2 und ohne Quality-Gate. Derselbe Upstream-Commit `12f1d8e4` brachte Instruktion v5 und das Gate, `a998ada0` dehnte das Gate auf `uncertain` aus und fasste die Metamuster enger (PR #643); welcher Teil wie viel bewirkt, ist nicht getrennt gemessen, und auf `def56700` endete kein Auftrag mehr `full-context` (Laptop). Beide Gate-Commits sind nicht in `v1.3.0`, aber in `v1.4.0`, und die Pfaddateien sind zwischen `v1.4.0` und `def56700` byte-gleich; der Befund betrifft also das Release 1.4.0, nicht 1.3. Für die Diskussion: Ein Upgrade hat das Ergebnis gekippt (Instruktion und Gate zugleich), und upstream prüft nicht, ob das ausgelieferte Modell die verlangte Form trifft (ADR 1C-018, Kontext).
 Beleg: [1C-Ergebnis 2](../../1C-ergebnis.md#2-kurzantwort), [ADR 1C-019](../../adr/1C-019-endstatus-echter-pfad-beibehalten.md), [ADR 1C-018](../../adr/1C-018-quality-gate-verwirft-echte-antworten.md)
 
 ### F35. Wer legt den Timeout fest: das Release oder der Betreiber?
@@ -292,7 +292,7 @@ Beleg: [ADR 1C-018](../../adr/1C-018-quality-gate-verwirft-echte-antworten.md), 
 
 ### F52. Alle Lehrenden teilen sich einen Slot und einen Prompt-Cache. Wie steht es um die Isolation zwischen Mandanten?
 
-Es gibt keinen Fair-Share: Eine Session belegt den Slot, die anderen bekommen `busy` oder `queue_full`, und ein OOM durch den Cache trifft alle. Geteilt wird im Cache nur das gemeinsame System-Präfix (135–137 Tokens), Inhalte anderer Sessions sehe ich darin nicht; geprüft habe ich das nicht. Für mehrere Mandanten bräuchte es Kontingente je Session oder mehrere Slots.
+Es gibt keinen Fair-Share: Eine Session belegt den Slot, die anderen warten in der Queue oder bekommen `queue_full`, und ein OOM durch den Cache trifft alle. Geteilt wird im Cache nur das gemeinsame System-Präfix (135–137 Tokens), Inhalte anderer Sessions sehe ich darin nicht; geprüft habe ich das nicht. Für mehrere Mandanten bräuchte es Kontingente je Session oder mehrere Slots.
 Beleg: [ADR 1C-024](../../adr/1C-024-prompt-cache-ram-begrenzen.md), [ADR-0035, 2.2](../../../architecture/decisions/0035-self-hosted-llm-runtime-llama-cpp-over-ollama.md)
 
 ### F53. Ihr Laptop ist x86, Produktion ein anderer Host. Was überträgt sich?
