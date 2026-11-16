@@ -38,6 +38,26 @@ Folienfolge, Grafiken und Animationen für 1A; Gliederung von Niklas' Handout in
 - Zeitkonflikt, offen für Niklas: 1A 9:30 + 1B 3–4 3:00 + G9 0:40 = 13:10 min gegen etwa 10:30. Die Kurzfassung (Marke in `sprechnotizen-niklas.md`: N1, N3, N5, N6, N8, N9, N10 und M1–M4) dauert 9:45, mit G9 10:25.
 - Sprechnotizen beider Personen: Stichpunkte vor dem Fließtext, sobald eine Folie `stichpunkte` hat (`bau.mjs/baueSprechnotizen`).
 
+## Reihenfolge nach Design 3, Rahmenfolien, Designregeln (_Ergänzt 2026-11-16_)
+
+Anlass: Das Deck lief noch in der alten Folge (Jonas eröffnet); abgestimmt ist Design 2026-11-15, Abschnitt 3.
+Dazu wünschte der Autor Titel-, Fahrplan- und Dankfolie und einen Designdurchgang über alle Folien.
+
+- **Reihenfolge:** GT (Titel: beide Namen, Kurs DSCC0127, IU Internationale Hochschule, Prüfer, 24.11.2026,
+  Platz für die Matrikelnummern), G0 (Leitfrage und Fahrplan), N1–N10 (1A), J1–J15, M1–M2 (1B 3–4), G9, GD
+  (Dank, Fragen, Link und offline erzeugter QR-Code zum Belegrepository), Anhang J16 und NL, Reserve. Alle
+  Rahmenfolien spricht Niklas. Übergänge: N10 „Was, wenn wir die schwere Arbeit auslagern?“ → J1 „Danke,
+  Niklas. Die schwere Arbeit, die Inferenz, ist ausgelagert auf einen zweiten Host.“; J15 „Und wenn der
+  zweite Host langsam ist oder ausfällt?“ → M1 „Danke, Jonas.“
+- **Zeit:** Budget je Person höchstens etwa 10:30 min samt Rahmenanteil (Absprache 2026-11-16, ersetzt
+  9:00 min). Jonas J1–J16 8:30 min, Niklas GT, G0, 1A, 1B 3–4, G9, GD 9:55 min. Sprungpläne zählen nur die
+  eigene Redezeit.
+- **Matrikelnummern:** Die Titelfolie steht in jedem Einzel-PDF; `abgabe-lokal.mjs` füllt den Platz nur in
+  ignorierten Kopien (Deck und PDFs). Der frühere Eckstempel entfällt.
+- **Designregeln:** Typografie (Text ≥ 28 px, Sekundärtext 24 px, Vermerke 20 px gedämpft in einer Zeile),
+  vertikaler Rhythmus (Inhalt im optischen Zentrum, Beleg unten), Abstandsstufen, Farbbedeutung. Beschrieben
+  im [README](../abgabe/jonas/README.md#designregeln-stand-2026-11-16), geprüft vom Layoutwächter.
+
 ## Gemeinsames Deck aus einem Guss (_Ergänzt 2026-11-16_)
 
 - Stichpunkte für alle Folien von Jonas (G0, J1–J15, R1–R14); erster Satz (G0) und letzter Satz (J15) wörtlich. Sprechkarten je Person als PDF (nur Stichpunkte, Startzeit, Kurzfassung-Marke).

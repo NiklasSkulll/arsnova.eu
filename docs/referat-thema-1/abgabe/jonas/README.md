@@ -14,8 +14,9 @@ node docs/referat-thema-1/abgabe/jonas/bau.mjs [--niklas1 <pdf>] [--niklas2 <pdf
 
 Ohne Argumente landen die Ausgaben in `ausgabe/` neben dieser Datei. Niklas' Teile (1A, 1B 3–4) kommen
 standardmäßig nativ aus [`../niklas/`](../niklas/README.md); dazu entstehen `niklas-folien.pdf` und
-`sprechnotizen-niklas.md`. Reihenfolge im Deck: G0 (Jonas eröffnet), J1–J15, Niklas 1A und 1B 3–4, G9
-(gemeinsames Fazit, spricht Niklas), Literatur (J16, NL), Reserve. `--niklas1`/`--niklas2` ersetzen einen
+`sprechnotizen-niklas.md`. Reihenfolge im Deck (Design 2026-11-15, Abschnitt 3): GT (Titel) und G0 (Fahrplan), Niklas 1A
+(N1–N10), Jonas J1–J15, Niklas 1B 3–4 (M1–M2), G9 (gemeinsames Fazit) und GD (Dank, Fragen), Literatur
+(J16, NL), Reserve. Alle Rahmenfolien spricht Niklas. `--niklas1`/`--niklas2` ersetzen einen
 Teil durch die Seiten eines PDFs (Rückfallweg); die `--niklasN-stand`-Texte landen dann im Manifest.
 
 Tests: `node --test docs/referat-thema-1/abgabe/jonas/*.test.mjs`.
@@ -63,12 +64,33 @@ er läuft springt auf das letzte Bild (`deck.js`, `clipSchritt`).
 
 - Jede Folie hat zwei Fassungen: `stichpunkte` (3–6, zum freien Vortrag, Zahlen mit Einheit) und `notiz`
   (Fließtext zum Üben). `[Weiter]` markiert jeden Tastendruck einer Aufbaustufe (J9, J15; bei Niklas N6, N7).
-- Der Sprungplan steht oben in den Sprechnotizen jeder Person, gezählt ab ihrer ersten Folie: Jonas muss J13
-  und J15 bis 9:00 min erreichen, Niklas N10, 1B 3–4 und G9. Überschreitet die Langfassung etwa 10:30 min,
-  steht dort ein Budgethinweis.
-- G0 zeigt den Fahrplan der vier Teile (`TEILE` in `folien.mjs`); dieselben Teile stehen klein oben rechts
-  auf jeder Hauptfolie (Teilleiste, `deck.mjs`), der aktuelle Teil unterstrichen. G9 nimmt die Leitfrage von
-  G0 wörtlich wieder auf.
+- Der Sprungplan steht oben in den Sprechnotizen jeder Person, gezählt nur über die eigene Redezeit ab der
+  ersten eigenen Folie: Jonas muss J13 und J15 bis 10:30 min erreichen, Niklas N10, 1B 3–4, G9 und GD (seine
+  Uhr steht, während Jonas spricht; Notizen und Sprechkarten markieren die Übergabe nach N10). Überschreitet
+  die Langfassung 10:30 min, steht dort ein Budgethinweis.
+- G0 zeigt Leitfrage und Fahrplan der vier Teile in Vortragsreihenfolge (`TEILE` in `folien.mjs`: Niklas 1A,
+  Jonas 1C und 1B 1–2, Niklas 1B 3–4, Fazit); dieselben Teile stehen klein oben rechts auf jeder Hauptfolie
+  (Teilleiste, `deck.mjs`), der aktuelle Teil unterstrichen. G9 nimmt die Leitfrage von G0 wörtlich wieder
+  auf. Übergänge: N10 „Was, wenn wir die schwere Arbeit auslagern?“, J15 „Und wenn der zweite Host langsam
+  ist oder ausfällt?“.
+
+## Designregeln (Stand 2026-11-16)
+
+Prüfbar in `layout-pruefung.mjs` (Druckmodus, alle Folien im Endbild) und `deck.test.mjs`:
+
+- **Typografie (T):** Folientext mindestens 28 px (`--s-text`), Sekundärtext 24 px (`--s-sek`, Klasse
+  `sekundaer`), Etiketten und Achsen 22 px (`--s-min`), Vermerke 20 px gedämpft (`--s-notiz`: `beleg`,
+  `vermerk`, Bildunterschrift, Fußzeile) in genau einer Zeile. Was nicht in eine Zeile passt, gehört in die
+  Sprechnotiz (`quelle`) oder in die Reserve.
+- **Vertikaler Rhythmus (V):** Der Inhaltsblock steht im optischen Zentrum der Fläche (freier Rest oben 2 :
+  unten 3, `.flaeche-inhalt::before/::after`), ein `beleg` sitzt unten an der Fußzeile. Füllt eine Grafik die
+  Fläche (`grafik-box`), nimmt sie den Platz. Der Wächter meldet Inhalt, der oben klebt und unten mehr als
+  35 % frei lässt.
+- **Raster und Abstände:** Ränder 90 px, Titel einzeilig, Abstände eng in der Gruppe (`--abstand-eng`, 12 px)
+  und weit zwischen Gruppen (`--abstand-gruppe`, 36 px); Merksätze (`merksatz`) und Übergaben (`uebergabe`)
+  als eigene Bausteine, kein `margin:auto` im Fluss.
+- **Farbe:** Blau = Titel und 1A, Petrol = 1C, Bernstein = 1B, Rot nur für Ablehnung; Farbe nie allein (immer
+  mit Etikett). Kein Text läuft aus seinem Kasten.
 
 ## Datenherkunft
 
@@ -83,7 +105,7 @@ die Herkunft von Niklas' Teilen.
 | --------------------------------------------------- | ------------------------------------------------------------------------------- |
 | `jonas-deck.html`                                   | Gemeinsames Deck zum Vortragen, selbstständig (Schriften, Bilder, Clip)         |
 | `gemeinsames-deck.pdf`                              | Druck des gemeinsamen Decks, eine Seite je Folie                                |
-| `jonas-folien.pdf`                                  | Nur Jonas' Folien (J1–J10, J12, J13, J15, J16) und Reserve, einzeln zuordenbar  |
+| `jonas-folien.pdf`                                  | Titel GT, Jonas' Folien (J1–J10, J12, J13, J15, J16) und Reserve                |
 | `sprechnotizen.md`                                  | Notizen je Folie mit Sekunden, kumulierter Zeit und Kürzung auf die Kurzfassung |
 | `sprechnotizen-niklas.md`                           | dasselbe für Niklas (1A, 1B 3–4, G9), mit eigenem Sprungplan                    |
 | `sprechkarten-jonas.pdf`, `sprechkarten-niklas.pdf` | Sprechkarten zum Ausdrucken (A4): je Folie nur die Stichpunkte mit Startzeit    |
@@ -91,10 +113,10 @@ die Herkunft von Niklas' Teilen.
 
 ## Abgabe mit Matrikelnummern (nur lokal)
 
-Die Prüfung verlangt Name und Matrikelnummer aller Gruppenmitglieder auf jeder Einreichung, das Repo darf keine Matrikelnummer enthalten. Deshalb setzt ein eigener Schritt die Nummern erst nach dem Bauen auf Seite 1 der Folien-PDFs:
+Die Prüfung verlangt Name und Matrikelnummer aller Gruppenmitglieder auf jeder Einreichung, das Repo darf keine Matrikelnummer enthalten. Die Titelfolie GT steht deshalb in jedem PDF und trägt unter jedem Namen einen Platz (`data-matrikel="<Name>"`), der im Repo nur „Matrikelnummer in der Abgabefassung“ zeigt. Ein eigener Schritt füllt ihn erst nach dem Bauen:
 
-1. `abgabe-lokal.beispiel.json` nach `abgabe-lokal.json` kopieren und ausfüllen (von Git ignoriert, siehe `.gitignore` hier).
-2. `node docs/referat-thema-1/abgabe/jonas/bau.mjs …` wie oben.
-3. `node docs/referat-thema-1/abgabe/jonas/abgabe-lokal.mjs` schreibt `abgabe-lokal/jonas-folien.pdf` und `abgabe-lokal/gemeinsames-deck.pdf` (ebenfalls ignoriert).
+1. `abgabe-lokal.beispiel.json` nach `abgabe-lokal.json` kopieren und ausfüllen (von Git ignoriert, siehe `.gitignore` hier); die Namen müssen denen auf der Titelfolie gleichen.
+2. `node docs/referat-thema-1/abgabe/jonas/bau.mjs` wie oben.
+3. `node docs/referat-thema-1/abgabe/jonas/abgabe-lokal.mjs` schreibt nach `abgabe-lokal/` (ebenfalls ignoriert): `jonas-deck.html` mit den Nummern (dieses Deck im Vortrag teilen) und daraus gedruckt `gemeinsames-deck.pdf`, `jonas-folien.pdf`, `niklas-folien.pdf`.
 
-Das Skript bricht ab, wenn Eingabe oder Ausgabe nicht ignoriert sind oder eine PDF noch Entwurfsmarker oder Platzhalter („Entwurf“, „[Niklas]“, „[Satz …]“, „[Titel]“) trägt.
+Das Skript bricht ab, wenn Eingabe oder Ausgabe nicht ignoriert sind, ein Name keinen Platz hat oder ein Platz leer bliebe, eine PDF noch Entwurfsmarker oder Platzhalter („Entwurf“, „[Niklas]“, „[Satz …]“, „[Titel]“) trägt oder auf Seite 1 eine Nummer fehlt.

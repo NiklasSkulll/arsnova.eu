@@ -17,8 +17,9 @@ PDF-Seiten bleibt `--niklas1 <pdf>`.
   `2026-11-16-lauf-{f2,l3,busy}-summary.json`), unverändert aus seinem Zweig
   `feature-1B-private-inference-3-4` übernommen; die Protokolle dazu liegen dort. Fehlen die Dateien, steht
   eine Platzhalterfolie, die `abgabe-lokal.mjs` vor der Abgabe meldet.
-- **Zeit:** Niklas höchstens 9:00 min samt M1–M2 und G9 (Sprungplan = Plan), damit etwa 6 min Diskussion
-  bleiben.
+- **Reihenfolge und Zeit (_Ergänzt 2026-11-16_):** Niklas eröffnet (GT Titel, G0 Fahrplan, N1–N10),
+  übergibt auf N10 an Jonas („Was, wenn wir die schwere Arbeit auslagern?“), übernimmt nach J15 mit M1–M2
+  und spricht G9 und GD. Budget je Person höchstens etwa 10:30 min samt Rahmen; Niklas plant 9:55 min.
 - **Diskussion:** [`fragenkatalog-1a.md`](fragenkatalog-1a.md) (Übung, nicht Teil der Abgabe).
 - **Sprechnotizen:** je Folie `notiz` (Fließtext) und `stichpunkte` (zum freien Vortrag); `[Weiter]` markiert
   jeden Tastendruck einer Aufbaustufe (N6: drei, Stufe 0 zeigt nur Umrisse; N7: zwei).

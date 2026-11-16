@@ -29,6 +29,10 @@ Niklas eröffnet mit 1A, Jonas erzählt den Auftrag am Stück (1C und 1B 1–2 v
 - von 1A: „Was, wenn wir die schwere Arbeit auslagern?“
 - zu 1B 3–4: „Und wenn der zweite Host langsam ist oder ausfällt?“
 
+_Ergänzt 2026-11-16:_ Das gemeinsame Deck folgt jetzt dieser Reihenfolge (vorher eröffnete Jonas mit G0):
+Titel und Fahrplan (Niklas), 1A, Jonas, 1B 3–4, Fazit und Dank (Niklas); Einzelheiten im
+[Gesamtdesign](2026-11-16-gesamtpraesentation-design.md#reihenfolge-nach-design-3-rahmenfolien-designregeln-ergänzt-2026-11-16).
+
 Gemeinsamer Rahmen als Entwurf für beide: Einstiegsfolie (Thema 1, wer macht was, Systembild) und Kurzfazit am Ende.
 
 **Ein gemeinsames Deck** (Autor, 2026-11-15): Eine Person teilt von Anfang bis Ende. Das Deck enthält Rahmen, 1A, Jonas' Teil und 1B 3–4 in dieser Reihenfolge. Niklas' Teile kommen als Abschnitte hinein: zunächst als Seiten seines PDFs (16:9, als Bilder eingebettet), später auf Wunsch in der gemeinsamen Vorlage nachgebaut. Für die Abgabe exportiert der Bau je Person ein eigenes Folien-PDF (eindeutig zugeordnet, Prüfungsdokument Z. 115) und das gemeinsame Vortragsdeck. Jonas' Teil muss auch allein vollständig funktionieren, falls die Gruppe doch getrennt teilt.

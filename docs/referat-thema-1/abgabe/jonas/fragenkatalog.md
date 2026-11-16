@@ -263,7 +263,7 @@ Beleg: [1B-Eigenanteil, Gemeinsame Artefakte](../../1B-eigenanteil.md#gemeinsame
 
 ### F47. Warum tragen Sie 1C und 1B 1–2 am Stück vor statt in der Reihenfolge der Aufträge?
 
-_(neu)_ Weil ein echter Auftrag beide Teile durchläuft: vom Klick über den Kontextpfad (1C) über den zweiten Host (1B) bis zur Ersatzzusammenfassung, jede Station mit ihrem Auftrag etikettiert. So gibt es nur zwei Sprecherwechsel, Niklas vor und nach mir. Die Reihenfolge ist mein Vorschlag und mit Niklas noch abzustimmen.
+_(neu)_ Weil ein echter Auftrag beide Teile durchläuft: vom Klick über den Kontextpfad (1C) über den zweiten Host (1B) bis zur Ersatzzusammenfassung, jede Station mit ihrem Auftrag etikettiert. So gibt es nur zwei Sprecherwechsel: Niklas eröffnet mit Titel, Fahrplan und 1A und übergibt mit „Was, wenn wir die schwere Arbeit auslagern?“; ich übergebe auf J15 mit „Und wenn der zweite Host langsam ist oder ausfällt?“ an seine Schritte 3–4, Fazit und Dank spricht er. _Ergänzt 2026-11-16:_ So steht es jetzt im gemeinsamen Deck.
 Beleg: [Präsentations-Design 3](../../specs/2026-11-15-praesentation-jonas-design.md#3-reihenfolge-der-gruppe), [Aufteilung](../../01-aufteilung.md#gemeinsame-präsentation-empfehlung-offen)
 
 ### F48. Der Clip auf J13 wartet über 300 s und endet mit einem Timeout. Widerspricht das nicht Ihrem Befund zum Gate?
