@@ -26,6 +26,16 @@ export const KETTE_1A = [
   { commit: 'e3b27b32', was: 'Nachtrag und Reihe für a19ca70f' },
 ];
 
+/**
+ * Erste vollständige Reihe auf dem älteren Stand (Daten 35271586, Auswertung 97bfcfc9), später aus dem
+ * Arbeitsbaum entfernt (ab1619e7). Gleicher Vertrag, Seed und Fixture; offengelegt, gewertet wird sie nicht.
+ */
+export const VORREIHE_1A = {
+  commitDaten: '35271586',
+  commitAuswertung: '97bfcfc9',
+  pfad: 'docs/referat-thema-1/evidenz/1A/auswertung/auswertung.json',
+};
+
 /** Aktionen der Live-Last in Vortragsreihenfolge, mit kurzer deutscher Bezeichnung. */
 export const AKTIONEN = [
   ['join', 'Beitritt'],
@@ -58,6 +68,33 @@ export function eingaben1A(root) {
       `${REIHE_1A}/${p.variant}/${p.run}/ressourcen.json.gz`,
     ]),
   ];
+}
+
+/** Kennzahlen der früheren Reihe aus Git (nur gelesen). */
+function ladeVorreihe(root, vertragSha) {
+  const a = JSON.parse(
+    execFileSync('git', ['show', `${VORREIHE_1A.commitAuswertung}:${VORREIHE_1A.pfad}`], {
+      cwd: root,
+      encoding: 'utf8',
+      maxBuffer: 64 * 1024 * 1024,
+    }),
+  );
+  const id = a.source.identity;
+  if (id.contractSha256 !== vertragSha) throw new Error('daten-1a: Vorreihe mit anderem Vertrag');
+  const fehl = a.comparisons.filter((c) => !c.passed);
+  return {
+    ...VORREIHE_1A,
+    datumDaten: gitDatum(root, VORREIHE_1A.commitDaten),
+    datumAuswertung: gitDatum(root, VORREIHE_1A.commitAuswertung),
+    baseline: id.baselineCommit.slice(0, 8),
+    gleicherSeed: id.orderSeed,
+    fixtureSha: id.fixtureSha256.slice(0, 8),
+    h1: { fehl: a.hypotheses.H1.failedComparisons, gesamt: a.hypotheses.H1.totalComparisons },
+    h2: { fehl: a.hypotheses.H2.failedComparisons, gesamt: a.hypotheses.H2.totalComparisons },
+    kontrolleFehl: fehl.filter((c) => c.variant === 'V1').length,
+    absolutFehl: a.comparisons.filter((c) => !c.absolutePassed).length,
+    vergleicheFehl: fehl.length,
+  };
 }
 
 function gitDatum(root, commit) {
@@ -124,6 +161,15 @@ export function ladeDaten1A(root) {
   // Konfiguration aus den Laufmanifesten (je Variante identisch; der Test prüft das)
   const manifest = (v) => lauf.get(`${v}/1`).manifest;
   const flags = manifest('V2').services.app.flags;
+  // Optionale Analysedienste (8.9b Q&A-Klassifikation, Encoder der semantischen Wortwolke, LLM) in allen
+  // Läufen aus; der Encoder-Container ist in keinem Manifest gestartet.
+  const OPTIONAL_AUS = ['QA_NLP_ENABLED', 'WORD_CLOUD_SEMANTIC_ENABLED', 'OPEN_WEIGHT_LLM_ENABLED'];
+  const optionalAus = [...lauf.values()].every(
+    (l) =>
+      OPTIONAL_AUS.every((k) => l.manifest.services.app.flags[k] === 'false') &&
+      !Object.keys(l.manifest.services).some((n) => /encoder|llm/i.test(n)),
+  );
+  if (!optionalAus) throw new Error('daten-1a: optionale Analysedienste nicht in allen Läufen aus');
   const spacyClient = readFileSync(resolve(root, SPACY_CLIENT), 'utf8');
   const maxInFlight = Number(spacyClient.match(/SPACY_MAX_IN_FLIGHT = (\d+);/)?.[1]);
   if (!maxInFlight) throw new Error('daten-1a: SPACY_MAX_IN_FLIGHT nicht gefunden');
@@ -271,12 +317,18 @@ export function ladeDaten1A(root) {
       offen: ausgang('V4', 'IN_FLIGHT_AT_END'),
       ersatzTimeout: grund('V4', 'TIMEOUT'),
       ersatzGegendruck: grund('V4', 'SIDECAR_UNAVAILABLE'),
+      /** Je Lauf gleich viele SIDECAR_UNAVAILABLE (Gegendruck bei zwei offenen Anfragen); sonst null. */
+      gegendruckJeLauf: (() => {
+        const w = new Set(laeufe('V4').map((r) => r.analysis.fallbackReasons.SIDECAR_UNAVAILABLE));
+        return w.size === 1 ? [...w][0] : null;
+      })(),
       ersatzP95Ms: spanne(laeufe('V4').map((r) => r.analysis.fallbackLatency.p95Ms)),
       weitergeleitet: summe(laeufe('V4').map((r) => r.proxy.forwarded)),
       empfangenJeLauf: laeufe('V4')[0].proxy.receivedNormalize,
       verzoegerungMs: laeufe('V4')[0].proxy.delayMs,
     },
     konfig: {
+      optionalAus,
       timeoutMs: Number(flags.NLP_TIMEOUT_MS),
       maxInFlight,
       spacy: Object.fromEntries(
@@ -326,6 +378,7 @@ export function ladeDaten1A(root) {
       ),
     },
     vorab: {
+      vorreihe: ladeVorreihe(root, vertragSha),
       kette,
       ersterLauf,
       tageVorher,
@@ -334,6 +387,11 @@ export function ladeDaten1A(root) {
     labor: {
       containerCpuProzent: spanne(containerSumme),
       minFreiGiB: Math.min(...a.runs.map((r) => r.collectorHost.minAvailableMemoryBytes)) / GiB,
+      /** Für „mindestens“: auf eine Nachkommastelle abgerundet (11,65 → 11,6), wie im Handout. */
+      minFreiGiBAb:
+        Math.floor(
+          (Math.min(...a.runs.map((r) => r.collectorHost.minAvailableMemoryBytes)) / GiB) * 10,
+        ) / 10,
       swapUnberuehrt: a.runs.every(
         (r) => r.collectorHost.minSwapFreeBytes === a.runs[0].collectorHost.minSwapFreeBytes,
       ),

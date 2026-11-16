@@ -20,22 +20,23 @@ const jonas = F.filter((f) => f.teil === 'jonas');
 const summe = (liste) => liste.reduce((s, f) => s + f.zeitS, 0);
 
 /**
- * Zeiten nach dem Audit 2026-11-16: G0 bis J16 etwa 10:30 min. J11 (Betrieb) ist Reserve R13, J16 steht als
+ * Zeiten nach dem zweiten Audit 2026-11-16: G0 bis J16 höchstens 9:00 min (Kursvorschlag 9 + 6, Sprungplan =
+ * Plan); J2, J4–J9 und J13 gekürzt. Davor: G0 bis J16 etwa 10:30 min. J11 (Betrieb) ist Reserve R13, J16 steht als
  * Anhang nach G9; J2, J4, J8 und J15 gekürzt. Früher: J14 in die Reserve (R11, fachliche Prüfung 2).
  */
 const PLAN = {
   J1: 40,
-  J2: 40,
+  J2: 30,
   J3: 40,
-  J4: 35,
-  J5: 40,
-  J6: 60,
-  J7: 40,
-  J8: 35,
-  J9: 45,
+  J4: 30,
+  J5: 35,
+  J6: 50,
+  J7: 30,
+  J8: 30,
+  J9: 40,
   J10: 25,
   J12: 50,
-  J13: 75,
+  J13: 60,
   J15: 40,
   J16: 5,
 };
@@ -133,17 +134,17 @@ function whitelist() {
   return w;
 }
 
-test('Jonas-Folien in Reihenfolge mit den geplanten Zeiten, mit Rahmen etwa 10:30 min', () => {
+test('Jonas-Folien in Reihenfolge mit den geplanten Zeiten, mit Rahmen höchstens 9:00 min', () => {
   assert.deepEqual(
     jonas.map((f) => f.id),
     Object.keys(PLAN),
   );
   for (const f of jonas) assert.equal(f.zeitS, PLAN[f.id], f.id);
   const s = summe(jonas);
-  assert.ok(s >= 540 && s <= 600, `Summe ${s}`);
+  assert.ok(s >= 480 && s <= 520, `Summe ${s}`);
   // G0 eröffnet Jonas; G9 (gemeinsames Fazit) spricht Niklas und zählt zu seiner Zeit.
   const rahmen = summe(F.filter((f) => f.teil === 'rahmen' && f.sprecher !== 'niklas'));
-  assert.ok(s + rahmen >= 600 && s + rahmen <= 660, `mit G0 ${s + rahmen} s`);
+  assert.ok(s + rahmen >= 520 && s + rahmen <= 540, `mit G0 ${s + rahmen} s`);
   assert.equal(F.find((f) => f.id === 'G9').sprecher, 'niklas');
 });
 
@@ -198,7 +199,7 @@ test('Teile: Fahrplan auf G0 in Vortragsreihenfolge, teilVon ordnet jede Hauptfo
   assert.ok(nach('G9').inhalt.includes(leitfrage));
 });
 
-test('Kurzfassung: nur Jonas-Folien, Summe 340–400 s; G9 gehört zu Niklas’ Kurzfassung', () => {
+test('Kurzfassung: nur Jonas-Folien, Summe 300–400 s; G9 gehört zu Niklas’ Kurzfassung', () => {
   assert.equal(F.find((f) => f.id === 'G9').kurzfassung, true);
   const k = F.filter((f) => f.kurzfassung && f.sprecher !== 'niklas');
   assert.ok(
@@ -206,7 +207,7 @@ test('Kurzfassung: nur Jonas-Folien, Summe 340–400 s; G9 gehört zu Niklas’ 
     'nur Jonas-Folien',
   );
   const s = summe(k);
-  assert.ok(s >= 340 && s <= 400, `Summe ${s}`);
+  assert.ok(s >= 300 && s <= 400, `Summe ${s}`);
 });
 
 test('Pflichtfelder: quelle mit Rechner und Commit, notiz, auftrag, station', () => {
@@ -238,12 +239,12 @@ test('Sprechnotizen passen zur Folienzeit (etwa 130 Wörter je Minute)', () => {
   }
 });
 
-test('Rahmen: G0 abgestimmt, G9 als Entwurf markiert, solange 1B 3–4 offen ist', () => {
+test('Rahmen: G0 und G9 ohne Entwurfsvermerk und Platzhalter; G9 zitiert Niklas', () => {
   for (const id of ['G0', 'G9']) assert.equal(nach(id)?.teil, 'rahmen', id);
-  assert.doesNotMatch(sichtbar(nach('G0').inhalt), /Entwurf/);
-  // G9 trägt Niklas' Platzhalter für 1B 3–4; der Vermerk fällt mit ihnen (abgabe-lokal.mjs blockiert sonst)
-  assert.match(sichtbar(nach('G9').inhalt), /Entwurf, mit Niklas abzustimmen/);
-  assert.match(sichtbar(nach('G9').inhalt), /\[Niklas/);
+  for (const id of ['G0', 'G9']) {
+    assert.doesNotMatch(sichtbar(nach(id).inhalt) + nach(id).notiz, /Entwurf|\[Niklas|\[Satz/, id);
+  }
+  assert.match(nach('G9').fuss, /Schneider, 2026/);
   assert.equal(F[0].id, 'G0');
   assert.equal(F.at(-1).teil, 'reserve');
   // J16 (Literaturverzeichnis) folgt als Anhang direkt auf G9, nicht zwischen J15 und Niklas.

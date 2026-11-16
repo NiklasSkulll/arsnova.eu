@@ -270,7 +270,7 @@ function jonasFolie(f, nr, gesamt, clipDaten) {
     (f.exkurs ? `<p class="weg-exkurs">${esc(f.exkurs)}</p>` : '') +
     `<h1 class="folie-titel">${f.titel}</h1>` +
     `<div class="folie-flaeche">${inhalt}</div>` +
-    `<div class="folie-fuss">${fussNr} · ${esc(f.fuss ?? f.quelle ?? '')}</div>` +
+    `<div class="folie-fuss"><span class="fuss-nr">${fussNr}</span> · ${esc(f.fuss ?? f.quelle ?? '')}</div>` +
     `</section>`;
   return f.quellenverzeichnis ? `<!--quellen-->${html}<!--/quellen-->` : html;
 }

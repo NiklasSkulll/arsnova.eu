@@ -714,7 +714,7 @@ export function folien(daten) {
         `</div></div>`,
     ),
     notiz: `Schritt 1 von 1B verlangt, das Zwei-Host-Deployment aus ADR-0035 nachzubauen. Gemessen habe ich auf Wunsch des Prüfers den aktuellen Stand nach Version 1.4.0, nicht den Tag 1.3. Zwei virtuelle Maschinen auf meinem Laptop: app-host mit App, Adapter, Datenbank und Redis; llm-host mit dem LLM-Server, erreichbar nur vom app-host und mit Token. Die Abweichungen stehen im Kasten: 4 statt 8 CPUs, weil sich beide VMs den Laptop teilen, und ${fw.laborTimeout1BS} statt ${fw.releaseTimeoutS} Sekunden Timeout, weil schon die Kalibrierung ${fw.kalibrierung1BS} Sekunden dauerte.`,
-    zeitS: 40,
+    zeitS: 30,
     kurzfassung: false,
     quelle: `${daten.aufbau.datei} · ${rechnerKurz(H.hauptlauf.rechner)} · ${daten.aufbau.commit}; Abweichungen: evidenz/1B/2026-11-12-aufbau.md (Komponenten, Befund 2, Abweichungen), evidenz/1B/2026-11-13-lauf.md (Kalibrierung, Versuch 3; Modell laut Manifest Qwen3-4B-Instruct-2507-Q4_K_M), ADR 1B-001, 1B-002, 1B-005, 1B-010`,
     station: null,
@@ -795,7 +795,7 @@ export function folien(daten) {
         `<p style="margin:10px 0 0;font-size:var(--s-min);line-height:1.35;color:var(--gedaempft)">Orientiert an Papadopoulos et al. (2021). Es fehlen Konfidenzintervalle und Wiederholung über Instanzen: n = ${n} ist ein Lauf, keine unabhängigen Wiederholungen.</p></div></div>`,
     ),
     notiz: `Erstens standen Hypothesen und Schwellen vor den gewerteten Läufen fest, mit offengelegten Ausnahmen. Für 1B: Netz im Median höchstens ${fw.schwelleNetzMs} Millisekunden, Adapter höchstens ${fw.schwelleAdapterS} Sekunden; das sind die echten Prüfungen. Der Inferenzanteil ist nur eine Konsistenzprüfung. Zweitens habe ich 1C zuerst ohne Modell getestet, mit Negativproben. Drittens das Labor: 1C lief auf einem Rechner über Loopback, ohne zweiten Host. Die Methode orientiert sich an Papadopoulos; Konfidenzintervalle und Wiederholungen über Instanzen fehlen.`,
-    zeitS: 35,
+    zeitS: 30,
     kurzfassung: false,
     quelle: `adr/1B-008-kernaussagen-und-schwellen.md; adr/1C-003-teststrategie-modellfrei.md; ${q1B}; Nachlauf 1C (Umgebung, Abweichungen): Laptop (ThinkPad P50) · def56700; ADR 1C-021 (Produktionslimits)`,
     station: null,
@@ -834,7 +834,7 @@ export function folien(daten) {
         `<p style="margin:0;font-size:24px;color:var(--text-2)">${etikett('1B')}&nbsp; zwei Hosts: Host-Aufruf im Median ${fmt(b.hostMedianMs, 1)} ms (alle ${n}), bei Auftrag ${au.nr} ${z.auHost} ms</p>`,
     ),
     notiz: `Erste Station, der Klick. Die Frage aus 1C lautet: Blockiert ein langsames Modell die Lehrperson? Der Mechanismus ist eine Queue. Der Host-Aufruf baut den Kontext, legt den Auftrag ab und kehrt sofort mit dem Status pending zurück. Gerechnet wird danach im Hintergrund, mit einem Slot. Im 1C-Nachlauf am Laptop dauert der Host-Aufruf im Median ${z.request} Millisekunden, die Inferenz dagegen ${z.infer1C} Sekunden. Der Host ist also vom Modell entkoppelt. Eine Grenze bleibt: Auf den Kontextaufbau wartet er doch, denn der passiert im Aufruf selbst. Belegt ist das mit dem Test E5 und dem Laborfall N3.`,
-    zeitS: 40,
+    zeitS: 35,
     kurzfassung: true,
     quelle: `${q1C('requestMs', 'inferenzS')}; 1B: ${q1B}`,
     station: 'klick',
@@ -873,7 +873,7 @@ export function folien(daten) {
         artefakt('nutzlast', ['{…', ...nl.zeilen, '…}'], 'var(--petrol)'),
     ),
     notiz: `Zweite Station, der Kontext. Die Frage: Bekommt die Runtime genau das, was die Lehrperson in der Vorschau sieht? Der Kontext entsteht aus dem App-Zustand, wird gegen versionierte Schemas geprüft und dann gepackt. Vorschau und Auftrag gibt es nur mit gültigem Host-Token, und jeder Kontextaufbau prüft die Rechte erneut, acht Prüfungen je Aufbau. Unten steht ein echter Ausschnitt der Nutzlast aus dem Nachlauf, mit synthetischen Daten: die Vertragsversion, ein abgeschalteter Bereich mit seinem Grund und eine Frage aus der Fixture. Vorschau und Nutzlast tragen denselben Hash, die Nachricht an die Runtime ist byte-gleich mit der Vorschau. Was kostet die strikte Validierung? ${z.valMs} Millisekunden, ${z.valP} Prozent eines warmen Kontextaufbaus; gemessen nur auf dem älteren Stand, mit der Test-Runtime. Deshalb bleibt sie. Welcher Bereich woher kommt, zeigt die Reserve.`,
-    zeitS: 60,
+    zeitS: 50,
     kurzfassung: true,
     quelle: `${qNutzlast}; ${q1C('validierungMs')}; Berechtigung: routers/qa.ts, 1C-diagrams.md · def56700`,
     station: 'kontext',
@@ -908,7 +908,7 @@ export function folien(daten) {
         `<p style="margin:14px 0 0;font-size:24px;color:var(--text-2)">Empfohlen: genauere Zählung prüfen (#17), nicht umgesetzt</p>`,
     ),
     notiz: `Zur Frage nach den Kosten der Kontextbereitstellung. Das Budget schätzt Tokens über Bytes: Jedes Byte zählt als ein Token. Das ist eine Obergrenze, denn ein Token umfasst mindestens ein Byte; in keinem Lauf lief das Fenster über. Aber es ist teuer. Die echten Tokens sind im Median nur das ${z.q}-fache der Schätzung. Rund zwei Drittel des geschätzten Budgets bleiben also ungenutzt. Und derselbe Kontext meldet gleichzeitig, dass eine Frage aus Budgetgründen weggelassen wurde. Ich empfehle, eine genauere Zählung zu prüfen. Umgesetzt ist das nicht.`,
-    zeitS: 40,
+    zeitS: 30,
     kurzfassung: false,
     quelle: `${q1C('q')}; Meldung: ${qNutzlast}`,
     station: 'kontext',
@@ -962,7 +962,7 @@ export function folien(daten) {
         `</div></div>`,
     ),
     notiz: `Wie trenne ich Netz und Inferenz, ohne Produktionscode anzufassen? Ich schneide auf beiden Hosts mit: am app-host t null und t drei, am llm-host t eins und t zwei. Jede Dauer misst eine Uhr; die Messunsicherheit der Uhren liegt bei etwa einer Millisekunde. Netz ist die Zeit am app-host minus die am llm-host: für Auftrag ${au.nr} unter einer Millisekunde, über alle ${n} im Median ${z.netz}. Transport heißt Netz plus Server ohne Inferenz. Auffällig: Server ohne Inferenz ${fmt(au.serverOhneInferenzMs)} Millisekunden, Ursache offen.`,
-    zeitS: 35,
+    zeitS: 30,
     kurzfassung: false,
     quelle: `${q1B} (Auftrag ${au.nr}: treiber.auftraege, zerlegung.auftraege)`,
     station: 'netz',
@@ -979,7 +979,7 @@ export function folien(daten) {
         grafikBox(zeitzerlegungSvg(b, { stufen: true })),
     ),
     notiz: `Die ganze Zerlegung als Punkte auf logarithmischer Achse; Balken würden hier das Verhältnis verschleiern. Vorab standen zwei Schwellen fest: Netz im Median höchstens ${fw.schwelleNetzMs} Millisekunden, Adapter höchstens ${fw.schwelleAdapterS} Sekunden. [Weiter] Das Netz kostet im Median ${z.netz} Millisekunden, der Transport, also Netz plus Server ohne Inferenz, ${z.transport} Millisekunden, der Adapter ${z.adapter}. Beide Prüfungen sind bestanden. [Weiter] Und die Inferenz: warm im Median ${z.inferWarm} Sekunden. Warm heißt: identischer Snapshot, Prompt aus dem Cache; die gestrichelte Marke ist der kalte Auftrag, ${z.kaltMedian} Sekunden. Der Anteil von ${z.anteil} Prozent hängt an dieser langsamen CPU, läge aber auch mit der PC-Kalibrierung über ${daten.abgeleitet.anteilPcMin} Prozent. Netz und Adapter zählten erst, wenn die Inferenz nur Sekunden dauerte.`,
-    zeitS: 45,
+    zeitS: 40,
     kurzfassung: true,
     // Vorhersage, dann Beleg (Leitfaden D18–D20): Schwellen, dann kleine Werte, dann die Inferenz.
     aufbau: 2,
@@ -1095,7 +1095,7 @@ export function folien(daten) {
           : 'Rechts die Lehrenden-Sicht aus dem Labor, gerafft: Ersatzzusammenfassung mit allgemeinem Hinweis, den Grund erfährt die Lehrperson nicht.'
         : 'Rechts ein Nachbau der Lehrenden-Sicht: die Fragen im Wortlaut und der allgemeine Hinweis aus dem App-Code, den Grund erfährt die Lehrperson nicht.'
     } Meine Empfehlung: Instruktion, Grammatik und Gate gemeinsam abstimmen. Umgesetzt ist das nicht.`,
-    zeitS: 75,
+    zeitS: 60,
     kurzfassung: true,
     quelle: `${qAntwort}; Lauf 1B · ThinkPad P50 · ${H.hauptlauf.commit.slice(0, 8)} (Code a19ca70f); Nachlauf · Laptop · def56700; ADR 1C-018 · 9f230abc; Gate-Ablation: evidenz/1C/2026-11-16-gate-ablation.md · Laptop, offline · def56700 und 9f230abc; Upstream-Commits 12f1d8e4, a998ada0; ${daten.clip ? `Clip: ${daten.clip.quelle}, ${daten.clip.datum}; Hinweis qaSummaryExtractive.ts` : `Nachbau: Nutzlast labor.quiet.runs[${nl.lauf}], Hinweis qaSummaryExtractive.ts`}`,
     station: 'gate',
@@ -1183,8 +1183,10 @@ export function folien(daten) {
   });
 
   // ------------------------------------------------------------ G9 Rahmen (gemeinsames Fazit, spricht Niklas)
-  // Ein Satz je Person, dann die gemeinsame Antwort auf die Leitfrage. Der Teil zu 1B Schritte 3–4 bleibt
-  // Platzhalter, bis Niklas' Ergebnis steht; deshalb trägt G9 noch den Entwurfsvermerk.
+  // Ein Satz je Person, dann die gemeinsame Antwort auf die Leitfrage. 1B Schritte 3–4 aus Niklas' gewerteten
+  // Störreihen vom 15./16.11. (abgabe/niklas/folien-1b34.mjs, M1–M2); die Überschrift ist nur so stark wie die
+  // Belege: Zeitkosten der Trennung (Jonas) und keine Live-Fehler unter Störung (Niklas), kein Isolationsgewinn
+  // gegenüber einem LLM auf dem App-Host (nicht gemessen).
   const person = (kopf, farbe, saetze) =>
     `<div style="border-top:6px solid ${farbe};padding-top:14px">` +
     `<p style="margin:0 0 8px;font-weight:700;font-size:28px">${kopf}</p>` +
@@ -1194,10 +1196,9 @@ export function folien(daten) {
     id: 'G9',
     teil: 'rahmen',
     auftrag: null,
-    titel: 'Trennung wirkt, Grenze ist die Inferenz',
+    titel: 'Zweiter Host: kaum Zeitkosten, keine Live-Fehler',
     inhalt: flaeche(
-      entwurf +
-        `<p data-leitfrage style="margin:0 0 26px;font-size:var(--s-min);line-height:1.35;color:var(--gedaempft)"><b style="color:var(--text-2)">Leitfrage:</b> ${LEITFRAGE}</p>` +
+      `<p data-leitfrage style="margin:0 0 26px;font-size:var(--s-min);line-height:1.35;color:var(--gedaempft)"><b style="color:var(--text-2)">Leitfrage:</b> ${LEITFRAGE}</p>` +
         `<div style="display:grid;grid-template-columns:1fr 1fr;column-gap:56px;font-size:24px;line-height:1.38">` +
         person('Jonas · 1C und 1B, Schritte 1–2', 'var(--petrol)', [
           `${etikett('1C')} Vertrag, Konsistenz und Entkopplung halten, mit benannten Ausnahmen (T2.3, T3.1). Nach v1.4.0 besteht keine der ${daten.abgeleitet.gateBeobachtet} geprüften Modellantworten das Gate (1B ${b.verworfen}, 1C ${c.gateAntwortenGesamt.wert}; ein Modell, eine Fixture); davor (${mono('9f230abc')}, Instruktion v2, ohne Gate) ${c.fullContextVorGate.wert}.`,
@@ -1205,18 +1206,18 @@ export function folien(daten) {
         ]) +
         person('Niklas · 1A und 1B, Schritte 3–4', 'var(--blau)', [
           `${etikett('1A')} Der App-Host trägt die Live-Last fehlerfrei. Die spaCy-Glättung bekommt keine Freigabe: Die vorab festgelegte Regel hält nicht, der Nutzen ist ungemessen.`,
-          `${etikett('1B')} <span style="color:var(--gedaempft)">[Niklas: Satz zu Störung, Ausfall und Aufwand der zweiten Serverrolle]</span>`,
+          `${etikett('1B')} Fällt die Inferenz aus oder schweigt sie, kommt der Ersatz, und keine Live-Aktion scheitert; ein stummer Host kostet aber Zeit bis zur Frist.`,
         ]) +
         `</div>` +
-        `<p style="margin:auto 0 0;padding:16px 24px;border-left:6px solid var(--blau);background:var(--raster);font-size:27px;line-height:1.35"><b style="color:var(--blau)">Gemeinsam:</b> Im Labor trennt die Architektur Live-Pfad und Inferenz wirksam. Die Betriebsgrenzen liegen in der Inferenz selbst und in optionaler Arbeit ohne Nutzenbeleg. <span style="color:var(--gedaempft)">[Satz zu Ausfall und Aufwand, Niklas]</span></p>`,
+        `<p style="margin:auto 0 0;padding:16px 24px;border-left:6px solid var(--blau);background:var(--raster);font-size:27px;line-height:1.35"><b style="color:var(--blau)">Gemeinsam:</b> Im Labor kostet die Trennung kaum Zeit, und Störungen der Inferenz werden nicht zu Live-Fehlern. Die Grenzen liegen in der Inferenz selbst, in optionaler Arbeit ohne Nutzenbeleg und im ungemessenen Betriebsaufwand.</p>`,
     ),
     notiz:
-      'Zum Schluss unsere Antwort auf die gemeinsame Leitfrage. Jonas hat gezeigt: Der Kontextpfad hält seine Zusagen, der zweite Host kostet keine relevante Zeit, und die Zeit steckt in der Inferenz; nach Version 1.4.0 besteht aber keine geprüfte Modellantwort das Gate. Mein Teil: Der App-Host trägt die Live-Last fehlerfrei, optionale Analyse bekommt ohne Nutzenbeleg keine Freigabe. [Niklas: Satz zu Störung und Aufwand.] Gemeinsam heißt das: Im Labor trennt die Architektur Live-Pfad und Inferenz wirksam; die Grenzen liegen in der Inferenz selbst und in optionaler Arbeit, deren Nutzen niemand gemessen hat. Wir freuen uns auf Ihre Fragen.',
+      'Zum Schluss unsere Antwort auf die gemeinsame Leitfrage. Jonas hat gezeigt: Der Kontextpfad hält seine Zusagen, der zweite Host kostet keine relevante Zeit, und die Zeit steckt in der Inferenz; nach Version 1.4.0 besteht aber keine geprüfte Modellantwort das Gate. Mein Teil: Der App-Host trägt die Live-Last fehlerfrei, optionale Analyse bekommt ohne Nutzenbeleg keine Freigabe. Fällt die Inferenz aus oder schweigt sie, kommt der Ersatz, und keine Live-Aktion scheitert; ein stummer Host kostet aber Zeit bis zur Frist. Gemeinsam heißt das: Im Labor kostet die Trennung kaum Zeit, und Störungen der Inferenz werden nicht zu Live-Fehlern. Die Grenzen liegen in der Inferenz selbst, in optionaler Arbeit ohne Nutzenbeleg und im Betriebsaufwand, den wir nicht gemessen haben. Wir freuen uns auf Ihre Fragen.',
     stichpunkte: [
       'Jonas: Kontextpfad hält, zweiter Host kostet keine Zeit, Zeit steckt in der Inferenz; Gate verwirft alle geprüften Antworten',
       'Niklas: App-Host trägt die Live-Last, spaCy ohne Freigabe',
-      '[Niklas: Störung und Aufwand]',
-      'Gemeinsam: Trennung wirkt im Labor; Grenze = Inferenz und Option ohne Nutzenbeleg',
+      'Niklas 1B: Ersatz bei Ausfall und Stille, kein Live-Fehler; stummer Host kostet Zeit',
+      'Gemeinsam: Trennung kostet kaum Zeit, Störung wird kein Live-Fehler; Grenzen: Inferenz, Option ohne Nutzen, Aufwand',
       'Wir freuen uns auf Ihre Fragen',
     ],
     zeitS: 40,
@@ -1224,7 +1225,7 @@ export function folien(daten) {
     kurzfassung: true,
     sprecher: 'niklas',
     quelle:
-      '1B-ergebnis.md, 1C-ergebnis.md (Kurzantwort, Verlauf 9f230abc); 1A: abgabe/niklas/folien-1a.mjs (N1, N10); 1B Schritte 3–4: offen',
+      '1B-ergebnis.md, 1C-ergebnis.md (Kurzantwort, Verlauf 9f230abc); 1A: abgabe/niklas/folien-1a.mjs (N1, N10); 1B Schritte 3–4: abgabe/niklas/folien-1b34.mjs (M1, M2), evidenz/1B/messung/2026-11-15-lauf-f1-summary.json, 2026-11-16-lauf-{f2,l3,busy}-summary.json (i7-10700K, Hyper-V · 5e758d0a, 2b39b9df)',
     station: null,
   });
 
@@ -1879,6 +1880,9 @@ export function folien(daten) {
     const liste = z.map(([k, stelle]) => kurzbeleg(k, stelle).slice(1, -1)).join('; ');
     f.fuss = `Quelle: ${liste}`;
   }
+  // G9 nennt auch Niklas' Ergebnisse (1A, 1B 3–4); sein Eintrag steht in seinem Verzeichnis (NL).
+  const g9 = F.find((f) => f.id === 'G9');
+  g9.fuss += '; Schneider, 2026, Ordner evidenz/1A und evidenz/1B';
   return F;
 }
 

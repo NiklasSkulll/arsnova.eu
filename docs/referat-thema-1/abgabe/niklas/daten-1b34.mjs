@@ -7,6 +7,7 @@
 // fasseLaufzeitenZusammen; Median der Job-Zeit selbst aus experiment.jobs[].jobMs (die Felder f1Fast und
 // medianF1JobMs sind in den ersten Dateien wegen eines Parserfehlers null).
 
+import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -62,6 +63,15 @@ export function ladeDaten1B34(root) {
       gruende[g] = (gruende[g] ?? 0) + 1;
     }
     const res = (j.treiber?.auftraege ?? []).map((x) => x.measurement?.resources).filter(Boolean);
+    const r = j.umgebung?.rechner ?? j.rechner;
+    // Rechner kurz („i7-10700K, Hyper-V“); Testdaten dürfen einen String liefern.
+    const rechner =
+      typeof r === 'string'
+        ? r
+        : r
+          ? `${r.cpu?.match(/i\d-\w+/)?.[0] ?? r.cpu}${j.umgebung?.hypervisor?.name ? `, ${j.umgebung.hypervisor.name}` : ''}`
+          : null;
+    const vms = (j.umgebung?.vms ?? []).map((v) => `${v.name} ${v.vcpu} vCPU/${v.ramGib} GiB`);
     laeufe.push({
       datei: pfad,
       datum,
@@ -70,7 +80,9 @@ export function ladeDaten1B34(root) {
       n: j.experiment.config?.n ?? j.n ?? null,
       timeoutMs: Number(j.experiment.config?.timeoutMs ?? j.timeoutMs) || null,
       commit: String(j.commit ?? '').slice(0, 8),
-      rechner: j.umgebung?.rechner ?? j.rechner ?? null,
+      rechner,
+      vms,
+      jobsMs: jobs,
       jobMedianMs: median(jobs),
       jobSpanneMs: jobs.length ? [Math.min(...jobs), Math.max(...jobs)] : null,
       gruende,
@@ -82,5 +94,33 @@ export function ladeDaten1B34(root) {
     });
   }
   const finde = (v, a = 'summary') => laeufe.find((l) => l.variante === v && l.auftrag === a);
-  return { vorhanden: laeufe.length > 0, laeufe, finde };
+  return { vorhanden: laeufe.length > 0, laeufe, finde, schwellen: schwellen1B34(root) };
+}
+
+/**
+ * Vorab festgelegte Schwellen für Schritt 3 (1B-3u4-Planung.md, Tabelle „Hypothesen und vorab festgelegte
+ * Schwellen“, auf Niklas' Zweig feature-1B-private-inference-3-4 seit Commit 5e758d0a unverändert).
+ * Datum aus Git, wenn der Commit lokal vorliegt.
+ */
+export const SCHWELLEN_1B34 = {
+  commit: '5e758d0a',
+  datei: 'docs/referat-thema-1/1B-3u4-Planung.md',
+  p95Faktor: 1.1,
+  fallbackPufferMs: 1000,
+  f1MedianMaxMs: 2000,
+  f2ZuF1Min: 10,
+};
+
+function schwellen1B34(root) {
+  let datum = null;
+  try {
+    datum = execFileSync('git', ['show', '-s', '--format=%cI', SCHWELLEN_1B34.commit], {
+      cwd: root,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+  } catch {
+    datum = null;
+  }
+  return { ...SCHWELLEN_1B34, datum };
 }

@@ -223,6 +223,7 @@ export function vergleichsMatrixSvg(daten) {
   const blockB = 4 * zelle.b + 3 * zelle.luecke;
   const teile = [];
   const proStufe = {}; // Staffelung: Zellen einer Stufe erscheinen kurz nacheinander
+  const haltende = []; // graue Füllung der haltenden Zellen, erscheint mit Stufe 1
 
   for (let b = 1; b <= 5; b++) {
     const bx = x0 + (b - 1) * (blockB + zelle.block);
@@ -247,10 +248,16 @@ export function vergleichsMatrixSvg(daten) {
         );
         if (!c) throw new Error(`grafik-1a: Vergleich ${v}/${b}/${aktion} fehlt`);
         const x = bx + ai * (zelle.b + zelle.luecke);
-        // Grundzelle immer grau; eine verfehlte Zelle färbt sich erst auf ihrer Aufbaustufe.
+        // Grundzelle als neutraler Umriss: Stufe 0 behauptet noch kein Ergebnis. Ab Stufe 1 füllen sich
+        // die haltenden Zellen grau (eine Gruppe, s. u.), verfehlte färben sich auf ihrer Aufbaustufe.
         teile.push(
-          `<rect x="${x}" y="${y}" width="${zelle.b}" height="${zelle.h}" rx="5" fill="${FARBEN.raster}"/>`,
+          `<rect x="${x}" y="${y}" width="${zelle.b}" height="${zelle.h}" rx="5" fill="none" stroke="${FARBEN.linie}" stroke-width="2"/>`,
         );
+        if (c.bestanden) {
+          haltende.push(
+            `<rect x="${x}" y="${y}" width="${zelle.b}" height="${zelle.h}" rx="5" fill="${FARBEN.raster}"/>`,
+          );
+        }
         if (!c.bestanden) {
           const absolut = !c.absolutBestanden;
           const nr = (proStufe[AUFBAU_STUFE[v]] = (proStufe[AUFBAU_STUFE[v]] ?? -1) + 1);
@@ -293,15 +300,18 @@ export function vergleichsMatrixSvg(daten) {
   ];
   let lx = x0;
   const legY = ly + 22;
-  for (const [f, r, t] of leg) {
-    teile.push(
+  leg.forEach(([f, r, t], i) => {
+    const eintrag =
       `<rect x="${lx}" y="${legY}" width="30" height="30" rx="4" fill="${f}"` +
-        (r === 'none' ? '' : ` stroke="${r}" stroke-width="2"`) +
-        '/>',
-    );
-    teile.push(text(lx + 42, legY + 24, esc(t), { groesse: 22, farbe: FARBEN.text2 }));
+      (r === 'none' ? '' : ` stroke="${r}" stroke-width="2"`) +
+      '/>' +
+      text(lx + 42, legY + 24, esc(t), { groesse: 22, farbe: FARBEN.text2 });
+    // „hält die Regel“ erscheint erst mit den grauen Zellen (Stufe 1), sonst behauptete Stufe 0 80 × „hält“.
+    if (i === 0) haltende.push(eintrag);
+    else teile.push(eintrag);
     lx += 42 + t.length * 12 + 56;
-  }
+  });
+  teile.push(`<g data-ab="1" class="aufbau-zelle">${haltende.join('')}</g>`);
 
   // Eine Zeile Erklärung je Aufbaustufe, an derselben Stelle (die vorige blendet aus).
   const fehlVon = (vs) =>
@@ -590,11 +600,12 @@ export function ressourcenSvg(daten) {
         }),
       );
     }
+    // Die Schwelle gilt laut Vertrag nur im Normalbetrieb (V2): Linie nur über der V2-Zeile.
     teile.push(
-      linie(sx(schwelle), y0 - 50, sx(schwelle), yAchse, FARBEN.rot, 3, ' stroke-dasharray="8 6"'),
+      linie(sx(schwelle), y0 - 50, sx(schwelle), y0 + 50, FARBEN.rot, 3, ' stroke-dasharray="8 6"'),
     );
     teile.push(
-      text(sx(schwelle) + (limit ? -8 : 8), y0 - 56, esc(schwelleText), {
+      text(sx(schwelle) + (limit ? -8 : 8), y0 - 56, esc(`${schwelleText} (nur V2)`), {
         groesse: 22,
         gewicht: 600,
         farbe: FARBEN.rot,
@@ -617,9 +628,11 @@ export function ressourcenSvg(daten) {
       teile.push(text(x0, y + 2, v, { groesse: 26, gewicht: 700 }));
       teile.push(text(x0, y + 30, was, { groesse: 22, farbe: FARBEN.gedaempft }));
       for (const w of werte[v]) {
+        // Rot nur für eine Vertragsverletzung (V2 über der Schwelle); V3 über 5 % ist gewollt (Drosselung).
         const ueber = w > schwelle;
+        const farbe = ueber ? (v === 'V2' ? FARBEN.rot : FARBEN.bernstein) : FARBEN.blau;
         teile.push(
-          `<circle cx="${r2(sx(w))}" cy="${y}" r="11" fill="${ueber ? FARBEN.rot : FARBEN.blau}" fill-opacity="0.75" stroke="${FARBEN.weiss}" stroke-width="2"/>`,
+          `<circle cx="${r2(sx(w))}" cy="${y}" r="11" fill="${farbe}" fill-opacity="0.75" stroke="${FARBEN.weiss}" stroke-width="2"/>`,
         );
       }
     });

@@ -283,12 +283,15 @@ test('sprechnotizen-niklas.md: Stichpunkte und Fließtext je Folie, G9 und Reser
     F.find((x) => x.id === 'G9'),
   ];
   const gesamt = haupt.reduce((s, f) => s + f.zeitS, 0);
-  assert.equal(/\*\*Zeitbudget:\*\*/.test(md), gesamt > 630);
+  assert.equal(/\*\*Zeitbudget:\*\*/.test(md), gesamt > 540);
+  // Zweites Audit 2026-11-16: geplanter Vortrag = Sprungplanziel, höchstens 9:00 min samt G9
+  assert.ok(gesamt <= 540, `Niklas geplant ${gesamt} s`);
 });
 
 test('Sprechnotizen: Jonas’ Sprungplan zählt ab G0; jede Folie mit Stichpunkten vor dem Fließtext', () => {
   const md = readFileSync(join(platzhalter, 'sprechnotizen.md'), 'utf8');
-  assert.match(md, /Ab der ersten Folie \(G0\) gezählt beginnt J13/);
+  assert.match(md, /ab der ersten Folie \(G0\) gezählt\. J13 beginnt im Plan/);
+  assert.doesNotMatch(md, /\*\*Zeitbudget:\*\*/, 'Jonas bleibt im Budget von 9:00 min');
   for (const f of F.filter((x) => x.sprecher !== 'niklas' && x.id !== 'J16')) {
     const abschnitt = md.split(`## ${f.id} `)[1].split('\n## ')[0];
     assert.ok(abschnitt.indexOf('**Stichpunkte**') < abschnitt.indexOf('**Fließtext**'), f.id);

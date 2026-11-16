@@ -53,10 +53,10 @@ after(async () => {
 
 // ---------------------------------------------------------------- Aufbau und Zeit
 
-test('1A: N1–N10 im Vortrag, Literatur NL im Anhang, RN1–RN2 als Reserve', () => {
+test('1A: acht Folien im Vortrag (N3 und N8 als Reserve), Literatur NL im Anhang', () => {
   assert.deepEqual(
     haupt1A.map((f) => f.id),
-    ['N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'N7', 'N8', 'N9', 'N10'],
+    ['N1', 'N2', 'N4', 'N5', 'N6', 'N7', 'N9', 'N10'],
   );
   assert.deepEqual(
     n1a.filter((f) => f.anhang).map((f) => f.id),
@@ -64,21 +64,28 @@ test('1A: N1–N10 im Vortrag, Literatur NL im Anhang, RN1–RN2 als Reserve', (
   );
   assert.deepEqual(
     reserve1A.map((f) => f.id),
-    ['RN1', 'RN2'],
+    ['RN1', 'RN2', 'RN3', 'RN4'],
   );
   assert.ok(reserve1A.every((f) => f.autor === 'niklas' && f.zeitS === 0));
   assert.ok(haupt1A.every((f) => f.auftrag === '1A' && f.station === null));
 });
 
-test('Zeit: 1A 9:30 bis 10:00 min; Kurzfassung mit N1, N6 und N10', () => {
+test('Zeit: Niklas höchstens 9:00 min samt 1B 3–4 und G9; N2, N4, N7 im Vortrag; Kurzfassung', () => {
   const s = summe(haupt1A);
-  assert.ok(s >= 570 && s <= 600, `1A ${s} s`);
-  const kurz = haupt1A.filter((f) => f.kurzfassung).map((f) => f.id);
-  for (const id of ['N1', 'N6', 'N10']) assert.ok(kurz.includes(id), id);
-  // G9 spricht Niklas (gemeinsames Fazit); 1B 3–4 als Gerüst mit eigener Zeit
+  assert.ok(s >= 380 && s <= 420, `1A ${s} s`);
+  // G9 spricht Niklas (gemeinsames Fazit); 1B 3–4 höchstens zwei Folien, höchstens 90 s
   const g9 = alle.find((f) => f.id === 'G9');
   assert.equal(g9.sprecher, 'niklas');
-  assert.ok(summe(n1b) > 0);
+  assert.ok(n1b.length <= 2 && summe(n1b) <= 90, `1B 3–4 ${summe(n1b)} s`);
+  const gesamt = s + summe(n1b) + g9.zeitS;
+  assert.ok(gesamt <= 540, `Niklas ${gesamt} s`);
+  // Prüfungsschritt 1 (N2), Vorab-Festlegung (N4), Diskussionskern Ursache (N7): je 30–50 s
+  for (const id of ['N2', 'N4', 'N7']) {
+    const f = haupt1A.find((x) => x.id === id);
+    assert.ok(f.zeitS >= 30 && f.zeitS <= 50, `${id}: ${f.zeitS} s`);
+  }
+  const kurz = haupt1A.filter((f) => f.kurzfassung).map((f) => f.id);
+  for (const id of ['N1', 'N4', 'N6', 'N7', 'N10']) assert.ok(kurz.includes(id), id);
 });
 
 test('Titel: Behauptung in einer Zeile (höchstens 44 Zeichen), Reserve mit „Reserve:“', () => {
@@ -169,7 +176,12 @@ function erlaubt() {
   return w;
 }
 // Festwerte außerhalb der Messreihe, je mit Beleg: 8 vCPU (ADR-0035, Zielhost), 0,1 s (Achsenmarke).
-const FESTWERTE_NIKLAS = { 8: 'ADR-0035 „8 vCPU“', '0,1': 'Achsenmarke 0,1 s' };
+// 16 GB und ~4 GB (ADR-0035, Abschn. 2.1), 2,5 min (Jonas' 1B-ergebnis.md, warm im Median 148,6 s).
+const FESTWERTE_NIKLAS = {
+  8: 'ADR-0035 „8 vCPU“',
+  '0,1': 'Achsenmarke 0,1 s',
+  '2,5': '1B-ergebnis.md „im Median 148,6 s“',
+};
 
 test('Keine Zahl auf den 1A-Folien, die nicht aus den Daten kommt', () => {
   const adr = readFileSync(
@@ -180,9 +192,12 @@ test('Keine Zahl auf den 1A-Folien, die nicht aus den Daten kommt', () => {
     'utf8',
   );
   assert.match(adr, /8 vCPU/);
+  assert.match(adr, /16-GB-Live-Host/);
+  assert.match(adr, /~4-GB-LLM/);
+  assert.match(readFileSync(resolve(ROOT, '1B-ergebnis.md'), 'utf8'), /im Median 148,6 s/);
   const w = erlaubt();
   const KENNUNG =
-    /\b(?:[VHNMRJG]\d+|1[ABC]|ADR-\d{4}|v\d(?:\.\d)+(?:-\d+)?|[0-9a-f]{8}|cgroup v2|Vertrag v\d|Version \d(?:\.\d)*|20\d\d|p\d\d|Abschn\. [\d.]+|Z\. \d+)\b/g;
+    /\b(?:8\.9b|16-GB|~?4-GB|[VHNMRJG]\d+|1[ABC]|ADR-\d{4}|v\d(?:\.\d)+(?:-\d+)?|[0-9a-f]{8}|cgroup v2|Vertrag v\d|Version \d(?:\.\d)*|20\d\d|p\d\d|Abschn\. [\d.]+|Z\. \d+)\b/g;
   const DATUM = /\d{2}\.\d{2}\.(?:\d{4})?/g;
   for (const f of [...haupt1A, ...reserve1A]) {
     const texte = [f.titel, ohneTags(f.inhalt), f.notiz, ...f.stichpunkte];
@@ -261,16 +276,25 @@ test(
 
 // ---------------------------------------------------------------- 1B 3–4 Gerüst
 
-test('1B 3–4: Gerüst M1–M4 mit sichtbaren Platzhaltern, solange Niklas’ Ergebnisse fehlen', () => {
+test('1B 3–4: M1–M2 aus den Ergebnis-JSONs ohne Platzhalter; ohne Daten eine Platzhalterfolie', () => {
   assert.deepEqual(
     n1b.map((f) => f.id),
-    ['M1', 'M2', 'M3', 'M4'],
+    ['M1', 'M2'],
   );
-  const leer = folien1B34();
-  for (const f of leer) {
-    assert.match(f.titel, /\[Titel\]/, f.id);
-    assert.match(ohneTags(f.inhalt) + f.fuss, /\[Niklas\]|\[Satz/, f.id);
+  for (const f of n1b) {
+    const t = [f.titel, ohneTags(f.inhalt), f.fuss, f.notiz, ...f.stichpunkte].join(' ');
+    assert.doesNotMatch(t, /\[Niklas|\[Satz|\[Titel|Entwurf/, f.id);
+    assert.match(f.quelle, /i7-10700K/, f.id);
   }
+  const d1b = ladeDaten1B34(ROOT);
+  assert.equal(d1b.finde('f1').jobMedianMs, 48);
+  assert.equal(d1b.finde('f2').jobMedianMs, 134732);
+  for (const l of d1b.laeufe) assert.equal(l.liveFehler, 0, l.datei);
+  assert.match(n1b[0].inhalt, /Median 48 ms/);
+  const leer = folien1B34();
+  assert.equal(leer.length, 1);
+  assert.match(leer[0].titel, /\[Titel\]/);
+  assert.match(ohneTags(leer[0].inhalt) + leer[0].fuss, /\[Niklas\]/);
 });
 
 test('1B 3–4 füllt sich aus Ergebnis-JSONs (Median selbst gerechnet, p95 gepoolt)', () => {
@@ -320,8 +344,8 @@ test('1B 3–4 füllt sich aus Ergebnis-JSONs (Median selbst gerechnet, p95 gepo
     assert.equal(f1.jobMedianMs, 48);
     assert.equal(f1.live.join.p95Ms, 30);
     assert.equal(f1.liveGeplant, 160);
-    const m2 = folien1B34(dd).find((f) => f.id === 'M2');
-    assert.match(ohneTags(m2.inhalt), /\b48\b/);
+    const m1 = folien1B34(dd).find((f) => f.id === 'M1');
+    assert.match(m1.inhalt, /Median 48 ms/);
   } finally {
     rmSync(wurzel, { recursive: true, force: true });
   }
@@ -343,7 +367,7 @@ test('Reihenfolge: G0, Jonas, Niklas 1A und 1B 3–4, G9, Anhang, Reserve', asyn
   await page.close();
   const pos = (id) => ids.findIndex(([x]) => x === id);
   assert.equal(ids[0][0], 'G0');
-  assert.ok(pos('J15') < pos('N1') && pos('N10') < pos('M1') && pos('M4') < pos('G9'));
+  assert.ok(pos('J15') < pos('N1') && pos('N10') < pos('M1') && pos('M2') < pos('G9'));
   assert.deepEqual(
     ids.slice(pos('G9') + 1, pos('G9') + 3).map(([x]) => x),
     ['J16', 'NL'],
@@ -431,7 +455,8 @@ async function ablauf(id, stufen, reducedMotion) {
 test('N6 baut in drei Stufen auf: 4, dann 7, dann 11 Treffer; rückwärts ins Endbild', async () => {
   const { verlauf, uebergang } = await ablauf('N6', 3, 'no-preference');
   // je Stufe: Treffer-Zellen plus genau eine Erklärzeile
-  assert.deepEqual(verlauf, ['N6:0:1', 'N6:1:5', 'N6:2:8', 'N6:3:12', 'N7:0:0', 'N6:3:12']);
+  // Stufe 0: nur Umrisse und Erklärzeile; ab Stufe 1 zusätzlich die graue Füllung samt Legende „hält“
+  assert.deepEqual(verlauf, ['N6:0:1', 'N6:1:6', 'N6:2:9', 'N6:3:13', 'N7:0:0', 'N6:3:13']);
   const ms = parseFloat(uebergang.split(',')[0]) * 1000;
   assert.ok(ms >= 150 && ms <= 300, `Übergang ${uebergang}`);
 });
@@ -439,7 +464,7 @@ test('N6 baut in drei Stufen auf: 4, dann 7, dann 11 Treffer; rückwärts ins En
 test('N7 baut in zwei Stufen auf (Latenz, dann Analyse, dann CPU); reduzierte Bewegung ohne Übergang', async () => {
   const normal = await ablauf('N7', 2, 'no-preference');
   // Stufe 0: nichts mit data-ab; 1: Band und Analyse; 2: zusätzlich CPU
-  assert.deepEqual(normal.verlauf, ['N7:0:0', 'N7:1:2', 'N7:2:3', 'N8:-:0', 'N7:2:3']);
+  assert.deepEqual(normal.verlauf, ['N7:0:0', 'N7:1:2', 'N7:2:3', 'N9:-:0', 'N7:2:3']);
   const reduziert = await ablauf('N7', 2, 'reduce');
   assert.deepEqual(reduziert.verlauf, normal.verlauf);
   assert.equal(reduziert.uebergang, '0s');
@@ -463,5 +488,5 @@ test('Druck: N6 und N7 stehen im Endbild', async () => {
     ),
   );
   await page.close();
-  assert.deepEqual(sichtbar, [12, 3]);
+  assert.deepEqual(sichtbar, [13, 3]);
 });

@@ -4,9 +4,12 @@
 // (literatur.mjs), damit beide Verzeichnisse übereinstimmen.
 //
 // Geprüft 2026-11-16:
-// - heo2015: Kopf der Kernel-Doku „Date: October, 2015“, „Author: Tejun Heo“; Abschnitte „Resource
-//   Distribution Models“ (Limits: „A child can only consume up to the configured amount of the resource.“),
-//   „CPU Interface Files“ (cpu.max, cpu.stat nr_throttled), „Memory Interface Files“ (memory.peak).
+// - heo2024: Kernel-Doku in der Fassung von Linux 6.12 (2024), geprüft 2026-11-16 auf
+//   https://www.kernel.org/doc/html/v6.12/admin-guide/cgroup-v2.html: Titel „Control Group v2“, „Author: Tejun
+//   Heo“; Abschnitte „CPU Interface Files“ (cpu.max „The maximum bandwidth limit“, cpu.stat nr_throttled) und
+//   „Memory Interface Files“ (memory.peak). Früher heo2015 mit „Date: October, 2015“ aus dem Dokumentkopf: Der
+//   CPU-Controller kam erst mit Linux 4.15 (2018) in cgroup v2, die zitierten Stellen fehlen in der Fassung von
+//   2015. Deshalb die gelesene, versionierte Fassung.
 // - nosek2018: Crossref 10.1073/pnas.1708274114 (4 Autoren, PNAS 115(11), 2600–2606); Volltext PMC5856500,
 //   Abstract S. 2600: „Preregistration distinguishes analyses and outcomes that result from predictions from
 //   those that result from postdictions.“
@@ -29,9 +32,9 @@ export const LITERATUR_1A = [
   geteilt('arsnova2026pruefung'),
   geteilt('dean2013'),
   {
-    schluessel: 'heo2015',
-    kurz: 'Heo, 2015',
-    voll: 'Heo, T. (2015, Oktober). <i>Control Group v2</i>. The Linux Kernel Documentation. https://docs.kernel.org/admin-guide/cgroup-v2.html',
+    schluessel: 'heo2024',
+    kurz: 'Heo, 2024',
+    voll: 'Heo, T. (2024). <i>Control Group v2</i> (Linux 6.12). The Linux Kernel Documentation. https://www.kernel.org/doc/html/v6.12/admin-guide/cgroup-v2.html',
   },
   {
     schluessel: 'nosek2018',
@@ -45,6 +48,8 @@ export const LITERATUR_1A = [
     voll: `Schneider, N. (2026). <i>Referat Thema 1, Aufträge 1A und 1B</i> [Referatsausarbeitung: Versuchsvertrag, Messreihen, Auswertung]. GitHub. ${GH_FORK}/main/docs/referat-thema-1`,
   },
   geteilt('ulrich2016'),
+  // Jonas' Messung (Inferenzdauer im Labor, N10); geteilt wie die übrigen Einträge.
+  geteilt('weirauch2026c'),
 ];
 
 const NACH_SCHLUESSEL = new Map(LITERATUR_1A.map((e) => [e.schluessel, e]));

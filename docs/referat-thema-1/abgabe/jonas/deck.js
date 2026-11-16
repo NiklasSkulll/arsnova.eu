@@ -328,8 +328,25 @@
   const aufbauFolien = alle.filter((s) => s.dataset.aufbau);
   let vorDruck = null;
   let aufbauVorDruck = null;
+  // Druckauszug einer Person (?druck=jonas|niklas): Seitenzahlen nur über die gedruckten Hauptfolien
+  // (1 / n statt der Nummer im gemeinsamen Deck), Reserve behält „Reserve …“. Danach zurück.
+  let nummernVorDruck = null;
+  function nummerierePerson() {
+    if (!druck) return;
+    const gedruckt = alle.filter(
+      (s) => getComputedStyle(s).display !== 'none' && s.dataset.teil !== 'reserve',
+    );
+    nummernVorDruck = [];
+    gedruckt.forEach((s, i) => {
+      const nr = s.querySelector('.fuss-nr');
+      if (!nr) return;
+      nummernVorDruck.push([nr, nr.textContent]);
+      nr.textContent = `${i + 1} / ${gedruckt.length}`;
+    });
+  }
   function druckBeginn() {
     if (vorDruck) return;
+    nummerierePerson();
     vorDruck = zoomFolien.map((s) => [s, s.dataset.zoomStufe]);
     aufbauVorDruck = aufbauFolien.map((s) => [s, s.dataset.aufbauStufe]);
     for (const s of aufbauFolien) aufbauStufe(s, aufbauMax(s));
@@ -337,6 +354,8 @@
   }
   function druckEnde() {
     if (!vorDruck) return;
+    for (const [nr, t] of nummernVorDruck ?? []) nr.textContent = t;
+    nummernVorDruck = null;
     for (const [s, stufe] of vorDruck) if (stufe !== undefined) zoomStufe(s, Number(stufe));
     for (const [s, stufe] of aufbauVorDruck)
       aufbauStufe(s, stufe === undefined ? 0 : Number(stufe));

@@ -16,6 +16,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { makroName, svgArial, svgMindestschrift, texEsc } from '../jonas/handout-latex.mjs';
 import { fmt } from '../jonas/zahlen.mjs';
 import { AKTIONEN, AUSWERTUNG_1A, ladeDaten1A } from './daten-1a.mjs';
+import { ladeDaten1B34 } from './daten-1b34.mjs';
 import { vergleichsMatrixSvg } from './grafik-1a.mjs';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
@@ -163,6 +164,17 @@ export function makros1A(d, roh, kontext) {
     docker: a.source.hardware.dockerVersion,
     minFreiGiB: fmt(ab(minFreiGiB, 1), 1),
     containerCpu: bis(spanne(containerCpu)),
+    /** Höchste Summe aller Container je Lauf in CPUs (nicht Prozent), aufgerundet auf zwei Stellen. */
+    containerCpuMax: fmt(Math.ceil(Math.max(...containerCpu)) / 100, 2),
+    // Erste vollständige Reihe auf älterem Stand (offengelegt, nicht gewertet; Daten aus Git)
+    vorreiheDatum: deutschesDatum(d.vorab.vorreihe.datumDaten),
+    vorreiheBaseline: d.vorab.vorreihe.baseline,
+    vorreiheCommit: d.vorab.vorreihe.commitDaten,
+    vorreiheAuswertung: d.vorab.vorreihe.commitAuswertung,
+    vorreiheHEinsFehl: fmt(d.vorab.vorreihe.h1.fehl),
+    vorreiheHZweiFehl: fmt(d.vorab.vorreihe.h2.fehl),
+    vorreiheAbsolutFehl: fmt(d.vorab.vorreihe.absolutFehl),
+    vVierGegendruckJeLauf: fmt(d.v4.gegendruckJeLauf),
     // Last und Plan
     laeufe: fmt(a.runs.length),
     bloecke: fmt(Math.max(...a.runs.map((r) => r.block))),
@@ -267,6 +279,49 @@ export function makros1A(d, roh, kontext) {
   };
 }
 
+/**
+ * Werte für 1B, Schritte 3–4 (Abschnitt 6 des Handouts) aus Niklas' gewerteten Störreihen
+ * (daten-1b34.mjs); Schlüssel mit Präfix `eb`. Leer, wenn die Ergebnis-JSONs fehlen.
+ */
+export function makros1B34(d) {
+  if (!d.vorhanden || !d.finde('f1')) return {};
+  const f1 = d.finde('f1');
+  const sek = (ms, st = 1) => fmt(ms / 1000, st);
+  const kandidaten = ['busy', 'f2', 'l3'].map((v) => d.finde(v)).filter(Boolean);
+  const alle = ['normal', 'f1', 'busy', 'f2', 'l3'].map((v) => d.finde(v)).filter(Boolean);
+  const deltas = kandidaten.flatMap((l) =>
+    AKTIONEN.map(([k]) => l.live[k].p95Ms - f1.live[k].p95Ms),
+  );
+  const ratios = kandidaten.flatMap((l) =>
+    AKTIONEN.map(([k]) => l.live[k].p95Ms / f1.live[k].p95Ms),
+  );
+  const m = (v) => d.finde(v);
+  return {
+    ebRechner: f1.rechner,
+    ebVms: f1.vms.join(', '),
+    ebCommitSchwellen: d.schwellen.commit,
+    ebDatumSchwellen: d.schwellen.datum ? deutschesDatum(d.schwellen.datum) : '15.11.2026',
+    ebCommitFEins: f1.commit,
+    ebCommitStoerung: m('f2')?.commit ?? '',
+    ebFristS: fmt(f1.timeoutMs / 1000),
+    ebNormalMedianS: sek(m('normal').jobMedianMs),
+    ebFEinsMedianMs: fmt(f1.jobMedianMs),
+    ebFEinsN: fmt(f1.n),
+    ebBusyMedianMs: fmt(m('busy').jobMedianMs),
+    ebFZweiMedianS: sek(m('f2').jobMedianMs),
+    ebFZweiN: fmt(m('f2').n),
+    ebLDreiMedianS: sek(m('l3').jobMedianMs),
+    ebLDreiMaxS: sek(m('l3').jobSpanneMs[1], 1),
+    ebFaktor: fmt(Math.round(m('f2').jobMedianMs / f1.jobMedianMs / 100) * 100),
+    ebLiveGeplant: fmt(alle.reduce((x, l) => x + l.liveGeplant, 0)),
+    ebLiveFehl: fmt(alle.reduce((x, l) => x + l.liveFehler, 0)),
+    ebMaxDeltaMs: fmt(Math.max(...deltas), 1),
+    ebMaxProzent: fmt((Math.max(...ratios) - 1) * 100),
+    ebAppCpuMax: fmt(Math.max(...alle.map((l) => l.appCpuMax))),
+    ebAppRssMiB: fmt(Math.max(...alle.map((l) => l.appRssMaxMiB))),
+  };
+}
+
 /** zahlen.tex: Kopf mit Herkunft, dann je Wert ein \newcommand (sortiert, eindeutig). */
 export function zahlenTex1A(makros, { commit, datum }) {
   const zeilen = Object.entries(makros)
@@ -350,7 +405,10 @@ export function abbildungen1A(d) {
 
 export async function erzeuge(ziel) {
   const d = ladeDaten1A(ROOT);
-  const makros = makros1A(d, ladeRohdaten1A(ROOT), ladeKontext1A());
+  const makros = {
+    ...makros1A(d, ladeRohdaten1A(ROOT), ladeKontext1A()),
+    ...makros1B34(ladeDaten1B34(ROOT)),
+  };
   mkdirSync(ziel, { recursive: true });
   const commit = execFileSync('git', ['rev-parse', '--short=8', 'HEAD'], {
     cwd: ROOT,

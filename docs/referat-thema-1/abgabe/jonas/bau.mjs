@@ -88,9 +88,12 @@ function ladeAbhaengigkeit(name) {
   }
 }
 
-/** Redebudget je Person (Design, Entscheidung 3) und Abbruchgrenze (Kursvorschlag 9 + 6). */
-const BUDGET_S = 630;
+/**
+ * Redebudget je Person = Abbruchgrenze (Kursvorschlag 9 + 6; zweites Audit 2026-11-16): Der geplante Vortrag
+ * selbst dauert höchstens 9:00 min, G0 und G9 eingeschlossen, damit etwa 6 min für die Diskussion bleiben.
+ */
 const ABBRUCH_S = 9 * 60;
+const BUDGET_S = ABBRUCH_S;
 
 /**
  * Sprungplan für einen Abbruch nach etwa 9 min (Kursvorschlag 9 + 6): Die Zielfolien (Jonas J13 und J15,
@@ -115,11 +118,15 @@ function sprungplan(haupt, ziele) {
   const kurz = haupt.filter((f) => f.kurzfassung).reduce((s, f) => s + f.zeitS, 0);
   const zielText =
     ziele.length === 2 ? `${ziele[0]} und ${ziele[1]}` : `${ziele[0]} bis ${ziele.at(-1)}`;
+  const puffer = spaetestens - start;
   const zeilen = [
     '## Sprungplan',
     '',
-    `Ab der ersten Folie (${haupt[0].id}) gezählt beginnt ${erstes} in der Langfassung bei ${mmss(start)} min. ` +
-      `${zielText} brauchen zusammen ${mmss(zielS)} min. Damit sie bis ${mmss(ABBRUCH_S)} min gesprochen sind: ` +
+    `Geplant: ${mmss(gesamt)} min (Grenze ${mmss(ABBRUCH_S)} min), ab der ersten Folie (${haupt[0].id}) gezählt. ` +
+      `${erstes} beginnt im Plan bei ${mmss(start)} min; ${zielText} brauchen zusammen ${mmss(zielS)} min. ` +
+      (puffer > 0
+        ? `Bis ${mmss(spaetestens)} min bleiben ${mmss(puffer)} min Puffer. `
+        : 'Der Plan hat keinen Puffer. ') +
       `Wer bei ${mmss(spaetestens)} min noch vor ${erstes} steht, blättert mit Pfeil rechts ohne Kommentar bis ${erstes} ` +
       `und spricht ab dort weiter. Bei Zeitdruck von Anfang an nur die Folien mit der Marke „Kurzfassung“ ` +
       `(${mmss(kurz)} min); sie enthält ${zielText}.`,
