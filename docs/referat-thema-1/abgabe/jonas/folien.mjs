@@ -620,7 +620,7 @@ const ZITATE = {
     ['shankar2024', 'S. 1–2'],
   ],
   J13b: [
-    ['mell2011', 'S. 2'],
+    ['mell2011', 'S. 2–3'],
     ['dean2013', 'S. 74'],
     [W, 'ADR 1C-018'],
   ],
@@ -2038,7 +2038,7 @@ export function folien(daten) {
   );
 
   // ------------------------------------------------------------ R14 Einordnung Cloud Computing
-  // Keine neue Messung: NIST-Merkmale (Mell & Grance 2011, SP 800-145, S. 2), Bulkhead und Kapazität aus dem Code (Stand a19ca70f, Zeilen per Serena geprüft 2026-11-16).
+  // Keine neue Messung: NIST-Merkmale und IaaS (Mell & Grance 2011, SP 800-145, S. 2–3), Bulkhead und Kapazität aus dem Code (Stand a19ca70f, Zeilen per Serena geprüft 2026-11-16).
   const nist = (merkmal, status, text) =>
     `<tr style="border-top:var(--linie-min) solid var(--linie)"><td style="padding:8px 14px 8px 0;font-weight:600">${merkmal}</td>` +
     `<td style="padding:8px 14px 8px 0;font-weight:700;color:${{ ja: 'var(--petrol)', nein: 'var(--rot)', teils: 'var(--bernstein-text)' }[status]}">${status}</td>` +
@@ -2082,7 +2082,7 @@ export function folien(daten) {
       ) +
       `</div></div>`,
     `Was heißt das aus Sicht des Kurses? Nach den NIST-Merkmalen ist das IaaS-Betrieb ohne Selbstbedienung zur Laufzeit: Netzzugang und Ressourcenbündelung sind gegeben, schnelle Elastizität fehlt, die Inferenz skaliert nur vertikal und von Hand. Der zweite Host ist ein Bulkhead, ein getrennter Fehler- und Ressourcenbereich; den Nutzen habe ich nicht gemessen. Kapazität, gerechnet aus dem Code und nicht gemessen: ein Aufruf zugleich, die Queue nimmt höchstens ${fw.queueLimit} an, danach queue_full mit Ersatz. Bei ${z.jobWarm} Sekunden je Auftrag sind das rund ${daten.abgeleitet.auftraegeProStunde} Zusammenfassungen pro Stunde. Als SLO würde ich Verfügbarkeit und Nutzen trennen: Endstatus nach ${fw.laborTimeoutS} Sekunden erfüllt der Fallback, der Nutzen lag bei ${daten.abgeleitet.fullContext1B} von ${n}.`,
-    `Code a19ca70f (gleich HEAD): apps/backend/src/lib/openWeightLlmClient.ts Z. 141 (inFlight), Z. 497 (busy); qaSummaryConfig.ts Z. 26 (QUEUE_LIMIT_DEFAULT = 8), Z. 29 (CONCURRENCY_DEFAULT = 1); qaSummaryQueue.ts Z. 510 (queue_full); Durchsatz aus T_job warm: ${q1B}; NIST SP 800-145, S. 2 (Mell & Grance, 2011); ADR-0035 Abschn. 2.1, 2.2; SLO-Vorschlag: fragenkatalog.md F51; full-context: ${q1B}`,
+    `Code a19ca70f (gleich HEAD): apps/backend/src/lib/openWeightLlmClient.ts Z. 141 (inFlight), Z. 497 (busy); qaSummaryConfig.ts Z. 26 (QUEUE_LIMIT_DEFAULT = 8), Z. 29 (CONCURRENCY_DEFAULT = 1); qaSummaryQueue.ts Z. 510 (queue_full); Durchsatz aus T_job warm: ${q1B}; NIST SP 800-145, S. 2–3 (Mell & Grance, 2011); ADR-0035 Abschn. 2.1, 2.2; SLO-Vorschlag: fragenkatalog.md F51; full-context: ${q1B}`,
     { zeitS: 50 },
   );
 

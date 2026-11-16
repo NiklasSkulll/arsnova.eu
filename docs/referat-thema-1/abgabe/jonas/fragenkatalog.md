@@ -283,7 +283,7 @@ Beleg: [`openWeightLlmClient.ts`, `inFlight`](../../../../apps/backend/src/lib/o
 ### F50. Wo ist hier Cloud Computing? Ordnen Sie das nach NIST ein.
 
 App und Inferenz laufen auf fest bereitgestellten Maschinen, also IaaS-Betrieb ohne Selbstbedienung zur Laufzeit. Ressourcenbündelung und Netzzugang sind gegeben, schnelle Elastizität fehlt: Die Inferenz skaliert nur vertikal und von Hand, ein Slot bleibt ein Slot. Die zweite Rolle ist ein Bulkhead, ein getrennter Fehler- und Ressourcenbereich, keine elastische Ressource.
-Beleg: NIST SP 800-145 (Definition, nicht im Literaturverzeichnis), [ADR-0035, 2.1–2.2](../../../architecture/decisions/0035-self-hosted-llm-runtime-llama-cpp-over-ollama.md), Dean und Barroso 2013, S. 74
+Beleg: Mell und Grance 2011 (NIST SP 800-145), S. 2–3, im Handout zitiert, [ADR-0035, 2.1–2.2](../../../architecture/decisions/0035-self-hosted-llm-runtime-llama-cpp-over-ollama.md), Dean und Barroso 2013, S. 74
 
 ### F51. Formulieren Sie ein SLO für den Kompass. Ist ein Fallback, der immer greift, ein Erfolg?
 

@@ -1022,8 +1022,8 @@ test('J13b (bis 2026-11-16 R14): Einordnung Cloud Computing als Rechnung aus dem
   assert.match(config[25], /QA_SUMMARY_QUEUE_LIMIT_DEFAULT = 8/);
   assert.match(config[28], /QA_SUMMARY_CONCURRENCY_DEFAULT = 1/);
   assert.match(code('qaSummaryQueue.ts')[509], /queue\.length \+ running >= config\.queueLimit/);
-  // NIST steht ohne Literatureintrag (nicht im Handout zitiert)
-  assert.ok(!r14.fuss.includes('NIST'));
+  // Kurzbeleg wie im Handout: Merkmale S. 2, IaaS S. 3 (Mell & Grance, 2011)
+  assert.ok(r14.fuss.includes('Mell & Grance, 2011, S. 2–3'));
 });
 
 test('GD: Nachweisumfang aus nachweisumfang.md, gleich der Neuberechnung, ohne Wertung', async () => {
