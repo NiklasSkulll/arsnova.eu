@@ -641,8 +641,8 @@
       .weg-mini-karte {
         display: block;
       }
-      /* Ortsmarke ohne Bewegung (deck.mjs ortsmarke, wegkarte.mjs wegMarke): Wegkarte im Platz und mit der
-         Beschriftung von Jonas' Marker, sichtbar auf dem Bildschirm und im Druck */
+      /* Wegkarte oben links (wegkarte.mjs): auf dem Bildschirm der beständige Läufer je Weg (deck.js
+         setzeMarker), im Druck die feste Marke in jeder Folie (Endbild). Beide aus derselben Zeichnung. */
       /* .folie p setzt text-wrap: pretty (stil.css); die Beschriftung bleibt einzeilig */
       .weg-mini .weg-beschriftung {
         text-wrap: nowrap;
@@ -650,7 +650,7 @@
       .weg-marke .weg-punkt {
         transform: translate(-50%, -50%);
       }
-      /* Störungszeichen (1B 3–4) auf der Karte über der Senke zum zweiten Host; je Aufbaustufe ein Satz */
+      /* Störungszeichen auf der Karte über der Senke zum zweiten Host; je Aufbaustufe ein Satz */
       .weg-zeichen-ort {
         position: absolute;
         display: grid;
@@ -690,14 +690,6 @@
         border-radius: 50%;
         background: var(--blau);
       }
-      .weg-wandernd .weg-punkt {
-        offset-rotate: 0deg;
-        offset-distance: 0%;
-        transition: offset-distance 600ms ease;
-      }
-      .weg-mini-statisch .weg-punkt {
-        transform: translate(-50%, -50%);
-      }
       .weg-beschriftung {
         position: absolute;
         left: 462px;
@@ -715,14 +707,55 @@
       .weg-beschriftung .etikett {
         padding: 0 10px;
       }
+      .weg-etiketten {
+        display: contents;
+      }
+      /* Läufer: ausgeblendet ohne data-an; Wechsel des Wegs blendet über (300 ms) */
+      .weg-laeufer {
+        opacity: 0;
+        visibility: hidden;
+        transition:
+          opacity 300ms ease,
+          visibility 0s linear 300ms;
+      }
+      .weg-laeufer[data-an] {
+        opacity: 1;
+        visibility: visible;
+        transition: opacity 300ms ease;
+      }
+      .weg-laeufer .weg-punkt {
+        offset-rotate: 0deg;
+        offset-distance: 0%;
+        transition:
+          offset-distance 600ms ease,
+          opacity 300ms ease;
+      }
+      .weg-laeufer .weg-punkt.weg-punkt-springt {
+        transition: opacity 300ms ease;
+      }
+      .weg-laeufer .weg-punkt:not([data-an]),
+      .weg-laeufer .weg-saum:not([data-an]),
+      .weg-laeufer .weg-wirkung:not([data-an]),
+      .weg-laeufer .weg-satz:not([data-an]) {
+        opacity: 0;
+      }
+      .weg-laeufer .weg-saum,
+      .weg-laeufer .weg-wirkung,
+      .weg-laeufer .weg-satz {
+        transition: opacity 300ms ease;
+      }
+      .weg-laeufer.weg-sofort * {
+        transition: none !important;
+      }
       @media screen {
-        .weg-mini-statisch {
+        .folie > .weg-marke {
           display: none;
         }
       }
       @media (prefers-reduced-motion: reduce) {
-        .weg-wandernd .weg-punkt {
-          transition: none;
+        .weg-laeufer,
+        .weg-laeufer * {
+          transition: none !important;
         }
       }
 
@@ -795,7 +828,7 @@
         white-space: nowrap;
       }
 
-      /* Druck/PDF: jede Folie eine Seite 1600 × 900, Marker fest an der Station. */
+      /* Druck/PDF: jede Folie eine Seite 1600 × 900, Wegkarte fest im Endbild der Folie. */
       @page {
         size: 1600px 900px;
         margin: 0;
@@ -834,7 +867,7 @@
         .clip-standbild {
           display: block !important;
         }
-        .weg-wandernd,
+        .weg-laeufer,
         .reserve-uebersicht,
         .live {
           display: none !important;
@@ -1023,81 +1056,47 @@
             focusable="false"
           >
             <path
-              d="M20 15L432.8 15"
+              d="M20 15L170 15C198.8 15 198.8 40 227.6 40L284.4 40C313.2 40 313.2 15 342 15L434 15"
               fill="none"
-              stroke="var(--linie)"
-              stroke-width="3"
-              stroke-linecap="round"
-            />
-            <path
-              d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
-              fill="none"
-              stroke="var(--linie)"
+              stroke="var(--blau)"
               stroke-width="3"
               stroke-linecap="round"
             />
             <circle
-              data-station="teilnehmende"
+              data-station="app"
               cx="20"
               cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
             <circle
-              data-station="app"
-              cx="110"
+              data-station="live"
+              cx="95"
               cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
-            <circle
-              data-station="datenbank"
-              cx="288"
-              cy="15"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle
-              data-station="antwort"
-              cx="432.8"
-              cy="15"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle
-              data-station="analyse"
-              cx="216"
-              cy="40"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle data-station="spacy" cx="288" cy="40" r="9" fill="var(--gedaempft)" />
+            <circle data-station="spacy" cx="256" cy="40" r="9" fill="var(--blau)" />
             <circle
               data-station="ersatz"
-              cx="360"
-              cy="40"
+              cx="371.9"
+              cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
             <circle
               data-station="wortwolke"
-              cx="432.8"
-              cy="40"
+              cx="434"
+              cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
           </svg>
@@ -1212,85 +1211,51 @@
             focusable="false"
           >
             <path
-              d="M20 15L432.8 15"
+              d="M20 15L170 15C198.8 15 198.8 40 227.6 40L284.4 40C313.2 40 313.2 15 342 15L434 15"
               fill="none"
-              stroke="var(--linie)"
-              stroke-width="3"
-              stroke-linecap="round"
-            />
-            <path
-              d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
-              fill="none"
-              stroke="var(--linie)"
+              stroke="var(--blau)"
               stroke-width="3"
               stroke-linecap="round"
             />
             <circle
-              data-station="teilnehmende"
+              data-station="app"
               cx="20"
               cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
             <circle
-              data-station="app"
-              cx="110"
+              data-station="live"
+              cx="95"
               cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
-            <circle
-              data-station="datenbank"
-              cx="288"
-              cy="15"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle
-              data-station="antwort"
-              cx="432.8"
-              cy="15"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle
-              data-station="analyse"
-              cx="216"
-              cy="40"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle data-station="spacy" cx="288" cy="40" r="9" fill="var(--gedaempft)" />
+            <circle data-station="spacy" cx="256" cy="40" r="9" fill="var(--blau)" />
             <circle
               data-station="ersatz"
-              cx="360"
-              cy="40"
+              cx="371.9"
+              cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
             <circle
               data-station="wortwolke"
-              cx="432.8"
-              cy="40"
+              cx="434"
+              cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
           </svg>
-          <div class="weg-punkt" style="left: 110px; top: 15px"></div>
+          <div class="weg-punkt" style="left: 20px; top: 15px"></div>
           <p class="weg-beschriftung" aria-hidden="true">
             <span class="weg-name">App-Host</span><span class="etikett etikett-1a">1A</span>
           </p>
@@ -1463,10 +1428,10 @@
       >
         <div
           class="weg-mini weg-marke"
-          data-marke="1a-spacy"
-          data-aktiv="spacy"
+          data-marke="1a-varianten"
+          data-aktiv="app"
           role="img"
-          aria-label="Ort auf dem Weg: spaCy (1A)"
+          aria-label="Ort auf dem Weg: App-Host (1A)"
         >
           <svg
             class="weg-mini-karte"
@@ -1478,87 +1443,63 @@
             focusable="false"
           >
             <path
-              d="M20 15L432.8 15"
+              d="M20 15L170 15C198.8 15 198.8 40 227.6 40L284.4 40C313.2 40 313.2 15 342 15L434 15"
               fill="none"
-              stroke="var(--linie)"
+              stroke="var(--blau)"
               stroke-width="3"
               stroke-linecap="round"
             />
-            <path
-              d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
-              fill="none"
-              stroke="var(--linie)"
-              stroke-width="3"
-              stroke-linecap="round"
-            />
+            <g data-abschnitt="analyse">
+              <path
+                d="M170 15C198.8 15 198.8 40 227.6 40L284.4 40C313.2 40 313.2 15 342 15"
+                fill="none"
+                stroke="var(--blau)"
+                stroke-opacity="0.16"
+                stroke-width="14"
+                stroke-linecap="round"
+              />
+            </g>
             <circle
-              data-station="teilnehmende"
+              data-station="app"
               cx="20"
               cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
             <circle
-              data-station="app"
-              cx="110"
+              data-station="live"
+              cx="95"
               cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
-            <circle
-              data-station="datenbank"
-              cx="288"
-              cy="15"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle
-              data-station="antwort"
-              cx="432.8"
-              cy="15"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle
-              data-station="analyse"
-              cx="216"
-              cy="40"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle data-station="spacy" cx="288" cy="40" r="9" fill="var(--gedaempft)" />
+            <circle data-station="spacy" cx="256" cy="40" r="9" fill="var(--blau)" />
             <circle
               data-station="ersatz"
-              cx="360"
-              cy="40"
+              cx="371.9"
+              cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
             <circle
               data-station="wortwolke"
-              cx="432.8"
-              cy="40"
+              cx="434"
+              cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
           </svg>
-          <div class="weg-punkt" style="left: 288px; top: 40px"></div>
+          <div class="weg-punkt" style="left: 20px; top: 15px"></div>
           <p class="weg-beschriftung" aria-hidden="true">
-            <span class="weg-name">spaCy</span><span class="etikett etikett-1a">1A</span>
+            <span class="weg-name">App-Host</span><span class="etikett etikett-1a">1A</span>
           </p>
         </div>
         <ol class="teilleiste" aria-label="Teil des Vortrags: 1A, Niklas">
@@ -1674,6 +1615,7 @@
         <div
           class="weg-mini weg-marke"
           data-marke="1a-regel"
+          data-aktiv="live"
           role="img"
           aria-label="Ort auf dem Weg: Live-Pfad (1A)"
         >
@@ -1687,119 +1629,72 @@
             focusable="false"
           >
             <path
-              d="M20 15L432.8 15"
+              d="M20 15L170 15C198.8 15 198.8 40 227.6 40L284.4 40C313.2 40 313.2 15 342 15L434 15"
               fill="none"
-              stroke="var(--linie)"
+              stroke="var(--blau)"
               stroke-width="3"
               stroke-linecap="round"
             />
-            <path
-              d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
-              fill="none"
-              stroke="var(--linie)"
-              stroke-width="3"
-              stroke-linecap="round"
-            />
-            <g data-abschnitt="haupt">
+            <g data-abschnitt="live">
               <path
-                d="M20 15L432.8 15"
+                d="M20 15L170 15"
                 fill="none"
                 stroke="var(--blau)"
                 stroke-opacity="0.16"
                 stroke-width="14"
-                stroke-linecap="round"
-              />
-              <path
-                d="M20 15L432.8 15"
-                fill="none"
-                stroke="var(--blau)"
-                stroke-width="3"
                 stroke-linecap="round"
               />
             </g>
-            <g data-abschnitt="zweig">
+            <g data-abschnitt="analyse">
               <path
-                d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
+                d="M170 15C198.8 15 198.8 40 227.6 40L284.4 40C313.2 40 313.2 15 342 15"
                 fill="none"
                 stroke="var(--blau)"
                 stroke-opacity="0.16"
                 stroke-width="14"
-                stroke-linecap="round"
-              />
-              <path
-                d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
-                fill="none"
-                stroke="var(--blau)"
-                stroke-width="3"
-                stroke-linecap="round"
-                stroke-dasharray="7 6"
+                stroke-linecap="butt"
+                stroke-dasharray="9 7"
               />
             </g>
             <circle
-              data-station="teilnehmende"
+              data-station="app"
               cx="20"
               cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
             <circle
-              data-station="app"
-              cx="110"
+              data-station="live"
+              cx="95"
               cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
-            <circle
-              data-station="datenbank"
-              cx="288"
-              cy="15"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle
-              data-station="antwort"
-              cx="432.8"
-              cy="15"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle
-              data-station="analyse"
-              cx="216"
-              cy="40"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle data-station="spacy" cx="288" cy="40" r="9" fill="var(--gedaempft)" />
+            <circle data-station="spacy" cx="256" cy="40" r="9" fill="var(--blau)" />
             <circle
               data-station="ersatz"
-              cx="360"
-              cy="40"
+              cx="371.9"
+              cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
             <circle
               data-station="wortwolke"
-              cx="432.8"
-              cy="40"
+              cx="434"
+              cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
           </svg>
+          <div class="weg-punkt" style="left: 95px; top: 15px"></div>
           <p class="weg-beschriftung" aria-hidden="true">
             <span class="weg-name">Live-Pfad</span><span class="etikett etikett-1a">1A</span>
           </p>
@@ -1906,6 +1801,7 @@
         <div
           class="weg-mini weg-marke"
           data-marke="1a-live"
+          data-aktiv="live"
           role="img"
           aria-label="Ort auf dem Weg: Live-Pfad (1A)"
         >
@@ -1919,101 +1815,61 @@
             focusable="false"
           >
             <path
-              d="M20 15L432.8 15"
+              d="M20 15L170 15C198.8 15 198.8 40 227.6 40L284.4 40C313.2 40 313.2 15 342 15L434 15"
               fill="none"
-              stroke="var(--linie)"
+              stroke="var(--blau)"
               stroke-width="3"
               stroke-linecap="round"
             />
-            <path
-              d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
-              fill="none"
-              stroke="var(--linie)"
-              stroke-width="3"
-              stroke-linecap="round"
-            />
-            <g data-abschnitt="haupt">
+            <g data-abschnitt="live">
               <path
-                d="M20 15L432.8 15"
+                d="M20 15L170 15"
                 fill="none"
                 stroke="var(--blau)"
                 stroke-opacity="0.16"
                 stroke-width="14"
                 stroke-linecap="round"
               />
-              <path
-                d="M20 15L432.8 15"
-                fill="none"
-                stroke="var(--blau)"
-                stroke-width="3"
-                stroke-linecap="round"
-              />
             </g>
             <circle
-              data-station="teilnehmende"
+              data-station="app"
               cx="20"
               cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
             <circle
-              data-station="app"
-              cx="110"
+              data-station="live"
+              cx="95"
               cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
-            <circle
-              data-station="datenbank"
-              cx="288"
-              cy="15"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle
-              data-station="antwort"
-              cx="432.8"
-              cy="15"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle
-              data-station="analyse"
-              cx="216"
-              cy="40"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle data-station="spacy" cx="288" cy="40" r="9" fill="var(--gedaempft)" />
+            <circle data-station="spacy" cx="256" cy="40" r="9" fill="var(--blau)" />
             <circle
               data-station="ersatz"
-              cx="360"
-              cy="40"
+              cx="371.9"
+              cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
             <circle
               data-station="wortwolke"
-              cx="432.8"
-              cy="40"
+              cx="434"
+              cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
           </svg>
+          <div class="weg-punkt" style="left: 95px; top: 15px"></div>
           <p class="weg-beschriftung" aria-hidden="true">
             <span class="weg-name">Live-Pfad</span><span class="etikett etikett-1a">1A</span>
           </p>
@@ -2055,6 +1911,7 @@
         <div
           class="weg-mini weg-marke"
           data-marke="1a-regel"
+          data-aktiv="live"
           role="img"
           aria-label="Ort auf dem Weg: Live-Pfad (1A)"
         >
@@ -2068,119 +1925,72 @@
             focusable="false"
           >
             <path
-              d="M20 15L432.8 15"
+              d="M20 15L170 15C198.8 15 198.8 40 227.6 40L284.4 40C313.2 40 313.2 15 342 15L434 15"
               fill="none"
-              stroke="var(--linie)"
+              stroke="var(--blau)"
               stroke-width="3"
               stroke-linecap="round"
             />
-            <path
-              d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
-              fill="none"
-              stroke="var(--linie)"
-              stroke-width="3"
-              stroke-linecap="round"
-            />
-            <g data-abschnitt="haupt">
+            <g data-abschnitt="live">
               <path
-                d="M20 15L432.8 15"
+                d="M20 15L170 15"
                 fill="none"
                 stroke="var(--blau)"
                 stroke-opacity="0.16"
                 stroke-width="14"
-                stroke-linecap="round"
-              />
-              <path
-                d="M20 15L432.8 15"
-                fill="none"
-                stroke="var(--blau)"
-                stroke-width="3"
                 stroke-linecap="round"
               />
             </g>
-            <g data-abschnitt="zweig">
+            <g data-abschnitt="analyse">
               <path
-                d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
+                d="M170 15C198.8 15 198.8 40 227.6 40L284.4 40C313.2 40 313.2 15 342 15"
                 fill="none"
                 stroke="var(--blau)"
                 stroke-opacity="0.16"
                 stroke-width="14"
-                stroke-linecap="round"
-              />
-              <path
-                d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
-                fill="none"
-                stroke="var(--blau)"
-                stroke-width="3"
-                stroke-linecap="round"
-                stroke-dasharray="7 6"
+                stroke-linecap="butt"
+                stroke-dasharray="9 7"
               />
             </g>
             <circle
-              data-station="teilnehmende"
+              data-station="app"
               cx="20"
               cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
             <circle
-              data-station="app"
-              cx="110"
+              data-station="live"
+              cx="95"
               cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
-            <circle
-              data-station="datenbank"
-              cx="288"
-              cy="15"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle
-              data-station="antwort"
-              cx="432.8"
-              cy="15"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle
-              data-station="analyse"
-              cx="216"
-              cy="40"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle data-station="spacy" cx="288" cy="40" r="9" fill="var(--gedaempft)" />
+            <circle data-station="spacy" cx="256" cy="40" r="9" fill="var(--blau)" />
             <circle
               data-station="ersatz"
-              cx="360"
-              cy="40"
+              cx="371.9"
+              cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
             <circle
               data-station="wortwolke"
-              cx="432.8"
-              cy="40"
+              cx="434"
+              cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
           </svg>
+          <div class="weg-punkt" style="left: 95px; top: 15px"></div>
           <p class="weg-beschriftung" aria-hidden="true">
             <span class="weg-name">Live-Pfad</span><span class="etikett etikett-1a">1A</span>
           </p>
@@ -2217,6 +2027,7 @@
         <div
           class="weg-mini weg-marke"
           data-marke="1a-regel"
+          data-aktiv="live"
           role="img"
           aria-label="Ort auf dem Weg: Live-Pfad (1A)"
         >
@@ -2230,119 +2041,72 @@
             focusable="false"
           >
             <path
-              d="M20 15L432.8 15"
+              d="M20 15L170 15C198.8 15 198.8 40 227.6 40L284.4 40C313.2 40 313.2 15 342 15L434 15"
               fill="none"
-              stroke="var(--linie)"
+              stroke="var(--blau)"
               stroke-width="3"
               stroke-linecap="round"
             />
-            <path
-              d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
-              fill="none"
-              stroke="var(--linie)"
-              stroke-width="3"
-              stroke-linecap="round"
-            />
-            <g data-abschnitt="haupt">
+            <g data-abschnitt="live">
               <path
-                d="M20 15L432.8 15"
+                d="M20 15L170 15"
                 fill="none"
                 stroke="var(--blau)"
                 stroke-opacity="0.16"
                 stroke-width="14"
-                stroke-linecap="round"
-              />
-              <path
-                d="M20 15L432.8 15"
-                fill="none"
-                stroke="var(--blau)"
-                stroke-width="3"
                 stroke-linecap="round"
               />
             </g>
-            <g data-abschnitt="zweig">
+            <g data-abschnitt="analyse">
               <path
-                d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
+                d="M170 15C198.8 15 198.8 40 227.6 40L284.4 40C313.2 40 313.2 15 342 15"
                 fill="none"
                 stroke="var(--blau)"
                 stroke-opacity="0.16"
                 stroke-width="14"
-                stroke-linecap="round"
-              />
-              <path
-                d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
-                fill="none"
-                stroke="var(--blau)"
-                stroke-width="3"
-                stroke-linecap="round"
-                stroke-dasharray="7 6"
+                stroke-linecap="butt"
+                stroke-dasharray="9 7"
               />
             </g>
             <circle
-              data-station="teilnehmende"
+              data-station="app"
               cx="20"
               cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
             <circle
-              data-station="app"
-              cx="110"
+              data-station="live"
+              cx="95"
               cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
-            <circle
-              data-station="datenbank"
-              cx="288"
-              cy="15"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle
-              data-station="antwort"
-              cx="432.8"
-              cy="15"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle
-              data-station="analyse"
-              cx="216"
-              cy="40"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle data-station="spacy" cx="288" cy="40" r="9" fill="var(--gedaempft)" />
+            <circle data-station="spacy" cx="256" cy="40" r="9" fill="var(--blau)" />
             <circle
               data-station="ersatz"
-              cx="360"
-              cy="40"
+              cx="371.9"
+              cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
             <circle
               data-station="wortwolke"
-              cx="432.8"
-              cy="40"
+              cx="434"
+              cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
           </svg>
+          <div class="weg-punkt" style="left: 95px; top: 15px"></div>
           <p class="weg-beschriftung" aria-hidden="true">
             <span class="weg-name">Live-Pfad</span><span class="etikett etikett-1a">1A</span>
           </p>
@@ -2468,9 +2232,9 @@
         <div
           class="weg-mini weg-marke"
           data-marke="1a-wirkung"
-          data-aktiv="spacy"
+          data-aktiv="live"
           role="img"
-          aria-label="Ort auf dem Weg: spaCy (1A); Ausschlag: Wirkung auf den Live-Pfad"
+          aria-label="Ort auf dem Weg: Live-Pfad (1A); Ausschlag: Wirkung auf den Live-Pfad"
         >
           <svg
             class="weg-mini-karte"
@@ -2482,22 +2246,15 @@
             focusable="false"
           >
             <path
-              d="M20 15L432.8 15"
+              d="M20 15L170 15C198.8 15 198.8 40 227.6 40L284.4 40C313.2 40 313.2 15 342 15L434 15"
               fill="none"
-              stroke="var(--linie)"
-              stroke-width="3"
-              stroke-linecap="round"
-            />
-            <path
-              d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
-              fill="none"
-              stroke="var(--linie)"
+              stroke="var(--blau)"
               stroke-width="3"
               stroke-linecap="round"
             />
             <path
               data-wirkung
-              d="M224.8 15h5l4 -11 5 22 4 -11h5"
+              d="M118.5 15h5l4 -11 5 22 4 -11h5"
               fill="none"
               stroke="var(--blau)"
               stroke-width="3"
@@ -2505,73 +2262,46 @@
               stroke-linejoin="round"
             />
             <circle
-              data-station="teilnehmende"
+              data-station="app"
               cx="20"
               cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
             <circle
-              data-station="app"
-              cx="110"
+              data-station="live"
+              cx="95"
               cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
-            <circle
-              data-station="datenbank"
-              cx="288"
-              cy="15"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle
-              data-station="antwort"
-              cx="432.8"
-              cy="15"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle
-              data-station="analyse"
-              cx="216"
-              cy="40"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle data-station="spacy" cx="288" cy="40" r="9" fill="var(--gedaempft)" />
+            <circle data-station="spacy" cx="256" cy="40" r="9" fill="var(--blau)" />
             <circle
               data-station="ersatz"
-              cx="360"
-              cy="40"
+              cx="371.9"
+              cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
             <circle
               data-station="wortwolke"
-              cx="432.8"
-              cy="40"
+              cx="434"
+              cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
           </svg>
-          <div class="weg-punkt" style="left: 288px; top: 40px"></div>
+          <div class="weg-punkt" style="left: 95px; top: 15px"></div>
           <p class="weg-beschriftung" aria-hidden="true">
-            <span class="weg-name">spaCy</span><span class="etikett etikett-1a">1A</span>
+            <span class="weg-name">Live-Pfad</span><span class="etikett etikett-1a">1A</span>
           </p>
         </div>
         <ol class="teilleiste" aria-label="Teil des Vortrags: 1A, Niklas">
@@ -2627,85 +2357,51 @@
             focusable="false"
           >
             <path
-              d="M20 15L432.8 15"
+              d="M20 15L170 15C198.8 15 198.8 40 227.6 40L284.4 40C313.2 40 313.2 15 342 15L434 15"
               fill="none"
-              stroke="var(--linie)"
-              stroke-width="3"
-              stroke-linecap="round"
-            />
-            <path
-              d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
-              fill="none"
-              stroke="var(--linie)"
+              stroke="var(--blau)"
               stroke-width="3"
               stroke-linecap="round"
             />
             <circle
-              data-station="teilnehmende"
+              data-station="app"
               cx="20"
               cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
             <circle
-              data-station="app"
-              cx="110"
+              data-station="live"
+              cx="95"
               cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
-            <circle
-              data-station="datenbank"
-              cx="288"
-              cy="15"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle
-              data-station="antwort"
-              cx="432.8"
-              cy="15"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle
-              data-station="analyse"
-              cx="216"
-              cy="40"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle data-station="spacy" cx="288" cy="40" r="9" fill="var(--gedaempft)" />
+            <circle data-station="spacy" cx="256" cy="40" r="9" fill="var(--blau)" />
             <circle
               data-station="ersatz"
-              cx="360"
-              cy="40"
+              cx="371.9"
+              cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
             <circle
               data-station="wortwolke"
-              cx="432.8"
-              cy="40"
+              cx="434"
+              cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
           </svg>
-          <div class="weg-punkt" style="left: 288px; top: 40px"></div>
+          <div class="weg-punkt" style="left: 256px; top: 40px"></div>
           <p class="weg-beschriftung" aria-hidden="true">
             <span class="weg-name">spaCy</span><span class="etikett etikett-1a">1A</span>
           </p>
@@ -2760,85 +2456,51 @@
             focusable="false"
           >
             <path
-              d="M20 15L432.8 15"
+              d="M20 15L170 15C198.8 15 198.8 40 227.6 40L284.4 40C313.2 40 313.2 15 342 15L434 15"
               fill="none"
-              stroke="var(--linie)"
-              stroke-width="3"
-              stroke-linecap="round"
-            />
-            <path
-              d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
-              fill="none"
-              stroke="var(--linie)"
+              stroke="var(--blau)"
               stroke-width="3"
               stroke-linecap="round"
             />
             <circle
-              data-station="teilnehmende"
+              data-station="app"
               cx="20"
               cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
             <circle
-              data-station="app"
-              cx="110"
+              data-station="live"
+              cx="95"
               cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
-            <circle
-              data-station="datenbank"
-              cx="288"
-              cy="15"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle
-              data-station="antwort"
-              cx="432.8"
-              cy="15"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle
-              data-station="analyse"
-              cx="216"
-              cy="40"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle data-station="spacy" cx="288" cy="40" r="9" fill="var(--gedaempft)" />
+            <circle data-station="spacy" cx="256" cy="40" r="9" fill="var(--blau)" />
             <circle
               data-station="ersatz"
-              cx="360"
-              cy="40"
+              cx="371.9"
+              cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
             <circle
               data-station="wortwolke"
-              cx="432.8"
-              cy="40"
+              cx="434"
+              cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
           </svg>
-          <div class="weg-punkt" style="left: 360px; top: 40px"></div>
+          <div class="weg-punkt" style="left: 371.9px; top: 15px"></div>
           <p class="weg-beschriftung" aria-hidden="true">
             <span class="weg-name">Ersatz</span><span class="etikett etikett-1a">1A</span>
           </p>
@@ -2893,85 +2555,51 @@
             focusable="false"
           >
             <path
-              d="M20 15L432.8 15"
+              d="M20 15L170 15C198.8 15 198.8 40 227.6 40L284.4 40C313.2 40 313.2 15 342 15L434 15"
               fill="none"
-              stroke="var(--linie)"
-              stroke-width="3"
-              stroke-linecap="round"
-            />
-            <path
-              d="M110 15L132 15C160.8 15 160.8 40 189.6 40L432.8 40"
-              fill="none"
-              stroke="var(--linie)"
+              stroke="var(--blau)"
               stroke-width="3"
               stroke-linecap="round"
             />
             <circle
-              data-station="teilnehmende"
+              data-station="app"
               cx="20"
               cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
             <circle
-              data-station="app"
-              cx="110"
+              data-station="live"
+              cx="95"
               cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
-            <circle
-              data-station="datenbank"
-              cx="288"
-              cy="15"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle
-              data-station="antwort"
-              cx="432.8"
-              cy="15"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle
-              data-station="analyse"
-              cx="216"
-              cy="40"
-              r="6.5"
-              fill="#fff"
-              stroke="var(--gedaempft)"
-              stroke-width="3"
-            />
-            <circle data-station="spacy" cx="288" cy="40" r="9" fill="var(--gedaempft)" />
+            <circle data-station="spacy" cx="256" cy="40" r="9" fill="var(--blau)" />
             <circle
               data-station="ersatz"
-              cx="360"
-              cy="40"
+              cx="371.9"
+              cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
             <circle
               data-station="wortwolke"
-              cx="432.8"
-              cy="40"
+              cx="434"
+              cy="15"
               r="6.5"
               fill="#fff"
-              stroke="var(--gedaempft)"
+              stroke="var(--blau)"
               stroke-width="3"
             />
           </svg>
-          <div class="weg-punkt" style="left: 432.8px; top: 40px"></div>
+          <div class="weg-punkt" style="left: 434px; top: 15px"></div>
           <p class="weg-beschriftung" aria-hidden="true">
             <span class="weg-name">Wortwolke</span><span class="etikett etikett-1a">1A</span>
           </p>
@@ -3743,10 +3371,11 @@
         aria-label="19 von 39: Der Host wartet nicht auf das Modell"
       >
         <div
-          class="weg-mini weg-mini-statisch"
+          class="weg-mini weg-marke"
+          data-marke="station:klick"
           data-aktiv="klick"
           role="img"
-          aria-label="Station des Auftrags: Klick (1C)"
+          aria-label="Ort auf dem Weg: Klick (1C)"
         >
           <svg
             class="weg-mini-karte"
@@ -3901,10 +3530,11 @@
         aria-label="20 von 39: Jeder Kontextaufbau prüft die Rechte erneut"
       >
         <div
-          class="weg-mini weg-mini-statisch"
+          class="weg-mini weg-marke"
+          data-marke="station:kontext"
           data-aktiv="kontext"
           role="img"
-          aria-label="Station des Auftrags: Kontext (1C)"
+          aria-label="Ort auf dem Weg: Kontext (1C)"
         >
           <svg
             class="weg-mini-karte"
@@ -4082,10 +3712,11 @@
         aria-label="21 von 39: Was die Vorschau zeigt, kommt an"
       >
         <div
-          class="weg-mini weg-mini-statisch"
+          class="weg-mini weg-marke"
+          data-marke="station:kontext"
           data-aktiv="kontext"
           role="img"
-          aria-label="Station des Auftrags: Kontext (1C)"
+          aria-label="Ort auf dem Weg: Kontext (1C)"
         >
           <svg
             class="weg-mini-karte"
@@ -4242,10 +3873,11 @@
         aria-label="22 von 39: Sicher geschätzt, aber Platz verschenkt"
       >
         <div
-          class="weg-mini weg-mini-statisch"
+          class="weg-mini weg-marke"
+          data-marke="station:kontext"
           data-aktiv="kontext"
           role="img"
-          aria-label="Station des Auftrags: Kontext (1C)"
+          aria-label="Ort auf dem Weg: Kontext (1C)"
         >
           <svg
             class="weg-mini-karte"
@@ -4428,10 +4060,11 @@
         aria-label="23 von 39: Gemessen am Draht, auf beiden Hosts"
       >
         <div
-          class="weg-mini weg-mini-statisch"
+          class="weg-mini weg-marke"
+          data-marke="auftrag-netz"
           data-aktiv="netz"
           role="img"
-          aria-label="Station des Auftrags: Netz (1B)"
+          aria-label="Ort auf dem Weg: Netz (1B)"
         >
           <svg
             class="weg-mini-karte"
@@ -4449,6 +4082,23 @@
               stroke-width="3"
               stroke-linecap="round"
             />
+            <g data-abschnitt="netz">
+              <path
+                d="M138.8 15C167.6 15 167.6 40 196.4 40M254 40C282.8 40 282.8 15 311.6 15"
+                fill="none"
+                stroke="var(--bernstein)"
+                stroke-opacity="0.16"
+                stroke-width="14"
+                stroke-linecap="round"
+              />
+              <path
+                d="M138.8 15C167.6 15 167.6 40 196.4 40M254 40C282.8 40 282.8 15 311.6 15"
+                fill="none"
+                stroke="var(--bernstein)"
+                stroke-width="3"
+                stroke-linecap="round"
+              />
+            </g>
             <circle
               data-station="klick"
               cx="20"
@@ -4571,10 +4221,11 @@
         aria-label="24 von 39: Strecke und lokal: kein Unterschied messbar"
       >
         <div
-          class="weg-mini weg-mini-statisch"
+          class="weg-mini weg-marke"
+          data-marke="auftrag-netz"
           data-aktiv="netz"
           role="img"
-          aria-label="Station des Auftrags: Netz (1B)"
+          aria-label="Ort auf dem Weg: Netz (1B)"
         >
           <svg
             class="weg-mini-karte"
@@ -4592,6 +4243,23 @@
               stroke-width="3"
               stroke-linecap="round"
             />
+            <g data-abschnitt="netz">
+              <path
+                d="M138.8 15C167.6 15 167.6 40 196.4 40M254 40C282.8 40 282.8 15 311.6 15"
+                fill="none"
+                stroke="var(--bernstein)"
+                stroke-opacity="0.16"
+                stroke-width="14"
+                stroke-linecap="round"
+              />
+              <path
+                d="M138.8 15C167.6 15 167.6 40 196.4 40M254 40C282.8 40 282.8 15 311.6 15"
+                fill="none"
+                stroke="var(--bernstein)"
+                stroke-width="3"
+                stroke-linecap="round"
+              />
+            </g>
             <circle
               data-station="klick"
               cx="20"
@@ -4706,10 +4374,11 @@
         aria-label="25 von 39: Die Zeit steckt in der Inferenz"
       >
         <div
-          class="weg-mini weg-mini-statisch"
+          class="weg-mini weg-marke"
+          data-marke="auftrag-zeit"
           data-aktiv="inferenz"
           role="img"
-          aria-label="Station des Auftrags: Inferenz (1B)"
+          aria-label="Ort auf dem Weg: Inferenz (1B)"
         >
           <svg
             class="weg-mini-karte"
@@ -4727,6 +4396,16 @@
               stroke-width="3"
               stroke-linecap="round"
             />
+            <g data-abschnitt="ganz">
+              <path
+                d="M20 15L138.8 15C167.6 15 167.6 40 196.4 40L254 40C282.8 40 282.8 15 311.6 15L434 15"
+                fill="none"
+                stroke="var(--blau)"
+                stroke-opacity="0.16"
+                stroke-width="14"
+                stroke-linecap="round"
+              />
+            </g>
             <circle
               data-station="klick"
               cx="20"
@@ -4811,10 +4490,11 @@
         aria-label="26 von 39: Das Netz ist 0,3 mm auf 105 m"
       >
         <div
-          class="weg-mini weg-mini-statisch"
+          class="weg-mini weg-marke"
+          data-marke="station:inferenz"
           data-aktiv="inferenz"
           role="img"
-          aria-label="Station des Auftrags: Inferenz (1B)"
+          aria-label="Ort auf dem Weg: Inferenz (1B)"
         >
           <svg
             class="weg-mini-karte"
@@ -4916,10 +4596,11 @@
         aria-label="27 von 39: Frisch gestartet: 200,5 s statt 148,6 s"
       >
         <div
-          class="weg-mini weg-mini-statisch"
+          class="weg-mini weg-marke"
+          data-marke="station:inferenz"
           data-aktiv="inferenz"
           role="img"
-          aria-label="Station des Auftrags: Inferenz (1B)"
+          aria-label="Ort auf dem Weg: Inferenz (1B)"
         >
           <svg
             class="weg-mini-karte"
@@ -5053,10 +4734,11 @@
         aria-label="28 von 39: Runtime gestoppt: Ersatz nach 88,5 ms"
       >
         <div
-          class="weg-mini weg-mini-statisch"
+          class="weg-mini weg-marke"
+          data-marke="auftrag-stopp"
           data-aktiv="inferenz"
           role="img"
-          aria-label="Station des Auftrags: Inferenz (1B)"
+          aria-label="Ort auf dem Weg: Inferenz (1B); Störungen: Stopp"
         >
           <svg
             class="weg-mini-karte"
@@ -5119,8 +4801,20 @@
               fill="#fff"
               stroke="var(--rot)"
               stroke-width="3"
-            />
-          </svg>
+            /></svg
+          ><span class="weg-zeichen-ort" style="left: 225.2px; top: 2px"
+            ><span class="weg-zeichen-reihe"
+              ><svg
+                class="weg-zeichen"
+                data-zeichen="stopp"
+                viewBox="0 0 22 22"
+                width="22"
+                height="22"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <rect x="5" y="5" width="12" height="12" rx="2" fill="currentColor" /></svg></span
+          ></span>
           <div class="weg-punkt" style="left: 225.2px; top: 40px"></div>
           <p class="weg-beschriftung" aria-hidden="true">
             <span class="weg-name">Inferenz</span><span class="etikett etikett-1b">1B</span>
@@ -5187,10 +4881,11 @@
         aria-label="29 von 39: 90 s Timeout ab Werk sind auf der CPU zu kurz"
       >
         <div
-          class="weg-mini weg-mini-statisch"
+          class="weg-mini weg-marke"
+          data-marke="auftrag-timeout"
           data-aktiv="inferenz"
           role="img"
-          aria-label="Station des Auftrags: Inferenz (1B)"
+          aria-label="Ort auf dem Weg: Inferenz (1B); Störungen: zu spät"
         >
           <svg
             class="weg-mini-karte"
@@ -5253,8 +4948,35 @@
               fill="#fff"
               stroke="var(--rot)"
               stroke-width="3"
-            />
-          </svg>
+            /></svg
+          ><span class="weg-zeichen-ort" style="left: 225.2px; top: 2px"
+            ><span class="weg-zeichen-reihe"
+              ><svg
+                class="weg-zeichen"
+                data-zeichen="spaet"
+                viewBox="0 0 22 22"
+                width="22"
+                height="22"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <circle
+                  cx="11"
+                  cy="11"
+                  r="7.5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                />
+                <path
+                  d="M11 6.5V11l3.2 2.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                /></svg></span
+          ></span>
           <div class="weg-punkt" style="left: 225.2px; top: 40px"></div>
           <p class="weg-beschriftung" aria-hidden="true">
             <span class="weg-name">Inferenz</span><span class="etikett etikett-1b">1B</span>
@@ -5340,10 +5062,11 @@
         aria-label="30 von 39: Nachprüfung: wenig Zeit, unter Voting riskant"
       >
         <div
-          class="weg-mini weg-mini-statisch"
+          class="weg-mini weg-marke"
+          data-marke="station:nachpruefung"
           data-aktiv="nachpruefung"
           role="img"
-          aria-label="Station des Auftrags: Nachprüfung (1C)"
+          aria-label="Ort auf dem Weg: Nachprüfung (1C)"
         >
           <svg
             class="weg-mini-karte"
@@ -5486,10 +5209,11 @@
         aria-label="31 von 39: 38 geprüfte Antworten, keine besteht das Gate"
       >
         <div
-          class="weg-mini weg-mini-statisch"
+          class="weg-mini weg-marke"
+          data-marke="station:gate"
           data-aktiv="gate"
           role="img"
-          aria-label="Station des Auftrags: Gate (1C)"
+          aria-label="Ort auf dem Weg: Gate (1C)"
         >
           <svg
             class="weg-mini-karte"
@@ -7816,7 +7540,115 @@
           Papadopoulos et al., 2021, Kap. 2.3
         </div>
       </section>
-      <div class="weg-mini weg-wandernd" role="img" aria-label="Station des Auftrags" hidden>
+      <div class="weg-mini weg-laeufer" data-weg="1a" role="img" aria-label="">
+        <svg
+          class="weg-mini-karte"
+          data-weg="1a"
+          viewBox="0 0 450 52"
+          width="450"
+          height="52"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path
+            d="M20 15L170 15C198.8 15 198.8 40 227.6 40L284.4 40C313.2 40 313.2 15 342 15L434 15"
+            fill="none"
+            stroke="var(--blau)"
+            stroke-width="3"
+            stroke-linecap="round"
+          />
+          <g data-abschnitt="analyse" class="weg-saum" data-saum="analyse|var(--blau)">
+            <path
+              d="M170 15C198.8 15 198.8 40 227.6 40L284.4 40C313.2 40 313.2 15 342 15"
+              fill="none"
+              stroke="var(--blau)"
+              stroke-opacity="0.16"
+              stroke-width="14"
+              stroke-linecap="round"
+            />
+          </g>
+          <g data-abschnitt="live" class="weg-saum" data-saum="live|var(--blau)">
+            <path
+              d="M20 15L170 15"
+              fill="none"
+              stroke="var(--blau)"
+              stroke-opacity="0.16"
+              stroke-width="14"
+              stroke-linecap="round"
+            />
+          </g>
+          <g data-abschnitt="analyse" class="weg-saum" data-saum="analyse|var(--blau)|gestrichelt">
+            <path
+              d="M170 15C198.8 15 198.8 40 227.6 40L284.4 40C313.2 40 313.2 15 342 15"
+              fill="none"
+              stroke="var(--blau)"
+              stroke-opacity="0.16"
+              stroke-width="14"
+              stroke-linecap="butt"
+              stroke-dasharray="9 7"
+            />
+          </g>
+          <path
+            data-wirkung
+            class="weg-wirkung"
+            d="M118.5 15h5l4 -11 5 22 4 -11h5"
+            fill="none"
+            stroke="var(--blau)"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <circle
+            data-station="app"
+            cx="20"
+            cy="15"
+            r="6.5"
+            fill="#fff"
+            stroke="var(--blau)"
+            stroke-width="3"
+          />
+          <circle
+            data-station="live"
+            cx="95"
+            cy="15"
+            r="6.5"
+            fill="#fff"
+            stroke="var(--blau)"
+            stroke-width="3"
+          />
+          <circle data-station="spacy" cx="256" cy="40" r="9" fill="var(--blau)" />
+          <circle
+            data-station="ersatz"
+            cx="371.9"
+            cy="15"
+            r="6.5"
+            fill="#fff"
+            stroke="var(--blau)"
+            stroke-width="3"
+          />
+          <circle
+            data-station="wortwolke"
+            cx="434"
+            cy="15"
+            r="6.5"
+            fill="#fff"
+            stroke="var(--blau)"
+            stroke-width="3"
+          />
+        </svg>
+        <div
+          class="weg-punkt"
+          style="
+            offset-path: path(
+              'M20 15L170 15C198.8 15 198.8 40 227.6 40L284.4 40C313.2 40 313.2 15 342 15L434 15'
+            );
+          "
+        ></div>
+        <p class="weg-beschriftung" aria-hidden="true">
+          <span class="weg-name"></span><span class="weg-etiketten"></span>
+        </p>
+      </div>
+      <div class="weg-mini weg-laeufer" data-weg="auftrag" role="img" aria-label="">
         <svg
           class="weg-mini-karte"
           data-weg="auftrag"
@@ -7833,6 +7665,50 @@
             stroke-width="3"
             stroke-linecap="round"
           />
+          <g data-abschnitt="netz" class="weg-saum" data-saum="netz|var(--bernstein)">
+            <path
+              d="M138.8 15C167.6 15 167.6 40 196.4 40M254 40C282.8 40 282.8 15 311.6 15"
+              fill="none"
+              stroke="var(--bernstein)"
+              stroke-opacity="0.16"
+              stroke-width="14"
+              stroke-linecap="round"
+            />
+            <path
+              d="M138.8 15C167.6 15 167.6 40 196.4 40M254 40C282.8 40 282.8 15 311.6 15"
+              fill="none"
+              stroke="var(--bernstein)"
+              stroke-width="3"
+              stroke-linecap="round"
+            />
+          </g>
+          <g data-abschnitt="ganz" class="weg-saum" data-saum="ganz|var(--blau)">
+            <path
+              d="M20 15L138.8 15C167.6 15 167.6 40 196.4 40L254 40C282.8 40 282.8 15 311.6 15L434 15"
+              fill="none"
+              stroke="var(--blau)"
+              stroke-opacity="0.16"
+              stroke-width="14"
+              stroke-linecap="round"
+            />
+          </g>
+          <g data-abschnitt="zweiterHost" class="weg-saum" data-saum="zweiterHost|var(--bernstein)">
+            <path
+              d="M138.8 15C167.6 15 167.6 40 196.4 40L254 40C282.8 40 282.8 15 311.6 15"
+              fill="none"
+              stroke="var(--bernstein)"
+              stroke-opacity="0.16"
+              stroke-width="14"
+              stroke-linecap="round"
+            />
+            <path
+              d="M138.8 15C167.6 15 167.6 40 196.4 40L254 40C282.8 40 282.8 15 311.6 15"
+              fill="none"
+              stroke="var(--bernstein)"
+              stroke-width="3"
+              stroke-linecap="round"
+            />
+          </g>
           <circle
             data-station="klick"
             cx="20"
@@ -7878,8 +7754,176 @@
             fill="#fff"
             stroke="var(--rot)"
             stroke-width="3"
-          />
-        </svg>
+          /></svg
+        ><span class="weg-zeichen-ort" style="left: 225.2px; top: 2px"
+          ><span class="weg-stufe weg-satz" data-satz="stopp"
+            ><span class="weg-zeichen-reihe"
+              ><svg
+                class="weg-zeichen"
+                data-zeichen="stopp"
+                viewBox="0 0 22 22"
+                width="22"
+                height="22"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <rect
+                  x="5"
+                  y="5"
+                  width="12"
+                  height="12"
+                  rx="2"
+                  fill="currentColor"
+                /></svg></span></span
+          ><span class="weg-stufe weg-satz" data-satz="spaet"
+            ><span class="weg-zeichen-reihe"
+              ><svg
+                class="weg-zeichen"
+                data-zeichen="spaet"
+                viewBox="0 0 22 22"
+                width="22"
+                height="22"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <circle
+                  cx="11"
+                  cy="11"
+                  r="7.5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                />
+                <path
+                  d="M11 6.5V11l3.2 2.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                /></svg></span></span
+          ><span class="weg-stufe weg-satz" data-satz="stopp,belegt"
+            ><span class="weg-zeichen-reihe"
+              ><svg
+                class="weg-zeichen"
+                data-zeichen="stopp"
+                viewBox="0 0 22 22"
+                width="22"
+                height="22"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <rect x="5" y="5" width="12" height="12" rx="2" fill="currentColor" /></svg
+              ><svg
+                class="weg-zeichen"
+                data-zeichen="belegt"
+                viewBox="0 0 22 22"
+                width="22"
+                height="22"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <circle
+                  cx="11"
+                  cy="11"
+                  r="7.5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                />
+                <path d="M6.5 11h9" stroke="currentColor" stroke-width="3" /></svg></span></span
+          ><span class="weg-stufe weg-satz" data-satz="drop"
+            ><span class="weg-zeichen-reihe"
+              ><svg
+                class="weg-zeichen"
+                data-zeichen="drop"
+                viewBox="0 0 22 22"
+                width="22"
+                height="22"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path
+                  d="M2.5 11h11M9.5 6.5l4.5 4.5-4.5 4.5M18.5 4v14"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                /></svg></span></span
+          ><span class="weg-stufe weg-satz" data-satz="stopp,belegt,drop,spaet"
+            ><span class="weg-zeichen-reihe"
+              ><svg
+                class="weg-zeichen"
+                data-zeichen="stopp"
+                viewBox="0 0 22 22"
+                width="22"
+                height="22"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <rect x="5" y="5" width="12" height="12" rx="2" fill="currentColor" /></svg
+              ><svg
+                class="weg-zeichen"
+                data-zeichen="belegt"
+                viewBox="0 0 22 22"
+                width="22"
+                height="22"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <circle
+                  cx="11"
+                  cy="11"
+                  r="7.5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                />
+                <path d="M6.5 11h9" stroke="currentColor" stroke-width="3" /></svg
+              ><svg
+                class="weg-zeichen"
+                data-zeichen="drop"
+                viewBox="0 0 22 22"
+                width="22"
+                height="22"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path
+                  d="M2.5 11h11M9.5 6.5l4.5 4.5-4.5 4.5M18.5 4v14"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                /></svg
+              ><svg
+                class="weg-zeichen"
+                data-zeichen="spaet"
+                viewBox="0 0 22 22"
+                width="22"
+                height="22"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <circle
+                  cx="11"
+                  cy="11"
+                  r="7.5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                />
+                <path
+                  d="M11 6.5V11l3.2 2.2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                /></svg></span></span
+        ></span>
         <div
           class="weg-punkt"
           style="
@@ -7888,8 +7932,8 @@
             );
           "
         ></div>
-        <p class="weg-beschriftung">
-          <span class="weg-name"></span><span class="etikett etikett-1c"></span>
+        <p class="weg-beschriftung" aria-hidden="true">
+          <span class="weg-name"></span><span class="weg-etiketten"></span>
         </p>
       </div>
       <div
@@ -7959,60 +8003,395 @@
     <p class="live" aria-live="polite"></p>
     <script type="application/json" id="deck-konfig">
       {
-        "stationen": {
-          "klick": {
-            "x": 20,
-            "y": 15,
+        "marken": {
+          "N1": {
+            "name": "1a-weg",
+            "weg": "1a",
+            "station": null,
+            "anteil": null,
+            "text": "Weg der Analyse",
+            "teil": ["1A"],
+            "saeume": [],
+            "wirkung": false,
+            "stufen": [],
+            "label": "Ort auf dem Weg: Weg der Analyse (1A)"
+          },
+          "N2": {
+            "name": "1a-app",
+            "weg": "1a",
+            "station": "app",
             "anteil": 0,
-            "auftrag": "1C",
-            "name": "Klick",
-            "farbe": "var(--petrol)",
-            "kern": false
+            "text": "App-Host",
+            "teil": ["1A"],
+            "saeume": [],
+            "wirkung": false,
+            "stufen": [],
+            "label": "Ort auf dem Weg: App-Host (1A)"
           },
-          "kontext": {
-            "x": 99.3,
-            "y": 15,
-            "anteil": 18.53,
-            "auftrag": "1C",
-            "name": "Kontext",
-            "farbe": "var(--petrol)",
-            "kern": false
+          "N3": {
+            "name": "1a-varianten",
+            "weg": "1a",
+            "station": "app",
+            "anteil": 0,
+            "text": "App-Host",
+            "teil": ["1A"],
+            "saeume": ["analyse|var(--blau)"],
+            "wirkung": false,
+            "stufen": [],
+            "label": "Ort auf dem Weg: App-Host (1A)"
           },
-          "netz": {
-            "x": 167.6,
-            "y": 27.5,
-            "anteil": 35.31,
-            "auftrag": "1B",
-            "name": "Netz",
-            "farbe": "var(--bernstein)",
-            "kern": false
+          "N4": {
+            "name": "1a-regel",
+            "weg": "1a",
+            "station": "live",
+            "anteil": 17.53,
+            "text": "Live-Pfad",
+            "teil": ["1A"],
+            "saeume": ["live|var(--blau)", "analyse|var(--blau)|gestrichelt"],
+            "wirkung": false,
+            "stufen": [],
+            "label": "Ort auf dem Weg: Live-Pfad (1A)"
           },
-          "inferenz": {
-            "x": 225.2,
-            "y": 40,
-            "anteil": 49.58,
-            "auftrag": "1B",
-            "name": "Inferenz",
-            "farbe": "var(--bernstein)",
-            "kern": true
+          "N5": {
+            "name": "1a-live",
+            "weg": "1a",
+            "station": "live",
+            "anteil": 17.53,
+            "text": "Live-Pfad",
+            "teil": ["1A"],
+            "saeume": ["live|var(--blau)"],
+            "wirkung": false,
+            "stufen": [],
+            "label": "Ort auf dem Weg: Live-Pfad (1A)"
           },
-          "nachpruefung": {
-            "x": 344.04,
-            "y": 15,
-            "anteil": 78.97,
-            "auftrag": "1C",
-            "name": "Nachprüfung",
-            "farbe": "var(--petrol)",
-            "kern": false
+          "N6": {
+            "name": "1a-regel",
+            "weg": "1a",
+            "station": "live",
+            "anteil": 17.53,
+            "text": "Live-Pfad",
+            "teil": ["1A"],
+            "saeume": ["live|var(--blau)", "analyse|var(--blau)|gestrichelt"],
+            "wirkung": false,
+            "stufen": [],
+            "label": "Ort auf dem Weg: Live-Pfad (1A)"
           },
-          "gate": {
-            "x": 434,
-            "y": 15,
+          "N6b": {
+            "name": "1a-regel",
+            "weg": "1a",
+            "station": "live",
+            "anteil": 17.53,
+            "text": "Live-Pfad",
+            "teil": ["1A"],
+            "saeume": ["live|var(--blau)", "analyse|var(--blau)|gestrichelt"],
+            "wirkung": false,
+            "stufen": [],
+            "label": "Ort auf dem Weg: Live-Pfad (1A)"
+          },
+          "N7": {
+            "name": "1a-wirkung",
+            "weg": "1a",
+            "station": "live",
+            "anteil": 17.53,
+            "text": "Live-Pfad",
+            "teil": ["1A"],
+            "saeume": [],
+            "wirkung": true,
+            "stufen": [],
+            "label": "Ort auf dem Weg: Live-Pfad (1A); Ausschlag: Wirkung auf den Live-Pfad"
+          },
+          "N8": {
+            "name": "1a-spacy",
+            "weg": "1a",
+            "station": "spacy",
+            "anteil": 56.78,
+            "text": "spaCy",
+            "teil": ["1A"],
+            "saeume": [],
+            "wirkung": false,
+            "stufen": [],
+            "label": "Ort auf dem Weg: spaCy (1A)"
+          },
+          "N9": {
+            "name": "1a-ersatz",
+            "weg": "1a",
+            "station": "ersatz",
+            "anteil": 85.49,
+            "text": "Ersatz",
+            "teil": ["1A"],
+            "saeume": [],
+            "wirkung": false,
+            "stufen": [],
+            "label": "Ort auf dem Weg: Ersatz (1A)"
+          },
+          "N10": {
+            "name": "1a-wortwolke",
+            "weg": "1a",
+            "station": "wortwolke",
             "anteil": 100,
-            "auftrag": "1C",
-            "name": "Gate",
-            "farbe": "var(--rot)",
-            "kern": false
+            "text": "Wortwolke",
+            "teil": ["1A"],
+            "saeume": [],
+            "wirkung": false,
+            "stufen": [],
+            "label": "Ort auf dem Weg: Wortwolke (1A)"
+          },
+          "J1": {
+            "name": "auftrag",
+            "weg": "auftrag",
+            "station": null,
+            "anteil": null,
+            "text": "Weg eines Auftrags",
+            "teil": ["1C", "1B"],
+            "saeume": [],
+            "wirkung": false,
+            "stufen": [],
+            "label": "Ort auf dem Weg: Weg eines Auftrags (1C, 1B)"
+          },
+          "J2": {
+            "name": "auftrag",
+            "weg": "auftrag",
+            "station": null,
+            "anteil": null,
+            "text": "Weg eines Auftrags",
+            "teil": ["1C", "1B"],
+            "saeume": [],
+            "wirkung": false,
+            "stufen": [],
+            "label": "Ort auf dem Weg: Weg eines Auftrags (1C, 1B)"
+          },
+          "J3": {
+            "name": "auftrag",
+            "weg": "auftrag",
+            "station": null,
+            "anteil": null,
+            "text": "Weg eines Auftrags",
+            "teil": ["1C", "1B"],
+            "saeume": [],
+            "wirkung": false,
+            "stufen": [],
+            "label": "Ort auf dem Weg: Weg eines Auftrags (1C, 1B)"
+          },
+          "J4": {
+            "name": "auftrag",
+            "weg": "auftrag",
+            "station": null,
+            "anteil": null,
+            "text": "Weg eines Auftrags",
+            "teil": ["1C", "1B"],
+            "saeume": [],
+            "wirkung": false,
+            "stufen": [],
+            "label": "Ort auf dem Weg: Weg eines Auftrags (1C, 1B)"
+          },
+          "J5": {
+            "name": "station:klick",
+            "weg": "auftrag",
+            "station": "klick",
+            "anteil": 0,
+            "text": "Klick",
+            "teil": ["1C"],
+            "saeume": [],
+            "wirkung": false,
+            "stufen": [],
+            "label": "Ort auf dem Weg: Klick (1C)"
+          },
+          "J5b": {
+            "name": "station:kontext",
+            "weg": "auftrag",
+            "station": "kontext",
+            "anteil": 18.53,
+            "text": "Kontext",
+            "teil": ["1C"],
+            "saeume": [],
+            "wirkung": false,
+            "stufen": [],
+            "label": "Ort auf dem Weg: Kontext (1C)"
+          },
+          "J6": {
+            "name": "station:kontext",
+            "weg": "auftrag",
+            "station": "kontext",
+            "anteil": 18.53,
+            "text": "Kontext",
+            "teil": ["1C"],
+            "saeume": [],
+            "wirkung": false,
+            "stufen": [],
+            "label": "Ort auf dem Weg: Kontext (1C)"
+          },
+          "J7": {
+            "name": "station:kontext",
+            "weg": "auftrag",
+            "station": "kontext",
+            "anteil": 18.53,
+            "text": "Kontext",
+            "teil": ["1C"],
+            "saeume": [],
+            "wirkung": false,
+            "stufen": [],
+            "label": "Ort auf dem Weg: Kontext (1C)"
+          },
+          "J8": {
+            "name": "auftrag-netz",
+            "weg": "auftrag",
+            "station": "netz",
+            "anteil": 35.31,
+            "text": "Netz",
+            "teil": ["1B"],
+            "saeume": ["netz|var(--bernstein)"],
+            "wirkung": false,
+            "stufen": [],
+            "label": "Ort auf dem Weg: Netz (1B)"
+          },
+          "J8b": {
+            "name": "auftrag-netz",
+            "weg": "auftrag",
+            "station": "netz",
+            "anteil": 35.31,
+            "text": "Netz",
+            "teil": ["1B"],
+            "saeume": ["netz|var(--bernstein)"],
+            "wirkung": false,
+            "stufen": [],
+            "label": "Ort auf dem Weg: Netz (1B)"
+          },
+          "J9": {
+            "name": "auftrag-zeit",
+            "weg": "auftrag",
+            "station": "inferenz",
+            "anteil": 49.58,
+            "text": "Inferenz",
+            "teil": ["1B"],
+            "saeume": ["ganz|var(--blau)"],
+            "wirkung": false,
+            "stufen": [],
+            "label": "Ort auf dem Weg: Inferenz (1B)"
+          },
+          "J10": {
+            "name": "station:inferenz",
+            "weg": "auftrag",
+            "station": "inferenz",
+            "anteil": 49.58,
+            "text": "Inferenz",
+            "teil": ["1B"],
+            "saeume": [],
+            "wirkung": false,
+            "stufen": [],
+            "label": "Ort auf dem Weg: Inferenz (1B)"
+          },
+          "J10a": {
+            "name": "station:inferenz",
+            "weg": "auftrag",
+            "station": "inferenz",
+            "anteil": 49.58,
+            "text": "Inferenz",
+            "teil": ["1B"],
+            "saeume": [],
+            "wirkung": false,
+            "stufen": [],
+            "label": "Ort auf dem Weg: Inferenz (1B)"
+          },
+          "J10b": {
+            "name": "auftrag-stopp",
+            "weg": "auftrag",
+            "station": "inferenz",
+            "anteil": 49.58,
+            "text": "Inferenz",
+            "teil": ["1B"],
+            "saeume": [],
+            "wirkung": false,
+            "stufen": [{ "ab": 0, "bis": null, "satz": "stopp" }],
+            "label": "Ort auf dem Weg: Inferenz (1B); Störungen: Stopp"
+          },
+          "J11": {
+            "name": "auftrag-timeout",
+            "weg": "auftrag",
+            "station": "inferenz",
+            "anteil": 49.58,
+            "text": "Inferenz",
+            "teil": ["1B"],
+            "saeume": [],
+            "wirkung": false,
+            "stufen": [{ "ab": 0, "bis": null, "satz": "spaet" }],
+            "label": "Ort auf dem Weg: Inferenz (1B); Störungen: zu spät"
+          },
+          "J12": {
+            "name": "station:nachpruefung",
+            "weg": "auftrag",
+            "station": "nachpruefung",
+            "anteil": 78.97,
+            "text": "Nachprüfung",
+            "teil": ["1C"],
+            "saeume": [],
+            "wirkung": false,
+            "stufen": [],
+            "label": "Ort auf dem Weg: Nachprüfung (1C)"
+          },
+          "J13": {
+            "name": "station:gate",
+            "weg": "auftrag",
+            "station": "gate",
+            "anteil": 100,
+            "text": "Gate",
+            "teil": ["1C"],
+            "saeume": [],
+            "wirkung": false,
+            "stufen": [],
+            "label": "Ort auf dem Weg: Gate (1C)"
+          },
+          "J13b": {
+            "name": "auftrag",
+            "weg": "auftrag",
+            "station": null,
+            "anteil": null,
+            "text": "Weg eines Auftrags",
+            "teil": ["1C", "1B"],
+            "saeume": [],
+            "wirkung": false,
+            "stufen": [],
+            "label": "Ort auf dem Weg: Weg eines Auftrags (1C, 1B)"
+          },
+          "J15": {
+            "name": "auftrag",
+            "weg": "auftrag",
+            "station": null,
+            "anteil": null,
+            "text": "Weg eines Auftrags",
+            "teil": ["1C", "1B"],
+            "saeume": [],
+            "wirkung": false,
+            "stufen": [],
+            "label": "Ort auf dem Weg: Weg eines Auftrags (1C, 1B)"
+          },
+          "M1": {
+            "name": "1b-stoerung",
+            "weg": "auftrag",
+            "station": null,
+            "anteil": null,
+            "text": "Zweiter Host",
+            "teil": ["1B"],
+            "saeume": ["zweiterHost|var(--bernstein)"],
+            "wirkung": false,
+            "stufen": [
+              { "ab": 0, "bis": 0, "satz": "" },
+              { "ab": 1, "bis": 1, "satz": "stopp,belegt" },
+              { "ab": 2, "bis": 2, "satz": "drop" },
+              { "ab": 3, "bis": null, "satz": "spaet" }
+            ],
+            "label": "Ort auf dem Weg: Zweiter Host (1B); Störungen: Stopp, Slot belegt, DROP, zu spät"
+          },
+          "M2": {
+            "name": "1b-alle",
+            "weg": "auftrag",
+            "station": null,
+            "anteil": null,
+            "text": "Zweiter Host",
+            "teil": ["1B"],
+            "saeume": ["zweiterHost|var(--bernstein)"],
+            "wirkung": false,
+            "stufen": [{ "ab": 0, "bis": null, "satz": "stopp,belegt,drop,spaet" }],
+            "label": "Ort auf dem Weg: Zweiter Host (1B); Störungen: Stopp, Slot belegt, DROP, zu spät"
           }
         }
       }
@@ -8020,8 +8399,9 @@
     <script>
       // Laufzeit des Browser-Decks (wird von deck.mjs in deck-vorlage.html eingesetzt).
       // Steuerung: → / Leertaste / Bild ab vor, ← / Bild auf zurück, Pos1 / Ende, f Vollbild,
-      // r Reserve-Übersicht, Esc zurück in den Vortrag. Bewegung nur für den wandernden Marker
-      // (600 ms) und den Zoom in J10; mit prefers-reduced-motion springt beides in den Endzustand.
+      // r Reserve-Übersicht, Esc zurück in den Vortrag. Bewegung nur für die Wegkarte oben links (Punkt fährt
+      // 600 ms, Säume und Zeichen blenden 300 ms, Wechsel des Wegs blendet über) und den Zoom in J10; mit
+      // prefers-reduced-motion springt alles in den Endzustand.
       /* global document, window, location, history, URLSearchParams, getComputedStyle, performance,
    requestAnimationFrame, cancelAnimationFrame, setTimeout, clearTimeout */
       (() => {
@@ -8033,10 +8413,10 @@
         const alle = [...buehne.querySelectorAll(':scope > .folie')];
         const haupt = alle.filter((s) => s.dataset.teil !== 'reserve');
         const reserve = alle.filter((s) => s.dataset.teil === 'reserve');
-        const weg = buehne.querySelector('.weg-wandernd');
-        const punkt = weg.querySelector('.weg-punkt');
-        const wegName = weg.querySelector('.weg-name');
-        const wegEtikett = weg.querySelector('.etikett');
+        // Ein beständiger Marker je Weg (wegkarte.mjs wegLaeufer), je Folie ein Zustand (konfig.marken)
+        const laeufer = Object.fromEntries(
+          [...buehne.querySelectorAll(':scope > .weg-laeufer')].map((el) => [el.dataset.weg, el]),
+        );
         const uebersicht = buehne.querySelector('.reserve-uebersicht');
         const knoepfe = [...uebersicht.querySelectorAll('button[data-ziel]')];
         const live = document.querySelector('.live');
@@ -8160,6 +8540,8 @@
             if (stufe >= ab && stufe <= bis) el.setAttribute('data-an', '');
             else el.removeAttribute('data-an');
           }
+          // Zeichen der Wegkarte je Stufe (M1)
+          if (folie === aktuell) setzeMarker(folie);
         }
         /** Ein Aufbauschritt innerhalb der Folie; false, wenn die Folie keinen weiteren hat. */
         function aufbauSchritt(richtung) {
@@ -8170,31 +8552,74 @@
           return true;
         }
 
-        // ---------------------------------------------------------------- wandernder Marker
-        function setzeMarker(folie) {
-          const name = folie.dataset.station || '';
-          const station = konfig.stationen[name];
-          const zeigen = Boolean(station) && !('eigenerWeg' in folie.dataset);
-          const warSichtbar = !weg.hidden;
-          weg.dataset.aktiv = name;
-          weg.hidden = !zeigen;
-          if (!station) return;
-          weg.setAttribute(
-            'aria-label',
-            `Station des Auftrags: ${station.name} (${station.auftrag})`,
+        // ---------------------------------------------------------------- Wegkarte (Läufer)
+        // Eine Maschine für beide Teile: Je Weg ein Element, das über alle Folien des Wegs bleibt. Innerhalb des
+        // Wegs fährt der Punkt per offset-distance (CSS-Übergang) zur nächsten Station; Säume, Ausschlag und
+        // Zeichen blenden ein und aus. Erscheint der Punkt neu, steht er ohne Fahrt an der Station. Beim Wechsel
+        // des Wegs (N10 → J1) blendet die alte Karte aus und die neue, sofort im Zustand der Folie, ein.
+        // Reduzierte Bewegung: kein Übergang (Vorlage). Druck: die feste Marke in jeder Folie.
+        const ohneUebergang = (el, fn) => {
+          el.classList.add('weg-sofort');
+          fn();
+          void el.offsetWidth;
+          el.classList.remove('weg-sofort');
+        };
+        const schalte = (el, an) =>
+          an ? el.setAttribute('data-an', '') : el.removeAttribute('data-an');
+        /** Zeichensatz der Marke in der aktuellen Aufbaustufe der Folie (M1 je Stufe, sonst einer). */
+        function satzVon(zustand, folie) {
+          const stufe =
+            folie.dataset.aufbauStufe === undefined ? 0 : Number(folie.dataset.aufbauStufe);
+          const st = zustand.stufen.find(
+            (x) => stufe >= x.ab && (x.bis === null || stufe <= x.bis),
           );
-          wegName.textContent = station.name;
-          wegEtikett.textContent = station.auftrag;
-          wegEtikett.className = `etikett etikett-${station.auftrag.toLowerCase()}`;
-          if (zeigen && warSichtbar) {
-            // fährt per CSS-Übergang (600 ms ease) entlang offset-path
-            punkt.style.offsetDistance = `${station.anteil}%`;
+          return st ? st.satz : '';
+        }
+        function wende(el, z, folie) {
+          const punkt = el.querySelector('.weg-punkt');
+          if (z.anteil === null) {
+            schalte(punkt, false);
+          } else if (punkt.hasAttribute('data-an')) {
+            // fährt per CSS-Übergang (600 ms) entlang offset-path
+            punkt.style.offsetDistance = `${z.anteil}%`;
           } else {
-            // erscheint ohne Fahrt an der Station
-            punkt.style.transition = 'none';
-            punkt.style.offsetDistance = `${station.anteil}%`;
-            void getComputedStyle(punkt).offsetDistance;
-            punkt.style.transition = '';
+            // erscheint ohne Fahrt an der Station und blendet ein
+            punkt.classList.add('weg-punkt-springt');
+            punkt.style.offsetDistance = `${z.anteil}%`;
+            void punkt.offsetWidth;
+            punkt.classList.remove('weg-punkt-springt');
+            schalte(punkt, true);
+          }
+          for (const g of el.querySelectorAll('.weg-saum'))
+            schalte(g, z.saeume.includes(g.dataset.saum));
+          for (const w of el.querySelectorAll('.weg-wirkung')) schalte(w, z.wirkung);
+          const satz = satzVon(z, folie);
+          for (const s of el.querySelectorAll('.weg-satz')) schalte(s, s.dataset.satz === satz);
+          el.querySelector('.weg-name').textContent = z.text;
+          const etiketten = el.querySelector('.weg-etiketten');
+          etiketten.replaceChildren(
+            ...z.teil.map((t) => {
+              const span = document.createElement('span');
+              span.className = `etikett etikett-${t.toLowerCase()}`;
+              span.textContent = t;
+              return span;
+            }),
+          );
+          el.setAttribute('aria-label', z.label);
+          el.dataset.marke = z.name;
+          el.dataset.aktiv = z.station ?? '';
+        }
+        function setzeMarker(folie) {
+          const z = konfig.marken[folie.dataset.id] ?? null;
+          const ziel = z ? laeufer[z.weg] : null;
+          for (const el of Object.values(laeufer)) if (el !== ziel) schalte(el, false);
+          if (!ziel) return;
+          if (ziel.hasAttribute('data-an')) {
+            wende(ziel, z, folie);
+          } else {
+            // Weg erscheint (oder wechselt): Zustand ohne Übergang setzen, dann die ganze Karte einblenden
+            ohneUebergang(ziel, () => wende(ziel, z, folie));
+            schalte(ziel, true);
           }
         }
 

@@ -141,19 +141,19 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/deck-vorlage.html",
-      "sha256": "e79b5fc80e18d355fe26387a39e7f52b9889f877cf5f06381578641ee9030f7d"
+      "sha256": "7c87cbf38417e582047812b6a35ba36ef41e7cef232f7a8af996d71d6d4e35bd"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/deck.js",
-      "sha256": "1e54baa8dd059fd730dd28a8e3e939b81a5169aad354973a3ef63227c790b026"
+      "sha256": "8790cc0af9cf87a7ef0024816b452316e89cbc61127c217c801666e05dac638f"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/deck.mjs",
-      "sha256": "e1579010e5919c58788e9c796c21104119b9c088a3eb468b8f79aa296c8cdd6b"
+      "sha256": "f9264fc4dc5a9ef34994ec8cff3d067fd23ac4788388bb275bcb489c4d342270"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/folien.mjs",
-      "sha256": "a39df32ff5bf39ac4be0eb736daf4a61bc8be2b0cdde13ebf78b22bb366b482e"
+      "sha256": "afd5429eb9a44aa0201fa860819a65731355514e745e8f9d848a10724598cf23"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/grafik.mjs",
@@ -173,7 +173,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/layout-pruefung.mjs",
-      "sha256": "12e5f6d49d5abf39590961755bcc9b62544355f212be4e344c7dc0b1f14c1732"
+      "sha256": "e63917233d3ef355b868ab9c787b95a7bb82f5eaa5a3c94caa00cc4d5624efa6"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/literatur.mjs",
@@ -193,7 +193,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/wegkarte.mjs",
-      "sha256": "efc293fd95a6eaf21200d9a5233629e136092e47100dc85fdfc336f158f6c2d4"
+      "sha256": "aecbab1025ed8b5fa17616de8915fd977cc83292498af50d8509281690196e5b"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/zahlen.mjs",
@@ -497,7 +497,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/niklas/folien-1a.mjs",
-      "sha256": "743dac2f5bc77ab491b6dfd820865c678eb1aa12c821af9f98428abccb7aa2ee"
+      "sha256": "92fe2e475c06689086379ccbc717c0050aac782213affd17085d66ddfa22322b"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/niklas/folien-1b34.mjs",
@@ -523,25 +523,25 @@
   "ausgaben": [
     {
       "datei": "jonas-deck.html",
-      "bytes": 2057134,
-      "sha256": "70fb171c90bbe443fad97045382fe79a390c514be6a61fb0fe398fe341804f31"
+      "bytes": 2074899,
+      "sha256": "9921bb9d9728c60b4957d3c17b06de55de4003114cb07458bf1725de62d0e3f9"
     },
     {
       "datei": "gemeinsames-deck.pdf",
-      "bytes": 1587849,
-      "sha256": "41fd3d4a80c0957d5f5499045c2a97b1c60bfbfbf265f32a8165f9b4f3141bdc",
+      "bytes": 1555305,
+      "sha256": "7e984e20f451fcfdea66259c2fb8d8dcad271116d5c5ba9bcf6f4c500d84fa16",
       "seiten": 50
     },
     {
       "datei": "jonas-folien.pdf",
-      "bytes": 1072905,
-      "sha256": "06e0730f4faa79a7c0835ff8e743458ec4dc64b51b288ddb0a235d9136101c52",
+      "bytes": 1074287,
+      "sha256": "bf789c8ba90e16bd4383c217ff5be21293a0bdcc3e1d096741cc248f87ebabd8",
       "seiten": 31
     },
     {
       "datei": "niklas-folien.pdf",
-      "bytes": 538440,
-      "sha256": "893ff3c2ea2222f14f5d22df8444940722bf6b3e74ff2c549a2e9cd08e61c18f",
+      "bytes": 504772,
+      "sha256": "37b7a66738b0ec0a38d255847fb2639af8adc301cf7d65c6991976b03e724773",
       "seiten": 16
     },
     {
@@ -551,19 +551,19 @@
     },
     {
       "datei": "sprechnotizen-niklas.md",
-      "bytes": 32539,
-      "sha256": "1e04089c3e3eb3d5b3aa6fe14d18f7479dc90d9af87a4de914c417c14aa19540"
+      "bytes": 32571,
+      "sha256": "5ffffffc683ba278f2d83c29abbe2c941e934bd57533f546fa8d00f201347cb6"
     },
     {
       "datei": "sprechkarten-jonas.pdf",
       "bytes": 74133,
-      "sha256": "851c08dc9229d3437e571db50c4b2346797572d633f38c859152a2738796a4e7",
+      "sha256": "c50f8196bd11b567111eb5506d4f9f7e42aaaf51811d15b07e9189e9494dd3ff",
       "seiten": 4
     },
     {
       "datei": "sprechkarten-niklas.pdf",
       "bytes": 67950,
-      "sha256": "7bf3ebfbf65c7e56305bb9e8578178aa8e5b58af9ffe258189c405d2a853c011",
+      "sha256": "6ddf5f38f18a71a2f485ec2f7c2d93882e113c844c32b24f4cfe2cdcccff4bf2",
       "seiten": 4
     }
   ]
