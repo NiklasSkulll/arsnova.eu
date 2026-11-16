@@ -83,6 +83,10 @@ zurück, wo sie das Argument tragen.
   J1 (gleiche Geometrie, gleiche Quelle); nur der Ort der Folie trägt die Farbe seines Teils, die Beschriftung
   nennt den Ort. Ein erster Entwurf mit wechselnden Formen (App-Host-Karte) war laut Autor verwirrend und ist
   ersetzt. Jonas' wandernder Punkt bleibt; beide Marken teilen Platz und Beschriftungsstil.
+  _Ergänzt 2026-11-16:_ Die Miniatur war schwer lesbar und ist ersetzt durch Wegkarten in Jonas' Bildsprache
+  (`abgabe/jonas/wegkarte.mjs`): 1B 3–4 zeigt Jonas' Auftragsweg mit der Strecke über den zweiten Host in Bernstein
+  und einem Störungszeichen je Stufe, 1A einen eigenen Weg (Live-Pfad oben, Analysezweig mit Ersatz unten) mit der
+  Station der Folie in Blau, J1 Jonas' ganzen Weg ohne Hervorhebung. GK bleibt unverändert.
 - **Aufbaustufen neu:** GK (drei), J7 (Budget, dann echte Tokens), J12 (Zeitleiste: Stimme, dann Verwurf),
   J13 (Raster der 38 Antworten rot, dann Ablation; der Clip erst danach), M1 (je Störung eine Stufe). Analogien aus
   den Daten: M1 „Stopp 1 s → DROP rund 47 min“, Notizen N7 und N8. Urteile zu allen Ideen:

@@ -8,12 +8,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   FLAECHE,
   SYSTEM,
-  SYSTEM_ORTE,
-  MINI_HOEHE,
   abstimmungSvg,
   fussballfeldSvg,
   gateRasterSvg,
-  systemMini,
   systemSvg,
   kameraViewBox,
   logX,
@@ -294,7 +291,7 @@ test('fussballfeldSvg: Linie bis zur Torlinie geschlossen, Rest der Jobzeit besc
   assert.match(svg, /Inferenz endet hier/);
 });
 
-// ---------------------------------------------------------------- Ergänzt 2026-11-16: GK, J12, J13, Ortsmarken
+// ---------------------------------------------------------------- Ergänzt 2026-11-16: GK, J12, J13
 
 /** Regeln wie pruefeSvg, aber mit eigener viewBox. */
 function pruefeFrei(svg) {
@@ -337,27 +334,6 @@ test('GK systemSvg: drei Stufen in Fahrplanfolge, Auslegung aus FESTWERTE, Baust
   for (const k of ['live', 'kompass', 'spacy', 'kontext'])
     assert.ok(drin(SYSTEM[k], SYSTEM.app), k);
   assert.ok(drin(SYSTEM.inferenz, SYSTEM.llm));
-});
-
-test('systemMini: eine feste Miniatur von GK, nur der Ort trägt Farbe, Beschriftung nennt den Ort', () => {
-  const ohneFarbe = (svg) =>
-    svg.replace(/(fill|stroke)="[^"]*"/g, '').replace(/ data-an|stroke-width="\d"/g, '');
-  const formen = Object.keys(SYSTEM_ORTE).map((o) => ohneFarbe(systemMini(o)));
-  // gleiche Geometrie auf jeder Folie: ohne Farben sind alle Miniaturen identisch
-  assert.equal(new Set(formen).size, 1);
-  for (const [ort, o] of Object.entries(SYSTEM_ORTE)) {
-    const svg = systemMini(ort);
-    assert.match(svg, new RegExp(`height="${MINI_HOEHE}"`));
-    assert.match(svg, /aria-hidden="true"/);
-    assert.equal((svg.match(/ data-an/g) ?? []).length, o.bausteine.length, ort);
-    // Ort statt Tätigkeit: „Host · Baustein“
-    assert.match(o.text, /Host/, ort);
-    assert.doesNotMatch(o.text, /Gemessen|Nebenzweig/, ort);
-  }
-  // Maßstab aus SYSTEM (dieselbe Quelle wie GK)
-  const w = Number(systemMini('app-alle').match(/width="([\d.]+)"/)[1]);
-  assert.ok(Math.abs((w - 4) / (MINI_HOEHE - 4) - SYSTEM.breite / SYSTEM.hoehe) < 0.01);
-  assert.throws(() => systemMini('x'));
 });
 
 test('J12 abstimmungSvg: Zeiten des Auftrags, Stimme (Stufe 1) und Verwurf (Stufe 2)', () => {

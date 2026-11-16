@@ -7,7 +7,8 @@ import { dirname, extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { TEILE, teilVon } from './folien.mjs';
-import { KAMERA, SYSTEM_ORTE, WEG_STATIONEN, systemMini } from './grafik.mjs';
+import { KAMERA } from './grafik.mjs';
+import { WEG_AUFTRAG, wegMarke, wegMini } from './wegkarte.mjs';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
 
@@ -31,136 +32,6 @@ function dataUri(pfad) {
   const mime = MIME[extname(pfad).toLowerCase()];
   if (!mime) throw new Error(`Unbekannter Dateityp: ${pfad}`);
   return `data:${mime};base64,${readFileSync(pfad).toString('base64')}`;
-}
-
-// ------------------------------------------------------------------ kleine Wegkarte
-
-/**
- * Verkleinerte Karte des Wegs aus J3 (gleiche Stationen, gleiche Form: oben app-host, Senke zum
- * llm-host). x aus WEG_STATIONEN mit Faktor 0,36; Kurven wie in J3 (Abstieg ab Kontext + 110,
- * Boden bei Inferenz − 80 usw.). Der Marker fährt per offset-path diese Linie entlang.
- */
-const MINI = { faktor: 0.36, x0: 20, oben: 15, unten: 40, breite: 450, hoehe: 52 };
-const mx = (x) => Math.round((MINI.x0 + (x - WEG_STATIONEN.klick.x) * MINI.faktor) * 10) / 10;
-
-function miniGeometrie() {
-  const S = WEG_STATIONEN;
-  const { oben: o, unten: u } = MINI;
-  const ab = [mx(S.kontext.x + 110), mx(S.inferenz.x - 80)];
-  const auf = [mx(S.inferenz.x + 80), mx(S.nachpruefung.x - 90)];
-  const k = (a, b) => (b - a) * 0.5; // Steuerpunkte wie eine weiche S-Kurve
-  const segmente = [
-    ['L', [mx(S.klick.x), o], [ab[0], o]],
-    ['C', [ab[0], o], [ab[0] + k(ab[0], ab[1]), o], [ab[1] - k(ab[0], ab[1]), u], [ab[1], u]],
-    ['L', [ab[1], u], [auf[0], u]],
-    [
-      'C',
-      [auf[0], u],
-      [auf[0] + k(auf[0], auf[1]), u],
-      [auf[1] - k(auf[0], auf[1]), o],
-      [auf[1], o],
-    ],
-    ['L', [auf[1], o], [mx(S.gate.x), o]],
-  ];
-  const r = (n) => Math.round(n * 100) / 100;
-  const d =
-    `M${r(segmente[0][1][0])} ${r(segmente[0][1][1])}` +
-    segmente
-      .map(([typ, , ...p]) =>
-        typ === 'L'
-          ? `L${r(p[0][0])} ${r(p[0][1])}`
-          : `C${p.map((q) => q.map(r).join(' ')).join(' ')}`,
-      )
-      .join('');
-
-  // Bogenlänge abtasten; Netz liegt auf halber Höhe des Abstiegs.
-  const punkte = [];
-  for (const [typ, ...p] of segmente) {
-    for (let i = 0; i <= 400; i++) {
-      const t = i / 400;
-      if (typ === 'L') {
-        punkte.push([p[0][0] + (p[1][0] - p[0][0]) * t, p[0][1] + (p[1][1] - p[0][1]) * t]);
-      } else {
-        const m = 1 - t;
-        const f = [m ** 3, 3 * m * m * t, 3 * m * t * t, t ** 3];
-        punkte.push([0, 1].map((a) => f.reduce((s, w, j) => s + w * p[j][a], 0)));
-      }
-    }
-  }
-  const laenge = [0];
-  for (let i = 1; i < punkte.length; i++) {
-    laenge.push(
-      laenge[i - 1] + Math.hypot(punkte[i][0] - punkte[i - 1][0], punkte[i][1] - punkte[i - 1][1]),
-    );
-  }
-  const gesamt = laenge.at(-1);
-  const ziel = {
-    klick: [mx(S.klick.x), o],
-    kontext: [mx(S.kontext.x), o],
-    netz: [(ab[0] + ab[1]) / 2, (o + u) / 2],
-    inferenz: [mx(S.inferenz.x), u],
-    nachpruefung: [mx(S.nachpruefung.x), o],
-    gate: [mx(S.gate.x), o],
-  };
-  const stationen = {};
-  for (const [name, [x, y]] of Object.entries(ziel)) {
-    let best = 0;
-    for (let i = 1; i < punkte.length; i++) {
-      if (
-        Math.hypot(punkte[i][0] - x, punkte[i][1] - y) <
-        Math.hypot(punkte[best][0] - x, punkte[best][1] - y)
-      )
-        best = i;
-    }
-    stationen[name] = {
-      x: r(punkte[best][0]),
-      y: r(punkte[best][1]),
-      anteil: r((laenge[best] / gesamt) * 100),
-      auftrag: S[name].auftrag,
-      name: S[name].name,
-    };
-  }
-  return { d, stationen };
-}
-
-const MINI_GEO = miniGeometrie();
-
-/** Kleine Wegkarte; mit `aktiv` steht der Marker fest an der Station (Druck/PDF). */
-function wegMini({ aktiv = null, wandernd = false } = {}) {
-  const { d, stationen } = MINI_GEO;
-  const kreise = Object.entries(stationen)
-    .map(([name, s]) => {
-      const farbe =
-        name === 'gate' ? 'var(--rot)' : s.auftrag === '1B' ? 'var(--bernstein)' : 'var(--petrol)';
-      return name === 'inferenz'
-        ? `<circle cx="${s.x}" cy="${s.y}" r="9" fill="${farbe}"/>`
-        : `<circle cx="${s.x}" cy="${s.y}" r="6.5" fill="#fff" stroke="${farbe}" stroke-width="3"/>`;
-    })
-    .join('');
-  const karte =
-    `<svg class="weg-mini-karte" viewBox="0 0 ${MINI.breite} ${MINI.hoehe}" width="${MINI.breite}" height="${MINI.hoehe}" aria-hidden="true" focusable="false">` +
-    `<path d="${d}" fill="none" stroke="var(--blau)" stroke-width="3" stroke-linecap="round"/>${kreise}</svg>`;
-  const s = aktiv ? stationen[aktiv] : null;
-  const punkt = wandernd
-    ? `<div class="weg-punkt" style="offset-path:path('${d}')"></div>`
-    : `<div class="weg-punkt" style="left:${s.x}px;top:${s.y}px"></div>`;
-  const name = (st) =>
-    `<span class="weg-name">${st ? esc(st.name) : ''}</span>` +
-    `<span class="etikett etikett-${st ? st.auftrag.toLowerCase() : '1c'}">${st ? st.auftrag : ''}</span>`;
-  if (wandernd) {
-    return (
-      `<div class="weg-mini weg-wandernd" role="img" aria-label="Station des Auftrags" hidden>` +
-      karte +
-      punkt +
-      `<p class="weg-beschriftung">${name(null)}</p></div>`
-    );
-  }
-  return (
-    `<div class="weg-mini weg-mini-statisch" data-aktiv="${aktiv}" role="img" aria-label="Station des Auftrags: ${esc(s.name)} (${s.auftrag})">` +
-    karte +
-    punkt +
-    `<p class="weg-beschriftung" aria-hidden="true">${name(s)}</p></div>`
-  );
 }
 
 // ------------------------------------------------------------------ Zoom J10
@@ -218,20 +89,12 @@ function teilleiste(f) {
 }
 
 /**
- * Ortsmarke oben links ohne Bewegung (druckfest): das Systembild von GK verkleinert, auf jeder Folie von 1A und
- * 1B 3–4 (und auf J1) gleich; nur der Ort der Folie (f.ort, Schlüssel aus SYSTEM_ORTE) trägt die Farbe seines
- * Teils. Beschriftung wie bei Jonas' Wegkarte: Ort und Etikett. Folien mit wanderndem Marker tragen keine.
+ * Ortsmarke oben links ohne Bewegung (druckfest) auf jeder Folie von 1A und 1B 3–4 und auf J1: eine Wegkarte
+ * in derselben Bildsprache wie Jonas' Stationsmarker (wegkarte.mjs, f.marke ist ein Schlüssel aus MARKEN).
+ * Folien mit Station tragen stattdessen Jonas' Marker.
  */
 function ortsmarke(f) {
-  if (!f.ort) return '';
-  const o = SYSTEM_ORTE[f.ort];
-  if (!o) throw new Error(`${f.id}: unbekannter Ort ${f.ort}`);
-  return (
-    `<div class="ort-mini" data-ort="${esc(f.ort)}" role="img" aria-label="Ort im Systembild: ${esc(o.text)} (${o.teil})">` +
-    systemMini(f.ort) +
-    `<p class="weg-beschriftung ort-beschriftung" aria-hidden="true"><span class="weg-name">${esc(o.text)}</span>` +
-    `<span class="etikett etikett-${o.teil.toLowerCase()}">${o.teil}</span></p></div>`
-  );
+  return f.marke ? wegMarke(f.marke) : '';
 }
 
 function jonasFolie(f, nr, gesamt, clipDaten) {
@@ -400,7 +263,7 @@ export function baueDeck(
     /url\('(schriften\/[^']+\.woff2)'\)/g,
     (_, pfad) => `url('${dataUri(join(HIER, pfad))}')`,
   );
-  const konfig = { stationen: MINI_GEO.stationen };
+  const konfig = { stationen: WEG_AUFTRAG.stationen };
   const vorlage = readFileSync(join(HIER, 'deck-vorlage.html'), 'utf8');
   // Platzhalter stehen als HTML-Kommentare in der Vorlage, damit Prettier sie nicht umformt.
   const fuellung = {

@@ -157,7 +157,7 @@ export function folien1A(d) {
         ) +
         `<p class="beleg">Labor: ein Rechner (WSL2, ${H.cpus} logische CPUs), Code ${mono(H.commit)} (nach v1.4.0), ${d.live.laeufe} Läufe am ${datum(d.vorab.ersterLauf)}2026</p>`,
     ),
-    notiz: `Ich beginne auf dem App-Host und frage: Welche Reserve hat er für optionale Analyse, ohne die Live-Signale zu verzögern? Geprüft habe ich das an der spaCy-Glättung der Wortwolke. Die Antwort vorweg: keine Freigabe. Alle ${fmt(d.live.geplant)} Live-Aktionen meiner Reihe kamen an, ohne einen Fehler. Mit spaCy verfehlen ${mitSpacyFehl} von ${mitSpacyGesamt} Vergleichen die vorher festgelegte Regel. Aber auch die Kontrolle ganz ohne spaCy verfehlt sie ${kontrolle.length} von ${d.h1.gesamt} Mal. Ich sage deshalb nicht, spaCy sei schädlich. Ich sage: Die Unschädlichkeit ist nicht belegt, und den Nutzen habe ich nicht gemessen. Oben links zeigt das kleine Systembild, wo wir sind: der spaCy-Sidecar auf dem App-Host.`,
+    notiz: `Ich beginne auf dem App-Host und frage: Welche Reserve hat er für optionale Analyse, ohne die Live-Signale zu verzögern? Geprüft habe ich das an der spaCy-Glättung der Wortwolke. Die Antwort vorweg: keine Freigabe. Alle ${fmt(d.live.geplant)} Live-Aktionen meiner Reihe kamen an, ohne einen Fehler. Mit spaCy verfehlen ${mitSpacyFehl} von ${mitSpacyGesamt} Vergleichen die vorher festgelegte Regel. Aber auch die Kontrolle ganz ohne spaCy verfehlt sie ${kontrolle.length} von ${d.h1.gesamt} Mal. Ich sage deshalb nicht, spaCy sei schädlich. Ich sage: Die Unschädlichkeit ist nicht belegt, und den Nutzen habe ich nicht gemessen. Oben links zeigt der kleine Weg, wo wir sind: der spaCy-Zweig neben dem Live-Pfad.`,
     stichpunkte: [
       'Start auf dem App-Host (Teil 1 im Fahrplan)',
       'Leitfrage: Reserve für optionale Analyse, ohne Live-Signale zu verzögern?',
@@ -167,8 +167,8 @@ export function folien1A(d) {
     ],
     zeitS: 50,
     kurzfassung: true,
-    // Ortsmarke oben links: Systembild von GK, Ort der Folie hervorgehoben (deck.mjs ortsmarke)
-    ort: 'app-spacy',
+    // Wegmarke (jonas/wegkarte.mjs MARKEN): Antwort zuerst zur spaCy-Glättung, also die Station spaCy.
+    marke: '1a-spacy',
     quelle: q(
       `${H.datei} (live.*.planned/succeeded, hypotheses.H1/H2); Leitfrage: Prüfungsdokument Abschn. 4.3, Gruppenauftrag 1A`,
     ),
@@ -215,7 +215,8 @@ export function folien1A(d) {
         `<p class="sekundaer" style="margin-top:12px">Kein LLM hier: Der 16-GB-Host trägt neben Baseline und Sidecars kein ~4-GB-Modell, Live-Pfade dürfen nie auf Inferenz warten. Deshalb ein zweiter Host ${etikett('1B')}.</p>`,
     ),
     notiz: `Auf dem App-Host laufen fünf Dienste. Backend, Datenbank und Redis haben kein Limit; spaCy hat wie in der Produktions-Compose eine CPU, ein Gibibyte und vierundsechzig Prozesse. Ein cgroup-Limit ist eine Obergrenze, keine Reservierung: Es hält spaCy klein, schützt aber nichts für die App. Den Encoder der semantischen Wortwolke und die Q&A-Klassifikation 8.9b habe ich in allen Läufen ausgeschaltet; der Kontextaufbau läuft in der App. Ein Sprachmodell gehört nach ADR-0035 nicht hierher: Der Host mit sechzehn Gigabyte trägt neben Baseline und Sidecars kein Modell mit etwa vier Gigabyte, und Live-Pfade dürfen nie auf Inferenz warten. Deshalb sagt mein spaCy-Befund nichts über ein LLM.`,
-    ort: 'app-alle',
+    // Wegmarke: Fünf Dienste teilen sich den App-Host: Station App.
+    marke: '1a-app',
     stichpunkte: [
       'Fünf Dienste; Backend, DB, Redis ohne Limit; spaCy 1 CPU, 1 GiB, 64 PIDs wie in Produktion',
       'Limit = Obergrenze, keine Reservierung für die App (cgroup v2)',
@@ -263,7 +264,8 @@ export function folien1A(d) {
         `<p class="beleg">Dazu vorab: Fehler ≤ ${fmt(sw.fehler * 100, 1)} %, Quiz-p95 ≤ ${fmt(sw.quizZielMs)} ms, spaCy gedrosselt ≤ ${fmt(sw.drosselung * 100)} %, Speicher ≤ ${fmt(sw.speicher * 100)} % von 1 GiB, kein OOM</p>`,
     ),
     notiz: `Fünf Varianten: V0 nur Live-Last, V1 mit lexikalischer Analyse als Basis, V2 spaCy mit einer CPU, V3 gedrosselt auf ein Viertel, V4 hinter einem Proxy, der länger wartet als der Timeout. Fünf Blöcke, je Block zufällig gemischt, verglichen wird nur im selben Block. Die Regel: Je Aktion und Block darf der p95 höchstens zehn Prozent und höchstens fünfzig Millisekunden steigen, und alle fünf Blöcke müssen bestehen. Gemessen wird das p95, weil Nutzer auf die langsamen Anfragen warten. Die Regel steht seit dem siebten November in Git, eine Woche vor den Läufen. Offen gesagt: Eine erste vollständige Reihe auf dem älteren Code-Stand vom zwölften November verfehlte H1 und H2 ebenfalls. Gewertet wird die Wiederholung auf einem Stand nach Version 1.4.0 mit unverändertem Vertrag, weil das Ergebnis für den aktuellen Stand gelten soll.`,
-    ort: 'app-live',
+    // Wegmarke: Die vorab festgelegte Regel vergleicht Live-Latenz mit und ohne Analyse: Live-Pfad gegen Zweig.
+    marke: '1a-regel',
     stichpunkte: [
       `V0 ohne Analyse, V1 Basis, V2 ${fmt(k.spacy.V2.cpu)} CPU, V3 ${fmt(k.spacy.V3.cpu, 2)} CPU, V4 Proxy hinter Timeout; 5 Blöcke gemischt`,
       `Regel: p95 höchstens +${rel} % und +${abs} ms, je Aktion und Block; alle 5 Blöcke`,
@@ -285,7 +287,8 @@ export function folien1A(d) {
         `<p class="beleg">Gemessen am Lastgenerator bis zur Antwort des Backends; Anzeige im Browser und Kompasskarten nicht gemessen</p>`,
     ),
     notiz: `Zuerst, was hält. In allen fünfundzwanzig Läufen kamen alle ${fmt(d.live.erfolgreich)} Live-Aktionen an: Beitritte, Quizstimmen, Tempostimmen und Q&A-Fragen. Jeder Punkt ist der p95 eines Laufs; die lineare Achse reicht bis zum vorab gesetzten Quiz-Ziel von einer Sekunde. Der langsamste Quiz-Lauf liegt bei ${fmt(d.live.quizMaxMs)} Millisekunden, die meisten Punkte unter sechzig. Diese Aktionen sind die Eingänge des Moderationskompasses. Wie schnell eine Karte im Browser der Lehrperson erscheint, habe ich nicht gemessen.`,
-    ort: 'app-live',
+    // Wegmarke: Alle Live-Aktionen kamen an: der ganze Live-Pfad (Hauptlinie).
+    marke: '1a-live',
     stichpunkte: [
       `${fmt(d.live.erfolgreich)} von ${fmt(d.live.geplant)} ok, ${d.live.laeufe} Läufe, 0 Fehler`,
       'Ein Punkt = p95 eines Laufs, lineare Achse bis 1 s',
@@ -305,7 +308,8 @@ export function folien1A(d) {
     titel: 'Deutlich verletzt wird die Regel nur einmal',
     inhalt: flaeche(grafikBox(vergleichsMatrixSvg(d))),
     notiz: `Jetzt die Regel. Das sind alle ${d.vergleiche.length} gepaarten Vergleiche: jede Aktion in jedem Block gegen ihre Basis, noch ohne Ergebnis. [Weiter] Grau heißt: hält. Zuerst die Kontrolle, V1 gegen V0, ganz ohne spaCy. Schon sie verfehlt die Regel ${kontrolle.length}-mal, um höchstens ${fmt(Math.max(...kontrolle.map((x) => x.deltaMs)), 0)} Millisekunden. Bei p95-Werten um zwanzig Millisekunden reichen dafür zwei Millisekunden Schwankung. [Weiter] Mit spaCy kommen ${mitSpacy.length - v3b5Fehl.length} ebenso kleine Treffer dazu, alle unter fünf Millisekunden. Formal reicht das schon: H1 und H2 sind nicht bestätigt. [Weiter] Und hier der eine deutliche Effekt: V3, also spaCy gedrosselt, im letzten Lauf der Reihe. ${v3b5Abs.length} Aktionen über fünfzig Millisekunden, bis zu ${fmt(d.v3Block5MaxDeltaMs)} Millisekunden mehr. Insgesamt verfehlen ${fehlAlle.length} von ${d.vergleiche.length} die Regel. Ich lasse sie trotzdem stehen, weil sie vorher festgelegt war.`,
-    ort: 'app-live',
+    // Wegmarke: Gepaarte Vergleiche der Regel: Live-Pfad gegen Zweig.
+    marke: '1a-regel',
     stichpunkte: [
       `${d.vergleiche.length} Vergleiche, erst ohne Ergebnis`,
       `[Weiter] Grau = hält; Kontrolle ohne spaCy: ${kontrolle.length} Treffer, je wenige ms`,
@@ -331,7 +335,8 @@ export function folien1A(d) {
         `<p class="beleg">Ursache offen: Rückstau der gedrosselten Analyse oder Ereignis auf Host und Datenbank; dagegen: V4 mit ${fmt(d.v4.ersatzTimeout)} Timeouts ohne Live-Effekt</p>`,
     ),
     notiz: `Was geschah im letzten Lauf? Nachträglich ausgewertet, deshalb das Etikett. Alle ${e.langsam.join} Beitritte über hundert Millisekunden liegen in einem Fenster von etwa zehn Sekunden; in den übrigen Läufen gibt es je Aktion höchstens ${e.langsamAndereMax} solchen Wert. [Weiter] Genau dort laufen die einzigen ${e.timeouts} Timeouts der gedrosselten Variante. [Weiter] Zugleich steigt die CPU der App auf ${fmt(e.appCpuMax)} Prozent einer CPU und die der Datenbank auf ${fmt(e.pgMax.max)} Prozent, sonst höchstens ${fmt(e.pgAndere[1])}. Die Ursache ist offen. Ein Rückstau der gedrosselten Analyse passt dazu, aber V4 hatte hunderte Timeouts ohne solchen Effekt; ebenso möglich ist ein Ereignis auf Host oder Datenbank. Zum Maßstab: ${d.live.laeufe} Läufe mit je ${fmt(k.profil.durationMs / 1000)} Sekunden Messfenster sind ${fmt((d.live.laeufe * k.profil.durationMs) / 60000)} Minuten; der Ausreißer betrifft davon etwa zehn Sekunden. Für die Entscheidung ändert das nichts.`,
-    ort: 'app-live',
+    // Wegmarke: Ausreißer in V3 (gedrosseltes spaCy): Station spaCy, Wirkung als Ausschlag auf dem Live-Pfad.
+    marke: '1a-wirkung',
     stichpunkte: [
       'Nachträglich ausgewertet, nicht vorab festgelegt',
       `${e.langsam.join} langsame Beitritte in ≈ 10 s; sonst je Aktion höchstens ${e.langsamAndereMax}`,
@@ -357,7 +362,8 @@ export function folien1A(d) {
         `<p class="beleg">V4: Proxy hat ${fmt(d.v4.weitergeleitet)} Anfragen weitergeleitet, geprüft werden Frist und Ersatz; ${fmt(d.v4.ersatzGegendruck)} Ersatzfälle durch Gegendruck</p>`,
     ),
     notiz: `Was sehen die Lehrenden? Die lexikalische Wortwolke ist in unter einer Zehntelsekunde da, mit spaCy im Normalbetrieb nach etwa einer halben Sekunde, gedrosselt nach zwei bis drei; das passt zur Drosselung von eben. In V4 greift nach rund fünf Sekunden der Timeout, und die App liefert den lexikalischen Ersatz; der Proxy hat keine Anfrage weitergeleitet, V4 prüft also Frist und Ersatz. ${fmt(d.v4.ersatzGegendruck)} Ersatzfälle meldet der Client als nicht erreichbar, je Lauf genau ${fmt(d.v4.gegendruckJeLauf)}: Das passt zur Grenze von zwei offenen Anfragen. Zur Reserve: Im Labor brauchte der ganze Stack weniger als eine halbe CPU von sechzehn, mindestens ${fmt(d.labor.minFreiGiBAb, 1)} Gibibyte blieben frei. Für den Zielhost habe ich das nicht gemessen.`,
-    ort: 'app-spacy',
+    // Wegmarke: Nach 5 s liefert die App den Ersatz: Station Ersatz auf dem Zweig.
+    marke: '1a-ersatz',
     stichpunkte: [
       'Lexikalisch < 0,1 s, spaCy ≈ 0,5 s, gedrosselt 2–3 s (passt zur Drosselung)',
       `V4: Ersatz nach ≈ ${timeoutS} s, Proxy hat ${fmt(d.v4.weitergeleitet)} weitergeleitet: prüft Frist und Ersatz`,
@@ -411,7 +417,8 @@ export function folien1A(d) {
     ],
     zeitS: 65,
     kurzfassung: true,
-    ort: 'app-spacy',
+    // Wegmarke: Entscheidung über das Ergebnis des Zweigs (lexikalische Wortwolke bleibt): Ende des Zweigs.
+    marke: '1a-wortwolke',
     quelle: q(
       `1A-auswertung.md (Entscheidung, Budget und Rückweg, Grenzen); 1A-Versuchsvertrag (Gegenalternative); ${H.datei} hypotheses; NLP_ENABLED=false: .env.production.example Z. 205 (docker-compose.prod.yml liest es von dort, Default false); LLM-Dauer: 1B-ergebnis.md, warm im Median 148,6 s je Auftrag (ThinkPad P50, Commit 8e9d1317) ≈ 2,5 min`,
     ),
@@ -428,7 +435,8 @@ export function folien1A(d) {
   neu({
     id: 'N3',
     titel: 'Fünf Varianten, je Block gemischt',
-    ort: 'app-spacy',
+    // Wegmarke: Fünf Varianten unterscheiden sich nur in spaCy (aus, normal, gedrosselt, hinter Proxy): Station spaCy.
+    marke: '1a-spacy',
     zeitS: 45,
     inhalt: flaeche(
       `<table style="border-collapse:collapse;font-size:28px;width:100%;margin:0 0 12px">` +
@@ -457,7 +465,8 @@ export function folien1A(d) {
   neu({
     id: 'N8',
     titel: 'spaCy bleibt im Budget, bis CPU fehlt',
-    ort: 'app-spacy',
+    // Wegmarke: CPU und Speicher des spaCy-Containers: Station spaCy.
+    marke: '1a-spacy',
     zeitS: 45,
     inhalt: flaeche(
       grafikBox(ressourcenSvg(d)) +
@@ -542,7 +551,8 @@ export function folien1A(d) {
   neu({
     id: 'N6b',
     titel: 'Die Regel schlägt auch ohne Wirkung an',
-    ort: 'app-live',
+    // Wegmarke: Empfindlichkeit der Regel (Kontrolle ohne spaCy schlägt an): Live-Pfad gegen Zweig.
+    marke: '1a-regel',
     zeitS: 45,
     fuss: `Quelle: ${ZITATE.N6b.map(([sl, st]) => kurzbeleg1A(sl, st).slice(1, -1)).join('; ')}`,
     inhalt: flaeche(

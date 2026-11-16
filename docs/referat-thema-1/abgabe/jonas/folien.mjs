@@ -888,8 +888,8 @@ export function folien(daten) {
   });
 
   // ------------------------------------------------------------ GK Was ist arsnova? (spricht Niklas)
-  // Systembild in drei Stufen in der Reihenfolge des Fahrplans; die Eröffnungsfolien N1, J1 und M1 zeigen
-  // denselben Plan klein oben links mit ihrem Teil (Objektkonstanz, deck.mjs ortsmarke).
+  // Systembild in drei Stufen in der Reihenfolge des Fahrplans; oben links zeigen die Teile danach ihren
+  // Weg als Wegkarte (wegkarte.mjs, deck.mjs ortsmarke).
   F.push({
     id: 'GK',
     teil: 'rahmen',
@@ -899,14 +899,14 @@ export function folien(daten) {
       `<p class="sekundaer" style="margin:0 0 var(--abstand-eng);color:var(--tinte)">arsnova.eu: Open-Source-App (MIT) für Live-Interaktion in der Lehre, ohne Pflichtkonten. Lehrende sehen im Moderationskompass Hinweiskarten aus den Live-Signalen.</p>` +
         grafikBox(systemSvg({ clients: FESTWERTE.liveClients.wert })),
     ),
-    notiz: `Kurz zum System. arsnova.eu ist eine Open-Source-App für Live-Interaktion in der Lehre: Quiz, Q&A und Blitzlicht in einer Session, ohne Pflichtkonten. Ausgelegt ist sie auf mindestens ${fw.liveClients} gleichzeitige Clients im Hörsaal, auch wenn viele hinter einem gemeinsamen NAT sitzen. Die Lehrperson sieht im Moderationskompass Hinweiskarten aus den Live-Signalen, regelbasiert und ohne KI nutzbar. Drei optionale Bausteine haben wir untersucht. [Weiter] Ich beginne mit dem spaCy-Sidecar, der auf dem App-Host die Wortwolke glättet. [Weiter] Jonas verfolgt den Kontextpfad zur Q&A-Zusammenfassung und die Inferenz auf dem zweiten, privaten Host. [Weiter] Zum Schluss störe ich diesen zweiten Host. Der kleine Plan oben links zeigt später, wo wir gerade sind.`,
+    notiz: `Kurz zum System. arsnova.eu ist eine Open-Source-App für Live-Interaktion in der Lehre: Quiz, Q&A und Blitzlicht in einer Session, ohne Pflichtkonten. Ausgelegt ist sie auf mindestens ${fw.liveClients} gleichzeitige Clients im Hörsaal, auch wenn viele hinter einem gemeinsamen NAT sitzen. Die Lehrperson sieht im Moderationskompass Hinweiskarten aus den Live-Signalen, regelbasiert und ohne KI nutzbar. Drei optionale Bausteine haben wir untersucht. [Weiter] Ich beginne mit dem spaCy-Sidecar, der auf dem App-Host die Wortwolke glättet. [Weiter] Jonas verfolgt den Kontextpfad zur Q&A-Zusammenfassung und die Inferenz auf dem zweiten, privaten Host. [Weiter] Zum Schluss störe ich diesen zweiten Host. Der kleine Weg oben links zeigt später, wo wir gerade sind.`,
     stichpunkte: [
       'arsnova.eu: Open Source (MIT), Quiz, Q&A und Blitzlicht in einer Live-Session',
       `Ausgelegt auf ≥ ${fw.liveClients} Clients zugleich, auch hinter gemeinsamem NAT`,
       'Moderationskompass: Hinweiskarten für Lehrende, regelbasiert, ohne KI nutzbar',
       '[Weiter] 1A (ich): spaCy-Sidecar glättet die Wortwolke auf dem App-Host',
       '[Weiter] Jonas: Kontextpfad und Inferenz auf dem zweiten Host',
-      '[Weiter] 1B 3–4 (ich): zweiten Host stören; Plan oben links zeigt den Ort',
+      '[Weiter] 1B 3–4 (ich): zweiten Host stören; Weg oben links zeigt den Ort',
     ],
     zeitS: 50,
     kurzfassung: true,
@@ -932,11 +932,11 @@ export function folien(daten) {
         `</div>` +
         `<p class="beleg">Auftrag Nr. ${au.nr}: Klick bis Ergebnis ${z.auWarte} s, Jobdauer T_job ${z.auJob} s · Median warm, n = ${nWarm}: ${z.jobWarm} s, Spanne ${z.warmMin}–${z.warmMax} s</p>`,
     ),
-    notiz: `Danke, Niklas. Die schwere Arbeit, die Inferenz, ist ausgelagert auf einen zweiten Host. Was heißt das für einen einzelnen Auftrag? Ein Klick der Lehrperson, ${z.auS} Sekunden Warten, und am Ende steht keine Modellantwort auf dem Bildschirm. Dieser Auftrag ist echt, die Nummer ${au.nr} aus meinem gewerteten Lauf, auf der CPU meines Laptops. Davon rechnet der Server ${z.auJob} Sekunden am Job; warme Aufträge brauchen im Median ${z.jobWarm} Sekunden. Gemessen habe ich Code nach Version 1.4.0; das wird beim Gate wichtig. Zwei Fragen: Für 1C, hält der Kontextpfad seine Zusagen? Für 1B, Schritte 1 und 2, wo steckt die Zeit auf dem zweiten Host? Petrol ist 1C, Bernstein ist 1B; oben links zeigt das kleine Systembild meinen Teil.`,
+    notiz: `Danke, Niklas. Die schwere Arbeit, die Inferenz, ist ausgelagert auf einen zweiten Host. Was heißt das für einen einzelnen Auftrag? Ein Klick der Lehrperson, ${z.auS} Sekunden Warten, und am Ende steht keine Modellantwort auf dem Bildschirm. Dieser Auftrag ist echt, die Nummer ${au.nr} aus meinem gewerteten Lauf, auf der CPU meines Laptops. Davon rechnet der Server ${z.auJob} Sekunden am Job; warme Aufträge brauchen im Median ${z.jobWarm} Sekunden. Gemessen habe ich Code nach Version 1.4.0; das wird beim Gate wichtig. Zwei Fragen: Für 1C, hält der Kontextpfad seine Zusagen? Für 1B, Schritte 1 und 2, wo steckt die Zeit auf dem zweiten Host? Petrol ist 1C, Bernstein ist 1B; oben links zeigt der kleine Weg meinen Auftrag vom Klick bis zum Gate.`,
     zeitS: 50,
     kurzfassung: true,
-    // Ortsmarke oben links: Systembild von GK, Kontextpfad und Inferenz hervorgehoben (deck.mjs ortsmarke)
-    ort: 'jonas',
+    // Wegmarke oben links: Jonas' ganzer Auftragsweg ohne Hervorhebung, den J2 ff. mit dem Marker abfahren
+    marke: 'auftrag',
     quelle: `${q1B} (Auftrag ${au.nr}: treiber.auftraege clientWaitMs, zerlegung.auftraege jobMs; Spanne warm: zerlegung.auftraege 2–${n}); Code: 1B a19ca70f (v1.4.0-184), 1C-Nachlauf def56700 (v1.4.0-14), frühere 1C-Messungen v1.3.0-228 und v1.3.0-322; Leitfragen: Prüfungsdokument 4.3, ADR 1B-011`,
     station: null,
   });

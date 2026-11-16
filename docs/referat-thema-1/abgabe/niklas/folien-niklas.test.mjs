@@ -17,7 +17,7 @@ import { layoutBefunde } from '../jonas/layout-pruefung.mjs';
 import { baueEntwurf, notizenNiklas } from './bau-entwurf.mjs';
 import { ladeDaten1A } from './daten-1a.mjs';
 import { ladeDaten1B34 } from './daten-1b34.mjs';
-import { folien1B34 } from './folien-1b34.mjs';
+import { STUFE_1B34, folien1B34 } from './folien-1b34.mjs';
 import { LITERATUR_1A, kurzbeleg1A } from './literatur-1a.mjs';
 
 const HIER = resolve(fileURLToPath(import.meta.url), '..');
@@ -521,35 +521,73 @@ test('Druck: N6 und N7 stehen im Endbild', async () => {
   assert.deepEqual(sichtbar, [13, 3]);
 });
 
-// ---------------------------------------------------------------- Ergänzt 2026-11-16: Ortsmarken, M1 in Stufen
+// ---------------------------------------------------------------- Ergänzt 2026-11-16: Wegmarken, M1 in Stufen
 
-test('Ortsmarke: eine feste Miniatur des Systembilds auf jeder Folie von 1A und 1B 3–4, nur der Ort wechselt', async () => {
-  const { SYSTEM_ORTE } = await import('../jonas/grafik.mjs');
-  const orte = Object.fromEntries([...haupt1A, ...n1b].map((f) => [f.id, f.ort]));
-  assert.deepEqual(orte, {
-    N1: 'app-spacy',
-    N2: 'app-alle',
-    N3: 'app-spacy',
-    N4: 'app-live',
-    N5: 'app-live',
-    N6: 'app-live',
-    N6b: 'app-live',
-    N7: 'app-live',
-    N8: 'app-spacy',
-    N9: 'app-spacy',
-    N10: 'app-spacy',
-    M1: 'llm-gestoert',
-    M2: 'llm-live',
+test('Wegmarke: 1A auf eigenem Weg, je Folie die erwartete Station; 1B 3–4 auf Jonas’ Weg', async () => {
+  const { MARKEN, STOERUNG_ZEICHEN } = await import('../jonas/wegkarte.mjs');
+  const marken = Object.fromEntries([...haupt1A, ...n1b].map((f) => [f.id, f.marke]));
+  assert.deepEqual(marken, {
+    N1: '1a-spacy',
+    N2: '1a-app',
+    N3: '1a-spacy',
+    N4: '1a-regel',
+    N5: '1a-live',
+    N6: '1a-regel',
+    N6b: '1a-regel',
+    N7: '1a-wirkung',
+    N8: '1a-spacy',
+    N9: '1a-ersatz',
+    N10: '1a-wortwolke',
+    M1: '1b-stoerung',
+    M2: '1b-alle',
   });
-  for (const o of Object.values(orte)) assert.ok(SYSTEM_ORTE[o], o);
-  // Farbe je Teil: 1A auf dem App-Host, 1B am zweiten Host
-  for (const f of haupt1A) assert.equal(SYSTEM_ORTE[f.ort].teil, '1A', f.id);
-  for (const f of n1b) assert.equal(SYSTEM_ORTE[f.ort].teil, '1B', f.id);
-  // Im Deck: dieselbe Marke, Beschriftung nennt den Ort
-  for (const o of ['app-spacy', 'app-alle', 'app-live', 'llm-gestoert', 'llm-live'])
-    assert.match(html, new RegExp(`data-ort="${o}"`));
-  assert.match(html, /App-Host · spaCy-Sidecar/);
-  assert.match(html, /Zweiter Host · gestört/);
+  // erwartete Station bzw. Strecke je Marke
+  const ort = (m) => MARKEN[m].station ?? MARKEN[m].abschnitte.map((a) => a.name).join('+');
+  assert.deepEqual(Object.fromEntries(Object.entries(marken).map(([id, m]) => [id, ort(m)])), {
+    N1: 'spacy',
+    N2: 'app',
+    N3: 'spacy',
+    N4: 'haupt+zweig',
+    N5: 'haupt',
+    N6: 'haupt+zweig',
+    N6b: 'haupt+zweig',
+    N7: 'spacy',
+    N8: 'spacy',
+    N9: 'ersatz',
+    N10: 'wortwolke',
+    M1: 'zweiterHost',
+    M2: 'zweiterHost',
+  });
+  assert.equal(MARKEN['1a-wirkung'].wirkung, true);
+  for (const f of haupt1A) {
+    assert.equal(MARKEN[f.marke].weg, '1a', f.id);
+    assert.deepEqual(MARKEN[f.marke].teil, ['1A'], f.id);
+  }
+  // 1B 3–4: Jonas' Auftragsweg, Strecke über den zweiten Host in Bernstein
+  for (const f of n1b) {
+    const m = MARKEN[f.marke];
+    assert.equal(m.weg, 'auftrag', f.id);
+    assert.deepEqual(m.abschnitte, [{ name: 'zweiterHost' }], f.id);
+    assert.equal(m.farbe, 'var(--bernstein)', f.id);
+  }
+  // Stufen der Marke auf M1 = Stufen der Störungen auf M1 (STUFE_1B34)
+  const stufen = {};
+  for (const st of MARKEN['1b-stoerung'].stufen) for (const z of st.zeichen) stufen[z] = st.ab;
+  assert.deepEqual(stufen, {
+    stopp: STUFE_1B34.f1,
+    belegt: STUFE_1B34.busy,
+    drop: STUFE_1B34.f2,
+    spaet: STUFE_1B34.l3,
+  });
+  assert.deepEqual(MARKEN['1b-alle'].zeichen, Object.keys(STOERUNG_ZEICHEN));
+  // Im Deck: Marke je Folie mit Beschriftung und Etikett, keine Reste der Systembild-Miniatur
+  for (const f of [...haupt1A, ...n1b]) {
+    const folie = html.match(new RegExp(`<section[^>]*data-id="${f.id}"[\\s\\S]*?</section>`))[0];
+    assert.match(folie, new RegExp(`class="weg-mini weg-marke" data-marke="${f.marke}"`), f.id);
+    assert.match(folie, /<p class="weg-beschriftung"[^>]*><span class="weg-(name|stufen)"/, f.id);
+    assert.match(folie, /class="etikett etikett-1[ab]"/, f.id);
+  }
+  assert.doesNotMatch(html, /ort-mini|data-ort=|Ort im Systembild/);
 });
 
 test('M1: Störungen als Stufen (Stopp und Slot, DROP, zu spät) und Maßstab aus dem Verhältnis der Mediane', () => {

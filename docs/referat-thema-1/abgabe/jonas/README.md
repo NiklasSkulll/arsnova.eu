@@ -71,10 +71,13 @@ er läuft springt auf das letzte Bild (`deck.js`, `clipSchritt`).
   Uhr steht, während Jonas spricht; Notizen und Sprechkarten markieren die Übergabe nach N10). Überschreitet
   die Langfassung 15:00 min, steht dort ein Budgethinweis (Entscheidung der Autoren 2026-11-16: 15 min Redezeit
   je Person, Fragen kommen hinzu; vorher 10:30 min).
-- Ortsmarke ohne Bewegung oben links (`deck.mjs`, `ortsmarke`) auf jeder Folie von 1A und 1B 3–4 und auf J1:
-  das Systembild von GK verkleinert (`grafik.mjs`, `systemMini`, dieselbe Geometrie `SYSTEM`), immer gleich;
-  nur der Ort der Folie trägt die Farbe seines Teils, die Beschriftung nennt den Ort („App-Host · spaCy-Sidecar“,
-  „Zweiter Host · gestört“) wie die Wegkarte auf Jonas' Stationsfolien.
+- Ortsmarke ohne Bewegung oben links (`deck.mjs`, `ortsmarke`; Folienfeld `marke`) auf jeder Folie von 1A und
+  1B 3–4 und auf J1: eine Wegkarte in derselben Bildsprache wie Jonas' Marker (`wegkarte.mjs`, gleiche Maße,
+  Linien und Stationen, Beschriftung mit Etikett). 1B 3–4 zeigt Jonas' Auftragsweg, die Strecke über den zweiten
+  Host in Bernstein, dazu je Stufe ein Störungszeichen (Stopp, Slot belegt, DROP, zu spät); 1A einen eigenen Weg
+  (oben Teilnehmende → App → Datenbank → Antwort, unten der Zweig Analyse → spaCy → Ersatz → Wortwolke) mit dem Ort
+  der Folie in Blau; J1 Jonas' ganzen Weg ohne Hervorhebung. Welche Folie welche Station zeigt, steht begründet
+  an der Folie (`../niklas/folien-1a.mjs`).
 - G0 zeigt Leitfrage und Fahrplan der vier Teile in Vortragsreihenfolge (`TEILE` in `folien.mjs`: Niklas 1A,
   Jonas 1C und 1B 1–2, Niklas 1B 3–4, Fazit); dieselben Teile stehen klein oben rechts auf jeder Hauptfolie
   (Teilleiste, `deck.mjs`), der aktuelle Teil unterstrichen. G9 nimmt die Leitfrage von G0 wörtlich wieder

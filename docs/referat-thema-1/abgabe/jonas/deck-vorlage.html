@@ -78,25 +78,31 @@
       .weg-mini-karte {
         display: block;
       }
-      /* Ortsmarke ohne Bewegung (deck.mjs, ortsmarke): Systembild von GK verkleinert, im selben Platz und mit
-         derselben Beschriftung wie die Wegkarte */
-      .ort-mini {
-        position: absolute;
-        left: var(--rand);
-        top: 16px;
-        height: 64px;
+      /* Ortsmarke ohne Bewegung (deck.mjs ortsmarke, wegkarte.mjs wegMarke): Wegkarte im Platz und mit der
+         Beschriftung von Jonas' Marker, sichtbar auf dem Bildschirm und im Druck */
+      /* .folie p setzt text-wrap: pretty (stil.css); die Beschriftung bleibt einzeilig */
+      .weg-mini .weg-beschriftung {
+        text-wrap: nowrap;
+      }
+      .weg-marke .weg-punkt {
+        transform: translate(-50%, -50%);
+      }
+      .weg-stufen {
+        display: grid;
+      }
+      .weg-stufe {
+        grid-area: 1 / 1;
         display: flex;
         align-items: center;
-        gap: 16px;
-        z-index: 2;
+        gap: 10px;
       }
-      .ort-mini svg {
+      .weg-zeichen-reihe {
+        display: flex;
+        gap: 6px;
+        color: var(--bernstein);
+      }
+      .weg-zeichen {
         display: block;
-        flex: none;
-      }
-      .ort-mini .ort-beschriftung {
-        position: static;
-        height: auto;
       }
       /* Folie neben dem Weg (J11): Vermerk an der Stelle der Wegkarte */
       .weg-exkurs {
