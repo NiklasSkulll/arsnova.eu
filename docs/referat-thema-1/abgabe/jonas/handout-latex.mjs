@@ -93,6 +93,17 @@ export function svgArial(svg) {
     .replace(/font-family:[^;"]*/g, 'font-family:Arial');
 }
 
+/** Schriftgrade unter `min` (SVG-Einheiten) auf `min` anheben; Attribut- und Stilschreibweise. */
+export function svgMindestschrift(svg, min) {
+  const hoch = (wert) => String(Math.max(Number(wert), min));
+  return svg
+    .replace(/font-size="(\d+(?:\.\d+)?)"/g, (_, w) => `font-size="${hoch(w)}"`)
+    .replace(/font-size:\s*(\d+(?:\.\d+)?)px/g, (_, w) => `font-size: ${hoch(w)}px`);
+}
+
+// Druckbreite 170 mm bei viewBox-Breite 1380: 24 Einheiten ≈ 8,4 pt (PaperLab: Schrift ≥ 8 pt).
+const MINDESTSCHRIFT = 24;
+
 // SVG → PDF mit rsvg-convert (cairo): bettet Arial als TrueType ein. Chromium schrieb Teile als
 // Type-3-Schrift, die PaperLab ablehnt (Schriftregel RL S. 2: alle Schriften eingebettet, eine Familie).
 function svgZuPdf(svg, pfad, { breiteMm }) {
@@ -121,10 +132,18 @@ export async function erzeuge(ziel) {
   const datum = new Date().toISOString().slice(0, 10);
   writeFileSync(join(ziel, 'zahlen.tex'), zahlenTex(handoutMakros(daten), { commit, datum }));
   const { b1, c1, auftrag } = daten;
-  svgZuPdf(svgArial(wegSvg({ aktiv: null, b1, c1, auftrag })), join(ziel, 'abb-weg.pdf'), {
-    breiteMm: 170,
-  });
-  svgZuPdf(svgArial(zeitzerlegungSvg(b1)), join(ziel, 'abb-zeit.pdf'), { breiteMm: 170 });
+  svgZuPdf(
+    svgMindestschrift(svgArial(wegSvg({ aktiv: null, b1, c1, auftrag })), MINDESTSCHRIFT),
+    join(ziel, 'abb-weg.pdf'),
+    {
+      breiteMm: 170,
+    },
+  );
+  svgZuPdf(
+    svgMindestschrift(svgArial(zeitzerlegungSvg(b1)), MINDESTSCHRIFT),
+    join(ziel, 'abb-zeit.pdf'),
+    { breiteMm: 170 },
+  );
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {

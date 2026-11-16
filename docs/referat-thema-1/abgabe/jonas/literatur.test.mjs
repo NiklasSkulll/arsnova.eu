@@ -11,7 +11,7 @@ const BIB = `${process.env.HOME}/Documents/Code/PaperLab/scientific-papers/prese
 test('kurzbeleg: Autor, Jahr und Stelle in Klammern (ZL S. 3)', () => {
   assert.equal(kurzbeleg('kwon2023', 'Kap. 3'), '(Kwon et al., 2023, Kap. 3)');
   assert.equal(kurzbeleg('dean2013', 'S. 74'), '(Dean & Barroso, 2013, S. 74)');
-  assert.equal(kurzbeleg('weirauch2026c'), '(Weirauch, 2026c)');
+  assert.equal(kurzbeleg('weirauch2026c', 'ADR 1C-024'), '(Weirauch, 2026, ADR 1C-024)');
   assert.throws(() => kurzbeleg('fehlt2020'), /fehlt2020/);
 });
 
@@ -32,8 +32,18 @@ test(
     const bib = readFileSync(BIB, 'utf8');
     for (const e of LITERATUR)
       assert.match(bib, new RegExp(`@\\w+\\{${e.schluessel},`), e.schluessel);
-    assert.equal(kurzbeleg('weirauch2026b'), '(Weirauch, 2026a)');
-    assert.equal(kurzbeleg('weirauch2026d'), '(Weirauch, 2026b)');
+    // Eigene Arbeit: ein Eintrag ohne Jahresbuchstaben, Fundstelle im Kurzbeleg (wie im Handout).
+    assert.equal(kurzbeleg('weirauch2026c'), '(Weirauch, 2026)');
+    assert.ok(
+      !/weirauch2026[abd]\b/.test(bib.replace(/^%.*$/gm, '')),
+      'Handout hat nur weirauch2026c',
+    );
+    assert.ok(!LITERATUR.some((e) => /^weirauch2026[abd]$/.test(e.schluessel)));
     assert.equal(kurzbeleg('arsnova2026pruefung'), '(arsnova.eu-Projektteam, 2026b)');
+    // Projektdokumente als Permalink auf denselben Stand wie im Handout
+    for (const k of ['arsnova2026adr0035', 'arsnova2026pruefung']) {
+      const url = LITERATUR.find((e) => e.schluessel === k).voll.match(/https:\S+/)[0];
+      assert.ok(bib.includes(url), `${k}: URL wie im Handout`);
+    }
   },
 );

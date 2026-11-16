@@ -6,7 +6,14 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { ladeFolienDaten } from './folien.mjs';
-import { handoutMakros, makroName, svgArial, texEsc, zahlenTex } from './handout-latex.mjs';
+import {
+  handoutMakros,
+  makroName,
+  svgArial,
+  svgMindestschrift,
+  texEsc,
+  zahlenTex,
+} from './handout-latex.mjs';
 import { handoutWerte } from './handout.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -56,6 +63,17 @@ test('svgArial ersetzt jede Schriftfamilie durch Arial', () => {
   );
   assert.doesNotMatch(s, /Inter|Plex/);
   assert.equal((s.match(/Arial/g) || []).length, 2);
+});
+
+test('svgMindestschrift hebt kleine Schriftgrade an und lässt große stehen', () => {
+  // 17 cm Druckbreite bei viewBox 1380: 24 Einheiten ≈ 8,4 pt (Schrift ≥ 8 pt, PaperLab figures/README).
+  const s = svgMindestschrift(
+    '<text font-size="22">a</text><text style="font-size: 18px">b</text><text font-size="30">c</text>',
+    24,
+  );
+  assert.match(s, /font-size="24">a/);
+  assert.match(s, /font-size: 24px">b/);
+  assert.match(s, /font-size="30">c/);
 });
 
 test('erzeuge: Abbildungen nur mit eingebetteten TrueType-Schriften (Arial), keine Type-3-Schrift', async () => {

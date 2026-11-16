@@ -48,6 +48,11 @@ export function zahlen1B(lauf, kaltLaeufe, c0, b0) {
     jobWarmMs: k.warm.jobMsMedian,
     inferWarmMs: k.warm.inferMsMedian,
     jobKaltMs: k.kalt.jobMsMedian,
+    // Spanne der warmen Aufträge (2-10) im gewerteten Lauf, in s: ein Lauf, keine unabhängigen Wiederholungen.
+    jobWarmSpanneS: (() => {
+      const w = lauf.zerlegung.auftraege.slice(1).map((a) => a.jobMs / 1000);
+      return [Math.min(...w), Math.max(...w)];
+    })(),
     kaltMedianS: median(kaltS),
     kaltSpanneS: [Math.min(...kaltS), Math.max(...kaltS)],
     // H_B3 kalt misst den Inferenzanteil je Lauf, dazu Netz im Median über die fünf Läufe (Nachtrag M4).
@@ -136,6 +141,14 @@ export const ZAHLEN_1C = {
     beleg: '**223,7 s** (209,6–248,3)',
     rechner: 'Laptop (ThinkPad P50)',
     commit: NACHLAUF_STAND,
+  },
+  inferenzRuhigS: {
+    wert: 163.4,
+    text: 'Inferenz (Prefill + Ausgabe), Median in s, Laborlauf ohne Nebenlast',
+    quelle: 'evidenz/1C/2026-11-05-labor.md',
+    beleg: '163,4 s (Prefill 76,2 s, Ausgabe 86,6 s)',
+    rechner: 'Laptop (ThinkPad P50)',
+    commit: '9f230abc',
   },
   kalibrierungPcS: {
     wert: 98.7,
@@ -248,6 +261,22 @@ export const ZAHLEN_1C = {
     beleg: '**0 von 28 bestehen.**',
     rechner: 'Laptop (ThinkPad P50)',
     commit: NACHLAUF_STAND,
+  },
+  ablationNeuEnglisch: {
+    wert: '22 von 28',
+    text: 'Nachlauf-Antworten, die eine Wortzählung als englisch einstuft (Gate-Ablation, nachträglich)',
+    quelle: 'evidenz/1C/2026-11-16-gate-ablation.md',
+    beleg: 'stuft 22 der 28 Nachlauf-Antworten als englisch ein',
+    rechner: 'Laptop (ThinkPad P50), offline ausgewertet',
+    commit: NACHLAUF_STAND,
+  },
+  ablationAltMeta: {
+    wert: '26 von 59',
+    text: 'Antworten von 9f230abc, die eine Inhaltsregel des Gates verletzen (Gate-Ablation, H_A2)',
+    quelle: 'evidenz/1C/2026-11-16-gate-ablation.md',
+    beleg: 'Auf `9f230abc` verletzen 26 von 59 Antworten (44 %) eine Inhaltsregel',
+    rechner: 'Laptop (ThinkPad P50) und PC (i7-8700), offline ausgewertet',
+    commit: '9f230abc',
   },
 };
 

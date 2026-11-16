@@ -59,6 +59,8 @@ export function handoutWerte(daten) {
     jobWarm: fmt(b.jobWarmMs / 1000, 1),
     jobKalt: fmt(b.jobKaltMs / 1000, 1),
     kaltMedian: fmt(b.kaltMedianS, 1),
+    warmMin: fmt(b.jobWarmSpanneS[0], 1),
+    warmMax: fmt(b.jobWarmSpanneS[1], 1),
     kaltMin: fmt(b.kaltSpanneS[0], 1),
     kaltMax: fmt(b.kaltSpanneS[1], 1),
     c0: fmt(b.c0DiffMs, 1),

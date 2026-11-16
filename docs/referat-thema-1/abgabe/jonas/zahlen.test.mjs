@@ -21,6 +21,10 @@ test('1B-Zahlen aus den committeten Ergebnis-JSONs', () => {
     b1.kaltSpanneS.map((s) => fmt(s, 1)),
     ['187,1', '210,1'],
   );
+  assert.deepEqual(
+    b1.jobWarmSpanneS.map((s) => fmt(s, 1)),
+    ['148,1', '158,3'],
+  );
   assert.equal(fmt(b1.c0DiffMs, 1), '−2,0');
   assert.equal(fmt(b1.b0JobMs, 1), '88,5');
   assert.equal(b1.anzahl, 10);
