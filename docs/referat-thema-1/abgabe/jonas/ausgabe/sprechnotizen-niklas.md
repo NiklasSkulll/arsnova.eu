@@ -1,10 +1,10 @@
 # Sprechnotizen Niklas
 
-Gesamt 14:10 min, Kurzfassung 10:30 min (Folien mit der Marke „Kurzfassung“). Erzeugt aus `abgabe/niklas/folien-1a.mjs`, `folien-1b34.mjs` und GT, G0, G9, GD in `folien.mjs` (`notiz` = Fließtext, `stichpunkte`, `zeitS`, `kurzfassung`); nicht von Hand ändern. Vorgetragen wird aus den Stichpunkten; der Fließtext ist die ausformulierte Fassung zum Üben.
+Gesamt 14:25 min, Kurzfassung 12:15 min (Folien mit der Marke „Kurzfassung“). Erzeugt aus `abgabe/niklas/folien-1a.mjs`, `folien-1b34.mjs` und GT, G0, G9, GD in `folien.mjs` (`notiz` = Fließtext, `stichpunkte`, `zeitS`, `kurzfassung`); nicht von Hand ändern. Vorgetragen wird aus den Stichpunkten; der Fließtext ist die ausformulierte Fassung zum Üben.
 
 ## Sprungplan
 
-Geplant: 14:10 min (Grenze 15:00 min), ab der ersten Folie (GT) gezählt. N10 beginnt im Plan bei 9:50 min; N10 bis GD brauchen zusammen 4:20 min. Bis 10:40 min bleiben 0:50 min Puffer. Wer bei 10:40 min noch vor N10 steht, blättert mit Pfeil rechts ohne Kommentar bis N10 und spricht ab dort weiter. Bei Zeitdruck von Anfang an nur die Folien mit der Marke „Kurzfassung“ (10:30 min); sie enthält N10 bis GD. Nach N10 spricht Jonas (J1–J15, etwa 14:30 min); die Uhr für den Sprungplan läuft nur während der eigenen Folien.
+Geplant: 14:25 min (Grenze 15:00 min), ab der ersten Folie (GT) gezählt. N10 beginnt im Plan bei 8:20 min; N10 bis GD brauchen zusammen 6:05 min. Bis 8:55 min bleiben 0:35 min Puffer. Wer bei 8:55 min noch vor N10 steht, blättert mit Pfeil rechts ohne Kommentar bis N10 und spricht ab dort weiter. Bei Zeitdruck von Anfang an nur die Folien mit der Marke „Kurzfassung“ (12:15 min); sie enthält N10 bis GD. Nach N10 spricht Jonas (J1–J15, etwa 14:30 min); die Uhr für den Sprungplan läuft nur während der eigenen Folien.
 
 ## GT Thema 1: KI-Inferenz im Moderationskompass (10 s, kumuliert 0:10, **Kurzfassung** 0:10)
 
@@ -147,22 +147,7 @@ Jetzt die Regel. Das sind alle 80 gepaarten Vergleiche: jede Aktion in jedem Blo
 
 _Quelle:_ evidenz/1A/reihe-main-a19ca70f-20261115-122547/auswertung/auswertung.json comparisons[] (relativePassed, absolutePassed, absoluteChangeMs); evidenz/1A/…/auswertung/live-vergleiche.csv; nachgerechnet aus durationSamplesMs (Nearest Rank), 0 Abweichungen · Niklas' Rechner, Ubuntu 24.04.5 LTS unter WSL2 (Kernel 6.18.58.1-microsoft-standard-WSL2), 16 logische CPUs, Lastgenerator auf demselben Rechner · App-Commit a19ca70f (nach v1.4.0) · Auswertung SHA-256 a3bebdf236cfb3b6…
 
-## N6b Die Regel schlägt auch ohne Wirkung an (45 s, kumuliert 7:20)
-
-**Stichpunkte**
-
-- Nachträglich: gepoolt V2 − V1 = −5,5 bis +0,1 ms
-- Streuung je Variante > Effekt (V2 Beitritt 31–58 ms)
-- Kontrolle 4/20; wirkungslos besteht nur ≈ 1 %
-- Künftig ohne Änderung kalibrieren; hier gilt die Regel
-
-**Fließtext**
-
-Warum schlägt die Regel so oft an? Nachträglich ausgewertet: Gepoolt über alle fünf Blöcke weicht spaCy im Normalbetrieb um −5,5 bis +0,1 Millisekunden von der Basis ab, also praktisch nicht. Die Lauf-p95 streuen innerhalb derselben Variante stärker, beim Beitritt in V2 zwischen 31–58 Millisekunden. Die Kontrolle ohne spaCy verfehlt die Regel 4 von 20 Mal. Wären die Vergleiche unabhängig, bestünde selbst eine wirkungslose Komponente alle 20 nur mit etwa 1 Prozent. Für einen neuen Versuch würde ich die Regel deshalb an einem Vergleich ohne Änderung kalibrieren, für diesen Versuch gilt sie.
-
-_Quelle:_ alle 25 lauf.json (live.actions.<aktion>.latency.durationSamplesMs), Nearest Rank gepoolt; Kontrolle: comparisons[variant=V1]; Unabhängigkeit ist eine grobe Annahme · Niklas' Rechner, Ubuntu 24.04.5 LTS unter WSL2 (Kernel 6.18.58.1-microsoft-standard-WSL2), 16 logische CPUs, Lastgenerator auf demselben Rechner · App-Commit a19ca70f (nach v1.4.0) · Auswertung SHA-256 a3bebdf236cfb3b6…
-
-## N7 Der Ausreißer dauerte rund zehn Sekunden (50 s, kumuliert 8:10, **Kurzfassung** 5:15)
+## N7 Der Ausreißer dauerte rund zehn Sekunden (50 s, kumuliert 7:25, **Kurzfassung** 5:15)
 
 **Stichpunkte**
 
@@ -178,23 +163,7 @@ Was geschah im letzten Lauf? Nachträglich ausgewertet, deshalb der Vermerk hint
 
 _Quelle:_ evidenz/1A/reihe-main-a19ca70f-20261115-122547/V3/block-05/lauf.json (live.actions.join.latency.durationSamplesMs, live.lifecycle.arrivals[].scheduledAtMs, analysis.analysis.calls[]), V3/block-05/ressourcen.json.gz (snapshots[].containers[].delta.cpuPercent); Vergleich mit allen übrigen Läufen; Zuordnung Stichprobe ↔ Ankunft ist eine Näherung (Abschlussreihenfolge) · Niklas' Rechner, Ubuntu 24.04.5 LTS unter WSL2 (Kernel 6.18.58.1-microsoft-standard-WSL2), 16 logische CPUs, Lastgenerator auf demselben Rechner · App-Commit a19ca70f (nach v1.4.0) · Auswertung SHA-256 a3bebdf236cfb3b6…
 
-## N8 spaCy bleibt im Budget, bis CPU fehlt (45 s, kumuliert 8:55)
-
-**Stichpunkte**
-
-- V2: ≈ 18 % einer CPU, < 1 % gedrosselt, ≈ 480 MiB
-- V3: 20–24 % bei Quote 25 % → 88–96 % gedrosselt
-- Bild: je 100-ms-Takt nur ein Viertel rechnen; fast immer aufgebraucht
-- Reserve im Labor: < 0,5 CPU von 16, ≥ 11,6 GiB frei
-- Reserve groß, schützt Latenz aber nicht; 8-vCPU-Zielhost nicht gemessen
-
-**Fließtext**
-
-Links gedrosselte CPU-Perioden, rechts die Speicherspitze. Im Normalbetrieb braucht spaCy rund 18 Prozent einer CPU, wird in unter einem Prozent der Perioden gedrosselt und kommt auf etwa 480 Mebibyte, weit unter der Schwelle. Gedrosselt auf ein Viertel CPU verbraucht es fast die ganze Quote. Als Bild: Der Kernel teilt die Zeit in Takte von hundert Millisekunden, und spaCy darf in jedem Takt nur ein Viertel davon rechnen. In 88–96 Prozent der Takte war dieses Viertel aufgebraucht, bevor die Arbeit fertig war; spaCy wartete fast immer auf den nächsten Takt. Zur Reserve: Alle Container zusammen brauchten weniger als eine halbe CPU von sechzehn, mindestens 11,6 Gibibyte blieben frei. Das schützt die Latenz nicht automatisch; den Zielhost habe ich nicht gemessen.
-
-_Quelle:_ evidenz/1A/reihe-main-a19ca70f-20261115-122547/auswertung/auswertung.json runs[].resources[alias=spacy] (cpuPercent, throttledPeriodRatio aus cpu.stat, lifetimePeakMemoryBytes aus memory.peak, oomKillDelta), runs[].resources[].cpuPercent (Summe je Lauf), runs[].collectorHost.minAvailableMemoryBytes; Takt von cpu.max: Kernel-Doku cgroup v2, Abschn. „CPU Interface Files“ (Standard „max 100000“, also 100 ms) · Niklas' Rechner, Ubuntu 24.04.5 LTS unter WSL2 (Kernel 6.18.58.1-microsoft-standard-WSL2), 16 logische CPUs, Lastgenerator auf demselben Rechner · App-Commit a19ca70f (nach v1.4.0) · Auswertung SHA-256 a3bebdf236cfb3b6…
-
-## N9 Nach 5 s liefert die App den Ersatz (55 s, kumuliert 9:50, **Kurzfassung** 6:10)
+## N9 Nach 5 s liefert die App den Ersatz (55 s, kumuliert 8:20, **Kurzfassung** 6:10)
 
 **Stichpunkte**
 
@@ -209,7 +178,7 @@ Was sehen die Lehrenden? Die lexikalische Wortwolke ist in unter einer Zehntelse
 
 _Quelle:_ evidenz/1A/reihe-main-a19ca70f-20261115-122547/auswertung/auswertung.json runs[].analysis (successLatency, fallbackLatency, outcomes, fallbackReasons), runs[V4].proxy (delayMs, forwarded, cancelledBeforeForward; scope proxy-lifetime-including-warmup), runs[].resources[alias=spacy], runs[].collectorHost.minAvailableMemoryBytes (abgerundet); SIDECAR_UNAVAILABLE fasst Gegendruck und echte Unerreichbarkeit zusammen (apps/backend/src/lib/wordCloudNormalizer.ts, reasonFromSidecarError), Gegendruck daher erschlossen aus genau 50 je Lauf; NLP_TIMEOUT_MS aus den Laufmanifesten; SPACY_MAX_IN_FLIGHT: apps/backend/src/lib/spacyClient.ts Z. 22, Prüfung Z. 187 · Niklas' Rechner, Ubuntu 24.04.5 LTS unter WSL2 (Kernel 6.18.58.1-microsoft-standard-WSL2), 16 logische CPUs, Lastgenerator auf demselben Rechner · App-Commit a19ca70f (nach v1.4.0) · Auswertung SHA-256 a3bebdf236cfb3b6…
 
-## N10 Entscheidung: lexikalische Wortwolke bleibt (65 s, kumuliert 10:55, **Kurzfassung** 7:15)
+## N10 Entscheidung: lexikalische Wortwolke bleibt (65 s, kumuliert 9:25, **Kurzfassung** 7:15)
 
 **Stichpunkte**
 
@@ -228,72 +197,118 @@ _Quelle:_ 1A-auswertung.md (Entscheidung, Budget und Rückweg, Grenzen); 1A-Vers
 
 _Übergabe:_ Nach N10 spricht Jonas (J1–J15, etwa 14:30 min); die Uhr für den Sprungplan läuft nur während der eigenen Folien.
 
-## M1 Ersatz kommt immer, ein stummer Host kostet Minuten (75 s, kumuliert 12:10, **Kurzfassung** 8:30)
+## M1 Ersatz kommt immer, ein stummer Host bremst (75 s, kumuliert 10:40, **Kurzfassung** 8:30)
 
 **Stichpunkte**
 
 - „Danke, Jonas.“ Seine Frage: Was, wenn der zweite Host langsam ist oder ausfällt?
-- Achse: Zeit bis zum Ersatz, log; Frist 300 s; grau = Normalbetrieb
-- [Weiter] Stopp: Ersatz nach 48 ms, Slot belegt 93 ms (Median)
-- [Weiter] DROP: 134,7 s; Bild: Stopp 1 s → DROP rund 47 min
-- [Weiter] Antwort nach der Frist: 300,1 s
-- Kriterien vorab (5e758d0a) alle erfüllt, jeder Ersatz in der Frist; stumm ist teurer als tot
+- Kreis Summary, Raute Label; Fristen 30 s und 300 s; grau normal
+- [Weiter] Stopp 48 ms, Slot belegt 93 ms
+- [Weiter] Netz langsam: Antwort kommt; DROP Summary 135 s (× 2.800), Label 30 s
+- [Weiter] Zu spät: volle Frist (300 s, Label 30 s)
+- Kriterien vorab (5e758d0a) erfüllt; gestoppt Millisekunden, stumm Minuten
 
 **Fließtext**
 
-Danke, Jonas. Er hat gefragt: Was passiert, wenn der zweite Host langsam ist oder ausfällt? Oben links ist auf Jonas' Weg jetzt die Strecke über den zweiten Host markiert. Ich habe die Runtime im Labor gezielt gestört, jeweils unter derselben Beitrittswelle wie in 1A. Die Achse zeigt die Zeit bis zum Ersatz je Auftrag, logarithmisch; rechts steht die Frist von 300 Sekunden. Grau ist der Normalbetrieb: Die Inferenz läuft, und die Antwort verwirft das Gate, wie bei Jonas. [Weiter] Ist der Container gestoppt, wird die Verbindung sofort abgewiesen, und die App liefert die extraktive Zusammenfassung nach 48 Millisekunden im Median; bei belegtem Slot nach 93 Millisekunden. [Weiter] Verwirft die Firewall die Pakete, merkt die App das erst nach rund 135 Sekunden. Im Maßstab: Dauerte der Stopp eine Sekunde, wartete DROP rund 47 Minuten. [Weiter] Antwortet die Runtime erst nach der Frist, wartet die App die vollen 300 Sekunden. Alle Kriterien standen vor der ersten Reihe fest und sind erfüllt. Ein stummer Host ist also teurer als ein toter.
+Danke, Jonas. Er hat gefragt: Was, wenn der zweite Host langsam ist oder ausfällt? Ich habe die Runtime im Labor gezielt gestört, unter derselben Beitrittswelle wie in 1A, für zwei Aufträge: die Q&A-Zusammenfassung als Kreis und die Wortwolken-Labels als Raute. Die Achse ist logarithmisch, rot stehen die Fristen, 30 Sekunden für Labels und 300 für Summaries. Grau ist der Normalbetrieb. Labels übernimmt die App nach etwa 3,5 Sekunden, Summaries verwirft das Gate wie bei Jonas. [Weiter] Ist der Container gestoppt, kommt der Ersatz nach 48 Millisekunden, bei belegtem Slot nach 93 Millisekunden. [Weiter] Bremse ich das Netz um fünfhundert Millisekunden, kommt die Antwort trotzdem. Verwirft die Firewall die Pakete, merkt die App das bei Summaries erst nach 135 Sekunden, rund 2.800-mal so spät wie beim Stopp; bei Labels beendet die Frist das Warten nach 30 Sekunden. [Weiter] Antwortet die Runtime zu spät, wartet die App die volle Frist. Ein gestoppter Host kostet Millisekunden, ein stummer Minuten.
 
-_Quelle:_ evidenz/1B/messung/2026-11-15-lauf-normal-summary.json (Commit 5e758d0a, n = 10); evidenz/1B/messung/2026-11-15-lauf-f1-summary.json (Commit 5e758d0a, n = 10); evidenz/1B/messung/2026-11-16-lauf-busy-summary.json (Commit 2b39b9df, n = 10); evidenz/1B/messung/2026-11-16-lauf-f2-summary.json (Commit 2b39b9df, n = 5); evidenz/1B/messung/2026-11-16-lauf-l3-summary.json (Commit 2b39b9df, n = 10) · i7-10700K, Hyper-V, ohne CPU-Pinning; arsnova-1b-app 2 vCPU/4 GiB, arsnova-1b-llm 8 vCPU/10 GiB · Schwellen: docs/referat-thema-1/1B-3u4-Planung.md auf Niklas' Zweig feature-1B-private-inference-3-4, Commit 5e758d0a (2026-11-15T21:10:37+01:00), vor der ersten gewerteten Reihe; Protokolle evidenz/1B/2026-11-15-lauf-_-summary.md, 2026-11-16-lauf-_-summary.md (Prüfung durch den Autor: offen)
+_Quelle:_ evidenz/1B/messung/2026-11-15-lauf-normal-summary.json.gz (Commit 5e758d0a, n = 10); evidenz/1B/messung/2026-11-16-lauf-normal-label-01.json.gz + evidenz/1B/messung/2026-11-16-lauf-normal-label-02.json.gz + evidenz/1B/messung/2026-11-16-lauf-normal-label-03.json.gz (Commit 7c64dd6a, n = 30); evidenz/1B/messung/2026-11-15-lauf-f1-summary.json.gz (Commit 5e758d0a, n = 10); evidenz/1B/messung/2026-11-16-lauf-f1-label.json.gz (Commit 7c64dd6a, n = 10); evidenz/1B/messung/2026-11-16-lauf-busy-summary.json.gz (Commit 2b39b9df, n = 10); evidenz/1B/messung/2026-11-16-lauf-l1-label-01.json.gz + evidenz/1B/messung/2026-11-16-lauf-l1-label-02.json.gz (Commit 7c64dd6a, n = 20); evidenz/1B/messung/2026-11-16-lauf-l2-label.json.gz (Commit 7c64dd6a, n = 3); evidenz/1B/messung/2026-11-16-lauf-f2-summary.json.gz (Commit 2b39b9df, n = 5); evidenz/1B/messung/2026-11-16-lauf-f2-label.json.gz (Commit 7c64dd6a, n = 3); evidenz/1B/messung/2026-11-16-lauf-l3-summary.json.gz (Commit 2b39b9df, n = 10); evidenz/1B/messung/2026-11-16-lauf-l3-label.json.gz (Commit 7c64dd6a, n = 3) · i7-10700K, Hyper-V, ohne CPU-Pinning; arsnova-1b-app 2 vCPU/4 GiB, arsnova-1b-llm 8 vCPU/10 GiB · Summary Job-Zeit (experiment.jobs[].jobMs), Label Client-Zeit (clientWaitMs, die Label-API legt keine Job-Zeit offen); Label-Frist OPEN_WEIGHT_LLM_LABEL_TIMEOUT_MS = 30.000 ms laut settings · Faktor DROP/Stopp wie f2-summary.md (134.732 / 48) · Schwellen docs/referat-thema-1/1B-3u4-Planung.md, Commit 5e758d0a (2026-11-15T21:10:37+01:00); Label-Fristkriterium laut Planung nicht bewertbar · Prüfung durch den Autor: 2026-11-16
 
-## M2 Kein Live-Fehler unter Störung, p95 bis +8 ms (60 s, kumuliert 13:10, **Kurzfassung** 9:30)
+## M2 Der Breaker dämpft Ausfälle, keine Hänger (50 s, kumuliert 11:30, **Kurzfassung** 9:20)
 
 **Stichpunkte**
 
-- 0 Live-Fehler bei 72.000 Aktionen, alle Reihen
-- Regel +10 % je Reihe verfehlt (Slot belegt: Beitritt, Slot belegt: Tempo, F2 DROP: Beitritt, L3 zu spät: Tempo), höchstens +8,1 ms
-- Serielle Reihen, ein Rechner: Ursache offen, Regel bleibt
-- Schritt 4: zweite Rolle bleibt (ADR-0035); Gewinn gemessen, Aufwand nicht in Stunden
-- Risiko: stummer Host bindet Aufträge bis zur Frist
+- Breaker: nach 3 Fehlern 30 s aus, Ersatz sofort; vier Aufträge ohne Pause
+- Stopp: 3 × abgewiesen, Auftrag 4 nach 44 ms ohne Netz
+- [Weiter] Zu spät: 4 × 90 s, auch Auftrag 4 erreicht die Runtime
+- Code: Queue-Abbruch = aborted, zählt nicht; dämpft Ausfälle, keine Hänger
 
 **Fließtext**
 
-Und die Live-Aktionen? In allen Störreihen scheiterte keine einzige: 0 Fehler bei 72.000 Aktionen. Die vorab festgelegte Latenzregel, höchstens zehn Prozent über der Referenz, verfehlt aber jede Störreihe bei mindestens einer Aktion, um höchstens 8,1 Millisekunden. Die Reihen liefen nacheinander auf einem Rechner; eine Ursache kann ich nicht belegen, und die Regel lasse ich stehen. Der App-Host brauchte dabei höchstens 58 Prozent einer CPU und 472 Mebibyte. Für Schritt 4 folgt: Die zweite Serverrolle bleibt, wie ADR-0035 sie vorsieht. Ihr Gewinn ist gemessen, keine Störung der Inferenz wurde zum Live-Fehler. Ihre Kosten sind ein zweiter Host mit Token, Firewall, Deployment und Überwachung; in Stunden gemessen habe ich sie nicht. Das Risiko: Ein stummer Host bindet jeden Auftrag bis zur Frist.
+Der Client hat einen Circuit Breaker: Nach drei Fehlern schaltet er dreißig Sekunden lang ab und liefert sofort den Ersatz. Meine Folge prüft mit vier Aufträgen direkt hintereinander, ob er auch Hänger abfängt. Oben ist die Runtime gestoppt: drei Ablehnungen, dann öffnet der Breaker, und Auftrag vier endet nach 44 Millisekunden ohne Netzversuch. [Weiter] Unten antwortet die Runtime zu spät: Jeder Auftrag wartet die Frist von 90 Sekunden, und auch Auftrag vier geht wieder zur Runtime. Der Grund steht im Code: Die Warteschlange bricht den Aufruf selbst ab, das zählt als abgebrochen und nicht als Fehler. Der Breaker dämpft also Ausfälle, aber keine Hänger.
 
-_Quelle:_ evidenz/1B/messung/2026-11-15-lauf-normal-summary.json (Commit 5e758d0a, n = 10); evidenz/1B/messung/2026-11-15-lauf-f1-summary.json (Commit 5e758d0a, n = 10); evidenz/1B/messung/2026-11-16-lauf-busy-summary.json (Commit 2b39b9df, n = 10); evidenz/1B/messung/2026-11-16-lauf-f2-summary.json (Commit 2b39b9df, n = 5); evidenz/1B/messung/2026-11-16-lauf-l3-summary.json (Commit 2b39b9df, n = 10) · i7-10700K, Hyper-V, ohne CPU-Pinning; arsnova-1b-app 2 vCPU/4 GiB, arsnova-1b-llm 8 vCPU/10 GiB · Schwellen: docs/referat-thema-1/1B-3u4-Planung.md auf Niklas' Zweig feature-1B-private-inference-3-4, Commit 5e758d0a (2026-11-15T21:10:37+01:00), vor der ersten gewerteten Reihe; Protokolle evidenz/1B/2026-11-15-lauf-_-summary.md, 2026-11-16-lauf-_-summary.md (Prüfung durch den Autor: offen); p95 gepoolt über alle Fenster (fasseLaufzeitenZusammen), Referenz B0 = F1; F2, L3 und Slot belegt auf Commit 2b39b9df, F1 auf 5e758d0a (versionsübergreifend, Produktionscode unverändert laut Versionsnachtrag; automatischer Vergleich meldet MANIFEST_MISSING_OR_DIFFERENT); App-CPU/RSS aus treiber.auftraege[].measurement.resources (RSS-Summe zählt geteilte Seiten ggf. mehrfach); Kosten Schritt 4 aus evidenz/1B/runbook.md (Aufbau, Abschnitt 2), nicht gemessen
+_Quelle:_ evidenz/1B/messung/2026-11-16-lauf-breaker-f1-summary.json, evidenz/1B/messung/2026-11-16-lauf-breaker-l3-summary.json (Commit 7c64dd6a, je 4 Aufträge ohne Pause und ohne Live-Last, Budget 90.000 ms, Fake-Verzögerung 130.000 ms) · i7-10700K, Hyper-V, ohne CPU-Pinning; arsnova-1b-app 2 vCPU/4 GiB, arsnova-1b-llm 8 vCPU/10 GiB · Code am HEAD: apps/backend/src/lib/openWeightLlmClient.ts:183–190 (classifyCaughtError, Z. 188 aborted vor timeout), :476–478 (failureCountsForCircuit), openWeightLlmConfig.ts:9–10 (3 Fehler, 30.000 ms), qaSummaryQueue.ts:259–269 (runWithQueueTimeout, abort QA_SUMMARY_TIMEOUT); interner Status nicht ausgelesen (breaker-l3-summary.md), das Protokoll nennt die Funktion processWithTimeout, gemeint ist runWithQueueTimeout · Prüfung durch den Autor: 2026-11-16
 
-## G9 Zweiter Host: kaum Zeitkosten, keine Live-Fehler (45 s, kumuliert 13:55, **Kurzfassung** 10:15)
+## M3 Kein Live-Fehler, aber nicht latenzneutral (60 s, kumuliert 12:30, **Kurzfassung** 10:20)
+
+**Stichpunkte**
+
+- p95 je Störreihe gegen den Stopp desselben Auftrags, Regel +10 %
+- Summary: Slot belegt, DROP, zu spät reißen die Regel
+- [Weiter] Label: schon normal; DROP Tempo +128 %; Netz +500 ms, Zu spät halten (n = 3)
+- 0 Fehler bei 166.400 Aktionen; seriell, Ursache offen
+- Netz bei Labels 8,7 ms = 0,25 % (wie Jonas)
+
+**Fließtext**
+
+Und die Live-Aktionen? Die Tabelle zeigt das p95 jeder Störreihe gegen den Stopp desselben Auftrags, so war es vorab festgelegt. Bei Summaries reißen belegter Slot, DROP und die späte Antwort die Zehn-Prozent-Regel bei mindestens einer Aktion. [Weiter] Bei Labels schon der Normalbetrieb, beim Beitritt um +17 %; am stärksten DROP beim Tempo mit +128 %. Gehalten wird die Regel nur in 2 kleinen Reihen mit je drei Aufträgen. Gescheitert ist keine einzige Aktion: 0 Fehler bei 166.400. Die Reihen liefen nacheinander auf einem Rechner, eine Ursache kann ich nicht belegen. Das Netz selbst kostet bei Labels 8,7 Millisekunden, also 0,25 Prozent; das bestätigt Jonas' Ergebnis für einen zweiten Auftrag.
+
+_Quelle:_ evidenz/1B/messung/2026-11-15-lauf-f1-summary.json.gz (Commit 5e758d0a, n = 10); evidenz/1B/messung/2026-11-16-lauf-busy-summary.json.gz (Commit 2b39b9df, n = 10); evidenz/1B/messung/2026-11-16-lauf-f2-summary.json.gz (Commit 2b39b9df, n = 5); evidenz/1B/messung/2026-11-16-lauf-l3-summary.json.gz (Commit 2b39b9df, n = 10); evidenz/1B/messung/2026-11-16-lauf-f1-label.json.gz (Commit 7c64dd6a, n = 10); evidenz/1B/messung/2026-11-16-lauf-normal-label-01.json.gz + evidenz/1B/messung/2026-11-16-lauf-normal-label-02.json.gz + evidenz/1B/messung/2026-11-16-lauf-normal-label-03.json.gz (Commit 7c64dd6a, n = 30); evidenz/1B/messung/2026-11-16-lauf-l1-label-01.json.gz + evidenz/1B/messung/2026-11-16-lauf-l1-label-02.json.gz (Commit 7c64dd6a, n = 20); evidenz/1B/messung/2026-11-16-lauf-l2-label.json.gz (Commit 7c64dd6a, n = 3); evidenz/1B/messung/2026-11-16-lauf-l3-label.json.gz (Commit 7c64dd6a, n = 3); evidenz/1B/messung/2026-11-16-lauf-f2-label.json.gz (Commit 7c64dd6a, n = 3) · i7-10700K, Hyper-V, ohne CPU-Pinning; arsnova-1b-app 2 vCPU/4 GiB, arsnova-1b-llm 8 vCPU/10 GiB · p95 gepoolt über alle Fenster und Teilreihen (fasseLaufzeitenZusammen), Referenz je Consumer der eigene Stopp (B0/F1); Summary-Störreihen auf 2b39b9df gegen F1 auf 5e758d0a (versionsübergreifend, Produktionscode unverändert, automatischer Vergleich meldet MANIFEST_MISSING_OR_DIFFERENT); Label auf 7c64dd6a; Summary-Normal nicht im Raster (Protokoll rechnet nur F1 gegen Normal) · Transport: evidenz/1B/messung/2026-11-16-transportauswertung.json (Analyse-Commit 7c64dd6a, 30 Label-Normalaufträge) · über der Regel: Slot belegt/summary, DROP/summary, Zu spät/summary, Normal/label, Netz +50 ms/label, DROP/label · Prüfung durch den Autor: 2026-11-16
+
+## M4 Zweiter Host: Betriebsfrage, nicht Tempo (55 s, kumuliert 13:25, **Kurzfassung** 11:15)
+
+**Stichpunkte**
+
+- S1: App-Stack auf der LLM-VM, je 3 Aufträge, gleiche Last
+- Label reißt Beitritt und Quiz, Summary hält alle; 0 Fehler
+- Kein Tempovorteil belegt; S1 mit anderer Kapazität
+- [Weiter] ADR 1B-020: Rolle bleibt, betrieblich begründet
+- Kosten qualitativ; Fristen je Host, Ersatzgründe überwachen, Hänger ≠ Breaker
+
+**Fließtext**
+
+Für Schritt 4 habe ich den App-Stack auf die LLM-VM gelegt, alles auf einem Host, je drei Aufträge unter derselben Last. Gegen zwei Hosts reißen Labels die Regel bei Beitritt und Quiz, Summaries halten alle vier Aktionen; Fehler gab es keine. Ein Tempovorteil für einen der beiden Aufbauten folgt daraus nicht, zumal S1 andere Kapazität hatte. [Weiter] Deshalb begründet ADR 1B-020 die zweite Rolle betrieblich: Ressourcen, Wartung und Zuständigkeit getrennt. Die Kosten sind ein zweites System mit eigenem Deployment, Token-Rotation, Überwachung und bei Schutzbedarf TLS; bewertet habe ich sie qualitativ, nicht in Stunden. Daraus folgt: Fristen je Host kalibrieren, Ersatzgründe überwachen und Hänger nicht dem Breaker überlassen.
+
+_Quelle:_ evidenz/1B/messung/2026-11-16-lauf-s1-label.json.gz (Commit 4b135fe8, n = 3); evidenz/1B/messung/2026-11-16-lauf-s1-summary.json.gz (Commit 4b135fe8, n = 3) · i7-10700K, Hyper-V, ohne CPU-Pinning · S1 auf llm-host (8 vCPU, App-CPUs 0,1, Encoder 2 CPUs, http, Treiber auf llm-host) gegen Zwei-Host-Normal (Label evidenz/1B/messung/2026-11-16-lauf-normal-label-01.json.gz + evidenz/1B/messung/2026-11-16-lauf-normal-label-02.json.gz + evidenz/1B/messung/2026-11-16-lauf-normal-label-03.json.gz (Commit 7c64dd6a, n = 30); Summary evidenz/1B/messung/2026-11-15-lauf-normal-summary.json.gz (Commit 5e758d0a, n = 10)), Kriterium nur beschreibend (1B-3u4-Planung.md, Nachtrag S1, Commit 4b135fe8); 0 Fehler bei 9.600 Aktionen · Entscheidung und Aufwand: adr/1B-020-zweite-rolle-betrieblich-begruenden.md (qualitativ, keine Stunden, Preise oder Energie) · Prüfung durch den Autor: 2026-11-16
+
+## G9 Zweiter Host: kaum Zeitkosten, keine Live-Fehler (45 s, kumuliert 14:10, **Kurzfassung** 12:00)
 
 **Stichpunkte**
 
 - Jonas: Kontextpfad hält, zweiter Host kostet keine Zeit, Zeit steckt in der Inferenz; Gate verwirft alle geprüften Antworten
 - Niklas: App-Host trägt die Live-Last, spaCy ohne Freigabe
-- Niklas 1B: Ersatz bei Ausfall und Stille, kein Live-Fehler; stummer Host kostet Zeit
-- Gemeinsam: Trennung kostet kaum Zeit, Störung wird kein Live-Fehler; Grenzen: Inferenz, Option ohne Nutzen, Aufwand
+- Niklas 1B: Ersatz immer, kein Live-Fehler; nicht latenzneutral, Breaker hilft nicht bei Hängern; Host betrieblich begründet
+- Gemeinsam: Trennung kostet kaum Zeit, Störung wird kein Live-Fehler; Grenzen: Inferenz, Option ohne Nutzen, Aufwand qualitativ
 
 **Fließtext**
 
-Zum Schluss unsere Antwort auf die gemeinsame Leitfrage. Jonas hat gezeigt: Der Kontextpfad hält seine Zusagen, der zweite Host kostet keine relevante Zeit, und die Zeit steckt in der Inferenz; nach Version 1.4.0 besteht aber keine geprüfte Modellantwort das Gate. Mein Teil: Der App-Host trägt die Live-Last fehlerfrei, optionale Analyse bekommt ohne Nutzenbeleg keine Freigabe. Fällt die Inferenz aus oder schweigt sie, kommt der Ersatz, und keine Live-Aktion scheitert; ein stummer Host kostet aber Zeit bis zur Frist. Gemeinsam heißt das: Im Labor kostet die Trennung kaum Zeit, und Störungen der Inferenz werden nicht zu Live-Fehlern. Die Grenzen liegen in der Inferenz selbst, in optionaler Arbeit ohne Nutzenbeleg und im Betriebsaufwand, den wir nicht gemessen haben.
+Zum Schluss unsere Antwort auf die gemeinsame Leitfrage. Jonas hat gezeigt: Der Kontextpfad hält seine Zusagen, der zweite Host kostet keine relevante Zeit, und die Zeit steckt in der Inferenz; nach Version 1.4.0 besteht aber keine geprüfte Modellantwort das Gate. Mein Teil: Der App-Host trägt die Live-Last fehlerfrei, optionale Analyse bekommt ohne Nutzenbeleg keine Freigabe. Fällt die Inferenz aus oder schweigt sie, kommt der Ersatz, und keine Live-Aktion scheitert; latenzneutral ist das nicht, und Hänger dämpft der Breaker nicht. Den zweiten Host begründen wir deshalb betrieblich, nicht mit Tempo. Gemeinsam heißt das: Im Labor kostet die Trennung kaum Zeit, und Störungen der Inferenz werden nicht zu Live-Fehlern. Die Grenzen liegen in der Inferenz selbst, in optionaler Arbeit ohne Nutzenbeleg und im Betriebsaufwand, den wir nur qualitativ bewertet haben.
 
-_Quelle:_ 1B-ergebnis.md, 1C-ergebnis.md (Kurzantwort, Verlauf 9f230abc); 1A: abgabe/niklas/folien-1a.mjs (N1, N10); 1B Schritte 3–4: abgabe/niklas/folien-1b34.mjs (M1, M2), evidenz/1B/messung/2026-11-15-lauf-f1-summary.json, 2026-11-16-lauf-{f2,l3,busy}-summary.json (i7-10700K, Hyper-V · 5e758d0a, 2b39b9df)
+_Quelle:_ 1B-ergebnis.md, 1C-ergebnis.md (Kurzantwort, Verlauf 9f230abc); 1A: abgabe/niklas/folien-1a.mjs (N1, N10); 1B Schritte 3–4: abgabe/niklas/folien-1b34.mjs (M1–M4), evidenz/1B/messung/2026-11-1{5,6}-lauf-*.json.gz und Breaker-Folgen (i7-10700K, Hyper-V · 5e758d0a, 2b39b9df, 7c64dd6a, 4b135fe8), adr/1B-020-zweite-rolle-betrieblich-begruenden.md
 
-## GD Danke. Wir freuen uns auf Ihre Fragen. (15 s, kumuliert 14:10, **Kurzfassung** 10:30)
+## GD Danke. Wir freuen uns auf Ihre Fragen. (15 s, kumuliert 14:25, **Kurzfassung** 12:15)
 
 **Stichpunkte**
 
 - „Danke fürs Zuhören.“
 - Belege: Repository-Link und QR-Code
-- Im Repo: 7,7 h Laborzeit, 254 Tests, 34 ADRs, 44 Hypothesen
+- Im Repo: 18,6 h Laborzeit, 326 Tests, 35 ADRs, 50 Hypothesen
 - „Wir freuen uns auf Ihre Fragen.“
 
 **Fließtext**
 
-Danke fürs Zuhören. Alle Belege, also Entscheidungen, Protokolle und Messdaten, liegen im Repository hinter diesem Link. Was dort liegt, steht darunter in Zahlen: 7,7 Stunden gewertete Laborzeit, 254 automatisierte Tests, 34 Entscheidungen als ADR und 44 vorab festgelegte Hypothesen. Wir freuen uns auf Ihre Fragen.
+Danke fürs Zuhören. Alle Belege, also Entscheidungen, Protokolle und Messdaten, liegen im Repository hinter diesem Link. Was dort liegt, steht darunter in Zahlen: 18,6 Stunden gewertete Laborzeit, 326 automatisierte Tests, 35 Entscheidungen als ADR und 50 vorab festgelegte Hypothesen. Wir freuen uns auf Ihre Fragen.
 
 _Quelle:_ https://github.com/NiklasSkulll/arsnova.eu/tree/main/docs/referat-thema-1 (Fork, main nach dem Merge); Eintrag weirauch2026c in literatur.mjs; Nachweisumfang: nachweisumfang.md (Kopfzahlen, nachgerechnet von abgabe/jonas/nachweisumfang.mjs)
 
 # Reserve
 
 Nur auf Nachfrage (Taste `r`), keine Zeit im Vortrag.
+
+## RN1 Reserve: Die Regel schlägt auch ohne Wirkung an
+
+**Stichpunkte**
+
+- Nachträglich: gepoolt V2 − V1 = −5,5 bis +0,1 ms
+- Streuung je Variante > Effekt (V2 Beitritt 31–58 ms)
+- Kontrolle 4/20; wirkungslos besteht nur ≈ 1 %
+- Künftig ohne Änderung kalibrieren; hier gilt die Regel
+
+**Fließtext**
+
+Warum schlägt die Regel so oft an? Nachträglich ausgewertet: Gepoolt über alle fünf Blöcke weicht spaCy im Normalbetrieb um −5,5 bis +0,1 Millisekunden von der Basis ab, also praktisch nicht. Die Lauf-p95 streuen innerhalb derselben Variante stärker, beim Beitritt in V2 zwischen 31–58 Millisekunden. Die Kontrolle ohne spaCy verfehlt die Regel 4 von 20 Mal. Wären die Vergleiche unabhängig, bestünde selbst eine wirkungslose Komponente alle 20 nur mit etwa 1 Prozent. Für einen neuen Versuch würde ich die Regel deshalb an einem Vergleich ohne Änderung kalibrieren, für diesen Versuch gilt sie.
+
+_Quelle:_ alle 25 lauf.json (live.actions.<aktion>.latency.durationSamplesMs), Nearest Rank gepoolt; Kontrolle: comparisons[variant=V1]; Unabhängigkeit ist eine grobe Annahme · Niklas' Rechner, Ubuntu 24.04.5 LTS unter WSL2 (Kernel 6.18.58.1-microsoft-standard-WSL2), 16 logische CPUs, Lastgenerator auf demselben Rechner · App-Commit a19ca70f (nach v1.4.0) · Auswertung SHA-256 a3bebdf236cfb3b6…
 
 ## RN2 Reserve: Was die Messung nicht zeigt
 
@@ -309,3 +324,19 @@ Nur auf Nachfrage (Taste `r`), keine Zeit im Vortrag.
 Falls nach Gültigkeit oder Eigenanteil gefragt wird. Alle Zahlen gelten für dieses Labor: ein WSL2-Rechner mit dem Lastgenerator auf demselben Host, eine Beitrittswelle, ein synthetischer Korpus. Über Rendering, die Kompassanzeige und ein LLM sage ich nichts. Gemessen habe ich einen Stand nach Version 1.4.0, weil der Prüfer das Aktualisieren des Forks freigegeben hat. Werkzeuge, Tests und Auswertung hat Codex umgesetzt; Auftrag, Labor, Messung, Freigaben und die Deutung sind meine.
 
 _Quelle:_ 1A-auswertung.md (Grenzen), 1A-eigenanteil.md, 00-rahmen-und-pruefung.md (Freigabe des aktuellen main) · Niklas' Rechner, Ubuntu 24.04.5 LTS unter WSL2 (Kernel 6.18.58.1-microsoft-standard-WSL2), 16 logische CPUs, Lastgenerator auf demselben Rechner · App-Commit a19ca70f (nach v1.4.0) · Auswertung SHA-256 a3bebdf236cfb3b6…
+
+## RN4 Reserve: spaCy bleibt im Budget, bis CPU fehlt
+
+**Stichpunkte**
+
+- V2: ≈ 18 % einer CPU, < 1 % gedrosselt, ≈ 480 MiB
+- V3: 20–24 % bei Quote 25 % → 88–96 % gedrosselt
+- Bild: je 100-ms-Takt nur ein Viertel rechnen; fast immer aufgebraucht
+- Reserve im Labor: < 0,5 CPU von 16, ≥ 11,6 GiB frei
+- Reserve groß, schützt Latenz aber nicht; 8-vCPU-Zielhost nicht gemessen
+
+**Fließtext**
+
+Links gedrosselte CPU-Perioden, rechts die Speicherspitze. Im Normalbetrieb braucht spaCy rund 18 Prozent einer CPU, wird in unter einem Prozent der Perioden gedrosselt und kommt auf etwa 480 Mebibyte, weit unter der Schwelle. Gedrosselt auf ein Viertel CPU verbraucht es fast die ganze Quote. Als Bild: Der Kernel teilt die Zeit in Takte von hundert Millisekunden, und spaCy darf in jedem Takt nur ein Viertel davon rechnen. In 88–96 Prozent der Takte war dieses Viertel aufgebraucht, bevor die Arbeit fertig war; spaCy wartete fast immer auf den nächsten Takt. Zur Reserve: Alle Container zusammen brauchten weniger als eine halbe CPU von sechzehn, mindestens 11,6 Gibibyte blieben frei. Das schützt die Latenz nicht automatisch; den Zielhost habe ich nicht gemessen.
+
+_Quelle:_ evidenz/1A/reihe-main-a19ca70f-20261115-122547/auswertung/auswertung.json runs[].resources[alias=spacy] (cpuPercent, throttledPeriodRatio aus cpu.stat, lifetimePeakMemoryBytes aus memory.peak, oomKillDelta), runs[].resources[].cpuPercent (Summe je Lauf), runs[].collectorHost.minAvailableMemoryBytes; Takt von cpu.max: Kernel-Doku cgroup v2, Abschn. „CPU Interface Files“ (Standard „max 100000“, also 100 ms) · Niklas' Rechner, Ubuntu 24.04.5 LTS unter WSL2 (Kernel 6.18.58.1-microsoft-standard-WSL2), 16 logische CPUs, Lastgenerator auf demselben Rechner · App-Commit a19ca70f (nach v1.4.0) · Auswertung SHA-256 a3bebdf236cfb3b6…
