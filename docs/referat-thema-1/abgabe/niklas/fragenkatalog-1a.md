@@ -79,7 +79,7 @@ Beleg: `apps/backend/src/lib/wordCloudNormalizer.ts` (`reasonFromSidecarError`),
 
 _Variante:_ „Die Leitfrage nennt Release 1.3. Warum messen Sie 1.4.0?“
 
-**Kurzantwort:** Gemessen habe ich ein Labor, nicht den Zielhost: Dort brauchte der ganze Stack unter der Beitrittswelle im Mittel des Fensters höchstens 0,44 von 16 CPUs, und mindestens 11,6 GiB blieben frei. Für den 8-vCPU-Host mit 16 GB folgt daraus keine Zahl, nur dass die CPU nicht der Engpass dieser Last war. Ein gelungener spaCy-Versuch belegt nicht, dass der Host ein LLM trägt: spaCy brauchte 18 % einer CPU und 480 MiB, ein Sprachmodell nach ADR-0035 etwa 4 GB RAM und in Jonas’ Labor rund 150 s Rechenzeit je Auftrag.
+**Kurzantwort:** Gemessen habe ich ein Labor, nicht den Zielhost: Dort brauchte der ganze Stack unter der Beitrittswelle im Mittel des Fensters weniger als eine halbe CPU von 16, und mindestens 11,6 GiB blieben frei. Für den 8-vCPU-Host mit 16 GB folgt daraus keine Zahl, nur dass die CPU nicht der Engpass dieser Last war. Ein gelungener spaCy-Versuch belegt nicht, dass der Host ein LLM trägt: spaCy brauchte 18 % einer CPU und 480 MiB, ein Sprachmodell nach ADR-0035 etwa 4 GB RAM und in Jonas’ Labor rund 150 s Rechenzeit je Auftrag.
 
 **Nachlegen:** Der Stand ist v1.4.0, weil wir den Fork mit Zustimmung des Prüfers aktualisiert haben (E-Mail vom 04.11.); den Unterschied nenne ich als Grenze. ADR-0035 begründet, warum generative Inferenz keine App-Host-Aufgabe ist: Der 16-GB-Live-Host trägt neben etwa 10–11 GB Baseline, spaCy, Encoder und PDF-Worker kein zusätzliches ~4-GB-LLM, und Live-Pfade dürfen nie auf Inferenz warten.
 

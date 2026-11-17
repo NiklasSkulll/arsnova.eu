@@ -266,9 +266,9 @@ Beleg: [1B-Eigenanteil, Gemeinsame Artefakte](../../1B-eigenanteil.md#gemeinsame
 _(neu)_ Weil ein echter Auftrag beide Teile durchläuft: vom Klick über den Kontextpfad (1C) über den zweiten Host (1B) bis zur Ersatzzusammenfassung, jede Station mit ihrem Auftrag etikettiert. So gibt es nur zwei Sprecherwechsel: Niklas eröffnet mit Titel, Fahrplan und 1A und übergibt mit „Was, wenn wir die schwere Arbeit auslagern?“; ich übergebe auf J15 mit „Und wenn der zweite Host langsam ist oder ausfällt?“ an seine Schritte 3–4, Fazit und Dank spricht er. _Ergänzt 2026-11-16:_ So steht es jetzt im gemeinsamen Deck.
 Beleg: [Präsentations-Design 3](../../specs/2026-11-15-praesentation-jonas-design.md#3-reihenfolge-der-gruppe), [Aufteilung](../../01-aufteilung.md#gemeinsame-präsentation-empfehlung-offen)
 
-### F48. Der Clip auf J13 wartet über 300 s und endet mit einem Timeout. Widerspricht das nicht Ihrem Befund zum Gate?
+### F48. Ist der Clip auf J13 ein Nachweis für das Gate?
 
-_(neu)_ Nein, der Clip ist Illustration, kein Nachweis. Er lief am 15.11. im Energiesparprofil; die Inferenz dauerte länger als das Labor-Timeout von 300 s, laut App-Log `fallbackReason: 'timeout'`. Genau das zeigt den Punkt der Folie: Ob Gate oder Timeout, die Lehrperson sieht dieselbe Ersatzzusammenfassung mit demselben allgemeinen Hinweis und erfährt den Grund nicht. Die Gate-Zahlen stammen aus dem gewerteten Lauf im Profil `performance`.
+_(neu; Korrigiert 2026-11-17: der Clip ist seit dem 15.11. Lauf 4, nicht mehr der Timeout-Lauf)_ Nein, der Clip ist Illustration, kein Nachweis. Er zeigt Lauf 4 vom 15.11. im Profil `performance` wie der gewertete Lauf: Klick bis Ergebnis 148,6 s, laut App-Log `fallbackReason: 'invalid_response'`, `latencyMs: 147748`; das Quality-Gate verwarf die Antwort wie im gewerteten Lauf. Die Wartezeit ist im Clip auf 4 s gerafft. Ein früherer Lauf im Energiesparprofil endete am Labor-Timeout von 300 s (`fallbackReason: 'timeout'`); auch dann sieht die Lehrperson dieselbe Ersatzzusammenfassung mit demselben Hinweis und erfährt den Grund nicht. Die Gate-Zahlen stammen aus dem gewerteten Lauf.
 Beleg: [Clip-Protokoll](../../evidenz/1B/2026-11-15-clip.md#ergebnis), [Laufprotokoll 1B](../../evidenz/1B/2026-11-13-lauf.md)
 
 ## Kursbezug Cloud Computing _(neu, 2026-11-16)_
