@@ -160,14 +160,14 @@ details.frage[open]{background:var(--flaeche)}
 .fehlt{color:var(--bernstein);font-weight:600}
 `;
 
-function seiteHtml(e, { offen = false } = {}) {
+function seiteHtml(e, { offen = false, zeitBezug = '' } = {}) {
   const stufen = e.vortrag
     .map((t, i) => `${i ? `<span class="weiter">[Weiter] Stufe ${i}</span>` : ''}<p>${esc(t)}</p>`)
     .join('');
   return (
     `<section class="seite" id="s-${esc(e.id)}">` +
     `<div class="kopf"><h2>${esc(e.id)} · ${esc(e.titel)}</h2>` +
-    `<span class="meta">${e.reserve ? 'Reserve, nur auf Nachfrage (Taste r)' : `${e.zeitS} s · bis hier ${mmss(e.kumuliertS)} min`}${e.aufbau ? ` · ${e.aufbau} Aufbaustufe${e.aufbau > 1 ? 'n' : ''}` : ''}${e.sprecher ? ` · spricht ${e.sprecher === 'niklas' ? 'Niklas' : 'Jonas'}` : ''}</span></div>` +
+    `<span class="meta">${e.reserve ? 'Reserve, nur auf Nachfrage (Taste r)' : `${e.zeitS} s · bis hier ${mmss(e.kumuliertS)} min${zeitBezug ? ` (${zeitBezug})` : ''}`}${e.aufbau ? ` · ${e.aufbau} Aufbaustufe${e.aufbau > 1 ? 'n' : ''}` : ''}${e.sprecher ? ` · spricht ${e.sprecher === 'niklas' ? 'Niklas' : 'Jonas'}` : ''}</span></div>` +
     (e.fehlt ? `<p class="fehlt">Heftseite fehlt (abgabe/sprechheft/${esc(e.id)}.md)</p>` : '') +
     `<h3>Vortrag</h3><div class="vortrag">${stufen}</div>` +
     (e.stichpunkte.length
@@ -200,7 +200,7 @@ function glossar(eintraege) {
 }
 
 /** Sprechheft einer Person als eigenständige HTML-Datei (eine Druckseite je Folie). */
-export function baueHeftHtml(eintraege, { person, stand }) {
+export function baueHeftHtml(eintraege, { person, stand, zeitBezug = '' }) {
   const g = glossar(eintraege);
   const haupt = eintraege.filter((e) => !e.reserve);
   const inhalt =
@@ -221,7 +221,7 @@ nav.inhalt a,.glossar a{color:var(--blau);text-decoration:none}
     `„Vortrag“ ist zum Ablesen und passt in die Redezeit; alles darunter dient dem Verstehen und den Fragen. ` +
     `Im Deck öffnet Taste n die Referentenansicht mit denselben Inhalten.</p>` +
     inhalt +
-    eintraege.map((e) => seiteHtml(e, { offen: true })).join('') +
+    eintraege.map((e) => seiteHtml(e, { offen: true, zeitBezug })).join('') +
     `<section class="seite glossar" id="glossar"><h2>Glossar</h2><dl class="begriffe">` +
     g
       .map(
@@ -280,7 +280,7 @@ const REFERENT_SKRIPT = `(() => {
     $('r-id').textContent = e.id + ' · ' + e.titel;
     $('r-stufe').textContent = e.aufbau ? 'Stufe ' + (z.stufe || 0) + ' von ' + e.aufbau : '';
     $('r-naechste').textContent = z.naechste ? 'Danach: ' + z.naechste : '';
-    $('r-soll').textContent = e.reserve ? 'Reserve' : e.zeitS + ' s · Soll bis Ende ' + mmss(e.kumuliertS);
+    $('r-soll').textContent = e.reserve ? 'Reserve' : e.zeitS + ' s · Soll bis Ende ' + mmss(e.kumuliertS) + ' (gesamt)';
     const vortrag = e.vortrag.map((t, i) => '<p class="' + (i === stufe ? 'jetzt' : i < stufe ? 'vorbei' : '') + '">' + (i ? '<span class="weiter">[Weiter]</span> ' : '') + esc(t) + '</p>').join('');
     const neu = letzte !== e.id;
     letzte = e.id;

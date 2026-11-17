@@ -48,6 +48,7 @@ const PRIVAT = [
   'sprechkarten-niklas.pdf',
   'sprechheft-jonas.html',
   'sprechheft-niklas.html',
+  'sprechheft-gesamt.html',
 ];
 
 let wurzel;

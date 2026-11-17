@@ -458,9 +458,25 @@ async function main() {
     };
     // Öffentliches Deck ohne Sprechheft; das Vortragsdeck (privat) trägt die Referentenansicht (Taste n).
     const rohHtml = baueDeck(alle, deckOptionen);
+    // Gemeinsames Heft und Referentenansicht in Vortragsreihenfolge des Decks, Zeit über den ganzen Vortrag
+    const folieNachId = new Map([...listeNiklas, ...folienJonas(alle)].map((f) => [f.id, f]));
+    const reihenfolge = [
+      ...new Set(
+        [...rohHtml.matchAll(/<section[^>]*class="folie[^"]*"[^>]*data-id="([^"]+)"/g)].map(
+          (m) => m[1],
+        ),
+      ),
+    ];
+    const ohneFolie = reihenfolge.filter((id) => !folieNachId.has(id));
+    if (ohneFolie.length)
+      throw new Error(`Gemeinsames Sprechheft: Folien ohne Daten: ${ohneFolie.join(', ')}`);
+    const heftGesamt = heftEintraege(
+      reihenfolge.filter((id) => folieNachId.has(id)).map((id) => folieNachId.get(id)),
+      heft,
+    );
     const rohVortrag = baueDeck(alle, {
       ...deckOptionen,
-      referent: baueReferentHtml([...heftNiklas, ...heftJonas]),
+      referent: baueReferentHtml(heftGesamt),
     });
     // Wie der Pre-commit-Hook formatieren, bevor gehasht wird, damit das Manifest stimmen bleibt.
     const html = await format(rohHtml, { ...formatierung, parser: 'html' });
@@ -543,13 +559,14 @@ async function main() {
 
     // Kein Datum im Heft: der Stand steht im Manifest (Eingaben mit SHA-256), der Bau bleibt reproduzierbar
     const stand = 'siehe manifest.json';
-    for (const [datei, person, eintraege] of [
-      ['sprechheft-jonas.html', 'Jonas', heftJonas],
-      ['sprechheft-niklas.html', 'Niklas', heftNiklas],
+    for (const [datei, person, eintraege, zeitBezug] of [
+      ['sprechheft-jonas.html', 'Jonas', heftJonas, 'eigener Teil'],
+      ['sprechheft-niklas.html', 'Niklas', heftNiklas, 'eigener Teil'],
+      ['sprechheft-gesamt.html', 'Jonas und Niklas', heftGesamt, 'gesamt'],
     ]) {
       writeFileSync(
         join(privatAusgabe, datei),
-        await format(baueHeftHtml(eintraege, { person, stand }), {
+        await format(baueHeftHtml(eintraege, { person, stand, zeitBezug }), {
           ...formatierung,
           parser: 'html',
         }),

@@ -137,7 +137,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/bau.mjs",
-      "sha256": "1c68da6c88a744bc28622bad88f2fc0435933b52a8f877457d13a8b2aa21b551"
+      "sha256": "86380ff357953915ca0be2eceb36c837ebb96f302bc8830b85ae45da7fc34407"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/deck-vorlage.html",
@@ -189,7 +189,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/sprechheft.mjs",
-      "sha256": "80aa2bc806453db16b7fb46abb01a8efaaab64619ab7ac62ec325362edda1aaf"
+      "sha256": "f762e2e06abc915e786fa1a564b6a8f918a0185965ee9f2bdcc6a3622c1bfd31"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/stil.css",
@@ -605,19 +605,19 @@
     {
       "datei": "gemeinsames-deck.pdf",
       "bytes": 1602121,
-      "sha256": "525640dc076e51bc533039443bb370165efbaaf5fd553470ffc6e78b55ff7b18",
+      "sha256": "f0dfc25c7c4007c235946ecc152dff2c971609d7bddc949a7610f72dcf816a0b",
       "seiten": 53
     },
     {
       "datei": "jonas-folien.pdf",
       "bytes": 1079906,
-      "sha256": "9a0550248932ca0256df9cb946fbf4b5d083f5a67c32072b4ea976b84fbc495d",
+      "sha256": "5317d4a279dee2f800518ca0e52a577d3d538a1078a63a2a47e13941aa46f716",
       "seiten": 32
     },
     {
       "datei": "niklas-folien.pdf",
       "bytes": 531938,
-      "sha256": "516f87df0bcd5dcd69748c973ec998dfecd4437ed616390cee3df471d1d9bcaa",
+      "sha256": "4c60d7bf4fcde4f2fe6577c96fd380d4b1ba74fa61467b79f68d16a1318a52fe",
       "seiten": 18
     }
   ]
