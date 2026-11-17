@@ -94,3 +94,74 @@ zurück, wo sie das Argument tragen.
 - **Nachweisumfang:** [`nachweisumfang.md`](../nachweisumfang.md), auf GD als ein ruhiger Satz.
 - **Codeprüfung:** J13 korrigiert (`12f1d8e4` änderte Instruktion und Gate, `a998ada0` nur das Gate); 1A nennt
   `a19ca70f` „nach v1.4.0“ statt v1.4.0.
+
+## 1B Schritte 3–4 vollständig einarbeiten (_Ergänzt 2026-11-17_)
+
+Anlass: Niklas hat 1B Schritte 3–4 abgeschlossen und nach `main` gemergt (PR #26, `dfe035e1`). Neu gegenüber M1–M2
+(nur Summary-Reihen): acht gewertete Label-Reihen, gerichtete Breaker-/Queue-Folgen, Transportauswertung, S1
+(Same-Host) und die Entscheidung [ADR 1B-020](../adr/1B-020-zweite-rolle-betrieblich-begruenden.md). Ziel: dieselbe
+Bildsprache, derselbe rote Faden, jede Zahl generiert aus den Ergebnis-JSONs.
+
+### Entscheidungen (Jonas, 2026-11-17)
+
+1. **Vier Folien M1–M4, zusammen 4:00 min** (bisher M1–M2, 2:15 min). N6b und N8 gehen zurück in die Reserve
+   (als RN1 und RN4, wie vor dem 16.11.). Niklas danach etwa 14:25 min, unter 15:00.
+2. **Handout:** Abschnitt 06 neu (Tabelle Summary und Label je Störung, Breaker/Queue, Live, S1, Entscheidung),
+   dafür 1A-Grundlagen und -Methode um etwa 120–150 Wörter straffen; höchstens 5 Seiten ohne Literatur,
+   höchstens 1800 Wörter, gleiche PaperLab-Prüfungen.
+3. **Rohdaten:** alle `evidenz/1B/messung/*.json` über 1 MB byte-identisch als `.json.gz` (gzip -9 -n), wie 1C
+   (`83d17248`); Leser lesen `.gz` transparent, Links in Protokollen und README zeigen auf `.json.gz`.
+4. **Integration:** `origin/main` (mit PR #26) in `feature-praesentation-jonas` mergen; Konflikte in
+   `README.md` und `evidenz/1B/treiber.mjs` so auflösen, dass J13-Recorder und Label-Pfad beide erhalten bleiben;
+   gzip danach als eigener Commit im Zweig. Kein Alleingang auf `main`.
+5. **Schwachstellen offen vorbereiten, Niklas' Protokolle nicht umschreiben:** Folien und Handout formulieren
+   korrekt (Funktion `runWithQueueTimeout`, nicht `processWithTimeout`); Notizen und Fragenkatalog haben je eine ehrliche Antwort, auch zu den Plan-Nachträgen,
+   die erst nach einigen Läufen committet wurden (`aa0e90c7`). Hinweisliste für Niklas.
+
+### Folien (Reihenfolge … N10, J1–J15, M1–M4, G9, GD)
+
+- **M1 Ersatz je Störung (75 s, drei Stufen):** eine Log-Achse (10 ms bis 1000 s), Zeilen je Störung, je Zeile
+  Summary (Kreis, Job-Zeit) und Label (Raute, Client-Zeit; die API liefert keine Job-Zeit), zwei Fristlinien
+  (Label 30 s, Summary 300 s). Zeilen: Normal; Stopp F1; Slot belegt (nur Summary); Netz +50/+500 ms (L1/L2, nur
+  Label); DROP F2; zu spät L3. Stufen wie bisher: Stopp/Slot, dann DROP (und Netz langsam), dann zu spät.
+  Kernsatz: Ein gestoppter Host kostet Millisekunden, ein stummer Minuten (Summary-Faktor DROP/Stopp ≈ 2800). DROP
+  endet bei Summary vor der Frist (Verbindungsaufbau gibt nach etwa 2¼ min auf), bei Label an der 30-s-Frist;
+  Notiz und Fragenkatalog erklären das.
+- **M2 Breaker gegen Queue (50 s, zwei Stufen):** zwei Bahnen mit je vier Aufträgen auf linearer Zeitachse.
+  Oben F1: drei RST-Fehler, der vierte endet nach 44 ms mit `circuit_open` ohne Netzversuch. Unten L3: vier
+  Timeouts zu je 90 s, auch der vierte erreicht die Runtime. Codebeleg: `openWeightLlmClient.ts:188` (`aborted`
+  vor `timeout`), `:476–478` (zählende Gründe), `qaSummaryQueue.ts` `runWithQueueTimeout`. Kernsatz: Der
+  Breaker dämpft Ausfälle, nicht Hänger.
+- **M3 Live-Rückwirkung (60 s, zwei Stufen):** Raster Reihe × Aktion (Beitritt, Quiz, Q&A, Tempo), Wert p95 gegen
+  die eigene B0/F1-Referenz desselben Consumers, Bernstein über 110 %. Stufe 1 Summary (Slot belegt, DROP, zu
+  spät), Stufe 2 Label (Normal, L1, L2, L3, DROP). Summary-Normal fehlt im Raster: Niklas' Protokoll rechnet nur
+  F1 gegen Normal, und Folien zeigen keine eigenen Herleitungen (AGENTS.md des Ordners); die Nachrechnung steht
+  als vorbereitete Antwort im Fragenkatalog. Zeile „Fehler 0 / N“ über alle Reihen. Eine Zeile
+  Transport: Label 8,7 ms von 3,5 s (0,25 %, Schwelle 5 %), bestätigt J9/J10 für einen zweiten Auftragstyp.
+  Kernsatz: fehlerfrei, aber nicht latenzneutral; Ursache auf einem Rechner nicht zuordenbar.
+- **M4 Schritt 4: S1 und Entscheidung (55 s, zwei Stufen):** Stufe 1 S1 (App-Stack auf der LLM-VM) gegen
+  Zwei-Host-Normal: p95 je Aktion für Label und Summary, Fehler 0; Label reißt Beitritt und Quiz, Summary hält
+  alle. Stufe 2 Entscheidung nach ADR 1B-020 als Merksatz Gewinn/Kosten/Risiko: zweite Rolle betrieblich
+  begründen (Trennung, Wartung, Zuständigkeit), kein Leistungsvorteil belegt, S1 keine Freigabe; Budgets je
+  Host kalibrieren, Fallback-Gründe überwachen, nicht allein auf den Breaker verlassen. Kosten qualitativ.
+- **Wegkarte:** M1 `1b-stoerung` (Stufen um Zeichen „Netz langsam“ für L1/L2 ergänzt), M2 neue Marke mit Stopp und
+  zu spät, M3 `1b-alle`, M4 neue Marke „Ein Host (S1)“. Teilleiste, Etikett 1B Bernstein, Fuß mit Kurzbeleg wie
+  bisher.
+- **G9:** Niklas' 1B-Satz neu: Ersatz kommt immer, kein Live-Fehler, aber Latenz nicht neutral und Hänger nicht
+  gedämpft; zweiter Host betrieblich begründet. „Betriebsaufwand nicht gemessen“ wird „qualitativ bewertet“.
+- **Notizen, Sprechkarten, Fragenkatalog:** Stichpunkte und Fließtext für M1–M4; Übergang J15 → M1 („Danke,
+  Jonas.“) bleibt. Fragenkatalog Niklas um 1B 3–4 erweitert (RST/DROP, Breaker, Label vs. Summary, S1, ADR
+  1B-020, die Schwachstellen aus Entscheidung 5).
+
+### Daten
+
+`daten-1b34.mjs` liest zusätzlich Label-Teilreihen (`-01` … `-03` zusammengefasst), Breaker-Folgen, S1 und
+`2026-11-16-transportauswertung.json`; Kennzahlen wie in Niklas' Protokollen (Gegenprobe: Tests prüfen die
+p95-Werte der Protokolle). Quellen nennen Commit, n, Rechner und die Autorenprüfung vom 16.11.
+
+### Ermessensentscheidungen des Bauenden
+
+- Summary mit Job-Zeit (so sind die Kriterien formuliert), Label mit Client-Zeit; beides auf der Folie benannt.
+- KI-Offenlegung im Handout: Modell aus Niklas' PR übernommen (GPT-6.1 Sol in Codex); die Marke für seine eigene
+  Prüfung in eigenen Worten bleibt.
+- Feinheiten der Grafiken, Animationen und Formulierungen innerhalb der Designregeln.
