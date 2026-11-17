@@ -17,7 +17,7 @@ standardmäßig nativ aus [`../niklas/`](../niklas/README.md); dazu entstehen `n
 `sprechnotizen-niklas.md`. Reihenfolge im Deck (Design 2026-11-15, Abschnitt 3; ergänzt 2026-11-16): GT (Titel),
 G0 (Fahrplan), GK (Systembild „Was ist arsnova?“), Niklas 1A (N1–N10 ohne N8; _aktualisiert 2026-11-17_), Jonas J1–J15 (mit J5b, J8b, J10a,
 J10b, J11, J13b), Niklas 1B 3–4 (M1–M4), G9 (gemeinsames Fazit) und GD (Dank, Fragen, Nachweisumfang), Literatur
-(J16, NL), Reserve (R1, R5–R7, R9–R12, R15–R16 mit Abb. 1 und 2 aus `1C-diagrams.md`; RN1, RN2, RN4). Alle Rahmenfolien spricht Niklas. `--niklas1`/`--niklas2` ersetzen einen
+(J16, NL), Reserve (R1, R5–R7, R9–R12, R15–R16 mit Abb. 1 und 2 aus `1C-diagrams.md`, R17 Nachweisumfang im Einzelnen; RN1, RN2, RN4). Alle Rahmenfolien spricht Niklas. `--niklas1`/`--niklas2` ersetzen einen
 Teil durch die Seiten eines PDFs (Rückfallweg); die `--niklasN-stand`-Texte landen dann im Manifest.
 
 Tests: `node --test docs/referat-thema-1/abgabe/jonas/*.test.mjs`.

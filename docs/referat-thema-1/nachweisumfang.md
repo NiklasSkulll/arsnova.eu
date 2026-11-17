@@ -32,12 +32,13 @@ Dauer je Lauf aus den Zeitstempeln der Rohdaten, nicht aus Protokollangaben.
 Gezählt sind nur gewertete Läufe; Vorläufe, gestörte und abgebrochene Versuche,
 Entwicklungsläufe, Aufbau und modellfreie Messungen fehlen.
 
-| Kennzahl                     | Wert                                  | Rohdaten und Zeitstempel                                                                                                                                                           |
-| ---------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| davon 1A Ressourcenisolation | 2 h 32 min (25 Läufe, 25 vollständig) | `evidenz/1A/reihe-main-a19ca70f-20261115-122547/V*/block-*/`: `lauf.json` → `warmup.manifest.startAt` bis `report.json` → `timestamp`                                              |
-| davon 1B Schritte 1–2        | 55 min (25 Aufträge)                  | `evidenz/1B/messung/2026-11-13-lauf.json`, `-lauf-b0.json`, `-lauf-kalt*.json`: `treiber.startedAt` bis spätestes `treiber.auftraege[].finishedAt`                                 |
-| davon 1B Schritte 3–4        | 10 h 56 min (18 Läufe, 128 Aufträge)  | `evidenz/1B/messung/2026-11-1{5,6}-lauf-*-{summary,label}[-NN].json.gz`, Breaker-Folgen `-lauf-breaker-*.json`: `treiber.startedAt` bis spätestes `treiber.auftraege[].finishedAt` |
-| davon 1C Laborläufe          | 4 h 15 min (3 Läufe)                  | `evidenz/1C/messung/2026-11-05-labor.json.gz`, `-labor-pc.json.gz`, `2026-11-09-labor-nachlauf.json.gz`: `environment.startedAt` bis `endedAt`                                     |
+| Kennzahl                      | Wert                                  | Rohdaten und Zeitstempel                                                                                                                                                           |
+| ----------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| davon 1A Ressourcenisolation  | 2 h 32 min (25 Läufe, 25 vollständig) | `evidenz/1A/reihe-main-a19ca70f-20261115-122547/V*/block-*/`: `lauf.json` → `warmup.manifest.startAt` bis `report.json` → `timestamp`                                              |
+| davon 1B Schritte 1–2         | 55 min (25 Aufträge)                  | `evidenz/1B/messung/2026-11-13-lauf.json`, `-lauf-b0.json`, `-lauf-kalt*.json`: `treiber.startedAt` bis spätestes `treiber.auftraege[].finishedAt`                                 |
+| davon 1B Schritte 3–4         | 10 h 56 min (18 Läufe, 128 Aufträge)  | `evidenz/1B/messung/2026-11-1{5,6}-lauf-*-{summary,label}[-NN].json.gz`, Breaker-Folgen `-lauf-breaker-*.json`: `treiber.startedAt` bis spätestes `treiber.auftraege[].finishedAt` |
+| davon 1C Laborläufe           | 4 h 15 min (3 Läufe)                  | `evidenz/1C/messung/2026-11-05-labor.json.gz`, `-labor-pc.json.gz`, `2026-11-09-labor-nachlauf.json.gz`: `environment.startedAt` bis `endedAt`                                     |
+| Zeitraum der gewerteten Läufe | 5.–16.11.2026                         | erster Start bis letztes Ende der Zeilen darüber, Berliner Kalendertag                                                                                                             |
 
 _Aktualisiert 2026-11-17:_ 1B Schritte 3–4 zählen jetzt mit. Rohdaten, Protokolle, Schwellen
 (`1B-3u4-Planung.md`) und Autorenprüfung (16.11.) liegen seit dem Merge von PR #26 auf diesem Branch. Gemessen
@@ -88,7 +89,9 @@ Nicht gezählt: die beschreibende S1-Prüfung aus den Nachträgen der Planung un
 
 ## Darstellung
 
-Auf Folien und im Handout nur Zahl und Pfad, ohne Wertung wie „umfangreich“.
+Auf Folien und im Handout nur Zahl und Pfad, ohne Wertung wie „umfangreich“. _Ergänzt 2026-11-17:_ GD zeigt die
+vier Kopfzahlen, den Zeitraum und die Laborzeit je Auftrag als Balken; Reservefolie R17 zeigt alle Zeilen dieser
+Datei. Beide lesen die Werte aus dieser Datei (`ladeNachweis` in `abgabe/jonas/folien.mjs`).
 Verworfene und gestörte Läufe stehen mit Grund in den Protokollen unter
 `evidenz/`; wer die Laborzeit nennt, nennt sie als gewertete Zeit. Commit- und
 Zeilenzahlen sind kein Aufwandsmaß und gehören nicht hierher.

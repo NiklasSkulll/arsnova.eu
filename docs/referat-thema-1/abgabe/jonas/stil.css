@@ -533,18 +533,111 @@
   text-underline-offset: 4px;
 }
 .dank-namen {
-  margin: 48px 0 0;
+  margin: 28px 0 0;
   color: var(--gedaempft);
   font-size: var(--s-sek);
 }
-/* Nachweisumfang auf GD: ruhig, eine Zeile, ohne Wertung (nachweisumfang.md) */
+/* Nachweisumfang auf GD: Band über die volle Breite, Kennzahlen links, Laborzeit je Auftrag rechts; ruhig,
+   ohne Wertung (nachweisumfang.md, Abschnitt Darstellung) */
 .dank-nachweis {
-  margin: 28px 0 0;
-  padding: 12px 0 0;
+  grid-column: 1 / -1;
+  margin: 40px 0 0;
+  padding: 22px 0 0;
   border-top: 1px solid var(--linie);
   color: var(--text-2);
+}
+.nw-kopf {
+  margin: 0;
+  color: var(--gedaempft);
+  font-size: var(--s-min);
+}
+.nw-band {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 96px;
+  align-items: center;
+  margin: 16px 0 0;
+}
+.nw-zahlen {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  column-gap: 56px;
+  row-gap: 18px;
+}
+.nw-zahl {
+  display: flex;
+  flex-direction: column;
+}
+.nw-wert {
+  color: var(--tinte);
+  font-size: 44px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.nw-was {
+  margin-top: 2px;
+  font-size: var(--s-min);
+  white-space: nowrap;
+}
+.nw-balken {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 24px;
+  row-gap: 14px;
+  font-size: var(--s-min);
+}
+.nw-auftrag {
+  white-space: nowrap;
+}
+.nw-spur {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.nw-spur > span:first-child {
+  flex: none;
+  height: 16px;
+  min-width: 4px;
+  border-radius: 3px;
+}
+.nw-balken-1a {
+  background: var(--blau);
+}
+.nw-balken-1b {
+  background: var(--bernstein);
+}
+.nw-balken-1c {
+  background: var(--petrol);
+}
+.nw-dauer {
+  color: var(--tinte);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+/* R17: Nachweisumfang im Einzelnen, drei Spalten */
+.nw-reserve {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 64px;
+  align-items: start;
+}
+.nw-tabelle .nw-kopf {
+  margin: 0 0 10px;
+  color: var(--tinte);
   font-size: var(--s-sek);
+  font-weight: 700;
+}
+.nw-notiz {
+  margin: 14px 0 0;
+  color: var(--gedaempft);
+  font-size: var(--s-min);
   line-height: 1.35;
+}
+.nw-zusatz {
+  color: var(--gedaempft);
+  font-size: 18px;
 }
 .dank-qr {
   margin: 0;

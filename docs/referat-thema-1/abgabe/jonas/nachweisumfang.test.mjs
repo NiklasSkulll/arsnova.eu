@@ -42,6 +42,11 @@ test('Teilsummen der Laborzeit ergeben die gewertete Laborzeit', () => {
   assert.equal(werte.laborzeit.laeufe1A, werte.laborzeit.vollstaendig1A);
 });
 
+test('Zeitraum der gewerteten Läufe: erster Start bis letztes Ende (Berliner Datum)', () => {
+  assert.deepEqual(werte.laborzeit.zeitraum, { von: '2026-11-05', bis: '2026-11-16' });
+  assert.equal(kopfzahlen(werte).zeitraum, '5.–16.11.2026');
+});
+
 test('Kopfzahlen deutsch formatiert', () => {
   const k = kopfzahlen(werte);
   assert.match(k.laborzeitStunden, /^\d+,\d h$/);

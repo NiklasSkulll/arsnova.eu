@@ -166,7 +166,9 @@ function whitelist() {
   blaetter(daten.nutzlast.zahlen);
   blaetter(daten.abgeleitet);
   for (const f of daten.nachbau.fragen) ziffern(f);
-  for (const v of Object.values(daten.nachweis)) ziffern(v);
+  for (const v of Object.values(daten.nachweis)) if (typeof v === 'string') ziffern(v);
+  for (const j of daten.nachweis.je) for (const v of [j.dauer, j.zusatz]) ziffern(v);
+  for (const v of Object.values(daten.nachweis.zeilen)) ziffern(v);
   for (const f of Object.values(FESTWERTE)) zahl(f.wert);
   return w;
 }
@@ -344,11 +346,11 @@ test('Dankfolie: Einladung zu Fragen, Link und offline erzeugter QR-Code zum Bel
   assert.match(qrSvg('x', 100), /viewBox="0 0 29 29"/);
 });
 
-test('Reservefolien R1, R5–R7, R9–R12, R15, R16 (R2–R4, R8, R13, R14 seit 2026-11-16 im Hauptteil)', () => {
+test('Reservefolien R1, R5–R7, R9–R12, R15–R17 (R2–R4, R8, R13, R14 seit 2026-11-16 im Hauptteil)', () => {
   const r = F.filter((f) => f.teil === 'reserve');
   assert.deepEqual(
     r.map((f) => f.id),
-    ['R1', 'R5', 'R6', 'R7', 'R9', 'R10', 'R11', 'R12', 'R15', 'R16'],
+    ['R1', 'R5', 'R6', 'R7', 'R9', 'R10', 'R11', 'R12', 'R15', 'R16', 'R17'],
   );
   const text = r.map((f) => f.titel).join(' | ');
   for (const wort of [
@@ -1039,12 +1041,56 @@ test('GD: Nachweisumfang aus nachweisumfang.md, gleich der Neuberechnung, ohne W
     { laborzeit: k.laborzeitStunden, tests: k.tests, adrs: k.adrs, hypothesen: k.hypothesen },
   );
   const gd = sichtbar(nach('GD').inhalt);
-  assert.match(
-    gd,
-    new RegExp(
-      `Belege im Repo: ${k.laborzeitStunden} gewertete Laborzeit, ${k.tests} automatisierte Tests, ${k.adrs} ADRs, ${k.hypothesen} vorab festgelegte Hypothesen`,
-    ),
+  for (const [wert, was] of [
+    [k.laborzeitStunden, 'gewertete Laborzeit'],
+    [k.tests, 'automatisierte Tests'],
+    [k.adrs, 'ADRs'],
+    [k.hypothesen, 'vorab festgelegte Hypothesen'],
+  ])
+    assert.ok(gd.replace(/\s+/g, ' ').includes(`${wert} ${was}`), `GD: „${wert} ${was}“ fehlt`);
+  assert.ok(gd.includes(`gewertete Messläufe ${k.zeitraum}`));
+  // Laborzeit je Auftrag: Dauer wie in nachweisumfang.md, Balkenlänge proportional, längster Balken voll
+  const { laborzeit, dauer } = await import('./nachweisumfang.mjs');
+  const je = laborzeit().je;
+  const erwartet = {
+    '1A': je['1A'],
+    '1B Schritte 1–2': je['1B'],
+    '1B Schritte 3–4': je['1B 3–4'],
+    '1C': je['1C'],
+  };
+  assert.deepEqual(
+    daten.nachweis.je.map((j) => j.dauer),
+    Object.values(erwartet).map(dauer),
   );
+  const anteile = [...nach('GD').inhalt.matchAll(/\* ([\d.]+)\)"/g)].map((m) => Number(m[1]));
+  const max = Math.max(...daten.nachweis.je.map((j) => j.min));
+  assert.deepEqual(
+    anteile,
+    daten.nachweis.je.map((j) => Number((j.min / max).toFixed(3))),
+  );
+  assert.equal(Math.max(...anteile), 1);
   // sachlich: keine Commit-Zahlen je Person, keine Wertung
-  assert.doesNotMatch(gd + nach('GD').notiz, /Commits|umfangreich|beeindruck|enorm/);
+  assert.doesNotMatch(
+    gd + nach('GD').notiz,
+    /Commits|umfangreich|beeindruck|enorm|unverhältnis|aufwendig/,
+  );
+  assert.match(nach('GD').notiz, /vom 5\. bis 16\. November/);
+});
+
+test('R17: Nachweisumfang im Einzelnen, jede Zeile wie in nachweisumfang.md, ohne Wertung', async () => {
+  const { tabellenwerte } = await import('./nachweisumfang.mjs');
+  const r = sichtbar(nach('R17').inhalt);
+  const ohneFett = (w) => w.replace(/\*\*/g, '');
+  for (const [name, wert] of Object.entries(tabellenwerte())) {
+    if (/^(Gewertete Laborzeit|Automatisierte Tests|Vorab festgelegte)/.test(name)) continue;
+    // Wert vor der Klammer steht auf der Folie, der Zusatz in der Klammer darunter
+    const [kopf, zusatz] = ohneFett(wert)
+      .match(/^([^(]+?)(?: \((.+)\))?$/)
+      .slice(1);
+    assert.ok(r.includes(kopf), `R17: ${name} → ${kopf} fehlt`);
+    if (zusatz && name !== 'ADRs') assert.ok(r.includes(zusatz), `R17: ${name} → ${zusatz} fehlt`);
+  }
+  assert.match(r, /Nicht gezählt: Vorläufe/);
+  assert.doesNotMatch(r + nach('R17').notiz, /umfangreich|beeindruck|enorm|unverhältnis|aufwendig/);
+  assert.equal(nach('R17').teil, 'reserve');
 });

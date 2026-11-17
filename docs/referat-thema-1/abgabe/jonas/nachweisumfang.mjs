@@ -114,17 +114,19 @@ function laufzeit1A(root) {
   let summe = 0;
   let laeufe = 0;
   let vollstaendig = 0;
+  const grenzen = [];
   for (const variante of readdirSync(reihe).filter((d) => /^V\d$/.test(d))) {
     for (const block of readdirSync(join(reihe, variante)).filter((d) => d.startsWith('block-'))) {
       const ordner = join(reihe, variante, block);
       const lauf = JSON.parse(readFileSync(join(ordner, 'lauf.json'), 'utf8'));
       const report = JSON.parse(readFileSync(join(ordner, 'report.json'), 'utf8'));
       summe += sek(lauf.warmup.manifest.startAt, report.timestamp);
+      grenzen.push(lauf.warmup.manifest.startAt, report.timestamp);
       laeufe += 1;
       if (lauf.complete === true) vollstaendig += 1;
     }
   }
-  return { sek: summe, laeufe, vollstaendig };
+  return { sek: summe, laeufe, vollstaendig, grenzen };
 }
 
 /** 1B: treiber.startedAt bis spätestes treiber.auftraege[].finishedAt. */
@@ -134,13 +136,30 @@ function laufzeit1B(root, datei) {
   return {
     sek: (Math.max(...enden) - Date.parse(treiber.startedAt)) / 1000,
     auftraege: treiber.auftraege.length,
+    grenzen: [Date.parse(treiber.startedAt), Math.max(...enden)],
   };
 }
 
 /** 1C: environment.startedAt bis environment.endedAt. */
 function laufzeit1C(root, datei) {
   const { environment } = JSON.parse(gunzipSync(readFileSync(join(root, MESSUNG_1C, datei))));
-  return { sek: sek(environment.startedAt, environment.endedAt) };
+  return {
+    sek: sek(environment.startedAt, environment.endedAt),
+    grenzen: [environment.startedAt, environment.endedAt],
+  };
+}
+
+/** Kalendertag in Berlin (JJJJ-MM-TT) eines Zeitpunkts. */
+function tagBerlin(ms) {
+  return new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Berlin' }).format(new Date(ms));
+}
+
+/** Erster Start bis letztes Ende aller gewerteten Läufe, als Berliner Kalendertage. */
+function zeitraum(laeufe) {
+  const ms = laeufe
+    .flatMap((l) => l.grenzen)
+    .map((t) => (typeof t === 'number' ? t : Date.parse(t)));
+  return { von: tagBerlin(Math.min(...ms)), bis: tagBerlin(Math.max(...ms)) };
 }
 
 function summe(werte) {
@@ -169,6 +188,7 @@ export function laborzeit(root = REFERAT) {
   return {
     gewertetSek: summe(Object.values(je)),
     je,
+    zeitraum: zeitraum([a, ...b, ...c, ...n]),
     laeufe1A: a.laeufe,
     vollstaendig1A: a.vollstaendig,
     auftraege1B: summe(b.map((x) => x.auftraege)),
@@ -266,6 +286,14 @@ export function dauer(sekunden) {
   return stunden ? `${stunden} h ${minuten % 60} min` : `${minuten} min`;
 }
 
+/** { von: '2026-11-05', bis: '2026-11-16' } als „5.–16.11.2026“ (gleicher Monat) oder „28.10.–3.11.2026“. */
+export function tageSpanne({ von, bis }) {
+  const [vj, vm, vt] = von.split('-').map(Number);
+  const [bj, bm, bt] = bis.split('-').map(Number);
+  if (vj !== bj) return `${vt}.${vm}.${vj}–${bt}.${bm}.${bj}`;
+  return vm === bm ? `${vt}.–${bt}.${bm}.${bj}` : `${vt}.${vm}.–${bt}.${bm}.${bj}`;
+}
+
 /**
  * Deutsch formatierte Kopfzahlen für Folie und Handout, z. B.
  * „Belege im Repo: 7,7 h gewertete Laborzeit, 301 automatisierte Tests, …“.
@@ -278,6 +306,7 @@ export function kopfzahlen(werte = berechneNachweisumfang()) {
     testsMitAbgabe: zahl(werte.tests.gesamt),
     adrs: zahl(werte.adrs.gesamt),
     hypothesen: zahl(werte.hypothesen.gesamt),
+    zeitraum: tageSpanne(werte.laborzeit.zeitraum),
   };
 }
 
@@ -295,6 +324,7 @@ export function tabellenwerte(werte = berechneNachweisumfang()) {
     'davon 1B Schritte 1–2': `${dauer(l.je['1B'])} (${l.auftraege1B} Aufträge)`,
     'davon 1B Schritte 3–4': `${dauer(l.je['1B 3–4'])} (${l.reihen1B3u4.laeufe} Läufe, ${l.reihen1B3u4.auftraege} Aufträge)`,
     'davon 1C Laborläufe': `${dauer(l.je['1C'])} (${l.laeufe1C} Läufe)`,
+    'Zeitraum der gewerteten Läufe': k.zeitraum,
     'Automatisierte Tests': `**${k.tests}**`,
     ADRs: `**${k.adrs}** (1B: ${a['1B']}, 1C: ${a['1C']})`,
     'Vorab festgelegte Hypothesen und Kriterien': `**${k.hypothesen}**`,
