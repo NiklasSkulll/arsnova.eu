@@ -177,7 +177,7 @@ test('Läuferzustand: Anteil der Station, Säume, Zeichensätze je Stufe', () =>
   // M2 (Breaker gegen Queue): erst die Stopp-Bahn, dann die Bahn „zu spät“
   assert.deepEqual(
     laeuferZustand('1b-breaker').stufen.map((s) => s.satz),
-    ['', 'stopp', 'spaet'],
+    ['stopp', 'spaet'],
   );
   assert.deepEqual(laeuferZustand('auftrag-stopp').stufen, [{ ab: 0, bis: null, satz: 'stopp' }]);
   assert.equal(laeuferZustand('1a-wirkung').wirkung, true);

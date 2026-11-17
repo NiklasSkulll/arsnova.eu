@@ -736,8 +736,8 @@ test('Wegkarte N1–N10 und M1–M4: ein beständiger Läufer je Weg wie bei Jon
     ['', 'stopp,belegt', 'drop,langsam', 'spaet'],
   );
   assert.deepEqual(
-    ['0', '1', '2'].map((s) => bei('M2', s).satz),
-    ['', 'stopp', 'spaet'],
+    ['0', '1'].map((s) => bei('M2', s).satz),
+    ['stopp', 'spaet'],
   );
   assert.equal(bei('M3', '0').satz, 'stopp,belegt,drop,langsam,spaet');
   assert.deepEqual(bei('M4', '0').saeume, ['zweiterHost|var(--bernstein)|gestrichelt']);
@@ -830,7 +830,7 @@ test('Druck: jede Folie von 1A und 1B 3–4 trägt ihre feste Wegkarte im Endbil
     assert.notEqual(z.display, 'none', f.id);
     assert.equal(z.aktiv, wegMarke(f.marke).match(/data-aktiv="([a-z]+)"/)?.[1] ?? null, f.id);
   }
-  // Endbild: M1 Stufe 3 („zu spät“), M2 Stufe 2 („zu spät“), M3 alle fünf, M4 keine
+  // Endbild: M1 Stufe 3 („zu spät“), M2 Stufe 1 („zu spät“), M3 alle fünf, M4 keine
   assert.deepEqual(r.folien.M1.zeichen, ['spaet']);
   assert.deepEqual(r.folien.M2.zeichen, ['spaet']);
   assert.deepEqual(r.folien.M3.zeichen, ['stopp', 'belegt', 'drop', 'langsam', 'spaet']);
@@ -868,7 +868,7 @@ test('M2: zitierte Codezeilen stimmen am Checkout (Breaker zählt aborted nicht)
   const m2 = n1b.find((f) => f.id === 'M2');
   assert.match(ohneTags(m2.inhalt), /openWeightLlmClient\.ts:188/);
   assert.match(m2.quelle, /runWithQueueTimeout/);
-  assert.equal(m2.aufbau, 2);
+  assert.equal(m2.aufbau, 1);
 });
 
 test('1B 3–4 liest .json.gz; liegen .json und .json.gz nebeneinander, zählt der Lauf einmal', () => {

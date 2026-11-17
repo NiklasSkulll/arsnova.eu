@@ -26,7 +26,8 @@ PDF-Seiten bleibt `--niklas1 <pdf>`.
 - **Diskussion:** [`fragenkatalog-1a.md`](fragenkatalog-1a.md) (Übung, nicht Teil der Abgabe).
 - **Sprechnotizen:** je Folie `notiz` (Fließtext) und `stichpunkte` (zum freien Vortrag); `[Weiter]` markiert
   jeden Tastendruck einer Aufbaustufe (GK: drei; N6: drei, Stufe 0 zeigt nur Umrisse; N7: zwei; M1: drei, je
-  Störung eine Stufe; M2: zwei Bahnen; M3: Summary, dann Label; M4: Entscheidung).
+  Störung eine Stufe; M2: Stopp, dann Zu spät; M3: Summary, dann
+  Label; M4: Entscheidung).
 - **Handout (PaperLab):** [`handout-latex-1a.mjs`](handout-latex-1a.mjs) schreibt `zahlen.tex` und
   `abb-vergleiche.pdf` aus denselben Daten wie die Folien (`node … <PaperLab-Projekt>/generated`).
 - **Befunde zum früheren Entwurf:** [`BEFUNDE-1A.md`](BEFUNDE-1A.md).

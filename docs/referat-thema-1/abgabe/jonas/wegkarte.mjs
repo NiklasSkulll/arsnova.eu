@@ -365,9 +365,8 @@ export const MARKEN = Object.freeze({
     farbe: 'var(--bernstein)',
     text: 'Zweiter Host',
     stufen: [
-      { ab: 0, bis: 0, zeichen: [] },
-      { ab: 1, bis: 1, zeichen: ['stopp'] },
-      { ab: 2, zeichen: ['spaet'] },
+      { ab: 0, bis: 0, zeichen: ['stopp'] },
+      { ab: 1, zeichen: ['spaet'] },
     ],
   },
   // M3: Rückwirkung aller Störungen auf die Live-Aktionen

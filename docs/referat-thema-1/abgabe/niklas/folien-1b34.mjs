@@ -64,6 +64,8 @@ const dauer = (ms) =>
   ms < 1000
     ? `${fmt(ms, ms < 100 && ms % 1 ? 1 : 0)} ms`
     : `${fmt(ms / 1000, ms < 10000 ? 1 : 0)} s`;
+/** Dauer für den Fließtext der Notizen: Einheiten ausgeschrieben. */
+const gesprochen = (ms) => dauer(ms).replace(/ ms$/, ' Millisekunden').replace(/ s$/, ' Sekunden');
 const prozent = (r) =>
   `${Math.abs(r - 1) < 0.005 ? '±' : r > 1 ? '+' : '−'}${fmt(Math.abs(r - 1) * 100)}&nbsp;%`;
 
@@ -207,7 +209,7 @@ export function breakerSvg(b) {
       }),
     );
   const bahn = (folge, y, name, was, stufe, farbe) => {
-    t.push(`<g data-ab="${stufe}" data-bahn="${name}">`);
+    t.push(stufe ? `<g data-ab="${stufe}" data-bahn="${name}">` : `<g data-bahn="${name}">`);
     t.push(text(0, y + 6, esc(name), { groesse: 26, gewicht: 700 }));
     t.push(text(0, y + 34, esc(was), { groesse: 20, farbe: FARBEN.gedaempft }));
     folge.jobs.forEach((j, i) => {
@@ -230,7 +232,7 @@ export function breakerSvg(b) {
         }),
       );
       const grund = offen
-        ? 'Breaker offen, kein Netz'
+        ? 'Breaker offen'
         : j.grund === 'unavailable'
           ? 'abgewiesen (RST)'
           : j.verbindungen
@@ -258,8 +260,8 @@ export function breakerSvg(b) {
     });
     t.push('</g>');
   };
-  bahn(b.f1, 92, 'Stopp', 'Runtime gestoppt', 1, FARBEN.blau);
-  bahn(b.l3, 262, 'Zu spät', `Antwort nach ${fmt(b.l3.fakeDelayMs / 1000)} s`, 2, FARBEN.bernstein);
+  bahn(b.f1, 92, 'Stopp', 'Runtime gestoppt', 0, FARBEN.blau);
+  bahn(b.l3, 262, 'Zu spät', `Antwort nach ${fmt(b.l3.fakeDelayMs / 1000)} s`, 1, FARBEN.bernstein);
   t.push(
     text(x0, H - 6, `Balken: Job-Zeit von 0 bis zur Frist ${fmt(voll / 1000)} s, je Auftrag`, {
       groesse: 22,
@@ -374,7 +376,7 @@ export function folien1B34(
           )} min auf, bei Label endet die Frist von ${fmt(fristL)} s früher.</p>` +
         `<p class="beleg">Vorab festgelegt (${mono(sw.commit)}${swDatum ? `, ${swDatum}` : ''}): Ersatz ≤ Frist + ${fmt(sw.fallbackPufferMs / 1000)} s, Stopp im Median ≤ ${fmt(sw.f1MedianMaxMs / 1000)} s, DROP > ${fmt(sw.f2ZuF1Min)} × Stopp; für Summary alle erfüllt</p>`,
     ),
-    notiz: `Danke, Jonas. Er hat gefragt: Was, wenn der zweite Host langsam ist oder ausfällt? Ich habe die Runtime im Labor gezielt gestört, unter derselben Beitrittswelle wie in 1A, für zwei Aufträge: die Q&A-Zusammenfassung als Kreis und die Wortwolken-Labels als Raute. Die Achse ist logarithmisch, rot stehen die Fristen, ${fmt(fristL)} Sekunden für Labels und ${fmt(fristS)} für Summaries. Grau ist der Normalbetrieb. Labels übernimmt die App nach etwa ${fmt(nl.zeitMedianMs / 1000, 1)} Sekunden, Summaries verwirft das Gate wie bei Jonas. [Weiter] Ist der Container gestoppt, kommt der Ersatz nach ${dauer(f1.zeitMedianMs)}, bei belegtem Slot nach ${dauer(busy.zeitMedianMs)}. [Weiter] Bremse ich das Netz um fünfhundert Millisekunden, kommt die Antwort trotzdem. Verwirft die Firewall die Pakete, merkt die App das bei Summaries erst nach ${dauer(f2.zeitMedianMs)}, rund ${fmt(faktor)}-mal so spät wie beim Stopp; bei Labels beendet die Frist das Warten nach ${fmt(fristL)} Sekunden. [Weiter] Antwortet die Runtime zu spät, wartet die App die volle Frist. Ein gestoppter Host kostet Millisekunden, ein stummer Minuten.`,
+    notiz: `Danke, Jonas. Er hat gefragt: Was, wenn der zweite Host langsam ist oder ausfällt? Ich habe die Runtime im Labor gezielt gestört, unter derselben Beitrittswelle wie in 1A, für zwei Aufträge: die Q&A-Zusammenfassung als Kreis und die Wortwolken-Labels als Raute. Die Achse ist logarithmisch, rot stehen die Fristen, ${fmt(fristL)} Sekunden für Labels und ${fmt(fristS)} für Summaries. Grau ist der Normalbetrieb. Labels übernimmt die App nach etwa ${fmt(nl.zeitMedianMs / 1000, 1)} Sekunden, Summaries verwirft das Gate wie bei Jonas. [Weiter] Ist der Container gestoppt, kommt der Ersatz nach ${gesprochen(f1.zeitMedianMs)}, bei belegtem Slot nach ${gesprochen(busy.zeitMedianMs)}. [Weiter] Bremse ich das Netz um fünfhundert Millisekunden, kommt die Antwort trotzdem. Verwirft die Firewall die Pakete, merkt die App das bei Summaries erst nach ${gesprochen(f2.zeitMedianMs)}, rund ${fmt(faktor)}-mal so spät wie beim Stopp; bei Labels beendet die Frist das Warten nach ${fmt(fristL)} Sekunden. [Weiter] Antwortet die Runtime zu spät, wartet die App die volle Frist. Ein gestoppter Host kostet Millisekunden, ein stummer Minuten.`,
     stichpunkte: [
       '„Danke, Jonas.“ Seine Frage: Was, wenn der zweite Host langsam ist oder ausfällt?',
       `Kreis Summary, Raute Label; Fristen ${fmt(fristL)} s und ${fmt(fristS)} s; grau normal`,
@@ -402,15 +404,15 @@ export function folien1B34(
         grafikBox(breakerSvg(b)) +
         `<p class="beleg">Code: Queue-Abbruch gilt als ${mono('aborted')} (${mono('openWeightLlmClient.ts:188')}) und zählt nicht für den Breaker (${mono(':476–478')})</p>`,
     ),
-    notiz: `Der Client hat einen Circuit Breaker: Nach drei Fehlern schaltet er dreißig Sekunden lang ab und liefert sofort den Ersatz. Meine Folge prüft mit vier Aufträgen direkt hintereinander, ob er auch Hänger abfängt. [Weiter] Oben ist die Runtime gestoppt: drei Ablehnungen, dann öffnet der Breaker, und Auftrag vier endet nach ${dauer(b.f1.jobs[3].jobMs)} ohne Netzversuch. [Weiter] Unten antwortet die Runtime zu spät: Jeder Auftrag wartet die Frist von ${fmt(b.l3.timeoutMs / 1000)} Sekunden, und auch Auftrag vier geht wieder zur Runtime. Der Grund steht im Code: Die Warteschlange bricht den Aufruf selbst ab, das zählt als abgebrochen und nicht als Fehler. Der Breaker dämpft also Ausfälle, aber keine Hänger.`,
+    notiz: `Der Client hat einen Circuit Breaker: Nach drei Fehlern schaltet er dreißig Sekunden lang ab und liefert sofort den Ersatz. Meine Folge prüft mit vier Aufträgen direkt hintereinander, ob er auch Hänger abfängt. Oben ist die Runtime gestoppt: drei Ablehnungen, dann öffnet der Breaker, und Auftrag vier endet nach ${gesprochen(b.f1.jobs[3].jobMs)} ohne Netzversuch. [Weiter] Unten antwortet die Runtime zu spät: Jeder Auftrag wartet die Frist von ${fmt(b.l3.timeoutMs / 1000)} Sekunden, und auch Auftrag vier geht wieder zur Runtime. Der Grund steht im Code: Die Warteschlange bricht den Aufruf selbst ab, das zählt als abgebrochen und nicht als Fehler. Der Breaker dämpft also Ausfälle, aber keine Hänger.`,
     stichpunkte: [
       'Breaker: nach 3 Fehlern 30 s aus, Ersatz sofort; vier Aufträge ohne Pause',
-      `[Weiter] Stopp: 3 × abgewiesen, Auftrag 4 nach ${dauer(b.f1.jobs[3].jobMs)} ohne Netz`,
+      `Stopp: 3 × abgewiesen, Auftrag 4 nach ${dauer(b.f1.jobs[3].jobMs)} ohne Netz`,
       `[Weiter] Zu spät: 4 × ${fmt(b.l3.timeoutMs / 1000)} s, auch Auftrag 4 erreicht die Runtime`,
       'Code: Queue-Abbruch = aborted, zählt nicht; dämpft Ausfälle, keine Hänger',
     ],
     zeitS: 50,
-    aufbau: 2,
+    aufbau: 1,
     marke: '1b-breaker',
     quelle: `${b.f1.datei}, ${b.l3.datei} (Commit ${b.f1.commit}, je 4 Aufträge ohne Pause und ohne Live-Last, Budget ${fmt(b.l3.timeoutMs)} ms, Fake-Verzögerung ${fmt(b.l3.fakeDelayMs)} ms) · ${umgebung} · Code am HEAD: apps/backend/src/lib/openWeightLlmClient.ts:183–190 (classifyCaughtError, Z. 188 aborted vor timeout), :476–478 (failureCountsForCircuit), openWeightLlmConfig.ts:9–10 (3 Fehler, 30.000 ms), qaSummaryQueue.ts:259–269 (runWithQueueTimeout, abort QA_SUMMARY_TIMEOUT); interner Status nicht ausgelesen (breaker-l3-summary.md), das Protokoll nennt die Funktion processWithTimeout, gemeint ist runWithQueueTimeout · ${pruefung}`,
     fuss: `Quelle: ${kb('schneider2026', 'Ordner evidenz/1B, Breaker-Folgen')}`,
@@ -428,7 +430,7 @@ export function folien1B34(
       .map(([v, n]) => [d.finde(v, consumer), n])
       .filter(([l]) => l);
     return (
-      `<tbody data-ab="${stufe}"><tr style="border-top:var(--linie-min) solid var(--linie)"><td style="padding:6px 12px 2px 0;font-weight:700">${titel}</td><td style="padding:6px 12px 2px;text-align:right;color:var(--gedaempft);font-size:var(--s-min)">Stopp</td>` +
+      `<tbody${stufe ? ` data-ab="${stufe}"` : ''}><tr style="border-top:var(--linie-min) solid var(--linie)"><td style="padding:6px 12px 2px 0;font-weight:700">${titel}</td><td style="padding:6px 12px 2px;text-align:right;color:var(--gedaempft);font-size:var(--s-min)">Stopp</td>` +
       AKTIONEN.map(
         ([a]) =>
           `<td class="mono" style="padding:6px 12px 2px;text-align:right;color:var(--gedaempft);font-size:var(--s-min)">${fmt(ref.live[a].p95Ms, 1)} ms</td>`,
@@ -483,22 +485,22 @@ export function folien1B34(
       frage('Leiden die Live-Aktionen, wenn die Inferenz gestört ist?', '1B') +
         `<table style="border-collapse:collapse;font-size:24px;width:100%">` +
         `<thead><tr style="color:var(--gedaempft);font-size:var(--s-min)"><td>p95 gegen Stopp desselben Auftrags</td><td style="text-align:right;padding:0 12px">n</td>${AKTIONEN.map(([, n]) => `<td style="text-align:right;padding:0 12px"><b style="color:var(--tinte)">${n}</b></td>`).join('')}</tr></thead>` +
-        gruppe('summary', 'Summary', 1) +
-        gruppe('label', 'Label', 2) +
+        gruppe('summary', 'Summary', 0) +
+        gruppe('label', 'Label', 1) +
         `</table>` +
         `<p class="vermerk">Bernstein: über ${fmt(sw.p95Faktor * 100)} % der Referenz (vorab festgelegt); serielle Reihen auf einem Rechner, Ursache nicht belegt</p>` +
         `<p class="merksatz"><b>${fmt(fehler)} Fehler</b> bei ${fmt(geplant)} Live-Aktionen. Netz bei Labels: ${fmt(t.transportMedianMs, 1)} ms von ${fmt(nl.zeitMedianMs / 1000, 1)} s (${fmt(t.anteilMedianProzent, 2)}&nbsp;%)</p>`,
     ),
-    notiz: `Und die Live-Aktionen? Die Tabelle zeigt das p95 jeder Störreihe gegen den Stopp desselben Auftrags, so war es vorab festgelegt. [Weiter] Bei Summaries reißen belegter Slot, DROP und die späte Antwort die Zehn-Prozent-Regel bei mindestens einer Aktion. [Weiter] Bei Labels schon der Normalbetrieb, beim Beitritt um ${prozent(nl.live.join.p95Ms / f1l.live.join.p95Ms).replace('&nbsp;', ' ')}; am stärksten DROP beim Tempo mit ${prozent(maxR).replace('&nbsp;', ' ')}. ${gehalten.length ? `Gehalten wird die Regel nur in ${fmt(gehalten.length)} kleinen Reihen mit je drei Aufträgen. ` : ''}Gescheitert ist keine einzige Aktion: ${fmt(fehler)} Fehler bei ${fmt(geplant)}. Die Reihen liefen nacheinander auf einem Rechner, eine Ursache kann ich nicht belegen. Das Netz selbst kostet bei Labels ${fmt(t.transportMedianMs, 1)} Millisekunden, also ${fmt(t.anteilMedianProzent, 2)} Prozent; das bestätigt Jonas' Ergebnis für einen zweiten Auftrag.`,
+    notiz: `Und die Live-Aktionen? Die Tabelle zeigt das p95 jeder Störreihe gegen den Stopp desselben Auftrags, so war es vorab festgelegt. Bei Summaries reißen belegter Slot, DROP und die späte Antwort die Zehn-Prozent-Regel bei mindestens einer Aktion. [Weiter] Bei Labels schon der Normalbetrieb, beim Beitritt um ${prozent(nl.live.join.p95Ms / f1l.live.join.p95Ms).replace('&nbsp;', ' ')}; am stärksten DROP beim Tempo mit ${prozent(maxR).replace('&nbsp;', ' ')}. ${gehalten.length ? `Gehalten wird die Regel nur in ${fmt(gehalten.length)} kleinen Reihen mit je drei Aufträgen. ` : ''}Gescheitert ist keine einzige Aktion: ${fmt(fehler)} Fehler bei ${fmt(geplant)}. Die Reihen liefen nacheinander auf einem Rechner, eine Ursache kann ich nicht belegen. Das Netz selbst kostet bei Labels ${fmt(t.transportMedianMs, 1)} Millisekunden, also ${fmt(t.anteilMedianProzent, 2)} Prozent; das bestätigt Jonas' Ergebnis für einen zweiten Auftrag.`,
     stichpunkte: [
       'p95 je Störreihe gegen den Stopp desselben Auftrags, Regel +10 %',
-      '[Weiter] Summary: Slot belegt, DROP, zu spät reißen die Regel',
+      'Summary: Slot belegt, DROP, zu spät reißen die Regel',
       `[Weiter] Label: schon normal; DROP Tempo ${prozent(maxR).replace('&nbsp;', ' ')}; ${gehalten.map(([, n]) => n).join(', ')} halten (n = 3)`,
       `${fmt(fehler)} Fehler bei ${fmt(geplant)} Aktionen; seriell, Ursache offen`,
       `Netz bei Labels ${fmt(t.transportMedianMs, 1)} ms = ${fmt(t.anteilMedianProzent, 2)} % (wie Jonas)`,
     ],
     zeitS: 60,
-    aufbau: 2,
+    aufbau: 1,
     marke: '1b-alle',
     quelle: `${reihenM3.map(zeile).join('; ')} · ${umgebung} · p95 gepoolt über alle Fenster und Teilreihen (fasseLaufzeitenZusammen), Referenz je Consumer der eigene Stopp (B0/F1); Summary-Störreihen auf 2b39b9df gegen F1 auf 5e758d0a (versionsübergreifend, Produktionscode unverändert, automatischer Vergleich meldet MANIFEST_MISSING_OR_DIFFERENT); Label auf 7c64dd6a; Summary-Normal nicht im Raster (Protokoll rechnet nur F1 gegen Normal) · Transport: ${d.transport.datei} (Analyse-Commit ${d.transport.commit}, ${fmt(t.n)} Label-Normalaufträge) · über der Regel: ${verfehlt.map(([, n, c]) => `${n}/${c}`).join(', ')} · ${pruefung}`,
     fuss: `Quelle: ${kb('schneider2026', 'Ordner evidenz/1B, Transportauswertung')}`,
