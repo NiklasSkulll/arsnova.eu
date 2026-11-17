@@ -450,3 +450,18 @@ _Quelle:_ 1C-diagrams.md, Abb. 1 (diagrams/1c-context-path-overview.light.svg, L
 Falls nach dem zeitlichen Ablauf gefragt wird: Abbildung 2, ein vereinfachtes UML-Sequenzdiagramm. Die API prüft die Rechte und baut den Kontext; ändern sich die Daten dabei, scheitert die Anfrage, sonst reiht sie asynchron einen Job ein und meldet pending. Die Queue baut den Kontext vor und nach der LLM-Anfrage neu und speichert die Modellzusammenfassung nur bei gleichem Hash und gültiger, formgerechter Antwort. Der Statusabruf prüft das fertige Ergebnis noch einmal gegen die aktuellen Daten. Die Messpunkte t0 bis t3 auf J8 liegen auf den Pfeilen zur Runtime und zurück.
 
 _Quelle:_ 1C-diagrams.md, Abb. 2 (diagrams/1c-context-path-overview-sequence.light.svg) · Code-Stand def56700 (v1.4.0-14, Branch f746ffba), gezeichnet am Laptop (ThinkPad P50)
+
+## R17 Reserve: Was hinter den Belegen steht
+
+**Stichpunkte**
+
+- Laborzeit 18,6 h, nur gewertete Läufe 5.–16.11.2026, aus Zeitstempeln
+- 1A 2 h 32 min · 1B Schritte 1–2 55 min · 1B Schritte 3–4 10 h 56 min · 1C 4 h 15 min
+- Nicht gezählt: Vorläufe, Abbrüche, Entwicklungsläufe, Aufbau
+- 326 Tests, 50 Hypothesen vorab, 35 ADRs
+
+**Fließtext**
+
+Falls nach dem Umfang gefragt wird: Gewertet sind 18,6 Stunden Laborzeit aus Messläufen vom 5. bis 16. November, gemessen an den Zeitstempeln der Rohdaten. 1A Ressourcenisolation: 2 Stunden 32 Minuten; 1B Schritte 1 bis 2: 55 Minuten; 1B Schritte 3 bis 4: 10 Stunden 56 Minuten; 1C Laborläufe: 4 Stunden 15 Minuten. Vorläufe, abgebrochene Versuche, Entwicklungsläufe und der Aufbau der Labore sind darin nicht enthalten. Dazu kommen 326 automatisierte Tests für Last- und Messwerkzeuge, Laborskripte und Backend sowie 50 Hypothesen und Kriterien, die vor dem jeweiligen Lauf festgelegt wurden, und 35 Entscheidungen als ADR.
+
+_Quelle:_ nachweisumfang.md, alle Tabellen, Stand e3986902 (nachgerechnet von abgabe/jonas/nachweisumfang.mjs auf dem Checkout); Rechner je Lauf: 1C Laptop (ThinkPad P50) und PC (i7-8700), 1B Schritte 1–2 Laptop, 1A und 1B Schritte 3–4 wie in den Protokollen unter evidenz/1A und evidenz/1B

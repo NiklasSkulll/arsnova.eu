@@ -547,18 +547,111 @@
         text-underline-offset: 4px;
       }
       .dank-namen {
-        margin: 48px 0 0;
+        margin: 28px 0 0;
         color: var(--gedaempft);
         font-size: var(--s-sek);
       }
-      /* Nachweisumfang auf GD: ruhig, eine Zeile, ohne Wertung (nachweisumfang.md) */
+      /* Nachweisumfang auf GD: Band über die volle Breite, Kennzahlen links, Laborzeit je Auftrag rechts; ruhig,
+   ohne Wertung (nachweisumfang.md, Abschnitt Darstellung) */
       .dank-nachweis {
-        margin: 28px 0 0;
-        padding: 12px 0 0;
+        grid-column: 1 / -1;
+        margin: 40px 0 0;
+        padding: 22px 0 0;
         border-top: 1px solid var(--linie);
         color: var(--text-2);
+      }
+      .nw-kopf {
+        margin: 0;
+        color: var(--gedaempft);
+        font-size: var(--s-min);
+      }
+      .nw-band {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        column-gap: 96px;
+        align-items: center;
+        margin: 16px 0 0;
+      }
+      .nw-zahlen {
+        display: grid;
+        grid-template-columns: repeat(2, auto);
+        column-gap: 56px;
+        row-gap: 18px;
+      }
+      .nw-zahl {
+        display: flex;
+        flex-direction: column;
+      }
+      .nw-wert {
+        color: var(--tinte);
+        font-size: 44px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        line-height: 1.1;
+      }
+      .nw-was {
+        margin-top: 2px;
+        font-size: var(--s-min);
+        white-space: nowrap;
+      }
+      .nw-balken {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        align-items: center;
+        column-gap: 24px;
+        row-gap: 14px;
+        font-size: var(--s-min);
+      }
+      .nw-auftrag {
+        white-space: nowrap;
+      }
+      .nw-spur {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .nw-spur > span:first-child {
+        flex: none;
+        height: 16px;
+        min-width: 4px;
+        border-radius: 3px;
+      }
+      .nw-balken-1a {
+        background: var(--blau);
+      }
+      .nw-balken-1b {
+        background: var(--bernstein);
+      }
+      .nw-balken-1c {
+        background: var(--petrol);
+      }
+      .nw-dauer {
+        color: var(--tinte);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+      /* R17: Nachweisumfang im Einzelnen, drei Spalten */
+      .nw-reserve {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, 1fr);
+        column-gap: 64px;
+        align-items: start;
+      }
+      .nw-tabelle .nw-kopf {
+        margin: 0 0 10px;
+        color: var(--tinte);
         font-size: var(--s-sek);
+        font-weight: 700;
+      }
+      .nw-notiz {
+        margin: 14px 0 0;
+        color: var(--gedaempft);
+        font-size: var(--s-min);
         line-height: 1.35;
+      }
+      .nw-zusatz {
+        color: var(--gedaempft);
+        font-size: 18px;
       }
       .dank-qr {
         margin: 0;
@@ -6882,21 +6975,59 @@
                   >
                 </p>
                 <p class="dank-namen">Niklas Schneider · Jonas Weirauch</p>
-                <p class="dank-nachweis" data-nachweis>
-                  Belege im Repo: 18,6 h gewertete Laborzeit, 326 automatisierte Tests, 35 ADRs, 50
-                  vorab festgelegte Hypothesen
-                </p>
               </div>
               <figure class="dank-qr">
                 <!-- prettier-ignore --><svg viewBox="0 0 45 45" width="280" height="280" role="img" aria-label="QR-Code zum Belegrepository" shape-rendering="crispEdges"><rect width="45" height="45" style="fill:var(--grund)"/><path d="M4,4h1v1h-1zM5,4h1v1h-1zM6,4h1v1h-1zM7,4h1v1h-1zM8,4h1v1h-1zM9,4h1v1h-1zM10,4h1v1h-1zM13,4h1v1h-1zM16,4h1v1h-1zM17,4h1v1h-1zM18,4h1v1h-1zM19,4h1v1h-1zM21,4h1v1h-1zM22,4h1v1h-1zM23,4h1v1h-1zM25,4h1v1h-1zM26,4h1v1h-1zM29,4h1v1h-1zM34,4h1v1h-1zM35,4h1v1h-1zM36,4h1v1h-1zM37,4h1v1h-1zM38,4h1v1h-1zM39,4h1v1h-1zM40,4h1v1h-1zM4,5h1v1h-1zM10,5h1v1h-1zM12,5h1v1h-1zM14,5h1v1h-1zM17,5h1v1h-1zM18,5h1v1h-1zM20,5h1v1h-1zM21,5h1v1h-1zM22,5h1v1h-1zM23,5h1v1h-1zM25,5h1v1h-1zM28,5h1v1h-1zM29,5h1v1h-1zM32,5h1v1h-1zM34,5h1v1h-1zM40,5h1v1h-1zM4,6h1v1h-1zM6,6h1v1h-1zM7,6h1v1h-1zM8,6h1v1h-1zM10,6h1v1h-1zM12,6h1v1h-1zM14,6h1v1h-1zM15,6h1v1h-1zM19,6h1v1h-1zM20,6h1v1h-1zM22,6h1v1h-1zM23,6h1v1h-1zM24,6h1v1h-1zM25,6h1v1h-1zM26,6h1v1h-1zM30,6h1v1h-1zM32,6h1v1h-1zM34,6h1v1h-1zM36,6h1v1h-1zM37,6h1v1h-1zM38,6h1v1h-1zM40,6h1v1h-1zM4,7h1v1h-1zM6,7h1v1h-1zM7,7h1v1h-1zM8,7h1v1h-1zM10,7h1v1h-1zM12,7h1v1h-1zM13,7h1v1h-1zM15,7h1v1h-1zM20,7h1v1h-1zM21,7h1v1h-1zM23,7h1v1h-1zM29,7h1v1h-1zM31,7h1v1h-1zM32,7h1v1h-1zM34,7h1v1h-1zM36,7h1v1h-1zM37,7h1v1h-1zM38,7h1v1h-1zM40,7h1v1h-1zM4,8h1v1h-1zM6,8h1v1h-1zM7,8h1v1h-1zM8,8h1v1h-1zM10,8h1v1h-1zM13,8h1v1h-1zM14,8h1v1h-1zM15,8h1v1h-1zM18,8h1v1h-1zM20,8h1v1h-1zM23,8h1v1h-1zM24,8h1v1h-1zM26,8h1v1h-1zM27,8h1v1h-1zM32,8h1v1h-1zM34,8h1v1h-1zM36,8h1v1h-1zM37,8h1v1h-1zM38,8h1v1h-1zM40,8h1v1h-1zM4,9h1v1h-1zM10,9h1v1h-1zM13,9h1v1h-1zM14,9h1v1h-1zM16,9h1v1h-1zM17,9h1v1h-1zM18,9h1v1h-1zM19,9h1v1h-1zM20,9h1v1h-1zM22,9h1v1h-1zM24,9h1v1h-1zM29,9h1v1h-1zM34,9h1v1h-1zM40,9h1v1h-1zM4,10h1v1h-1zM5,10h1v1h-1zM6,10h1v1h-1zM7,10h1v1h-1zM8,10h1v1h-1zM9,10h1v1h-1zM10,10h1v1h-1zM12,10h1v1h-1zM14,10h1v1h-1zM16,10h1v1h-1zM18,10h1v1h-1zM20,10h1v1h-1zM22,10h1v1h-1zM24,10h1v1h-1zM26,10h1v1h-1zM28,10h1v1h-1zM30,10h1v1h-1zM32,10h1v1h-1zM34,10h1v1h-1zM35,10h1v1h-1zM36,10h1v1h-1zM37,10h1v1h-1zM38,10h1v1h-1zM39,10h1v1h-1zM40,10h1v1h-1zM12,11h1v1h-1zM13,11h1v1h-1zM16,11h1v1h-1zM17,11h1v1h-1zM18,11h1v1h-1zM19,11h1v1h-1zM20,11h1v1h-1zM28,11h1v1h-1zM31,11h1v1h-1zM32,11h1v1h-1zM4,12h1v1h-1zM10,12h1v1h-1zM12,12h1v1h-1zM13,12h1v1h-1zM15,12h1v1h-1zM16,12h1v1h-1zM17,12h1v1h-1zM18,12h1v1h-1zM19,12h1v1h-1zM22,12h1v1h-1zM24,12h1v1h-1zM26,12h1v1h-1zM29,12h1v1h-1zM30,12h1v1h-1zM33,12h1v1h-1zM34,12h1v1h-1zM37,12h1v1h-1zM38,12h1v1h-1zM39,12h1v1h-1zM4,13h1v1h-1zM6,13h1v1h-1zM7,13h1v1h-1zM8,13h1v1h-1zM9,13h1v1h-1zM13,13h1v1h-1zM15,13h1v1h-1zM24,13h1v1h-1zM26,13h1v1h-1zM27,13h1v1h-1zM29,13h1v1h-1zM30,13h1v1h-1zM31,13h1v1h-1zM32,13h1v1h-1zM35,13h1v1h-1zM36,13h1v1h-1zM38,13h1v1h-1zM39,13h1v1h-1zM6,14h1v1h-1zM8,14h1v1h-1zM9,14h1v1h-1zM10,14h1v1h-1zM13,14h1v1h-1zM18,14h1v1h-1zM21,14h1v1h-1zM22,14h1v1h-1zM24,14h1v1h-1zM29,14h1v1h-1zM30,14h1v1h-1zM31,14h1v1h-1zM32,14h1v1h-1zM33,14h1v1h-1zM34,14h1v1h-1zM35,14h1v1h-1zM37,14h1v1h-1zM38,14h1v1h-1zM39,14h1v1h-1zM40,14h1v1h-1zM5,15h1v1h-1zM6,15h1v1h-1zM7,15h1v1h-1zM9,15h1v1h-1zM11,15h1v1h-1zM12,15h1v1h-1zM13,15h1v1h-1zM15,15h1v1h-1zM18,15h1v1h-1zM19,15h1v1h-1zM20,15h1v1h-1zM26,15h1v1h-1zM30,15h1v1h-1zM31,15h1v1h-1zM33,15h1v1h-1zM36,15h1v1h-1zM37,15h1v1h-1zM40,15h1v1h-1zM5,16h1v1h-1zM10,16h1v1h-1zM12,16h1v1h-1zM13,16h1v1h-1zM15,16h1v1h-1zM16,16h1v1h-1zM23,16h1v1h-1zM24,16h1v1h-1zM28,16h1v1h-1zM31,16h1v1h-1zM32,16h1v1h-1zM34,16h1v1h-1zM35,16h1v1h-1zM37,16h1v1h-1zM40,16h1v1h-1zM4,17h1v1h-1zM12,17h1v1h-1zM15,17h1v1h-1zM17,17h1v1h-1zM18,17h1v1h-1zM19,17h1v1h-1zM20,17h1v1h-1zM21,17h1v1h-1zM22,17h1v1h-1zM23,17h1v1h-1zM24,17h1v1h-1zM27,17h1v1h-1zM31,17h1v1h-1zM35,17h1v1h-1zM37,17h1v1h-1zM39,17h1v1h-1zM5,18h1v1h-1zM7,18h1v1h-1zM8,18h1v1h-1zM10,18h1v1h-1zM13,18h1v1h-1zM15,18h1v1h-1zM16,18h1v1h-1zM17,18h1v1h-1zM19,18h1v1h-1zM20,18h1v1h-1zM21,18h1v1h-1zM24,18h1v1h-1zM25,18h1v1h-1zM26,18h1v1h-1zM28,18h1v1h-1zM30,18h1v1h-1zM31,18h1v1h-1zM33,18h1v1h-1zM35,18h1v1h-1zM36,18h1v1h-1zM37,18h1v1h-1zM39,18h1v1h-1zM40,18h1v1h-1zM4,19h1v1h-1zM6,19h1v1h-1zM7,19h1v1h-1zM8,19h1v1h-1zM9,19h1v1h-1zM12,19h1v1h-1zM13,19h1v1h-1zM16,19h1v1h-1zM17,19h1v1h-1zM21,19h1v1h-1zM22,19h1v1h-1zM23,19h1v1h-1zM31,19h1v1h-1zM32,19h1v1h-1zM35,19h1v1h-1zM37,19h1v1h-1zM38,19h1v1h-1zM40,19h1v1h-1zM4,20h1v1h-1zM9,20h1v1h-1zM10,20h1v1h-1zM15,20h1v1h-1zM16,20h1v1h-1zM17,20h1v1h-1zM19,20h1v1h-1zM20,20h1v1h-1zM23,20h1v1h-1zM26,20h1v1h-1zM27,20h1v1h-1zM28,20h1v1h-1zM29,20h1v1h-1zM30,20h1v1h-1zM31,20h1v1h-1zM32,20h1v1h-1zM34,20h1v1h-1zM36,20h1v1h-1zM38,20h1v1h-1zM39,20h1v1h-1zM40,20h1v1h-1zM4,21h1v1h-1zM5,21h1v1h-1zM6,21h1v1h-1zM9,21h1v1h-1zM11,21h1v1h-1zM12,21h1v1h-1zM14,21h1v1h-1zM16,21h1v1h-1zM18,21h1v1h-1zM21,21h1v1h-1zM22,21h1v1h-1zM24,21h1v1h-1zM25,21h1v1h-1zM27,21h1v1h-1zM28,21h1v1h-1zM29,21h1v1h-1zM31,21h1v1h-1zM32,21h1v1h-1zM35,21h1v1h-1zM37,21h1v1h-1zM39,21h1v1h-1zM4,22h1v1h-1zM7,22h1v1h-1zM9,22h1v1h-1zM10,22h1v1h-1zM14,22h1v1h-1zM15,22h1v1h-1zM16,22h1v1h-1zM17,22h1v1h-1zM18,22h1v1h-1zM19,22h1v1h-1zM24,22h1v1h-1zM26,22h1v1h-1zM27,22h1v1h-1zM28,22h1v1h-1zM29,22h1v1h-1zM31,22h1v1h-1zM33,22h1v1h-1zM36,22h1v1h-1zM38,22h1v1h-1zM40,22h1v1h-1zM4,23h1v1h-1zM5,23h1v1h-1zM8,23h1v1h-1zM9,23h1v1h-1zM12,23h1v1h-1zM13,23h1v1h-1zM15,23h1v1h-1zM17,23h1v1h-1zM22,23h1v1h-1zM23,23h1v1h-1zM24,23h1v1h-1zM26,23h1v1h-1zM30,23h1v1h-1zM31,23h1v1h-1zM33,23h1v1h-1zM34,23h1v1h-1zM37,23h1v1h-1zM40,23h1v1h-1zM10,24h1v1h-1zM12,24h1v1h-1zM14,24h1v1h-1zM17,24h1v1h-1zM19,24h1v1h-1zM21,24h1v1h-1zM23,24h1v1h-1zM26,24h1v1h-1zM28,24h1v1h-1zM29,24h1v1h-1zM31,24h1v1h-1zM33,24h1v1h-1zM34,24h1v1h-1zM36,24h1v1h-1zM37,24h1v1h-1zM38,24h1v1h-1zM4,25h1v1h-1zM8,25h1v1h-1zM12,25h1v1h-1zM14,25h1v1h-1zM15,25h1v1h-1zM18,25h1v1h-1zM19,25h1v1h-1zM22,25h1v1h-1zM23,25h1v1h-1zM24,25h1v1h-1zM25,25h1v1h-1zM27,25h1v1h-1zM30,25h1v1h-1zM31,25h1v1h-1zM33,25h1v1h-1zM36,25h1v1h-1zM38,25h1v1h-1zM39,25h1v1h-1zM8,26h1v1h-1zM10,26h1v1h-1zM12,26h1v1h-1zM14,26h1v1h-1zM15,26h1v1h-1zM16,26h1v1h-1zM19,26h1v1h-1zM22,26h1v1h-1zM25,26h1v1h-1zM26,26h1v1h-1zM29,26h1v1h-1zM30,26h1v1h-1zM31,26h1v1h-1zM32,26h1v1h-1zM33,26h1v1h-1zM35,26h1v1h-1zM36,26h1v1h-1zM37,26h1v1h-1zM39,26h1v1h-1zM40,26h1v1h-1zM4,27h1v1h-1zM5,27h1v1h-1zM6,27h1v1h-1zM7,27h1v1h-1zM8,27h1v1h-1zM9,27h1v1h-1zM14,27h1v1h-1zM16,27h1v1h-1zM18,27h1v1h-1zM19,27h1v1h-1zM20,27h1v1h-1zM24,27h1v1h-1zM26,27h1v1h-1zM27,27h1v1h-1zM28,27h1v1h-1zM32,27h1v1h-1zM33,27h1v1h-1zM35,27h1v1h-1zM36,27h1v1h-1zM37,27h1v1h-1zM39,27h1v1h-1zM8,28h1v1h-1zM9,28h1v1h-1zM10,28h1v1h-1zM11,28h1v1h-1zM15,28h1v1h-1zM16,28h1v1h-1zM17,28h1v1h-1zM20,28h1v1h-1zM21,28h1v1h-1zM22,28h1v1h-1zM24,28h1v1h-1zM31,28h1v1h-1zM32,28h1v1h-1zM34,28h1v1h-1zM35,28h1v1h-1zM4,29h1v1h-1zM5,29h1v1h-1zM7,29h1v1h-1zM8,29h1v1h-1zM9,29h1v1h-1zM12,29h1v1h-1zM13,29h1v1h-1zM14,29h1v1h-1zM15,29h1v1h-1zM16,29h1v1h-1zM17,29h1v1h-1zM18,29h1v1h-1zM20,29h1v1h-1zM21,29h1v1h-1zM27,29h1v1h-1zM29,29h1v1h-1zM31,29h1v1h-1zM32,29h1v1h-1zM35,29h1v1h-1zM37,29h1v1h-1zM4,30h1v1h-1zM8,30h1v1h-1zM10,30h1v1h-1zM11,30h1v1h-1zM13,30h1v1h-1zM21,30h1v1h-1zM24,30h1v1h-1zM25,30h1v1h-1zM26,30h1v1h-1zM29,30h1v1h-1zM30,30h1v1h-1zM31,30h1v1h-1zM32,30h1v1h-1zM33,30h1v1h-1zM34,30h1v1h-1zM35,30h1v1h-1zM39,30h1v1h-1zM40,30h1v1h-1zM4,31h1v1h-1zM6,31h1v1h-1zM8,31h1v1h-1zM9,31h1v1h-1zM12,31h1v1h-1zM15,31h1v1h-1zM18,31h1v1h-1zM19,31h1v1h-1zM24,31h1v1h-1zM28,31h1v1h-1zM31,31h1v1h-1zM34,31h1v1h-1zM35,31h1v1h-1zM38,31h1v1h-1zM39,31h1v1h-1zM40,31h1v1h-1zM4,32h1v1h-1zM6,32h1v1h-1zM10,32h1v1h-1zM12,32h1v1h-1zM14,32h1v1h-1zM17,32h1v1h-1zM18,32h1v1h-1zM21,32h1v1h-1zM26,32h1v1h-1zM28,32h1v1h-1zM30,32h1v1h-1zM32,32h1v1h-1zM33,32h1v1h-1zM34,32h1v1h-1zM35,32h1v1h-1zM36,32h1v1h-1zM37,32h1v1h-1zM38,32h1v1h-1zM12,33h1v1h-1zM13,33h1v1h-1zM14,33h1v1h-1zM16,33h1v1h-1zM18,33h1v1h-1zM19,33h1v1h-1zM21,33h1v1h-1zM23,33h1v1h-1zM24,33h1v1h-1zM27,33h1v1h-1zM31,33h1v1h-1zM32,33h1v1h-1zM36,33h1v1h-1zM4,34h1v1h-1zM5,34h1v1h-1zM6,34h1v1h-1zM7,34h1v1h-1zM8,34h1v1h-1zM9,34h1v1h-1zM10,34h1v1h-1zM17,34h1v1h-1zM18,34h1v1h-1zM19,34h1v1h-1zM23,34h1v1h-1zM24,34h1v1h-1zM25,34h1v1h-1zM26,34h1v1h-1zM27,34h1v1h-1zM29,34h1v1h-1zM32,34h1v1h-1zM34,34h1v1h-1zM36,34h1v1h-1zM39,34h1v1h-1zM40,34h1v1h-1zM4,35h1v1h-1zM10,35h1v1h-1zM14,35h1v1h-1zM16,35h1v1h-1zM21,35h1v1h-1zM22,35h1v1h-1zM24,35h1v1h-1zM26,35h1v1h-1zM28,35h1v1h-1zM30,35h1v1h-1zM31,35h1v1h-1zM32,35h1v1h-1zM36,35h1v1h-1zM39,35h1v1h-1zM40,35h1v1h-1zM4,36h1v1h-1zM6,36h1v1h-1zM7,36h1v1h-1zM8,36h1v1h-1zM10,36h1v1h-1zM13,36h1v1h-1zM17,36h1v1h-1zM19,36h1v1h-1zM20,36h1v1h-1zM23,36h1v1h-1zM24,36h1v1h-1zM27,36h1v1h-1zM28,36h1v1h-1zM29,36h1v1h-1zM30,36h1v1h-1zM31,36h1v1h-1zM32,36h1v1h-1zM33,36h1v1h-1zM34,36h1v1h-1zM35,36h1v1h-1zM36,36h1v1h-1zM38,36h1v1h-1zM39,36h1v1h-1zM40,36h1v1h-1zM4,37h1v1h-1zM6,37h1v1h-1zM7,37h1v1h-1zM8,37h1v1h-1zM10,37h1v1h-1zM13,37h1v1h-1zM16,37h1v1h-1zM17,37h1v1h-1zM18,37h1v1h-1zM20,37h1v1h-1zM22,37h1v1h-1zM23,37h1v1h-1zM24,37h1v1h-1zM25,37h1v1h-1zM26,37h1v1h-1zM27,37h1v1h-1zM29,37h1v1h-1zM32,37h1v1h-1zM33,37h1v1h-1zM34,37h1v1h-1zM37,37h1v1h-1zM40,37h1v1h-1zM4,38h1v1h-1zM6,38h1v1h-1zM7,38h1v1h-1zM8,38h1v1h-1zM10,38h1v1h-1zM13,38h1v1h-1zM15,38h1v1h-1zM19,38h1v1h-1zM20,38h1v1h-1zM21,38h1v1h-1zM24,38h1v1h-1zM25,38h1v1h-1zM26,38h1v1h-1zM28,38h1v1h-1zM29,38h1v1h-1zM30,38h1v1h-1zM31,38h1v1h-1zM32,38h1v1h-1zM38,38h1v1h-1zM39,38h1v1h-1zM40,38h1v1h-1zM4,39h1v1h-1zM10,39h1v1h-1zM15,39h1v1h-1zM16,39h1v1h-1zM22,39h1v1h-1zM24,39h1v1h-1zM27,39h1v1h-1zM28,39h1v1h-1zM32,39h1v1h-1zM33,39h1v1h-1zM34,39h1v1h-1zM36,39h1v1h-1zM37,39h1v1h-1zM40,39h1v1h-1zM4,40h1v1h-1zM5,40h1v1h-1zM6,40h1v1h-1zM7,40h1v1h-1zM8,40h1v1h-1zM9,40h1v1h-1zM10,40h1v1h-1zM12,40h1v1h-1zM13,40h1v1h-1zM15,40h1v1h-1zM17,40h1v1h-1zM18,40h1v1h-1zM19,40h1v1h-1zM20,40h1v1h-1zM24,40h1v1h-1zM27,40h1v1h-1zM28,40h1v1h-1zM32,40h1v1h-1zM33,40h1v1h-1zM34,40h1v1h-1zM35,40h1v1h-1zM37,40h1v1h-1zM40,40h1v1h-1z" style="fill:var(--tinte)"/></svg>
                 <figcaption class="vermerk">Repository, Ordner docs/referat-thema-1</figcaption>
               </figure>
+              <div class="dank-nachweis" data-nachweis>
+                <p class="nw-kopf">Belege im Repo · gewertete Messläufe 5.–16.11.2026</p>
+                <div class="nw-band">
+                  <div class="nw-zahlen">
+                    <div class="nw-zahl">
+                      <span class="nw-wert">18,6 h</span
+                      ><span class="nw-was">gewertete Laborzeit</span>
+                    </div>
+                    <div class="nw-zahl">
+                      <span class="nw-wert">326</span
+                      ><span class="nw-was">automatisierte Tests</span>
+                    </div>
+                    <div class="nw-zahl">
+                      <span class="nw-wert">35</span><span class="nw-was">ADRs</span>
+                    </div>
+                    <div class="nw-zahl">
+                      <span class="nw-wert">50</span
+                      ><span class="nw-was">vorab festgelegte Hypothesen</span>
+                    </div>
+                  </div>
+                  <div class="nw-balken" data-nachweis-je>
+                    <span class="nw-auftrag">1A Ressourcenisolation</span
+                    ><span class="nw-spur"
+                      ><span class="nw-balken-1a" style="width: calc((100% - 150px) * 0.232)"></span
+                      ><span class="nw-dauer">2 h 32 min</span></span
+                    ><span class="nw-auftrag">1B Schritte 1–2</span
+                    ><span class="nw-spur"
+                      ><span class="nw-balken-1b" style="width: calc((100% - 150px) * 0.084)"></span
+                      ><span class="nw-dauer">55 min</span></span
+                    ><span class="nw-auftrag">1B Schritte 3–4</span
+                    ><span class="nw-spur"
+                      ><span class="nw-balken-1b" style="width: calc((100% - 150px) * 1)"></span
+                      ><span class="nw-dauer">10 h 56 min</span></span
+                    ><span class="nw-auftrag">1C Laborläufe</span
+                    ><span class="nw-spur"
+                      ><span class="nw-balken-1c" style="width: calc((100% - 150px) * 0.389)"></span
+                      ><span class="nw-dauer">4 h 15 min</span></span
+                    >
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
         <div class="folie-fuss">
           <span class="fuss-nr">37 / 39</span> · Quelle: Weirauch, 2026, Ordner
-          docs/referat-thema-1, Datei nachweisumfang.md; Schneider, 2026, Ordner evidenz/1A
+          docs/referat-thema-1, Datei nachweisumfang.md; Schneider, 2026, Ordner evidenz/1A und
+          evidenz/1B
         </div>
       </section>
       <!--/quellen-->
@@ -7929,6 +8060,455 @@
       </section>
       <section
         class="folie"
+        data-id="R17"
+        data-teil="reserve"
+        aria-label="Reserve R17: Reserve: Was hinter den Belegen steht"
+      >
+        <h1 class="folie-titel">Reserve: Was hinter den Belegen steht</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1a">1A</span><span class="etikett etikett-1b">1B</span
+          ><span class="etikett etikett-1c">1C</span>Wie viel Messung und Prüfung steckt in den
+          Belegen?
+        </p>
+        <div class="folie-flaeche">
+          <div class="flaeche-inhalt">
+            <div class="nw-reserve">
+              <div class="nw-tabelle">
+                <p class="nw-kopf">Gewertete Laborzeit: 18,6 h</p>
+                <table
+                  class="eng"
+                  style="border-collapse: collapse; font-size: 22px; line-height: 1.3; width: 100%"
+                >
+                  <tr>
+                    <td
+                      style="
+                        padding: 7px 12px 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        vertical-align: top;
+                      "
+                    >
+                      1A Ressourcenisolation
+                    </td>
+                    <td
+                      style="
+                        padding: 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        text-align: right;
+                        font-variant-numeric: tabular-nums;
+                        vertical-align: top;
+                      "
+                    >
+                      <span style="white-space: nowrap">2 h 32 min</span><br /><span
+                        class="nw-zusatz"
+                        >25 Läufe, 25 vollständig</span
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style="
+                        padding: 7px 12px 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        vertical-align: top;
+                      "
+                    >
+                      1B Schritte 1–2
+                    </td>
+                    <td
+                      style="
+                        padding: 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        text-align: right;
+                        font-variant-numeric: tabular-nums;
+                        vertical-align: top;
+                      "
+                    >
+                      <span style="white-space: nowrap">55 min</span><br /><span class="nw-zusatz"
+                        >25 Aufträge</span
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style="
+                        padding: 7px 12px 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        vertical-align: top;
+                      "
+                    >
+                      1B Schritte 3–4
+                    </td>
+                    <td
+                      style="
+                        padding: 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        text-align: right;
+                        font-variant-numeric: tabular-nums;
+                        vertical-align: top;
+                      "
+                    >
+                      <span style="white-space: nowrap">10 h 56 min</span><br /><span
+                        class="nw-zusatz"
+                        >18 Läufe, 128 Aufträge</span
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style="
+                        padding: 7px 12px 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        vertical-align: top;
+                      "
+                    >
+                      1C Laborläufe
+                    </td>
+                    <td
+                      style="
+                        padding: 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        text-align: right;
+                        font-variant-numeric: tabular-nums;
+                        vertical-align: top;
+                      "
+                    >
+                      <span style="white-space: nowrap">4 h 15 min</span><br /><span
+                        class="nw-zusatz"
+                        >3 Läufe</span
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style="
+                        padding: 7px 12px 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        vertical-align: top;
+                      "
+                    >
+                      Zeitraum
+                    </td>
+                    <td
+                      style="
+                        padding: 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        text-align: right;
+                        font-variant-numeric: tabular-nums;
+                        vertical-align: top;
+                      "
+                    >
+                      <span style="white-space: nowrap">5.–16.11.2026</span>
+                    </td>
+                  </tr>
+                </table>
+                <p class="nw-notiz">
+                  Aus den Zeitstempeln der Rohdaten. Nicht gezählt: Vorläufe, gestörte und
+                  abgebrochene Versuche, Entwicklungsläufe, Aufbau.
+                </p>
+              </div>
+              <div class="nw-tabelle">
+                <p class="nw-kopf">Automatisierte Tests: 326</p>
+                <table
+                  class="eng"
+                  style="border-collapse: collapse; font-size: 22px; line-height: 1.3; width: 100%"
+                >
+                  <tr>
+                    <td
+                      style="
+                        padding: 7px 12px 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        vertical-align: top;
+                      "
+                    >
+                      1A Lastwerkzeuge
+                    </td>
+                    <td
+                      style="
+                        padding: 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        text-align: right;
+                        font-variant-numeric: tabular-nums;
+                        vertical-align: top;
+                      "
+                    >
+                      <span style="white-space: nowrap">108</span><br /><span class="nw-zusatz"
+                        >16 neue Dateien</span
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style="
+                        padding: 7px 12px 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        vertical-align: top;
+                      "
+                    >
+                      Messwerkzeuge 1B/1C
+                    </td>
+                    <td
+                      style="
+                        padding: 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        text-align: right;
+                        font-variant-numeric: tabular-nums;
+                        vertical-align: top;
+                      "
+                    >
+                      <span style="white-space: nowrap">126</span><br /><span class="nw-zusatz"
+                        >23 Dateien</span
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style="
+                        padding: 7px 12px 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        vertical-align: top;
+                      "
+                    >
+                      Pester 1B (Windows)
+                    </td>
+                    <td
+                      style="
+                        padding: 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        text-align: right;
+                        font-variant-numeric: tabular-nums;
+                        vertical-align: top;
+                      "
+                    >
+                      <span style="white-space: nowrap">57</span><br /><span class="nw-zusatz"
+                        >3 Dateien</span
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style="
+                        padding: 7px 12px 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        vertical-align: top;
+                      "
+                    >
+                      Backend 1C
+                    </td>
+                    <td
+                      style="
+                        padding: 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        text-align: right;
+                        font-variant-numeric: tabular-nums;
+                        vertical-align: top;
+                      "
+                    >
+                      <span style="white-space: nowrap">35</span><br /><span class="nw-zusatz"
+                        >4 neue Dateien, netto +1 in geänderten</span
+                      >
+                    </td>
+                  </tr>
+                </table>
+                <p class="nw-notiz">
+                  Statisch gezählt, ohne die Tests dieses Decks und der Handouts.
+                </p>
+              </div>
+              <div class="nw-tabelle">
+                <p class="nw-kopf">Vorab festgelegte Hypothesen: 50</p>
+                <table
+                  class="eng"
+                  style="border-collapse: collapse; font-size: 22px; line-height: 1.3; width: 100%"
+                >
+                  <tr>
+                    <td
+                      style="
+                        padding: 7px 12px 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        vertical-align: top;
+                      "
+                    >
+                      1A Experimentvertrag
+                    </td>
+                    <td
+                      style="
+                        padding: 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        text-align: right;
+                        font-variant-numeric: tabular-nums;
+                        vertical-align: top;
+                      "
+                    >
+                      <span style="white-space: nowrap">2</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style="
+                        padding: 7px 12px 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        vertical-align: top;
+                      "
+                    >
+                      1B Schritte 1–2
+                    </td>
+                    <td
+                      style="
+                        padding: 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        text-align: right;
+                        font-variant-numeric: tabular-nums;
+                        vertical-align: top;
+                      "
+                    >
+                      <span style="white-space: nowrap">5</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style="
+                        padding: 7px 12px 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        vertical-align: top;
+                      "
+                    >
+                      1B Schritte 3–4
+                    </td>
+                    <td
+                      style="
+                        padding: 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        text-align: right;
+                        font-variant-numeric: tabular-nums;
+                        vertical-align: top;
+                      "
+                    >
+                      <span style="white-space: nowrap">6</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style="
+                        padding: 7px 12px 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        vertical-align: top;
+                      "
+                    >
+                      1C Einzeltests E
+                    </td>
+                    <td
+                      style="
+                        padding: 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        text-align: right;
+                        font-variant-numeric: tabular-nums;
+                        vertical-align: top;
+                      "
+                    >
+                      <span style="white-space: nowrap">16</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style="
+                        padding: 7px 12px 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        vertical-align: top;
+                      "
+                    >
+                      1C Messungen M
+                    </td>
+                    <td
+                      style="
+                        padding: 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        text-align: right;
+                        font-variant-numeric: tabular-nums;
+                        vertical-align: top;
+                      "
+                    >
+                      <span style="white-space: nowrap">7</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style="
+                        padding: 7px 12px 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        vertical-align: top;
+                      "
+                    >
+                      1C Labor L
+                    </td>
+                    <td
+                      style="
+                        padding: 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        text-align: right;
+                        font-variant-numeric: tabular-nums;
+                        vertical-align: top;
+                      "
+                    >
+                      <span style="white-space: nowrap">6</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style="
+                        padding: 7px 12px 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        vertical-align: top;
+                      "
+                    >
+                      1C Nachlauf N
+                    </td>
+                    <td
+                      style="
+                        padding: 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        text-align: right;
+                        font-variant-numeric: tabular-nums;
+                        vertical-align: top;
+                      "
+                    >
+                      <span style="white-space: nowrap">6</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style="
+                        padding: 7px 12px 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        vertical-align: top;
+                      "
+                    >
+                      1C Gate-Ablation H_A
+                    </td>
+                    <td
+                      style="
+                        padding: 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        text-align: right;
+                        font-variant-numeric: tabular-nums;
+                        vertical-align: top;
+                      "
+                    >
+                      <span style="white-space: nowrap">2</span>
+                    </td>
+                  </tr>
+                </table>
+                <p class="nw-notiz">ADRs: 35 (1B: 13, 1C: 22)</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="folie-fuss">
+          <span class="fuss-nr">Reserve R17</span> · Quelle: Weirauch, 2026, Ordner
+          docs/referat-thema-1, Datei nachweisumfang.md; Schneider, 2026, Ordner evidenz/1A und
+          evidenz/1B
+        </div>
+      </section>
+      <section
+        class="folie"
         data-id="RN1"
         data-teil="reserve"
         data-autor="niklas"
@@ -8785,18 +9365,23 @@
             </button>
           </li>
           <li>
+            <button type="button" data-ziel="R17">
+              <span class="mono">11</span> Was hinter den Belegen steht
+            </button>
+          </li>
+          <li>
             <button type="button" data-ziel="RN1">
-              <span class="mono">11</span> Die Regel schlägt auch ohne Wirkung an
+              <span class="mono">12</span> Die Regel schlägt auch ohne Wirkung an
             </button>
           </li>
           <li>
             <button type="button" data-ziel="RN2">
-              <span class="mono">12</span> Was die Messung nicht zeigt
+              <span class="mono">13</span> Was die Messung nicht zeigt
             </button>
           </li>
           <li>
             <button type="button" data-ziel="RN4">
-              <span class="mono">13</span> spaCy bleibt im Budget, bis CPU fehlt
+              <span class="mono">14</span> spaCy bleibt im Budget, bis CPU fehlt
             </button>
           </li>
         </ol>
