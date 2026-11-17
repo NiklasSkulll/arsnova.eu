@@ -48,14 +48,12 @@ const GEWERTET_1C = [
   '2026-11-05-labor-pc.json.gz',
   '2026-11-09-labor-nachlauf.json.gz',
 ];
-/** Niklas' 1B-Reihen 3–4: Rohdaten auf HEAD, Protokolle nur auf seinem Zweig. */
-const REIHEN_1B_3U4 = [
-  '2026-11-15-lauf-normal-summary.json.gz',
-  '2026-11-15-lauf-f1-summary.json.gz',
-  '2026-11-16-lauf-f2-summary.json.gz',
-  '2026-11-16-lauf-l3-summary.json.gz',
-  '2026-11-16-lauf-busy-summary.json.gz',
-];
+/**
+ * Niklas' 1B-Läufe Schritte 3–4 (gewertet, ohne `dev-`): Störreihen Summary und Label samt Teilläufen,
+ * gerichtete Breaker-Folgen und S1; Protokolle und Autorenprüfung (16.11.) liegen seit dem Merge von PR #26.
+ */
+const REIHE_1B_3U4 =
+  /^2026-11-1[56]-lauf-(?!dev-)[a-z0-9-]+-(summary|label)(-\d{2})?\.json(\.gz)?$/;
 
 /** Quelle je Hypothesengruppe: Datei und Muster der definierenden Stelle. */
 const HYPOTHESEN = [
@@ -65,6 +63,7 @@ const HYPOTHESEN = [
     datei: 'specs/2026-11-12-1b-zwei-host-design.md',
     muster: /\*\*(H_[BC]\d)(?: kalt)?:\*\*/g,
   },
+  { gruppe: '1B 3–4', datei: '1B-3u4-Planung.md', muster: /^\| (H[A-Za-z0-9-]*) +\|/gm },
   { gruppe: '1C-E', datei: 'specs/2026-10-24-1c-teil2-design.md', muster: /^\| (E\d+[a-z]?) /gm },
   { gruppe: '1C-E', datei: 'specs/2026-10-24-1c-teil3-design.md', muster: /^\| (E\d+[a-z]?) /gm },
   { gruppe: '1C-M', datei: 'specs/2026-10-24-1c-teil2-design.md', muster: /^\| (M\d) /gm },
@@ -152,10 +151,17 @@ export function laborzeit(root = REFERAT) {
   const a = laufzeit1A(root);
   const b = GEWERTET_1B.map((d) => laufzeit1B(root, d));
   const c = GEWERTET_1C.map((d) => laufzeit1C(root, d));
-  const n = REIHEN_1B_3U4.map((d) => laufzeit1B(root, d));
-  const je = { '1A': a.sek, '1B': summe(b.map((x) => x.sek)), '1C': summe(c.map((x) => x.sek)) };
+  const n = readdirSync(join(root, MESSUNG_1B))
+    .filter((d) => REIHE_1B_3U4.test(d))
+    .map((d) => laufzeit1B(root, d));
+  const je = {
+    '1A': a.sek,
+    '1B': summe(b.map((x) => x.sek)),
+    '1B 3–4': summe(n.map((x) => x.sek)),
+    '1C': summe(c.map((x) => x.sek)),
+  };
   return {
-    gewertetSek: je['1A'] + je['1B'] + je['1C'],
+    gewertetSek: summe(Object.values(je)),
     je,
     laeufe1A: a.laeufe,
     vollstaendig1A: a.vollstaendig,
@@ -163,7 +169,7 @@ export function laborzeit(root = REFERAT) {
     laeufe1C: c.length,
     reihen1B3u4: {
       sek: summe(n.map((x) => x.sek)),
-      reihen: n.length,
+      laeufe: n.length,
       auftraege: summe(n.map((x) => x.auftraege)),
     },
   };
@@ -281,6 +287,7 @@ export function tabellenwerte(werte = berechneNachweisumfang()) {
     'Gewertete Laborzeit': `**${k.laborzeitStunden}** (${k.laborzeit}, ${zahl(Math.round(l.gewertetSek))} s)`,
     'davon 1A Ressourcenisolation': `${dauer(l.je['1A'])} (${l.laeufe1A} Läufe, ${l.vollstaendig1A} vollständig)`,
     'davon 1B Schritte 1–2': `${dauer(l.je['1B'])} (${l.auftraege1B} Aufträge)`,
+    'davon 1B Schritte 3–4': `${dauer(l.je['1B 3–4'])} (${l.reihen1B3u4.laeufe} Läufe, ${l.reihen1B3u4.auftraege} Aufträge)`,
     'davon 1C Laborläufe': `${dauer(l.je['1C'])} (${l.laeufe1C} Läufe)`,
     'Automatisierte Tests': `**${k.tests}**`,
     ADRs: `**${k.adrs}** (1B: ${a['1B']}, 1C: ${a['1C']})`,
@@ -291,12 +298,12 @@ export function tabellenwerte(werte = berechneNachweisumfang()) {
     'Backend 1C': `${g.backend.tests} (${g.backend.neueDateien} neue Dateien, netto ${g.backend.nettoInGeaenderten >= 0 ? '+' : '−'}${Math.abs(g.backend.nettoInGeaenderten)} in geänderten)`,
     '1A (Experimentvertrag)': String(h.je['1A']),
     '1B Schritte 1–2': String(h.je['1B']),
+    '1B Schritte 3–4': String(h.je['1B 3–4']),
     '1C Einzeltests E': String(h.je['1C-E']),
     '1C Messungen M': String(h.je['1C-M']),
     '1C Labor L': String(h.je['1C-L']),
     '1C Nachlauf N': String(h.je['1C-N']),
     '1C Gate-Ablation H_A': String(h.je['1C-H_A']),
-    '1B Schritte 3–4 (Rohdaten)': `${dauer(l.reihen1B3u4.sek)} (${l.reihen1B3u4.reihen} Reihen, ${l.reihen1B3u4.auftraege} Aufträge)`,
   };
 }
 

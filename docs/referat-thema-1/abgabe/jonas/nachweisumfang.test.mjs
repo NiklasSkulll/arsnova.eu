@@ -36,7 +36,9 @@ test('nachweisumfang.md stimmt mit der Neuberechnung auf dem Checkout überein',
 
 test('Teilsummen der Laborzeit ergeben die gewertete Laborzeit', () => {
   const { gewertetSek, je } = werte.laborzeit;
-  assert.ok(Math.abs(je['1A'] + je['1B'] + je['1C'] - gewertetSek) < 1e-6);
+  assert.ok(Math.abs(je['1A'] + je['1B'] + je['1B 3–4'] + je['1C'] - gewertetSek) < 1e-6);
+  // 1B 3–4: 18 gewertete Läufe (Summary 5, Label 9 mit Teilläufen, Breaker 2, S1 2), keine dev-Läufe
+  assert.equal(werte.laborzeit.reihen1B3u4.laeufe, 18);
   assert.equal(werte.laborzeit.laeufe1A, werte.laborzeit.vollstaendig1A);
 });
 
