@@ -278,6 +278,31 @@ export function tests() {
   return { ohneAbgabe, gesamt: ohneAbgabe + gruppen.abgabe.tests, gruppen };
 }
 
+/** Stand vor dem Löschen alter 1A-Nachweise (Commit ab1619e7, 15.11.2026, „alte A1-Nachweise entfernen“) */
+const VOR_LOESCHUNG_1A = 'ab1619e7^';
+
+/**
+ * 1A-Läufe aus der Git-Historie: je `V<n>/block-<n>/lauf.json` direkt unter `ordner` (Unterordner wie `vorlauf/`
+ * zählen getrennt) warmup.manifest.startAt bis report.json → timestamp, wie die gewertete Reihe.
+ */
+function laufzeit1AGit(ordner) {
+  const basis = `docs/referat-thema-1/${ordner}`;
+  const muster = new RegExp(`^${basis.replace(/[.^$]/g, '\\$&')}/V\\d/block-\\d+/lauf\\.json$`);
+  const laeufe = zeilen(git('ls-tree', '-r', '--name-only', VOR_LOESCHUNG_1A, '--', basis)).filter(
+    (p) => muster.test(p),
+  );
+  let sekunden = 0;
+  for (const p of laeufe) {
+    const lauf = JSON.parse(git('show', `${VOR_LOESCHUNG_1A}:${p}`));
+    const report = JSON.parse(
+      git('show', `${VOR_LOESCHUNG_1A}:${p.replace(/lauf\.json$/, 'report.json')}`),
+    );
+    // Abgebrochene Läufe haben kein warmup; dann gilt der Start der Messung (manifest.startAt)
+    sekunden += sek(lauf.warmup?.manifest?.startAt ?? lauf.manifest.startAt, report.timestamp);
+  }
+  return { sek: sekunden, laeufe: laeufe.length };
+}
+
 /** VM-Starts und -Enden aus dem Systemjournal (systemd-machined), Protokoll evidenz/1B/2026-11-17-vm-laufzeiten.md */
 const VM_CSV = 'evidenz/1B/messung/2026-11-17-vm-laufzeiten.csv';
 
@@ -294,6 +319,43 @@ export const FENSTER = [
     was: 'Vorlauf',
     datei: `${REIHE_1A}/vorabnachtrag.md`,
     vorlauf1A: `${REIHE_1A}/vorlauf`,
+  },
+  // 1A: in ab1619e7 gelöschte Läufe (README: „Frühere Fassungen sind über Git erreichbar“). `vorlauf/` und
+  // `reihe-2026-11-12/vorlauf/` tragen dieselben Zeitstempel; gezählt wird nur `vorlauf/`.
+  {
+    auftrag: '1A',
+    was: 'Reihe 12.11., alte Baseline (gelöscht)',
+    datei: 'evidenz/1A/README.md',
+    belege: ['Frühere Fassungen sind über Git erreichbar'],
+    git1A: 'evidenz/1A/reihe-2026-11-12',
+  },
+  {
+    auftrag: '1A',
+    was: 'Vorlauf 11.11. (gelöscht)',
+    datei: 'evidenz/1A/README.md',
+    belege: ['Frühere Fassungen sind über Git erreichbar'],
+    git1A: 'evidenz/1A/vorlauf',
+  },
+  {
+    auftrag: '1A',
+    was: 'Läufe 11.11. (gelöscht)',
+    datei: 'evidenz/1A/README.md',
+    belege: ['Frühere Fassungen sind über Git erreichbar'],
+    git1A: 'evidenz/1A',
+  },
+  {
+    auftrag: '1A',
+    was: 'Vorlauf 14.11. (gelöscht)',
+    datei: 'evidenz/1A/README.md',
+    belege: ['Frühere Fassungen sind über Git erreichbar'],
+    git1A: 'evidenz/1A/reihe-main-a19ca70f-20261114-154617/vorlauf',
+  },
+  {
+    auftrag: '1A',
+    was: 'abgebrochener Lauf 14.11. (gelöscht)',
+    datei: 'evidenz/1A/README.md',
+    belege: ['Frühere Fassungen sind über Git erreichbar'],
+    git1A: 'evidenz/1A/reihe-main-a19ca70f-20261114-154617',
   },
   // 1B Schritte 3–4 (Niklas, Windows-Rechner)
   {
@@ -543,11 +605,13 @@ export function vorarbeit(root = REFERAT) {
   const vm = vmLaufzeit(root, gewertet);
   const fenster = FENSTER.map((f) => {
     let sek;
-    if (f.vorlauf1A) sek = laufzeit1A(root, f.vorlauf1A).sek;
+    let laeufe = 1;
+    if (f.git1A) ({ sek, laeufe } = laufzeit1AGit(f.git1A));
+    else if (f.vorlauf1A) ({ sek, laeufe } = laufzeit1A(root, f.vorlauf1A));
     else if (f.json1C) sek = laufzeit1C(root, f.json1C).sek;
     else if (f.min !== undefined) sek = f.min * 60;
     else sek = (uhr(f.bis) - uhr(f.von) + 86400) % 86400;
-    return { ...f, sek };
+    return { ...f, sek, laeufe };
   });
   const je = { '1A': 0, '1B': vm.alleSek - vm.gewertetDarinSek, '1B 3–4': 0, '1C': 0 };
   for (const f of fenster) je[f.auftrag] += f.sek;
@@ -620,7 +684,7 @@ export function tabellenwerte(werte = berechneNachweisumfang()) {
     'davon 1C Laborläufe': `${dauer(l.je['1C'])} (${l.laeufe1C} Läufe)`,
     'Zeitraum der gewerteten Läufe': k.zeitraum,
     'Aufbau, Tests und weitere Läufe': `**${k.vorarbeitStunden}** (${dauer(v.gesamtSek)}, ${zahl(Math.round(v.gesamtSek))} s)`,
-    'zusätzlich 1A Ressourcenisolation': `${dauer(v.je['1A'])} (Vorlauf)`,
+    'zusätzlich 1A Ressourcenisolation': `${dauer(v.je['1A'])} (Vorlauf; ${summe(v.fenster.filter((f) => f.git1A).map((f) => f.laeufe))} gelöschte Läufe aus Git)`,
     'zusätzlich 1B Schritte 1–2': `${dauer(v.je['1B'])} (${v.vm.starts} VM-Starts, davon ${v.vm.startsWindows} Windows)`,
     'zusätzlich 1B Schritte 3–4': `${dauer(v.je['1B 3–4'])} (${v.fenster.filter((f) => f.auftrag === '1B 3–4').length} Zeitfenster)`,
     'zusätzlich 1C Laborläufe': `${dauer(v.je['1C'])} (${v.fenster.filter((f) => f.auftrag === '1C').length} Zeitfenster)`,

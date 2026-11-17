@@ -112,7 +112,13 @@ test('Vorarbeit aus Protokollen: jeder Beleg steht wörtlich in seiner Datei', (
 
 test('Vorarbeit je Auftrag', () => {
   const { je } = vorarbeit();
-  assert.equal(dauer(je['1A']), '6 min'); // Vorlauf der gewerteten Reihe, je Lauf wie die gewertete Zeit
+  // Vorlauf der gewerteten Reihe plus die in ab1619e7 gelöschten Läufe (Git-Historie), je Lauf gezählt
+  const a1 = vorarbeit().fenster.filter((f) => f.auftrag === '1A');
+  assert.deepEqual(
+    a1.map((f) => f.laeufe),
+    [5, 25, 5, 7, 5, 1],
+  );
+  assert.ok(je['1A'] > 3 * 3600 && je['1A'] < 4 * 3600, dauer(je['1A']));
   assert.equal(dauer(je['1B 3–4']), '1 h 19 min');
   assert.equal(dauer(je['1B']), '23 h 19 min'); // VM-Laufzeit ohne die 55 min gewerteter Läufe // Aufbau Windows, Entwicklungsläufe, Kalibrierung, Abbau
   assert.equal(dauer(je['1C']), '1 h 11 min'); // Kalibrierung PC, U1, Messungen Teil 2/3, Probe- und Trockenläufe

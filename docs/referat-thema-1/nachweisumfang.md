@@ -19,13 +19,13 @@ cd docs/referat-thema-1/abgabe/jonas && node --test nachweisumfang.test.mjs
 
 Nur Werte, deren Rohdaten und Protokolle beide auf diesem Stand liegen.
 
-| Kennzahl                                   | Wert                               | Quelle                                                                                                                |
-| ------------------------------------------ | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Gewertete Laborzeit                        | **20,3 h** (20 h 21 min, 73.235 s) | Abschnitt [Laborzeit](#laborzeit)                                                                                     |
-| Aufbau, Tests und weitere Läufe            | **25,9 h** (25 h 55 min, 93.295 s) | Abschnitt [Aufbau, Tests und weitere Läufe](#aufbau-tests-und-weitere-läufe); Rechnerzeit, getrennt von der Laborzeit |
-| Automatisierte Tests                       | **326**                            | Abschnitt [Tests](#tests); ohne die Tests des Abgabe-Builds                                                           |
-| ADRs                                       | **35** (1B: 13, 1C: 22)            | `ls adr/1[BC]-*.md`; 1A hat statt ADRs einen Experimentvertrag                                                        |
-| Vorab festgelegte Hypothesen und Kriterien | **50**                             | Abschnitt [Hypothesen](#hypothesen-und-kriterien)                                                                     |
+| Kennzahl                                   | Wert                                | Quelle                                                                                                                |
+| ------------------------------------------ | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Gewertete Laborzeit                        | **20,3 h** (20 h 21 min, 73.235 s)  | Abschnitt [Laborzeit](#laborzeit)                                                                                     |
+| Aufbau, Tests und weitere Läufe            | **29,3 h** (29 h 15 min, 105.311 s) | Abschnitt [Aufbau, Tests und weitere Läufe](#aufbau-tests-und-weitere-läufe); Rechnerzeit, getrennt von der Laborzeit |
+| Automatisierte Tests                       | **326**                             | Abschnitt [Tests](#tests); ohne die Tests des Abgabe-Builds                                                           |
+| ADRs                                       | **35** (1B: 13, 1C: 22)             | `ls adr/1[BC]-*.md`; 1A hat statt ADRs einen Experimentvertrag                                                        |
+| Vorab festgelegte Hypothesen und Kriterien | **50**                              | Abschnitt [Hypothesen](#hypothesen-und-kriterien)                                                                     |
 
 ## Laborzeit
 
@@ -54,17 +54,17 @@ addiert: Aufbau und Neuaufbau der Labore, Windows-/Hyper-V-Versuche, Entwicklung
 Kalibrierung, Ursachenversuch, Messungen außerhalb der Laborläufe, Abbau. Keine Arbeitszeit; Planung, Code,
 Tests und Dokumentation ohne laufendes Labor fehlen.
 
-| Kennzahl                          | Wert                                         | Quelle                                                                                                                                                  |
-| --------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| zusätzlich 1A Ressourcenisolation | 6 min (Vorlauf)                              | `evidenz/1A/reihe-main-a19ca70f-20261115-122547/vorlauf/`, gezählt wie die gewerteten Läufe                                                             |
-| zusätzlich 1B Schritte 1–2        | 23 h 19 min (29 VM-Starts, davon 11 Windows) | VM-Laufzeit aus dem Systemjournal ohne die gewerteten Läufe: [`evidenz/1B/2026-11-17-vm-laufzeiten.md`](evidenz/1B/2026-11-17-vm-laufzeiten.md)         |
-| zusätzlich 1B Schritte 3–4        | 1 h 19 min (14 Zeitfenster)                  | Uhrzeiten in den Protokollen `evidenz/1B/2026-11-1{5,6}-*` (Aufbau unter Windows, Entwicklungsläufe, Kalibrierung, Abbau)                               |
-| zusätzlich 1C Laborläufe          | 1 h 11 min (10 Zeitfenster)                  | Uhrzeiten in `evidenz/1C/2026-11-05-labor-pc.md`, `2026-10-24-teil2.md`, `-teil3.md`; Probe- und Trockenläufe aus `environment.startedAt` bis `endedAt` |
+| Kennzahl                          | Wert                                             | Quelle                                                                                                                                                                                                                          |
+| --------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| zusätzlich 1A Ressourcenisolation | 3 h 26 min (Vorlauf; 43 gelöschte Läufe aus Git) | Vorlauf der gewerteten Reihe; dazu die in `ab1619e7` (15.11.) gelöschten Reihen und Anläufe, gelesen aus `ab1619e7^` (`evidenz/1A/README.md`: „Frühere Fassungen sind über Git erreichbar“), je Lauf gezählt wie die gewerteten |
+| zusätzlich 1B Schritte 1–2        | 23 h 19 min (29 VM-Starts, davon 11 Windows)     | VM-Laufzeit aus dem Systemjournal ohne die gewerteten Läufe: [`evidenz/1B/2026-11-17-vm-laufzeiten.md`](evidenz/1B/2026-11-17-vm-laufzeiten.md)                                                                                 |
+| zusätzlich 1B Schritte 3–4        | 1 h 19 min (14 Zeitfenster)                      | Uhrzeiten in den Protokollen `evidenz/1B/2026-11-1{5,6}-*` (Aufbau unter Windows, Entwicklungsläufe, Kalibrierung, Abbau)                                                                                                       |
+| zusätzlich 1C Laborläufe          | 1 h 11 min (10 Zeitfenster)                      | Uhrzeiten in `evidenz/1C/2026-11-05-labor-pc.md`, `2026-10-24-teil2.md`, `-teil3.md`; Probe- und Trockenläufe aus `environment.startedAt` bis `endedAt`                                                                         |
 
 Jedes Zeitfenster steht mit Datei und wörtlichem Beleg in `FENSTER` in
 [`abgabe/jonas/nachweisumfang.mjs`](abgabe/jonas/nachweisumfang.mjs); der Test prüft, dass jeder Beleg in seiner
 Datei steht. Nur Fenster mit Anfang und Ende (oder einer Dauer) zählen. Nicht gezählt: Windows-Versuche 4 und 5
-ohne Uhrzeit (im VM-Journal enthalten), Entwicklungsläufe 1B 3–4 mit nur einer Startzeit, Daten, die nur noch in der Git-Historie liegen (gelöschte 1A-Vorreihen). Für Niklas'
+ohne Uhrzeit (im VM-Journal enthalten), Entwicklungsläufe 1B 3–4 mit nur einer Startzeit, der doppelte Vorlauf `reihe-2026-11-12/vorlauf/` (gleiche Zeitstempel wie `vorlauf/`). Für Niklas'
 Windows-Rechner gibt es kein Journal im Repo; seine PR nennt für Entwicklungs- und Diagnoseproben rund 1 h 20 min.
 
 ## Tests
