@@ -6,8 +6,8 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-/** Ordner der Heftseiten, relativ zu docs/referat-thema-1 */
-export const HEFT_ORDNER = 'abgabe/sprechheft';
+/** Ordner der Heftseiten, relativ zu docs/referat-thema-1; privat (eigenes Repo, von Git ignoriert) */
+export const HEFT_ORDNER = 'privat/sprechheft';
 export const ABSCHNITTE = ['Verstehen', 'Begriffe', 'Fragen', 'Übergang'];
 
 const esc = (s) =>

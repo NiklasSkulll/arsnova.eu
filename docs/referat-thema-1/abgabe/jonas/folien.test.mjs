@@ -2,7 +2,7 @@
 // „keine Zahl, die nicht aus den Daten stammt“.
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -848,8 +848,11 @@ test('R3-Minor: geprüfte Antworten, App-Überschrift im Nachbau, Ausnahmen in G
 test('R4-I1: Früherer OOM ohne Kausalaussage „weil mehr Tokens“ (ADR 1C-024: nicht getrennt gemessen)', () => {
   const kausal = /weil[^.]*mehr Tokens|\(mehr Tokens/;
   for (const f of F) assert.ok(!kausal.test(alles(f)), f.id);
-  const katalog = readFileSync(resolve(ROOT, 'abgabe/jonas/fragenkatalog.md'), 'utf8');
-  assert.ok(!kausal.test(katalog), 'Fragenkatalog');
+  // Fragenkatalog liegt privat (privat/, eigenes Repo); fehlt er, entfällt diese Teilprüfung
+  const katalogPfad = resolve(ROOT, 'privat/fragenkatalog.md');
+  if (existsSync(katalogPfad)) {
+    assert.ok(!kausal.test(readFileSync(katalogPfad, 'utf8')), 'Fragenkatalog');
+  }
   assert.match(sichtbar(nach('J11').inhalt), /nicht getrennt gemessen/);
 });
 

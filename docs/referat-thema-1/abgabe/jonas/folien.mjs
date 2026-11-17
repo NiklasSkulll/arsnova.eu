@@ -287,7 +287,7 @@ export const FESTWERTE = {
   sloEndstatusProzent: {
     wert: 95,
     text: 'SLO-Vorschlag: Anteil der Aufträge mit Endstatus nach dem Labor-Timeout, % (Vorschlag, nicht gemessen)',
-    quelle: 'abgabe/jonas/fragenkatalog.md',
+    quelle: '1B-ergebnis.md',
     beleg: '„95 % der Aufträge haben nach 300 s einen Endstatus“',
   },
   // Ergänzt 2026-11-16 (Kontextfolie GK): Auslegung der App laut Repo-Regeln am gemessenen Stand

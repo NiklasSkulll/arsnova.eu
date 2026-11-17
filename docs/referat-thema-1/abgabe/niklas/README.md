@@ -1,8 +1,8 @@
 # Niklas' Folien im gemeinsamen Deck
 
-Niklas' Teil (1A, 1B Schritte 3–4) als native Folien im Stil des gemeinsamen Decks. Das abgestimmte Deck,
-Niklas' Folien-PDF und seine Sprechnotizen baut [`jonas/bau.mjs`](../jonas/README.md) nach
-`jonas/ausgabe/` (`niklas-folien.pdf`, `sprechnotizen-niklas.md`); der Rückfallweg mit eingebetteten
+Niklas' Teil (1A, 1B Schritte 3–4) als native Folien im Stil des gemeinsamen Decks. Das abgestimmte Deck und
+Niklas' Folien-PDF baut [`jonas/bau.mjs`](../jonas/README.md) nach
+`jonas/ausgabe/` (`niklas-folien.pdf`); der Rückfallweg mit eingebetteten
 PDF-Seiten bleibt `--niklas1 <pdf>`.
 
 - **1A (N1–N10 ohne N8; Literatur NL im Anhang; Reserve RN1 Regelempfindlichkeit, RN2 Grenzen, RN4 Ressourcen):**
@@ -17,16 +17,11 @@ PDF-Seiten bleibt `--niklas1 <pdf>`.
   [`daten-1b34.mjs`](daten-1b34.mjs). Quelle sind alle gewerteten Reihen unter `evidenz/1B/messung/`
   (Summary und Label samt Teilläufen, Breaker-Folgen, S1, Transportauswertung); Gegenprobe gegen die Protokolle in
   [`daten-1b34.test.mjs`](daten-1b34.test.mjs), zitierte Codezeilen prüft `folien-niklas.test.mjs`. Fehlen Daten,
-  steht eine Platzhalterfolie, die `abgabe-lokal.mjs` vor der Abgabe meldet. Offene Punkte für Niklas:
-  [`HINWEISE-1B34.md`](HINWEISE-1B34.md).
+  steht eine Platzhalterfolie, die `abgabe-lokal.mjs` vor der Abgabe meldet.
 - **Reihenfolge und Zeit (_Ergänzt 2026-11-16_, _aktualisiert 2026-11-17_):** Niklas eröffnet (GT Titel, G0
   Fahrplan, GK Systembild, N1–N10), übergibt auf N10 an Jonas („Was, wenn wir die schwere Arbeit auslagern?“),
   übernimmt nach J15 mit M1–M4 und spricht G9 und GD. 15 min Redezeit je Person samt Rahmen, Fragen kommen hinzu;
   Niklas plant 14:25 min.
-- **Diskussion:** [`fragenkatalog-1a.md`](fragenkatalog-1a.md) (Übung, nicht Teil der Abgabe).
-- **Sprechheft (_Ergänzt 2026-11-17_):** eine Seite je Folie mit Vortrag, Verstehen, Begriffen und Fragen in
-  `jonas/ausgabe/sprechheft-niklas.html`, im Deck Taste `n` (Referentenansicht); Inhalte in
-  [`../sprechheft/`](../sprechheft/).
 - **Sprechnotizen:** je Folie `notiz` (Fließtext) und `stichpunkte` (zum freien Vortrag); `[Weiter]` markiert
   jeden Tastendruck einer Aufbaustufe (GK: drei; N6: drei, Stufe 0 zeigt nur Umrisse; N7: zwei; N9: zwei wie M1, je Variante; N10: Diskussion, dann Übergabe; G9: „Gemeinsam“ zuletzt; M1: drei, je
   Störung eine Stufe; M2: Stopp, dann Zu spät; M3: Summary, dann

@@ -31,13 +31,7 @@ import { parseArgs } from 'node:util';
 import { baueDeck } from './deck.mjs';
 import { DIAGRAMME, FESTWERTE, NACHWEIS, folien, ladeFolienDaten } from './folien.mjs';
 import { niklasSeiten } from './niklas-seiten.mjs';
-import {
-  HEFT_ORDNER,
-  baueHeftHtml,
-  baueReferentHtml,
-  heftEintraege,
-  ladeHeft,
-} from './sprechheft.mjs';
+import { baueHeftHtml, baueReferentHtml, heftEintraege, ladeHeft } from './sprechheft.mjs';
 import { eingabenNiklas, niklasTeile } from '../niklas/teile.mjs';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
@@ -384,9 +378,15 @@ async function main() {
       'niklas1-stand': { type: 'string' },
       'niklas2-stand': { type: 'string' },
       ausgabe: { type: 'string' },
+      privat: { type: 'string' },
     },
   });
   const ausgabe = resolve(o.ausgabe ?? STANDARD_AUSGABE);
+  // Private Ausgaben (Vortragsdeck mit Referentenansicht, Notizen, Karten, Hefte) nicht ins öffentliche Repo:
+  // standardmäßig in den von Git ignorierten Ordner privat/ausgabe, bei --ausgabe daneben unter privat/.
+  const privatAusgabe = resolve(
+    o.privat ?? (o.ausgabe ? join(ausgabe, 'privat') : join(ROOT, 'privat', 'ausgabe')),
+  );
   const { chromium } = ladeAbhaengigkeit('playwright');
   ladeAbhaengigkeit('pdf-parse');
   const { format, resolveConfig } = ladeAbhaengigkeit('prettier');
@@ -420,8 +420,6 @@ async function main() {
     ...alleDateien(join(HIER, 'schriften')),
     ...(mitClip ? [clip, clipJson, standbild] : []),
     ...eingabenNiklas(ROOT),
-    // Sprechheft: Verstehen, Begriffe, Fragen, Übergang je Folie
-    ...(existsSync(join(ROOT, HEFT_ORDNER)) ? alleDateien(join(ROOT, HEFT_ORDNER)) : []),
   ];
   const fehlend = festeEingaben.filter((p) => !existsSync(p));
   if (fehlend.length) {
@@ -453,11 +451,16 @@ async function main() {
     const ersteReserve = listeNiklas.findIndex((f) => f.teil === 'reserve');
     listeNiklas.splice(ersteReserve < 0 ? listeNiklas.length : ersteReserve, 0, ...anhangNiklas);
     const heftNiklas = heftEintraege(listeNiklas, heft);
-    const rohHtml = baueDeck(alle, {
-      referent: baueReferentHtml([...heftNiklas, ...heftJonas]),
+    const deckOptionen = {
       niklas,
       ...(mitClip ? { clip, clipInfo: JSON.parse(readFileSync(clipJson, 'utf8')), standbild } : {}),
       eingebettet: true,
+    };
+    // Öffentliches Deck ohne Sprechheft; das Vortragsdeck (privat) trägt die Referentenansicht (Taste n).
+    const rohHtml = baueDeck(alle, deckOptionen);
+    const rohVortrag = baueDeck(alle, {
+      ...deckOptionen,
+      referent: baueReferentHtml([...heftNiklas, ...heftJonas]),
     });
     // Wie der Pre-commit-Hook formatieren, bevor gehasht wird, damit das Manifest stimmen bleibt.
     const html = await format(rohHtml, { ...formatierung, parser: 'html' });
@@ -466,6 +469,8 @@ async function main() {
     rmSync(join(ausgabe, 'manifest.json'), { force: true });
     const deckPfad = join(ausgabe, 'jonas-deck.html');
     writeFileSync(deckPfad, html);
+    mkdirSync(privatAusgabe, { recursive: true });
+    writeFileSync(join(privatAusgabe, 'vortrag-deck.html'), rohVortrag);
 
     const browser = await chromium.launch();
     try {
@@ -509,7 +514,7 @@ async function main() {
         try {
           await seite.setContent(baueSprechkarten(liste, { person, schriften, pause }));
           await seite.evaluate(() => document.fonts.ready);
-          await seite.pdf({ path: join(ausgabe, datei), preferCSSPageSize: true });
+          await seite.pdf({ path: join(privatAusgabe, datei), preferCSSPageSize: true });
         } finally {
           await seite.close();
         }
@@ -519,11 +524,11 @@ async function main() {
     }
 
     writeFileSync(
-      join(ausgabe, 'sprechnotizen.md'),
+      join(privatAusgabe, 'sprechnotizen.md'),
       await format(baueSprechnotizen(folienJonas(alle)), { ...formatierung, parser: 'markdown' }),
     );
     writeFileSync(
-      join(ausgabe, 'sprechnotizen-niklas.md'),
+      join(privatAusgabe, 'sprechnotizen-niklas.md'),
       await format(
         baueSprechnotizen(folienNiklas(alle, niklas), {
           person: 'Niklas',
@@ -543,7 +548,7 @@ async function main() {
       ['sprechheft-niklas.html', 'Niklas', heftNiklas],
     ]) {
       writeFileSync(
-        join(ausgabe, datei),
+        join(privatAusgabe, datei),
         await format(baueHeftHtml(eintraege, { person, stand }), {
           ...formatierung,
           parser: 'html',
@@ -571,12 +576,6 @@ async function main() {
       'gemeinsames-deck.pdf',
       'jonas-folien.pdf',
       'niklas-folien.pdf',
-      'sprechnotizen.md',
-      'sprechnotizen-niklas.md',
-      'sprechkarten-jonas.pdf',
-      'sprechkarten-niklas.pdf',
-      'sprechheft-jonas.html',
-      'sprechheft-niklas.html',
     ]) {
       const p = join(ausgabe, datei);
       const daten_ = readFileSync(p);
@@ -622,6 +621,9 @@ async function main() {
       );
     }
     console.log(`Ausgabe: ${ausgabe}; Handout: PaperLab (./paperlab check|final)`);
+    console.log(
+      `Privat (nicht im Repo): ${privatAusgabe} (vortrag-deck.html mit Taste n, Sprechhefte, Notizen, Karten)`,
+    );
   } finally {
     rmSync(arbeit, { recursive: true, force: true });
   }

@@ -38,6 +38,10 @@ const AUSGABEN = [
   'gemeinsames-deck.pdf',
   'jonas-folien.pdf',
   'niklas-folien.pdf',
+];
+// Private Ausgaben (nicht im Repo, nicht im Manifest): bei --ausgabe unter <ausgabe>/privat
+const PRIVAT = [
+  'vortrag-deck.html',
   'sprechnotizen.md',
   'sprechnotizen-niklas.md',
   'sprechkarten-jonas.pdf',
@@ -80,7 +84,7 @@ before(() => {
 after(() => rmSync(wurzel, { recursive: true, force: true }));
 
 test('alle Ausgaben und das Manifest existieren und sind nicht leer', () => {
-  for (const name of [...AUSGABEN, 'manifest.json']) {
+  for (const name of [...AUSGABEN, 'manifest.json', ...PRIVAT.map((n) => join('privat', n))]) {
     const p = join(platzhalter, name);
     assert.ok(existsSync(p), name);
     assert.ok(statSync(p).size > 500, `${name} zu klein`);
@@ -143,6 +147,14 @@ test('jonas-folien.pdf: Titel, J1–J16 plus Reserve, eine Seite je Folie, 1600 
   assert.match(roh, /\/MediaBox\s*\[\s*0\s+0\s+1200(\.\d+)?\s+675(\.\d+)?\s*\]/);
 });
 
+test('öffentliches Deck ohne Sprechheft; Vortragsdeck mit Referentenansicht nur privat', () => {
+  const offen = readFileSync(join(platzhalter, 'jonas-deck.html'), 'utf8');
+  assert.doesNotMatch(offen, /"referent"\s*:/);
+  assert.doesNotMatch(offen, /r-daten|details class=\\?"frage/);
+  const vortrag = readFileSync(join(platzhalter, 'privat', 'vortrag-deck.html'), 'utf8');
+  assert.match(vortrag, /"referent"\s*:/);
+});
+
 test('jonas-deck.html ist selbstständig (kein http(s), kein externes Skript)', () => {
   // URLs nur als Text im Literaturverzeichnis (J16, zwischen den Quellen-Marken), keine externen Ressourcen.
   const h = readFileSync(join(platzhalter, 'jonas-deck.html'), 'utf8').replace(
@@ -154,7 +166,7 @@ test('jonas-deck.html ist selbstständig (kein http(s), kein externes Skript)', 
 });
 
 test('sprechnotizen.md: Summen und Folien stimmen mit folien.mjs überein (ohne Rahmen, den Niklas spricht)', () => {
-  const md = readFileSync(join(platzhalter, 'sprechnotizen.md'), 'utf8');
+  const md = readFileSync(join(platzhalter, 'privat', 'sprechnotizen.md'), 'utf8');
   const haupt = F.filter((f) => f.teil !== 'reserve' && f.sprecher !== 'niklas');
   for (const id of ['GT', 'G0', 'G9', 'GD']) {
     assert.ok(!md.includes(`## ${id} `), `${id} steht in Niklas’ Notizen`);
@@ -184,8 +196,8 @@ test('generierte Textausgaben sind Prettier-formatiert (Pre-commit würde sie so
   const konfig = (await resolveConfig(resolve(ROOT, '../../package.json'))) ?? {};
   for (const name of [
     'jonas-deck.html',
-    'sprechnotizen.md',
-    'sprechnotizen-niklas.md',
+    'privat/sprechnotizen.md',
+    'privat/sprechnotizen-niklas.md',
     'manifest.json',
   ]) {
     const text = readFileSync(join(platzhalter, name), 'utf8');
@@ -204,7 +216,7 @@ test('--abgabe gibt es nicht mehr: das Handout mit Matrikel entsteht in PaperLab
 
 test('fehlgeschlagener Bau hinterlässt kein altes Manifest', () => {
   const aus = join(wurzel, 'stale');
-  mkdirSync(join(aus, 'sprechnotizen.md'), { recursive: true }); // Schreiben schlägt fehl
+  mkdirSync(join(aus, 'privat', 'sprechnotizen.md'), { recursive: true }); // Schreiben schlägt fehl
   writeFileSync(join(aus, 'manifest.json'), '{"alt":true}');
   const r = bau(['--ausgabe', aus], { HOME: home });
   assert.notEqual(r.status, 0);
@@ -274,7 +286,7 @@ test('Sprechnotizen: Sprungplan zu J13 und J15 bei Abbruch (Prüfung 3, I5)', as
 });
 
 test('sprechnotizen-niklas.md: Stichpunkte und Fließtext je Folie, Rahmen und Reserve, ohne Literatur', () => {
-  const md = readFileSync(join(platzhalter, 'sprechnotizen-niklas.md'), 'utf8');
+  const md = readFileSync(join(platzhalter, 'privat', 'sprechnotizen-niklas.md'), 'utf8');
   assert.match(md, /^# Sprechnotizen Niklas/);
   const rahmen = F.filter((x) => x.teil === 'rahmen');
   for (const f of [...NIKLAS_ALLE.filter((x) => !x.anhang), ...rahmen]) {
@@ -300,7 +312,7 @@ test('sprechnotizen-niklas.md: Stichpunkte und Fließtext je Folie, Rahmen und R
 });
 
 test('Sprechnotizen: Jonas’ Sprungplan zählt ab J1; jede Folie mit Stichpunkten vor dem Fließtext', () => {
-  const md = readFileSync(join(platzhalter, 'sprechnotizen.md'), 'utf8');
+  const md = readFileSync(join(platzhalter, 'privat', 'sprechnotizen.md'), 'utf8');
   assert.match(md, /ab der ersten Folie \(J1\) gezählt\. J13 beginnt im Plan/);
   assert.doesNotMatch(md, /\*\*Zeitbudget:\*\*/, 'Jonas bleibt im Budget von 15:00 min');
   for (const f of F.filter((x) => x.sprecher !== 'niklas' && x.id !== 'J16')) {
@@ -312,7 +324,9 @@ test('Sprechnotizen: Jonas’ Sprungplan zählt ab J1; jede Folie mit Stichpunkt
 test('Sprechkarten: je Person ein PDF mit allen Stichpunkten, ohne Fließtext', async () => {
   const { PDFParse } = requireRepo('pdf-parse');
   const text = async (datei) => {
-    const p = new PDFParse({ data: new Uint8Array(readFileSync(join(platzhalter, datei))) });
+    const p = new PDFParse({
+      data: new Uint8Array(readFileSync(join(platzhalter, 'privat', datei))),
+    });
     try {
       return (await p.getText()).text.replace(/\s+/g, ' ');
     } finally {

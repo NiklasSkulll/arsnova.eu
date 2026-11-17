@@ -13,8 +13,7 @@ node docs/referat-thema-1/abgabe/jonas/bau.mjs [--niklas1 <pdf>] [--niklas2 <pdf
 ```
 
 Ohne Argumente landen die Ausgaben in `ausgabe/` neben dieser Datei. Niklas' Teile (1A, 1B 3–4) kommen
-standardmäßig nativ aus [`../niklas/`](../niklas/README.md); dazu entstehen `niklas-folien.pdf` und
-`sprechnotizen-niklas.md`. Reihenfolge im Deck (Design 2026-11-15, Abschnitt 3; ergänzt 2026-11-16): GT (Titel),
+standardmäßig nativ aus [`../niklas/`](../niklas/README.md); dazu entsteht `niklas-folien.pdf`. Reihenfolge im Deck (Design 2026-11-15, Abschnitt 3; ergänzt 2026-11-16): GT (Titel),
 G0 (Fahrplan), GK (Systembild „Was ist arsnova?“), Niklas 1A (N1–N10 ohne N8; _aktualisiert 2026-11-17_), Jonas J1–J15 (mit J5b, J8b, J10a,
 J10b, J11, J13b), Niklas 1B 3–4 (M1–M4), G9 (gemeinsames Fazit) und GD (Dank, Fragen, Nachweisumfang), Literatur
 (J16, NL), Reserve (R1, R5–R7, R9–R12, R15–R16 mit Abb. 1 und 2 aus `1C-diagrams.md`, R17 Nachweisumfang im Einzelnen; RN1, RN2, RN4). Alle Rahmenfolien spricht Niklas. `--niklas1`/`--niklas2` ersetzen einen
@@ -126,21 +125,16 @@ die Herkunft von Niklas' Teilen.
 
 ## Ausgaben (`ausgabe/`)
 
-| Datei                                               | Inhalt                                                                                                                                                                                                                                                        |
-| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `jonas-deck.html`                                   | Gemeinsames Deck zum Vortragen, selbstständig (Schriften, Bilder, Clip)                                                                                                                                                                                       |
-| `gemeinsames-deck.pdf`                              | Druck des gemeinsamen Decks, eine Seite je Folie                                                                                                                                                                                                              |
-| `jonas-folien.pdf`                                  | Titel GT, Jonas' Folien (J1–J10, J12, J13, J15, J16) und Reserve                                                                                                                                                                                              |
-| `sprechnotizen.md`                                  | Notizen je Folie mit Sekunden, kumulierter Zeit und Kürzung auf die Kurzfassung                                                                                                                                                                               |
-| `sprechnotizen-niklas.md`                           | dasselbe für Niklas (1A, 1B 3–4, G9), mit eigenem Sprungplan                                                                                                                                                                                                  |
-| `sprechkarten-jonas.pdf`, `sprechkarten-niklas.pdf` | Sprechkarten zum Ausdrucken (A4): je Folie nur die Stichpunkte mit Startzeit                                                                                                                                                                                  |
-| `sprechheft-jonas.html`, `sprechheft-niklas.html`   | Sprechheft je Person, eine Seite je Folie: Vortrag, Stichpunkte, Verstehen, Begriffe, Fragen mit Antworten, Übergang; Glossar am Ende. Inhalte aus [`abgabe/sprechheft/`](../sprechheft/) (Design: [Sprechheft](../../specs/2026-11-17-sprechheft-design.md)) |
-| `manifest.json`                                     | SHA-256 aller Ein- und Ausgaben, Seitenzahlen                                                                                                                                                                                                                 |
+| Datei                   | Inhalt                                                                                                          |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `jonas-deck.html`       | Gemeinsames Deck zum Vortragen, selbstständig (Schriften, Bilder, Clip)                                         |
+| `gemeinsames-deck.pdf`  | Druck des gemeinsamen Decks, eine Seite je Folie                                                                |
+| `jonas-folien.pdf`      | Titel GT, Jonas' Folien (J1–J10, J12, J13, J15, J16) und Reserve                                                |
+| `../../privat/ausgabe/` | Nicht im Repo (von Git ignoriert): Vortragsdeck mit Referentenansicht, Sprechnotizen, Sprechkarten, Sprechhefte |
+| `manifest.json`         | SHA-256 aller Ein- und Ausgaben, Seitenzahlen                                                                   |
 
-**Referentenansicht:** Im Deck öffnet Taste `n` ein zweites Fenster mit dem Sprechheft der aktuellen Folie. Es
-folgt Folie und Aufbaustufe (aktueller Absatz hervorgehoben), zeigt Uhr, Sollzeit und nächste Folie; Pfeiltasten
-dort steuern das Deck, `+`/`-` ändern die Schrift. Reserve: Taste `r`, Ziffer 1–9 oder Pfeile und Enter, `Esc`
-zurück.
+**Vortrag:** Reserve im Deck mit Taste `r`, Ziffer 1–9 oder Pfeile und Enter, `Esc` zurück. Persönliche
+Vortragsunterlagen entstehen beim Bau im von Git ignorierten Ordner `privat/ausgabe/`.
 
 ## Abgabe mit Matrikelnummern (nur lokal)
 

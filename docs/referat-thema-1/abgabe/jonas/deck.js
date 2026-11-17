@@ -253,7 +253,7 @@
   }
 
   // ---------------------------------------------------------------- Referentenansicht (Taste n)
-  // Zweites Fenster mit dem Sprechheft (sprechheft.mjs baueReferentHtml); folgt Folie und Stufe.
+  // Zweites Fenster (sprechheft.mjs baueReferentHtml), nur im privaten Vortragsdeck; folgt Folie und Stufe.
   const titelVon = (folie) =>
     (folie.querySelector('.folie-titel, h1, h2')?.textContent ?? '').replace(/\s+/g, ' ').trim();
   function sendeReferent() {
