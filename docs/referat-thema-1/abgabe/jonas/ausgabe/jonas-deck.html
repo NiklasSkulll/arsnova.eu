@@ -5501,7 +5501,7 @@
         data-teil="niklas"
         data-hauptfolie
         data-aufbau="3"
-        aria-label="32 von 39: Ersatz kommt immer, ein stummer Host bremst"
+        aria-label="32 von 39: Ersatz in jeder Reihe, Stille kostet Zeit"
       >
         <div
           class="weg-mini weg-marke"
@@ -5695,7 +5695,7 @@
           <li data-aktiv aria-current="step">1B 3–4</li>
           <li>Fazit</li>
         </ol>
-        <h1 class="folie-titel">Ersatz kommt immer, ein stummer Host bremst</h1>
+        <h1 class="folie-titel">Ersatz in jeder Reihe, Stille kostet Zeit</h1>
         <p class="folie-frage">
           <span class="etikett etikett-1b">1B</span>Wie schnell kommt der Ersatz, wenn die Inferenz
           gestört ist?
@@ -5710,8 +5710,8 @@
               etwa 2¼ min auf, bei Label endet die Frist von 30 s früher.
             </p>
             <p class="beleg">
-              Vorab festgelegt (<span class="mono">5e758d0a</span>, 15.11.): Ersatz ≤ Frist + 1 s,
-              Stopp im Median ≤ 2 s, DROP > 10 × Stopp; für Summary alle erfüllt
+              Vorab (<span class="mono">5e758d0a</span>, 15.11.): Ersatz ≤ Frist + 1 s, Stopp im
+              Median ≤ 2 s, DROP > 10 × Stopp; Summary erfüllt, DROP über zwei Commits
             </p>
           </div>
         </div>
@@ -6545,8 +6545,8 @@
               Rechner, Ursache nicht belegt
             </p>
             <p class="merksatz">
-              <b>0 Fehler</b> bei 166.400 Live-Aktionen. Netz bei Labels: 8,7 ms von 3,5 s
-              (0,25&nbsp;%)
+              <b>0 Fehler</b> bei 166.400 Live-Aktionen. Netz bei Labels: 8,7 ms, im Median
+              0,25&nbsp;% der Zeit beim Client
             </p>
           </div>
         </div>
@@ -6768,8 +6768,9 @@
               S1 mit 8 vCPU statt 2 + 8, HTTP auf derselben VM; ungleiche Kapazität, keine Freigabe
             </p>
             <p data-ab="1" class="merksatz">
-              <b>Schritt 4 (ADR <span class="nowrap">1B-020</span>):</b> Die zweite Rolle bleibt,
-              begründet durch getrennte Ressourcen, Wartung und Zuständigkeit. Kosten: zweites
+              <b>Schritt 4, Empfehlung (ADR <span class="nowrap">1B-020</span>):</b> Die Leitplanke
+              bleibt, S1 ist keine Freigabe. Die zweite Rolle ist nur betrieblich zu begründen
+              (getrennte Ressourcen, Wartung, Zuständigkeit), nicht mit Tempo. Kosten: zweites
               System, Deployment mit Digest und Modellhash, Token-Rotation, Überwachung beider
               Rollen, bei Schutzbedarf TLS. Folge: Fristen je Host kalibrieren, Ersatzgründe
               überwachen, Hänger nicht dem Breaker überlassen.
@@ -6841,8 +6842,8 @@
                 <p style="margin: 0 0 10px">
                   <span class="etikett etikett-1b">1B</span> Fällt die Inferenz aus oder schweigt
                   sie, kommt der Ersatz, und keine Live-Aktion scheitert. Latenzneutral ist das
-                  nicht, und Hänger dämpft der Breaker nicht; der zweite Host ist betrieblich
-                  begründet, nicht durch Tempo.
+                  nicht, und Hänger dämpft der Breaker nicht; den zweiten Host empfiehlt ADR
+                  <span class="nowrap">1B-020</span> nur betrieblich zu begründen, nicht mit Tempo.
                 </p>
               </div>
             </div>
