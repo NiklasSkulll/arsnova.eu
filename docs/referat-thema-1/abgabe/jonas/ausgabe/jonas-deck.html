@@ -555,8 +555,8 @@
    ohne Wertung (nachweisumfang.md, Abschnitt Darstellung) */
       .dank-nachweis {
         grid-column: 1 / -1;
-        margin: 40px 0 0;
-        padding: 22px 0 0;
+        margin: 18px 0 0;
+        padding: 16px 0 0;
         border-top: 1px solid var(--linie);
         color: var(--text-2);
       }
@@ -566,17 +566,15 @@
         font-size: var(--s-min);
       }
       .nw-band {
-        display: grid;
-        grid-template-columns: auto 1fr;
-        column-gap: 96px;
-        align-items: center;
-        margin: 16px 0 0;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        margin: 0;
       }
       .nw-zahlen {
-        display: grid;
-        grid-template-columns: repeat(2, auto);
-        column-gap: 56px;
-        row-gap: 18px;
+        display: flex;
+        justify-content: space-between;
+        column-gap: 40px;
       }
       .nw-zahl {
         display: flex;
@@ -584,7 +582,7 @@
       }
       .nw-wert {
         color: var(--tinte);
-        font-size: 44px;
+        font-size: 40px;
         font-weight: 700;
         font-variant-numeric: tabular-nums;
         line-height: 1.1;
@@ -599,8 +597,28 @@
         grid-template-columns: auto 1fr;
         align-items: center;
         column-gap: 24px;
-        row-gap: 14px;
+        row-gap: 4px;
         font-size: var(--s-min);
+      }
+      .nw-legende {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--gedaempft);
+        font-size: 18px;
+      }
+      .nw-l-voll,
+      .nw-l-schraffur {
+        display: inline-block;
+        width: 22px;
+        height: 12px;
+        border-radius: 2px;
+        background: var(--text-2);
+      }
+      .nw-l-schraffur {
+        margin-left: 18px;
+        background: repeating-linear-gradient(135deg, var(--text-2) 0 3px, transparent 3px 7px);
+        box-shadow: inset 0 0 0 1px var(--text-2);
       }
       .nw-auftrag {
         white-space: nowrap;
@@ -608,33 +626,46 @@
       .nw-spur {
         display: flex;
         align-items: center;
-        gap: 14px;
+        --farbe: var(--text-2);
       }
-      .nw-spur > span:first-child {
+      .nw-1a {
+        --farbe: var(--blau);
+      }
+      .nw-1b {
+        --farbe: var(--bernstein);
+      }
+      .nw-1c {
+        --farbe: var(--petrol);
+      }
+      .nw-voll,
+      .nw-schraffur {
         flex: none;
         height: 16px;
+      }
+      .nw-voll {
         min-width: 4px;
-        border-radius: 3px;
+        border-radius: 3px 0 0 3px;
+        background: var(--farbe);
       }
-      .nw-balken-1a {
-        background: var(--blau);
-      }
-      .nw-balken-1b {
-        background: var(--bernstein);
-      }
-      .nw-balken-1c {
-        background: var(--petrol);
+      .nw-schraffur {
+        border-radius: 0 3px 3px 0;
+        background: repeating-linear-gradient(135deg, var(--farbe) 0 3px, transparent 3px 7px);
+        box-shadow: inset 0 0 0 1px var(--farbe);
       }
       .nw-dauer {
+        margin-left: 14px;
         color: var(--tinte);
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
       }
+      .nw-plus {
+        color: var(--gedaempft);
+      }
       /* R17: Nachweisumfang im Einzelnen, drei Spalten */
       .nw-reserve {
         display: grid;
-        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, 1fr);
-        column-gap: 64px;
+        grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr) minmax(0, 1fr);
+        column-gap: 48px;
         align-items: start;
       }
       .nw-tabelle .nw-kopf {
@@ -6981,12 +7012,15 @@
                 <figcaption class="vermerk">Repository, Ordner docs/referat-thema-1</figcaption>
               </figure>
               <div class="dank-nachweis" data-nachweis>
-                <p class="nw-kopf">Belege im Repo · gewertete Messläufe 5.–16.11.2026</p>
                 <div class="nw-band">
                   <div class="nw-zahlen">
                     <div class="nw-zahl">
-                      <span class="nw-wert">18,6 h</span
+                      <span class="nw-wert">20,3 h</span
                       ><span class="nw-was">gewertete Laborzeit</span>
+                    </div>
+                    <div class="nw-zahl">
+                      <span class="nw-wert">25,9 h</span
+                      ><span class="nw-was">Aufbau, Tests, weitere Läufe</span>
                     </div>
                     <div class="nw-zahl">
                       <span class="nw-wert">326</span
@@ -7001,22 +7035,40 @@
                     </div>
                   </div>
                   <div class="nw-balken" data-nachweis-je>
-                    <span class="nw-auftrag">1A Ressourcenisolation</span
-                    ><span class="nw-spur"
-                      ><span class="nw-balken-1a" style="width: calc((100% - 150px) * 0.232)"></span
-                      ><span class="nw-dauer">2 h 32 min</span></span
+                    <span></span
+                    ><span class="nw-legende"
+                      ><span class="nw-l-voll"></span>gewertete Läufe 5.–16.11.2026<span
+                        class="nw-l-schraffur"
+                      ></span
+                      >Aufbau, Tests, weitere Läufe</span
+                    ><span class="nw-auftrag">1A Ressourcenisolation</span
+                    ><span class="nw-spur nw-1a"
+                      ><span class="nw-voll" style="width: calc((100% - 280px) * 0.105)"></span
+                      ><span class="nw-schraffur" style="width: calc((100% - 280px) * 0.004)"></span
+                      ><span class="nw-dauer"
+                        >2 h 32 min <span class="nw-plus">+ 6 min</span></span
+                      ></span
                     ><span class="nw-auftrag">1B Schritte 1–2</span
-                    ><span class="nw-spur"
-                      ><span class="nw-balken-1b" style="width: calc((100% - 150px) * 0.084)"></span
-                      ><span class="nw-dauer">55 min</span></span
+                    ><span class="nw-spur nw-1b"
+                      ><span class="nw-voll" style="width: calc((100% - 280px) * 0.038)"></span
+                      ><span class="nw-schraffur" style="width: calc((100% - 280px) * 0.962)"></span
+                      ><span class="nw-dauer"
+                        >55 min <span class="nw-plus">+ 23 h 19 min</span></span
+                      ></span
                     ><span class="nw-auftrag">1B Schritte 3–4</span
-                    ><span class="nw-spur"
-                      ><span class="nw-balken-1b" style="width: calc((100% - 150px) * 1)"></span
-                      ><span class="nw-dauer">10 h 56 min</span></span
+                    ><span class="nw-spur nw-1b"
+                      ><span class="nw-voll" style="width: calc((100% - 280px) * 0.522)"></span
+                      ><span class="nw-schraffur" style="width: calc((100% - 280px) * 0.054)"></span
+                      ><span class="nw-dauer"
+                        >12 h 39 min <span class="nw-plus">+ 1 h 19 min</span></span
+                      ></span
                     ><span class="nw-auftrag">1C Laborläufe</span
-                    ><span class="nw-spur"
-                      ><span class="nw-balken-1c" style="width: calc((100% - 150px) * 0.389)"></span
-                      ><span class="nw-dauer">4 h 15 min</span></span
+                    ><span class="nw-spur nw-1c"
+                      ><span class="nw-voll" style="width: calc((100% - 280px) * 0.175)"></span
+                      ><span class="nw-schraffur" style="width: calc((100% - 280px) * 0.049)"></span
+                      ><span class="nw-dauer"
+                        >4 h 15 min <span class="nw-plus">+ 1 h 11 min</span></span
+                      ></span
                     >
                   </div>
                 </div>
@@ -8074,7 +8126,7 @@
           <div class="flaeche-inhalt">
             <div class="nw-reserve">
               <div class="nw-tabelle">
-                <p class="nw-kopf">Gewertete Laborzeit: 18,6 h</p>
+                <p class="nw-kopf">Rechnerzeit: gewertet + Aufbau, Tests, weitere Läufe</p>
                 <table
                   class="eng"
                   style="border-collapse: collapse; font-size: 22px; line-height: 1.3; width: 100%"
@@ -8098,9 +8150,9 @@
                         vertical-align: top;
                       "
                     >
-                      <span style="white-space: nowrap">2 h 32 min</span><br /><span
+                      <span style="white-space: nowrap">2 h 32 min + 6 min</span><br /><span
                         class="nw-zusatz"
-                        >25 Läufe, 25 vollständig</span
+                        >25 Läufe, 25 vollständig; Vorlauf</span
                       >
                     </td>
                   </tr>
@@ -8123,8 +8175,9 @@
                         vertical-align: top;
                       "
                     >
-                      <span style="white-space: nowrap">55 min</span><br /><span class="nw-zusatz"
-                        >25 Aufträge</span
+                      <span style="white-space: nowrap">55 min + 23 h 19 min</span><br /><span
+                        class="nw-zusatz"
+                        >25 Aufträge; 29 VM-Starts, davon 11 Windows</span
                       >
                     </td>
                   </tr>
@@ -8147,9 +8200,9 @@
                         vertical-align: top;
                       "
                     >
-                      <span style="white-space: nowrap">10 h 56 min</span><br /><span
+                      <span style="white-space: nowrap">12 h 39 min + 1 h 19 min</span><br /><span
                         class="nw-zusatz"
-                        >18 Läufe, 128 Aufträge</span
+                        >18 Läufe, 128 Aufträge; 14 Zeitfenster</span
                       >
                     </td>
                   </tr>
@@ -8172,9 +8225,9 @@
                         vertical-align: top;
                       "
                     >
-                      <span style="white-space: nowrap">4 h 15 min</span><br /><span
+                      <span style="white-space: nowrap">4 h 15 min + 1 h 11 min</span><br /><span
                         class="nw-zusatz"
-                        >3 Läufe</span
+                        >3 Läufe; 10 Zeitfenster</span
                       >
                     </td>
                   </tr>
@@ -8186,7 +8239,29 @@
                         vertical-align: top;
                       "
                     >
-                      Zeitraum
+                      Summe
+                    </td>
+                    <td
+                      style="
+                        padding: 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        text-align: right;
+                        font-variant-numeric: tabular-nums;
+                        vertical-align: top;
+                      "
+                    >
+                      <span style="white-space: nowrap">20,3 h + 25,9 h</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style="
+                        padding: 7px 12px 7px 0;
+                        border-bottom: 1px solid var(--raster);
+                        vertical-align: top;
+                      "
+                    >
+                      Gewertete Läufe
                     </td>
                     <td
                       style="
@@ -8202,8 +8277,8 @@
                   </tr>
                 </table>
                 <p class="nw-notiz">
-                  Aus den Zeitstempeln der Rohdaten. Nicht gezählt: Vorläufe, gestörte und
-                  abgebrochene Versuche, Entwicklungsläufe, Aufbau.
+                  Rechnerzeit, keine Arbeitszeit. Aufbau usw.: VM-Journal (1B 1–2), sonst Uhrzeiten
+                  in Protokollen.
                 </p>
               </div>
               <div class="nw-tabelle">

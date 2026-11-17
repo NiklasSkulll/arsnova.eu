@@ -81,7 +81,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/nachweisumfang.md",
-      "sha256": "211d7609c9bb9dddf88b365613add1e7c2e02fda55c09974f1821607136bba66"
+      "sha256": "ebf63da03f9e640ab7841c15872a4eb820bfcd4242313ea6ba7cd9aa51bf8a57"
     },
     {
       "pfad": "docs/referat-thema-1/adr/1C-023-release-timeout-90-s-zu-kurz.md",
@@ -153,7 +153,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/folien.mjs",
-      "sha256": "7539bea5c64d513382728171d27e57dc3c65a7f1adb53ac09bbce0c2d94cf70c"
+      "sha256": "db5639db860a33181e4bf9e6bfbb97a6cb67e881f6759e8fe4ddd77ae70d3ed2"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/grafik.mjs",
@@ -181,7 +181,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/nachweisumfang.mjs",
-      "sha256": "b1ab5a50e4c594f60836a378f2df9e3b65e7a96a54589a60433087c561ffdec3"
+      "sha256": "08a4544ee93dc2e955ac0654f36b64de0a7aaa80c639ee2d894aec2bcc2b3a8c"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/niklas-seiten.mjs",
@@ -189,7 +189,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/stil.css",
-      "sha256": "53d56b1db672c11311bddd6acaa4d2868f2e016e0eb2adba0b0510bc7d3e39f3"
+      "sha256": "3ec58337c8b72b966c58fcf69ed813a3300dfb8833ddaa217e0d46c42695ab6e"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/wegkarte.mjs",
@@ -595,47 +595,47 @@
   "ausgaben": [
     {
       "datei": "jonas-deck.html",
-      "bytes": 2139542,
-      "sha256": "b3a0be2b02d808e719301263edd1a8d185391246feb10b2c0401362388276a0d"
+      "bytes": 2142515,
+      "sha256": "5e843f1efe043c93375beb19bdd1d4294828ac3d864912d3a68c95f1d4607f73"
     },
     {
       "datei": "gemeinsames-deck.pdf",
-      "bytes": 1589426,
-      "sha256": "305c4a201f98ecd9bdb675f3806f27cdd14dfe7486e8836cd05b77e4fedf248a",
+      "bytes": 1602068,
+      "sha256": "be0e9827fc0829f5a250f02d978e8fd6c576c2bfeba1e9f3638040b7196062f6",
       "seiten": 53
     },
     {
       "datei": "jonas-folien.pdf",
-      "bytes": 1079465,
-      "sha256": "e9f1955d423b6dd939669d63176c566338ac816d04bbcfe137557cafe3b9c776",
+      "bytes": 1079864,
+      "sha256": "d2b04d8514368ef485ccc22483e77a98445f41440cdc95890fa8c749c97dccad",
       "seiten": 32
     },
     {
       "datei": "niklas-folien.pdf",
       "bytes": 531938,
-      "sha256": "bbb13287b6c97750f51a74417665d84c204c6db5369518e4c6833df313434ba6",
+      "sha256": "033cdd6e7a0c91560b27618553b120cd7feb7881b608e877589fad1cf78c21f2",
       "seiten": 18
     },
     {
       "datei": "sprechnotizen.md",
-      "bytes": 37205,
-      "sha256": "59903fc816f187fe3111a1ef8b6cab20650355ff371b70d3a5040dc1c3e120b3"
+      "bytes": 37497,
+      "sha256": "49f58c05c6b139a38bf83858e82c839211082afbeb18e599bac34b117b78e145"
     },
     {
       "datei": "sprechnotizen-niklas.md",
-      "bytes": 38534,
-      "sha256": "01fb26660149734172fb17ea5af30c79c1ea3392bdb3b6de2b5e39db7fd8cb96"
+      "bytes": 38727,
+      "sha256": "b604fc3f82c43fcd7a8b79637122296a30a83f65c059179937f66222699179d3"
     },
     {
       "datei": "sprechkarten-jonas.pdf",
-      "bytes": 76250,
-      "sha256": "9dd6cc4dfb3758ae86e1aab5903fba976934c7a94c002416860885e7871192c4",
+      "bytes": 76266,
+      "sha256": "997d9036a432168a96390a9cfd2cbaf32971cb5a827cc85e1d36e6ad9af4aa2e",
       "seiten": 5
     },
     {
       "datei": "sprechkarten-niklas.pdf",
-      "bytes": 71605,
-      "sha256": "d2edd8a2ace6fda0e9b2f5fa2a1adaa53b8d139e124e2a4cbdd020ae47ac4eb8",
+      "bytes": 71870,
+      "sha256": "cd3670a91d9083c63d264557555b6ceccd460aefd4957a00aab80d80b5bec995",
       "seiten": 4
     }
   ]

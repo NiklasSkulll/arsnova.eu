@@ -282,13 +282,14 @@ _Quelle:_ 1B-ergebnis.md, 1C-ergebnis.md (Kurzantwort, Verlauf 9f230abc); 1A: ab
 
 - „Danke fürs Zuhören.“
 - Belege: Repository-Link und QR-Code
-- Im Repo: 18,6 h Laborzeit (5.–16.11.2026), davon 1B 3–4 10 h 56 min
+- Im Repo: 20,3 h gewertet (5.–16.11.2026) + 25,9 h Aufbau, Tests, weitere Läufe
+- 1B 1–2: 55 min gewertet, 23 h 19 min VM-Laufzeit für Aufbau und Tests
 - 326 Tests, 35 ADRs, 50 Hypothesen; alles nachrechenbar
 - „Wir freuen uns auf Ihre Fragen.“
 
 **Fließtext**
 
-Danke fürs Zuhören. Alle Belege, also Entscheidungen, Protokolle und Messdaten, liegen im Repository hinter diesem Link. Was dort liegt, steht darunter in Zahlen: 18,6 Stunden gewertete Laborzeit aus Messläufen vom 5. bis 16. November, davon 10 Stunden 56 Minuten für 1B Schritte 3 und 4, dazu 326 Tests, 35 ADRs und 50 vorab festgelegte Hypothesen. Wir freuen uns auf Ihre Fragen.
+Danke fürs Zuhören. Alle Belege, also Entscheidungen, Protokolle und Messdaten, liegen im Repository hinter diesem Link. Was dort liegt, steht darunter in Zahlen: 20,3 Stunden gewertete Laborzeit aus Messläufen vom 5. bis 16. November, dazu 25,9 Stunden Rechnerzeit für Aufbau, Tests und weitere Läufe, davon 23 Stunden 19 Minuten VM-Laufzeit allein für das Labor von 1B, Schritte 1 und 2. Außerdem 326 Tests, 35 ADRs und 50 vorab festgelegte Hypothesen. Wir freuen uns auf Ihre Fragen.
 
 _Quelle:_ https://github.com/NiklasSkulll/arsnova.eu/tree/main/docs/referat-thema-1 (Fork, main nach dem Merge); Eintrag weirauch2026c in literatur.mjs; Nachweisumfang: nachweisumfang.md (Kopfzahlen, nachgerechnet von abgabe/jonas/nachweisumfang.mjs)
 
