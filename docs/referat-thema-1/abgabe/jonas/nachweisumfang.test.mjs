@@ -55,3 +55,29 @@ test('dauer rundet auf Minuten und lässt 0 h weg', () => {
   assert.equal(dauer(27715.6), '7 h 42 min');
   assert.equal(dauer(3599.9), '1 h 0 min');
 });
+
+test('1B 3–4: liegen .json und .json.gz nebeneinander, zählt der Lauf einmal (.json hat Vorrang)', async () => {
+  const { mkdtempSync, mkdirSync, writeFileSync, rmSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { dateien1B3u4 } = await import('./nachweisumfang.mjs');
+  const wurzel = mkdtempSync(join(tmpdir(), 'nachweis-1b-'));
+  try {
+    const dir = join(wurzel, 'evidenz/1B/messung');
+    mkdirSync(dir, { recursive: true });
+    for (const n of [
+      '2026-11-16-lauf-l3-label.json',
+      '2026-11-16-lauf-l3-label.json.gz',
+      '2026-11-16-lauf-f1-summary.json.gz',
+      '2026-11-16-lauf-dev-f1-summary.json',
+      '2026-11-16-lauf-normal-label-02.json.gz',
+    ])
+      writeFileSync(join(dir, n), '');
+    assert.deepEqual(dateien1B3u4(wurzel), [
+      '2026-11-16-lauf-f1-summary.json.gz',
+      '2026-11-16-lauf-l3-label.json',
+      '2026-11-16-lauf-normal-label-02.json.gz',
+    ]);
+  } finally {
+    rmSync(wurzel, { recursive: true, force: true });
+  }
+});

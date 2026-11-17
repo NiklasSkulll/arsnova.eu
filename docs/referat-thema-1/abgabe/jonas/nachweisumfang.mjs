@@ -147,13 +147,19 @@ function summe(werte) {
   return werte.reduce((a, b) => a + b, 0);
 }
 
+/** Gewertete Läufe 1B 3–4 (Dateinamen); liegen `.json` und `.json.gz` nebeneinander, zählt `.json` einmal. */
+export function dateien1B3u4(root = REFERAT) {
+  const namen = readdirSync(join(root, MESSUNG_1B)).filter((d) => REIHE_1B_3U4.test(d));
+  return [...new Set(namen.map((d) => d.replace(/\.gz$/, '')))]
+    .sort()
+    .map((d) => (namen.includes(d) ? d : `${d}.gz`));
+}
+
 export function laborzeit(root = REFERAT) {
   const a = laufzeit1A(root);
   const b = GEWERTET_1B.map((d) => laufzeit1B(root, d));
   const c = GEWERTET_1C.map((d) => laufzeit1C(root, d));
-  const n = readdirSync(join(root, MESSUNG_1B))
-    .filter((d) => REIHE_1B_3U4.test(d))
-    .map((d) => laufzeit1B(root, d));
+  const n = dateien1B3u4(root).map((d) => laufzeit1B(root, d));
   const je = {
     '1A': a.sek,
     '1B': summe(b.map((x) => x.sek)),

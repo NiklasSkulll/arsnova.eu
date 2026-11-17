@@ -1507,17 +1507,17 @@ export function folien(daten) {
         ]) +
         person('Niklas · 1A und 1B, Schritte 3–4', 'var(--blau)', [
           `${etikett('1A')} Der App-Host trägt die Live-Last fehlerfrei. Die spaCy-Glättung bekommt keine Freigabe: Die vorab festgelegte Regel hält nicht, der Nutzen ist ungemessen.`,
-          `${etikett('1B')} Fällt die Inferenz aus oder schweigt sie, kommt der Ersatz, und keine Live-Aktion scheitert. Latenzneutral ist das nicht, und Hänger dämpft der Breaker nicht; der zweite Host ist betrieblich begründet, nicht durch Tempo.`,
+          `${etikett('1B')} Fällt die Inferenz aus oder schweigt sie, kommt der Ersatz, und keine Live-Aktion scheitert. Latenzneutral ist das nicht, und Hänger dämpft der Breaker nicht; den zweiten Host empfiehlt ADR 1B-020 nur betrieblich zu begründen, nicht mit Tempo.`,
         ]) +
         `</div>` +
         `<p class="merksatz"><b>Gemeinsam:</b> Im Labor kostet die Trennung kaum Zeit, und Störungen der Inferenz werden nicht zu Live-Fehlern. Die Grenzen liegen in der Inferenz selbst, in optionaler Arbeit ohne Nutzenbeleg und im nur qualitativ bewerteten Betriebsaufwand.</p>`,
     ),
     notiz:
-      'Zum Schluss unsere Antwort auf die gemeinsame Leitfrage. Jonas hat gezeigt: Der Kontextpfad hält seine Zusagen, der zweite Host kostet keine relevante Zeit, und die Zeit steckt in der Inferenz; nach Version 1.4.0 besteht aber keine geprüfte Modellantwort das Gate. Mein Teil: Der App-Host trägt die Live-Last fehlerfrei, optionale Analyse bekommt ohne Nutzenbeleg keine Freigabe. Fällt die Inferenz aus oder schweigt sie, kommt der Ersatz, und keine Live-Aktion scheitert; latenzneutral ist das nicht, und Hänger dämpft der Breaker nicht. Den zweiten Host begründen wir deshalb betrieblich, nicht mit Tempo. Gemeinsam heißt das: Im Labor kostet die Trennung kaum Zeit, und Störungen der Inferenz werden nicht zu Live-Fehlern. Die Grenzen liegen in der Inferenz selbst, in optionaler Arbeit ohne Nutzenbeleg und im Betriebsaufwand, den wir nur qualitativ bewertet haben.',
+      'Zum Schluss unsere Antwort auf die gemeinsame Leitfrage. Jonas hat gezeigt: Der Kontextpfad hält seine Zusagen, der zweite Host kostet keine relevante Zeit, und die Zeit steckt in der Inferenz; nach Version 1.4.0 besteht aber keine geprüfte Modellantwort das Gate. Mein Teil: Der App-Host trägt die Live-Last fehlerfrei, optionale Analyse bekommt ohne Nutzenbeleg keine Freigabe. Fällt die Inferenz aus oder schweigt sie, kommt der Ersatz, und keine Live-Aktion scheitert; latenzneutral ist das nicht, und Hänger dämpft der Breaker nicht. Den zweiten Host kann man deshalb nur betrieblich begründen, nicht mit Tempo. Gemeinsam heißt das: Im Labor kostet die Trennung kaum Zeit, und Störungen der Inferenz werden nicht zu Live-Fehlern. Die Grenzen liegen in der Inferenz selbst, in optionaler Arbeit ohne Nutzenbeleg und im Betriebsaufwand, den wir nur qualitativ bewertet haben.',
     stichpunkte: [
       'Jonas: Kontextpfad hält, zweiter Host kostet keine Zeit, Zeit steckt in der Inferenz; Gate verwirft alle geprüften Antworten',
       'Niklas: App-Host trägt die Live-Last, spaCy ohne Freigabe',
-      'Niklas 1B: Ersatz immer, kein Live-Fehler; nicht latenzneutral, Breaker hilft nicht bei Hängern; Host betrieblich begründet',
+      'Niklas 1B: Ersatz in jeder Reihe, kein Live-Fehler; nicht latenzneutral, Breaker hilft nicht bei Hängern; Host nur betrieblich begründbar',
       'Gemeinsam: Trennung kostet kaum Zeit, Störung wird kein Live-Fehler; Grenzen: Inferenz, Option ohne Nutzen, Aufwand qualitativ',
     ],
     zeitS: 45,

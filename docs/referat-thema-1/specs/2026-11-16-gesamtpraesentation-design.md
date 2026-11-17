@@ -68,6 +68,10 @@ Dazu wünschte der Autor Titel-, Fahrplan- und Dankfolie und einen Designdurchga
 
 ## 15 Minuten Redezeit je Person, Kontextfolie, Visualisierungen (_Ergänzt 2026-11-16_)
 
+_Hinweis 2026-11-17:_ Für 1B Schritte 3–4 abgelöst durch den Abschnitt [„1B Schritte 3–4 vollständig
+einarbeiten“](#1b-schritte-34-vollständig-einarbeiten-ergänzt-2026-11-17): M1–M4, N6b und N8 wieder Reserve, Niklas
+14:25 min.
+
 Anlass: Die Autoren planen mit 15 Minuten **Redezeit** je Person; die Fragen kommen hinzu. Das ersetzt die
 Grenze von etwa 10:30 min (Abschnitt oben). Mehr Tiefe statt Füllstoff: starke Reservefolien kommen dorthin
 zurück, wo sie das Argument tragen.

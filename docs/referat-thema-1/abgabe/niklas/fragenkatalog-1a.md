@@ -31,7 +31,7 @@ Beleg: Daten `35271586` (12.11.), Auswertung `97bfcfc9` (14.11., 12:41; H1 4/20,
 
 **Nachlegen:** Gepoolt über alle fünf Blöcke unterscheidet sich V2 von V1 je Aktion nur um −5,5 bis +0,1 ms, während der Beitritts-p95 von V2 schon von Block zu Block zwischen 31 und 58 ms schwankt (nachträglich ausgewertet). Die Entscheidung stützt sich auf die Beweislast der Option, auf den klaren V3-Effekt bei CPU-Mangel und auf den ungemessenen Nutzen. Für eine neue Reihe würde ich die Regel an einem A/A-Vergleich kalibrieren und eine Mindesteffektgröße (etwa +10 ms) mit Bootstrap-Konfidenzintervall über die Blöcke nutzen (Papadopoulos et al., 2021, Kap. 2.3, P1, P5).
 
-Beleg: `auswertung.json` (`comparisons[variant=V1]`, `hypotheses.H1`), Folie N6b, [1A-Auswertung, Live-Aktionen und Hypothesen](../../1A-auswertung.md#live-aktionen-und-hypothesen)
+Beleg: `auswertung.json` (`comparisons[variant=V1]`, `hypotheses.H1`), Reservefolie RN1, [1A-Auswertung, Live-Aktionen und Hypothesen](../../1A-auswertung.md#live-aktionen-und-hypothesen)
 
 ### F3. Warum p95 und nicht Mittelwert oder p99, und wie stabil ist ein p95 aus nur 100 Q&A-Stichproben?
 
@@ -65,7 +65,7 @@ _Variante:_ „Wie würden Sie die App schützen?“
 
 **Nachlegen:** Den Live-Pfad schützen hier Frist und Gegendruckgrenze: Nach 5 s liefert die App den lexikalischen Ersatz, und bei zwei offenen Anfragen lehnt der Client sofort ab. Für ein LLM, das viele Kerne minutenlang auslastet, reicht das nicht; deshalb sieht ADR-0035 dafür einen zweiten Host vor. App, PostgreSQL und Redis laufen in der Produktions-Compose ohne Limits.
 
-Beleg: Folien N2, N8, N9; `docker-compose.prod.yml`; [ADR-0035, Abschn. 2.1](../../../architecture/decisions/0035-self-hosted-llm-runtime-llama-cpp-over-ollama.md)
+Beleg: Folien N2, N9, Reservefolie RN4; `docker-compose.prod.yml`; [ADR-0035, Abschn. 2.1](../../../architecture/decisions/0035-self-hosted-llm-runtime-llama-cpp-over-ollama.md)
 
 ### F7. `SIDECAR_UNAVAILABLE` heißt doch, spaCy war weg?
 
@@ -149,7 +149,7 @@ Beleg: [Planung, Hypothesentabelle und Nachträge](../../1B-3u4-Planung.md); `gi
 
 ### F18. Lohnt sich der zweite Host?
 
-**Kurzantwort:** Nicht wegen Tempo: S1 mit allem auf einem Host hält bei Summary alle Live-Schwellen und reißt bei Labels Beitritt und Quiz um etwa 21–23 %, Fehler gab es keine. ADR 1B-020 begründet die zweite Rolle deshalb betrieblich: getrennte Ressourcen, Wartung und Zuständigkeit. Die Kosten (zweites System, Deployment mit Digest und Modellhash, Token-Rotation, Überwachung, bei Schutzbedarf TLS) sind qualitativ bewertet, nicht in Stunden.
+**Kurzantwort:** Nicht wegen Tempo: S1 mit allem auf einem Host hält bei Summary alle Live-Schwellen und reißt bei Labels Beitritt und Quiz um etwa 21–23 %, Fehler gab es keine. ADR 1B-020 empfiehlt deshalb: Die Leitplanke bleibt, S1 ist keine Freigabe, und die zweite Rolle ist nur betrieblich zu begründen (getrennte Ressourcen, Wartung, Zuständigkeit); ob das den Aufwand trägt, belegt das Labor nicht. Die Kosten (zweites System, Deployment mit Digest und Modellhash, Token-Rotation, Überwachung, bei Schutzbedarf TLS) sind qualitativ bewertet, nicht in Stunden.
 
 **Nachlegen:** S1 lief mit 8 vCPU statt 2 + 8 und HTTP auf derselben VM, Treiber und Collector auf demselben Host; daraus folgt keine Freigabe für einen produktiven Same-Host-Betrieb. Beide VMs liefen auf einem PC, unabhängige Ausfallbereiche sind nicht belegt.
 
