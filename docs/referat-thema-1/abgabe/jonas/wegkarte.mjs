@@ -243,6 +243,11 @@ export const STOERUNG_ZEICHEN = Object.freeze({
     text: 'DROP',
     svg: '<path d="M2.5 11h11M9.5 6.5l4.5 4.5-4.5 4.5M18.5 4v14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>',
   },
+  // L1/L2: Netzverzögerung +50/+500 ms: gestrichelter Pfeil
+  langsam: {
+    text: 'Netz langsam',
+    svg: '<path d="M2.5 11h2.5M8 11h2.5M13.5 11h1.5M12.5 6.5l4.5 4.5-4.5 4.5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>',
+  },
   spaet: {
     text: 'zu spät',
     svg: '<circle cx="11" cy="11" r="7.5" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M11 6.5V11l3.2 2.2" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>',
@@ -348,18 +353,39 @@ export const MARKEN = Object.freeze({
     stufen: [
       { ab: 0, bis: 0, zeichen: [] },
       { ab: 1, bis: 1, zeichen: ['stopp', 'belegt'] },
-      { ab: 2, bis: 2, zeichen: ['drop'] },
+      { ab: 2, bis: 2, zeichen: ['drop', 'langsam'] },
       { ab: 3, zeichen: ['spaet'] },
     ],
   },
-  // M2: Rückwirkung aller vier Störungen auf die Live-Aktionen
+  // M2: Breaker gegen Queue: erst die Folge mit gestoppter Runtime, dann die Folge mit Antworten nach der Frist
+  '1b-breaker': {
+    weg: 'auftrag',
+    teil: ['1B'],
+    abschnitte: [{ name: 'zweiterHost' }],
+    farbe: 'var(--bernstein)',
+    text: 'Zweiter Host',
+    stufen: [
+      { ab: 0, bis: 0, zeichen: [] },
+      { ab: 1, bis: 1, zeichen: ['stopp'] },
+      { ab: 2, zeichen: ['spaet'] },
+    ],
+  },
+  // M3: Rückwirkung aller Störungen auf die Live-Aktionen
   '1b-alle': {
     weg: 'auftrag',
     teil: ['1B'],
     abschnitte: [{ name: 'zweiterHost' }],
     farbe: 'var(--bernstein)',
-    zeichen: ['stopp', 'belegt', 'drop', 'spaet'],
+    zeichen: ['stopp', 'belegt', 'drop', 'langsam', 'spaet'],
     text: 'Zweiter Host',
+  },
+  // M4: S1, App-Stack und Runtime auf einem Host: die Strecke über den zweiten Host entfällt (gestrichelt)
+  '1b-s1': {
+    weg: 'auftrag',
+    teil: ['1B'],
+    abschnitte: [{ name: 'zweiterHost', gestrichelt: true }],
+    farbe: 'var(--bernstein)',
+    text: 'Ein Host (S1)',
   },
 });
 

@@ -172,13 +172,18 @@ test('Läuferzustand: Anteil der Station, Säume, Zeichensätze je Stufe', () =>
   ]);
   assert.deepEqual(
     laeuferZustand('1b-stoerung').stufen.map((s) => s.satz),
-    ['', 'stopp,belegt', 'drop', 'spaet'],
+    ['', 'stopp,belegt', 'drop,langsam', 'spaet'],
+  );
+  // M2 (Breaker gegen Queue): erst die Stopp-Bahn, dann die Bahn „zu spät“
+  assert.deepEqual(
+    laeuferZustand('1b-breaker').stufen.map((s) => s.satz),
+    ['', 'stopp', 'spaet'],
   );
   assert.deepEqual(laeuferZustand('auftrag-stopp').stufen, [{ ab: 0, bis: null, satz: 'stopp' }]);
   assert.equal(laeuferZustand('1a-wirkung').wirkung, true);
 });
 
-test('M1: Störungszeichen je Stufe auf der Karte, Beschriftung nur der Ort; M2 alle vier Zeichen', () => {
+test('M1: Störungszeichen je Stufe auf der Karte, Beschriftung nur der Ort; M3 alle fünf Zeichen', () => {
   const m1 = wegMarke('1b-stoerung');
   const stufen = [...m1.matchAll(/<span class="weg-stufe" data-ab="(\d)"/g)].map((m) =>
     Number(m[1]),
@@ -195,20 +200,31 @@ test('M1: Störungszeichen je Stufe auf der Karte, Beschriftung nur der Ort; M2 
     assert.match(m1.match(/aria-label="([^"]*)"/)[1], new RegExp(text), z);
   }
   const ort = m1.match(/<span class="weg-zeichen-ort"[\s\S]*?<p class="weg-beschriftung"/)[0];
-  assert.equal((ort.match(/data-zeichen=/g) ?? []).length, 4);
+  assert.equal((ort.match(/data-zeichen=/g) ?? []).length, 5);
   assert.match(
     m1,
     /<p class="weg-beschriftung" aria-hidden="true"><span class="weg-name">Zweiter Host<\/span><span class="etikett etikett-1b">1B<\/span><\/p>/,
   );
   // nur die letzte Stufe bleibt offen (Druck zeigt das Endbild)
   assert.equal((m1.match(/data-bis=/g) ?? []).length, 3);
-  const m2 = wegMarke('1b-alle');
-  assert.equal((m2.match(/data-zeichen=/g) ?? []).length, 4);
-  assert.match(m2, /<span class="weg-name">Zweiter Host<\/span>/);
+  const m3 = wegMarke('1b-alle');
+  assert.equal((m3.match(/data-zeichen=/g) ?? []).length, 5);
+  assert.match(m3, /<span class="weg-name">Zweiter Host<\/span>/);
   assert.match(
-    m2,
-    /aria-label="Ort auf dem Weg: Zweiter Host \(1B\); Störungen: Stopp, Slot belegt, DROP, zu spät"/,
+    m3,
+    /aria-label="Ort auf dem Weg: Zweiter Host \(1B\); Störungen: Stopp, Slot belegt, DROP, Netz langsam, zu spät"/,
   );
+});
+
+test('M4: S1 zeigt die Strecke über den zweiten Host gestrichelt, Beschriftung „Ein Host (S1)“', () => {
+  const m4 = wegMarke('1b-s1');
+  assert.match(
+    m4,
+    /<span class="weg-name">Ein Host \(S1\)<\/span><span class="etikett etikett-1b">1B</,
+  );
+  assert.equal((m4.match(/<g data-abschnitt="zweiterHost">/g) ?? []).length, 1);
+  assert.match(m4, /<g data-abschnitt="zweiterHost"><path [^>]*stroke-dasharray/);
+  assert.equal((m4.match(/data-zeichen=/g) ?? []).length, 0);
 });
 
 test('keine Systembild-Miniatur mehr', () => {
