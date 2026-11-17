@@ -167,14 +167,15 @@ _Quelle:_ evidenz/1A/reihe-main-a19ca70f-20261115-122547/V3/block-05/lauf.json (
 
 **Stichpunkte**
 
-- Lexikalisch < 0,1 s, spaCy ≈ 0,5 s, gedrosselt 2–3 s (passt zur Drosselung)
-- V4: Ersatz nach ≈ 5 s, Proxy hat 0 weitergeleitet: prüft Frist und Ersatz
+- Lexikalisch < 0,1 s
+- [Weiter] spaCy ≈ 0,5 s, gedrosselt 2–3 s (passt zur Drosselung)
+- [Weiter] V4: Ersatz nach ≈ 5 s, Proxy hat 0 weitergeleitet: prüft Frist und Ersatz
 - 250 „nicht erreichbar“, je Lauf 50 = Gegendruckgrenze (2 offen)
 - Reserve im Labor: < 0,5 CPU von 16, ≥ 11,6 GiB frei; Zielhost nicht gemessen
 
 **Fließtext**
 
-Was sehen die Lehrenden? Die lexikalische Wortwolke ist in unter einer Zehntelsekunde da, mit spaCy im Normalbetrieb nach etwa einer halben Sekunde, gedrosselt nach zwei bis drei; das passt zur Drosselung von eben. In V4 greift nach rund fünf Sekunden der Timeout, und die App liefert den lexikalischen Ersatz; der Proxy hat keine Anfrage weitergeleitet, V4 prüft also Frist und Ersatz. 250 Ersatzfälle meldet der Client als nicht erreichbar, je Lauf genau 50: Das passt zur Grenze von zwei offenen Anfragen. Zur Reserve: Im Labor brauchte der ganze Stack weniger als eine halbe CPU von sechzehn, mindestens 11,6 Gibibyte blieben frei. Für den Zielhost habe ich das nicht gemessen.
+Was sehen die Lehrenden? Die lexikalische Wortwolke ist in unter einer Zehntelsekunde da. [Weiter] Mit spaCy im Normalbetrieb nach etwa einer halben Sekunde, gedrosselt nach zwei bis drei; das passt zur Drosselung von eben. [Weiter] In V4 greift nach rund fünf Sekunden der Timeout, und die App liefert den lexikalischen Ersatz; der Proxy hat keine Anfrage weitergeleitet, V4 prüft also Frist und Ersatz. 250 Ersatzfälle meldet der Client als nicht erreichbar, je Lauf genau 50: Das passt zur Grenze von zwei offenen Anfragen. Zur Reserve: Im Labor brauchte der ganze Stack weniger als eine halbe CPU von sechzehn, mindestens 11,6 Gibibyte blieben frei. Für den Zielhost habe ich das nicht gemessen.
 
 _Quelle:_ evidenz/1A/reihe-main-a19ca70f-20261115-122547/auswertung/auswertung.json runs[].analysis (successLatency, fallbackLatency, outcomes, fallbackReasons), runs[V4].proxy (delayMs, forwarded, cancelledBeforeForward; scope proxy-lifetime-including-warmup), runs[].resources[alias=spacy], runs[].collectorHost.minAvailableMemoryBytes (abgerundet); SIDECAR_UNAVAILABLE fasst Gegendruck und echte Unerreichbarkeit zusammen (apps/backend/src/lib/wordCloudNormalizer.ts, reasonFromSidecarError), Gegendruck daher erschlossen aus genau 50 je Lauf; NLP_TIMEOUT_MS aus den Laufmanifesten; SPACY_MAX_IN_FLIGHT: apps/backend/src/lib/spacyClient.ts Z. 22, Prüfung Z. 187 · Niklas' Rechner, Ubuntu 24.04.5 LTS unter WSL2 (Kernel 6.18.58.1-microsoft-standard-WSL2), 16 logische CPUs, Lastgenerator auf demselben Rechner · App-Commit a19ca70f (nach v1.4.0) · Auswertung SHA-256 a3bebdf236cfb3b6…
 
@@ -186,12 +187,12 @@ _Quelle:_ evidenz/1A/reihe-main-a19ca70f-20261115-122547/auswertung/auswertung.j
 - Regel verfehlt (7/60), Beweislast bei der Option, Nutzen ungemessen
 - Budget 1 CPU / 1 GiB für neue Versuche; 0,25 CPU keine Einsparung
 - Grenzen: ein WSL2-Host mit Generator, Beitrittswelle
-- Selbstkritik: Regel zu empfindlich, künftig ohne Änderung kalibrieren
-- „Was, wenn wir die schwere Arbeit auslagern?“ LLM ≈ 2,5 min je Auftrag → Jonas
+- [Weiter] Selbstkritik: Regel zu empfindlich, künftig ohne Änderung kalibrieren
+- [Weiter] „Was, wenn wir die schwere Arbeit auslagern?“ LLM ≈ 2,5 min je Auftrag → Jonas
 
 **Fließtext**
 
-Meine Entscheidung ist die Gegenalternative aus dem Vertrag: keine Freigabe, spaCy bleibt aus, wie es die Produktionsvorlage ohnehin vorsieht. Das kostet im Betrieb nichts. Die Begründung: Die vorab festgelegte Regel ist verfehlt, und eine optionale Komponente muss ihre Unschädlichkeit belegen, nicht umgekehrt. Den Nutzen, zusammengeführte Wortformen, habe ich nicht gemessen; dagegen stehen Image, Modell, Limits und Überwachung. Ein Viertel CPU ist keine gleichwertige Einsparung. Die Grenzen: ein WSL2-Rechner mit dem Lastgenerator auf demselben Host und eine Beitrittswelle. Selbstkritisch: Die Regel war für p95-Werte um zwanzig Millisekunden zu empfindlich; für einen neuen Versuch würde ich sie an einem Vergleich ohne Änderung kalibrieren. Und spaCy ist klein: Ein Sprachmodell rechnet in Jonas' Labor rund zweieinhalb Minuten je Auftrag, das trägt der App-Host nicht. Was, wenn wir diese schwere Arbeit auslagern? Das zeigt Jonas.
+Meine Entscheidung ist die Gegenalternative aus dem Vertrag: keine Freigabe, spaCy bleibt aus, wie es die Produktionsvorlage ohnehin vorsieht. Das kostet im Betrieb nichts. Die Begründung: Die vorab festgelegte Regel ist verfehlt, und eine optionale Komponente muss ihre Unschädlichkeit belegen, nicht umgekehrt. Den Nutzen, zusammengeführte Wortformen, habe ich nicht gemessen; dagegen stehen Image, Modell, Limits und Überwachung. Ein Viertel CPU ist keine gleichwertige Einsparung. Die Grenzen: ein WSL2-Rechner mit dem Lastgenerator auf demselben Host und eine Beitrittswelle. [Weiter] Selbstkritisch: Die Regel war für p95-Werte um zwanzig Millisekunden zu empfindlich; für einen neuen Versuch würde ich sie an einem Vergleich ohne Änderung kalibrieren. [Weiter] Und spaCy ist klein: Ein Sprachmodell rechnet in Jonas' Labor rund zweieinhalb Minuten je Auftrag, das trägt der App-Host nicht. Was, wenn wir diese schwere Arbeit auslagern? Das zeigt Jonas.
 
 _Quelle:_ 1A-auswertung.md (Entscheidung, Budget und Rückweg, Grenzen); 1A-Versuchsvertrag (Gegenalternative); evidenz/1A/reihe-main-a19ca70f-20261115-122547/auswertung/auswertung.json hypotheses; NLP_ENABLED=false: .env.production.example Z. 205 (docker-compose.prod.yml liest es von dort, Default false); LLM-Dauer: 1B-ergebnis.md, warm im Median 148,6 s je Auftrag (ThinkPad P50, Commit 8e9d1317) ≈ 2,5 min · Niklas' Rechner, Ubuntu 24.04.5 LTS unter WSL2 (Kernel 6.18.58.1-microsoft-standard-WSL2), 16 logische CPUs, Lastgenerator auf demselben Rechner · App-Commit a19ca70f (nach v1.4.0) · Auswertung SHA-256 a3bebdf236cfb3b6…
 
@@ -268,11 +269,11 @@ _Quelle:_ evidenz/1B/messung/2026-11-16-lauf-s1-label.json.gz (Commit 4b135fe8, 
 - Jonas: Kontextpfad hält, zweiter Host kostet keine Zeit, Zeit steckt in der Inferenz; Gate verwirft alle geprüften Antworten
 - Niklas: App-Host trägt die Live-Last, spaCy ohne Freigabe
 - Niklas 1B: Ersatz in jeder Reihe, kein Live-Fehler; nicht latenzneutral, Breaker hilft nicht bei Hängern; Host nur betrieblich begründbar
-- Gemeinsam: Trennung kostet kaum Zeit, Störung wird kein Live-Fehler; Grenzen: Inferenz, Option ohne Nutzen, Aufwand qualitativ
+- [Weiter] Gemeinsam: Trennung kostet kaum Zeit, Störung wird kein Live-Fehler; Grenzen: Inferenz, Option ohne Nutzen, Aufwand qualitativ
 
 **Fließtext**
 
-Zum Schluss unsere Antwort auf die gemeinsame Leitfrage. Jonas hat gezeigt: Der Kontextpfad hält seine Zusagen, der zweite Host kostet keine relevante Zeit, und die Zeit steckt in der Inferenz; nach Version 1.4.0 besteht aber keine geprüfte Modellantwort das Gate. Mein Teil: Der App-Host trägt die Live-Last fehlerfrei, optionale Analyse bekommt ohne Nutzenbeleg keine Freigabe. Fällt die Inferenz aus oder schweigt sie, kommt der Ersatz, und keine Live-Aktion scheitert; latenzneutral ist das nicht, und Hänger dämpft der Breaker nicht. Den zweiten Host kann man deshalb nur betrieblich begründen, nicht mit Tempo. Gemeinsam heißt das: Im Labor kostet die Trennung kaum Zeit, und Störungen der Inferenz werden nicht zu Live-Fehlern. Die Grenzen liegen in der Inferenz selbst, in optionaler Arbeit ohne Nutzenbeleg und im Betriebsaufwand, den wir nur qualitativ bewertet haben.
+Zum Schluss unsere Antwort auf die gemeinsame Leitfrage. Jonas hat gezeigt: Der Kontextpfad hält seine Zusagen, der zweite Host kostet keine relevante Zeit, und die Zeit steckt in der Inferenz; nach Version 1.4.0 besteht aber keine geprüfte Modellantwort das Gate. Mein Teil: Der App-Host trägt die Live-Last fehlerfrei, optionale Analyse bekommt ohne Nutzenbeleg keine Freigabe. Fällt die Inferenz aus oder schweigt sie, kommt der Ersatz, und keine Live-Aktion scheitert; latenzneutral ist das nicht, und Hänger dämpft der Breaker nicht. Den zweiten Host kann man deshalb nur betrieblich begründen, nicht mit Tempo. [Weiter] Gemeinsam heißt das: Im Labor kostet die Trennung kaum Zeit, und Störungen der Inferenz werden nicht zu Live-Fehlern. Die Grenzen liegen in der Inferenz selbst, in optionaler Arbeit ohne Nutzenbeleg und im Betriebsaufwand, den wir nur qualitativ bewertet haben.
 
 _Quelle:_ 1B-ergebnis.md, 1C-ergebnis.md (Kurzantwort, Verlauf 9f230abc); 1A: abgabe/niklas/folien-1a.mjs (N1, N10); 1B Schritte 3–4: abgabe/niklas/folien-1b34.mjs (M1–M4), evidenz/1B/messung/2026-11-1{5,6}-lauf-*.json.gz und Breaker-Folgen (i7-10700K, Hyper-V · 5e758d0a, 2b39b9df, 7c64dd6a, 4b135fe8), adr/1B-020-zweite-rolle-betrieblich-begruenden.md
 
