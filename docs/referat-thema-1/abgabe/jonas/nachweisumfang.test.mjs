@@ -5,6 +5,8 @@ import { join } from 'node:path';
 import {
   berechneNachweisumfang,
   dauer,
+  FENSTER,
+  vorarbeit,
   kopfzahlen,
   REFERAT,
   tabellenwerte,
@@ -39,6 +41,8 @@ test('Teilsummen der Laborzeit ergeben die gewertete Laborzeit', () => {
   assert.ok(Math.abs(je['1A'] + je['1B'] + je['1B 3–4'] + je['1C'] - gewertetSek) < 1e-6);
   // 1B 3–4: 18 gewertete Läufe (Summary 5, Label 9 mit Teilläufen, Breaker 2, S1 2), keine dev-Läufe
   assert.equal(werte.laborzeit.reihen1B3u4.laeufe, 18);
+  // Zählweise wie Niklas' PR #26: Lauf-ID (UTC) bzw. Treiberstart bis umgebung.erfasstAm, zusammen ca. 12 h 40 min
+  assert.equal(dauer(werte.laborzeit.je['1B 3–4']), '12 h 39 min'); // PR rundet je Reihe: ca. 12 h 40 min
   assert.equal(werte.laborzeit.laeufe1A, werte.laborzeit.vollstaendig1A);
 });
 
@@ -85,4 +89,31 @@ test('1B 3–4: liegen .json und .json.gz nebeneinander, zählt der Lauf einmal 
   } finally {
     rmSync(wurzel, { recursive: true, force: true });
   }
+});
+
+test('Vorarbeit 1B 1–2: VM-Laufzeit aus dem Systemjournal (CSV), ohne die gewerteten Läufe', () => {
+  const v = vorarbeit();
+  assert.equal(v.vm.starts, 29);
+  assert.equal(v.vm.startsWindows, 11);
+  assert.equal(dauer(v.vm.alleSek), '24 h 14 min');
+  assert.equal(dauer(v.vm.laborSek), '14 h 40 min');
+  assert.equal(dauer(v.vm.windowsSek), '9 h 34 min');
+  // gewertete Läufe 1B 1–2 liegen vollständig in VM-Laufzeit und werden abgezogen
+  assert.ok(Math.abs(v.vm.gewertetDarinSek - werte.laborzeit.je['1B']) < 1);
+  assert.ok(Math.abs(v.je['1B'] - (v.vm.alleSek - v.vm.gewertetDarinSek)) < 1e-6);
+});
+
+test('Vorarbeit aus Protokollen: jeder Beleg steht wörtlich in seiner Datei', () => {
+  for (const f of FENSTER) {
+    const text = readFileSync(join(REFERAT, f.datei), 'utf8');
+    for (const b of f.belege ?? []) assert.ok(text.includes(b), `${f.datei}: „${b}“ fehlt`);
+  }
+});
+
+test('Vorarbeit je Auftrag', () => {
+  const { je } = vorarbeit();
+  assert.equal(dauer(je['1A']), '6 min'); // Vorlauf der gewerteten Reihe, je Lauf wie die gewertete Zeit
+  assert.equal(dauer(je['1B 3–4']), '1 h 19 min');
+  assert.equal(dauer(je['1B']), '23 h 19 min'); // VM-Laufzeit ohne die 55 min gewerteter Läufe // Aufbau Windows, Entwicklungsläufe, Kalibrierung, Abbau
+  assert.equal(dauer(je['1C']), '1 h 11 min'); // Kalibrierung PC, U1, Messungen Teil 2/3, Probe- und Trockenläufe
 });

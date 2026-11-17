@@ -19,12 +19,13 @@ cd docs/referat-thema-1/abgabe/jonas && node --test nachweisumfang.test.mjs
 
 Nur Werte, deren Rohdaten und Protokolle beide auf diesem Stand liegen.
 
-| Kennzahl                                   | Wert                               | Quelle                                                         |
-| ------------------------------------------ | ---------------------------------- | -------------------------------------------------------------- |
-| Gewertete Laborzeit                        | **18,6 h** (18 h 37 min, 67.048 s) | Abschnitt [Laborzeit](#laborzeit)                              |
-| Automatisierte Tests                       | **326**                            | Abschnitt [Tests](#tests); ohne die Tests des Abgabe-Builds    |
-| ADRs                                       | **35** (1B: 13, 1C: 22)            | `ls adr/1[BC]-*.md`; 1A hat statt ADRs einen Experimentvertrag |
-| Vorab festgelegte Hypothesen und Kriterien | **50**                             | Abschnitt [Hypothesen](#hypothesen-und-kriterien)              |
+| Kennzahl                                   | Wert                               | Quelle                                                                                                                |
+| ------------------------------------------ | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Gewertete Laborzeit                        | **20,3 h** (20 h 21 min, 73.235 s) | Abschnitt [Laborzeit](#laborzeit)                                                                                     |
+| Aufbau, Tests und weitere Läufe            | **25,9 h** (25 h 55 min, 93.295 s) | Abschnitt [Aufbau, Tests und weitere Läufe](#aufbau-tests-und-weitere-läufe); Rechnerzeit, getrennt von der Laborzeit |
+| Automatisierte Tests                       | **326**                            | Abschnitt [Tests](#tests); ohne die Tests des Abgabe-Builds                                                           |
+| ADRs                                       | **35** (1B: 13, 1C: 22)            | `ls adr/1[BC]-*.md`; 1A hat statt ADRs einen Experimentvertrag                                                        |
+| Vorab festgelegte Hypothesen und Kriterien | **50**                             | Abschnitt [Hypothesen](#hypothesen-und-kriterien)                                                                     |
 
 ## Laborzeit
 
@@ -32,18 +33,39 @@ Dauer je Lauf aus den Zeitstempeln der Rohdaten, nicht aus Protokollangaben.
 Gezählt sind nur gewertete Läufe; Vorläufe, gestörte und abgebrochene Versuche,
 Entwicklungsläufe, Aufbau und modellfreie Messungen fehlen.
 
-| Kennzahl                      | Wert                                  | Rohdaten und Zeitstempel                                                                                                                                                           |
-| ----------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| davon 1A Ressourcenisolation  | 2 h 32 min (25 Läufe, 25 vollständig) | `evidenz/1A/reihe-main-a19ca70f-20261115-122547/V*/block-*/`: `lauf.json` → `warmup.manifest.startAt` bis `report.json` → `timestamp`                                              |
-| davon 1B Schritte 1–2         | 55 min (25 Aufträge)                  | `evidenz/1B/messung/2026-11-13-lauf.json`, `-lauf-b0.json`, `-lauf-kalt*.json`: `treiber.startedAt` bis spätestes `treiber.auftraege[].finishedAt`                                 |
-| davon 1B Schritte 3–4         | 10 h 56 min (18 Läufe, 128 Aufträge)  | `evidenz/1B/messung/2026-11-1{5,6}-lauf-*-{summary,label}[-NN].json.gz`, Breaker-Folgen `-lauf-breaker-*.json`: `treiber.startedAt` bis spätestes `treiber.auftraege[].finishedAt` |
-| davon 1C Laborläufe           | 4 h 15 min (3 Läufe)                  | `evidenz/1C/messung/2026-11-05-labor.json.gz`, `-labor-pc.json.gz`, `2026-11-09-labor-nachlauf.json.gz`: `environment.startedAt` bis `endedAt`                                     |
-| Zeitraum der gewerteten Läufe | 5.–16.11.2026                         | erster Start bis letztes Ende der Zeilen darüber, Berliner Kalendertag                                                                                                             |
+| Kennzahl                      | Wert                                  | Rohdaten und Zeitstempel                                                                                                                                                                              |
+| ----------------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| davon 1A Ressourcenisolation  | 2 h 32 min (25 Läufe, 25 vollständig) | `evidenz/1A/reihe-main-a19ca70f-20261115-122547/V*/block-*/`: `lauf.json` → `warmup.manifest.startAt` bis `report.json` → `timestamp`                                                                 |
+| davon 1B Schritte 1–2         | 55 min (25 Aufträge)                  | `evidenz/1B/messung/2026-11-13-lauf.json`, `-lauf-b0.json`, `-lauf-kalt*.json`: `treiber.startedAt` bis spätestes `treiber.auftraege[].finishedAt`                                                    |
+| davon 1B Schritte 3–4         | 12 h 39 min (18 Läufe, 128 Aufträge)  | `evidenz/1B/messung/2026-11-1{5,6}-lauf-*-{summary,label}[-NN].json.gz`, Breaker-Folgen `-lauf-breaker-*.json`: Lauf-ID `lauf` (UTC, bei S1 `treiber.startedAt`) bis `umgebung.erfasstAm`, wie PR #26 |
+| davon 1C Laborläufe           | 4 h 15 min (3 Läufe)                  | `evidenz/1C/messung/2026-11-05-labor.json.gz`, `-labor-pc.json.gz`, `2026-11-09-labor-nachlauf.json.gz`: `environment.startedAt` bis `endedAt`                                                        |
+| Zeitraum der gewerteten Läufe | 5.–16.11.2026                         | erster Start bis letztes Ende der Zeilen darüber, Berliner Kalendertag                                                                                                                                |
 
 _Aktualisiert 2026-11-17:_ 1B Schritte 3–4 zählen jetzt mit. Rohdaten, Protokolle, Schwellen
-(`1B-3u4-Planung.md`) und Autorenprüfung (16.11.) liegen seit dem Merge von PR #26 auf diesem Branch. Gemessen
-wie oben vom Treiberstart bis zum letzten Auftragsende; die PR-Beschreibung nennt rund 12 h 40 min, weil sie ab
-dem Laufbeginn bis zur Ergebniserfassung zählt.
+(`1B-3u4-Planung.md`) und Autorenprüfung (16.11.) liegen seit dem Merge von PR #26 auf diesem Branch. Gezählt wie in
+der PR-Beschreibung vom Laufbeginn (Lauf-ID) bis zur Ergebniserfassung, also samt Aufwärmen und Nachlauf; die PR
+rundet je Reihe und nennt ca. 12 h 40 min. 1B Schritte 1–2 haben kein `erfasstAm` und bleiben bei Treiberstart bis
+letztem Auftrag.
+
+## Aufbau, Tests und weitere Läufe
+
+_Ergänzt 2026-11-17:_ Rechnerzeit außerhalb der gewerteten Läufe, getrennt gezählt und nie mit der Laborzeit
+addiert: Aufbau und Neuaufbau der Labore, Windows-/Hyper-V-Versuche, Entwicklungs-, Probe- und Trockenläufe,
+Kalibrierung, Ursachenversuch, Messungen außerhalb der Laborläufe, Abbau. Keine Arbeitszeit; Planung, Code,
+Tests und Dokumentation ohne laufendes Labor fehlen.
+
+| Kennzahl                          | Wert                                         | Quelle                                                                                                                                                  |
+| --------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| zusätzlich 1A Ressourcenisolation | 6 min (Vorlauf)                              | `evidenz/1A/reihe-main-a19ca70f-20261115-122547/vorlauf/`, gezählt wie die gewerteten Läufe                                                             |
+| zusätzlich 1B Schritte 1–2        | 23 h 19 min (29 VM-Starts, davon 11 Windows) | VM-Laufzeit aus dem Systemjournal ohne die gewerteten Läufe: [`evidenz/1B/2026-11-17-vm-laufzeiten.md`](evidenz/1B/2026-11-17-vm-laufzeiten.md)         |
+| zusätzlich 1B Schritte 3–4        | 1 h 19 min (14 Zeitfenster)                  | Uhrzeiten in den Protokollen `evidenz/1B/2026-11-1{5,6}-*` (Aufbau unter Windows, Entwicklungsläufe, Kalibrierung, Abbau)                               |
+| zusätzlich 1C Laborläufe          | 1 h 11 min (10 Zeitfenster)                  | Uhrzeiten in `evidenz/1C/2026-11-05-labor-pc.md`, `2026-10-24-teil2.md`, `-teil3.md`; Probe- und Trockenläufe aus `environment.startedAt` bis `endedAt` |
+
+Jedes Zeitfenster steht mit Datei und wörtlichem Beleg in `FENSTER` in
+[`abgabe/jonas/nachweisumfang.mjs`](abgabe/jonas/nachweisumfang.mjs); der Test prüft, dass jeder Beleg in seiner
+Datei steht. Nur Fenster mit Anfang und Ende (oder einer Dauer) zählen. Nicht gezählt: Windows-Versuche 4 und 5
+ohne Uhrzeit (im VM-Journal enthalten), Entwicklungsläufe 1B 3–4 mit nur einer Startzeit, Daten, die nur noch in der Git-Historie liegen (gelöschte 1A-Vorreihen). Für Niklas'
+Windows-Rechner gibt es kein Journal im Repo; seine PR nennt für Entwicklungs- und Diagnoseproben rund 1 h 20 min.
 
 ## Tests
 

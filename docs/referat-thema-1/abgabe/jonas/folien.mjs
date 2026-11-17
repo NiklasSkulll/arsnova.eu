@@ -366,7 +366,14 @@ export function ladeNachweis(root) {
       ['1B', '1B Schritte 1–2', 'davon 1B Schritte 1–2'],
       ['1B', '1B Schritte 3–4', 'davon 1B Schritte 3–4'],
       ['1C', '1C Laborläufe', 'davon 1C Laborläufe'],
-    ].map(([auftrag, was, name]) => ({ auftrag, was, ...dauerZeile(name) })),
+    ].map(([auftrag, was, name]) => ({
+      auftrag,
+      was,
+      ...dauerZeile(name),
+      // Aufbau, Tests und weitere Läufe desselben Auftrags (getrennt gezählt)
+      vor: dauerZeile(name.replace(/^davon /, 'zusätzlich ')),
+    })),
+    vorarbeit: wert('Aufbau, Tests und weitere Läufe'),
     zeilen,
   };
 }
@@ -621,25 +628,30 @@ const gesprochenZeitraum = (t) => {
  * proportional, Farbe des Auftragsetiketts). Werte unverändert aus nachweisumfang.md.
  */
 const nachweisLeiste = (n) => {
-  const max = Math.max(...n.je.map((j) => j.min));
+  const max = Math.max(...n.je.map((j) => j.min + j.vor.min));
+  const anteil = (min) => `calc((100% - 280px) * ${(min / max).toFixed(3)})`;
   const kennzahl = (wert, was) =>
     `<div class="nw-zahl"><span class="nw-wert">${esc(wert)}</span><span class="nw-was">${esc(was)}</span></div>`;
   return (
     `<div class="dank-nachweis" data-nachweis>` +
-    `<p class="nw-kopf">Belege im Repo · gewertete Messläufe ${esc(n.zeitraum)}</p>` +
     `<div class="nw-band"><div class="nw-zahlen">` +
     kennzahl(n.laborzeit, 'gewertete Laborzeit') +
+    kennzahl(n.vorarbeit, 'Aufbau, Tests, weitere Läufe') +
     kennzahl(n.tests, 'automatisierte Tests') +
     kennzahl(n.adrs, 'ADRs') +
     kennzahl(n.hypothesen, 'vorab festgelegte Hypothesen') +
     `</div>` +
     `<div class="nw-balken" data-nachweis-je>` +
+    `<span></span><span class="nw-legende"><span class="nw-l-voll"></span>gewertete Läufe ${esc(n.zeitraum)}` +
+    `<span class="nw-l-schraffur"></span>Aufbau, Tests, weitere Läufe</span>` +
     n.je
       .map(
         (j) =>
           `<span class="nw-auftrag">${esc(j.was)}</span>` +
-          `<span class="nw-spur"><span class="nw-balken-${j.auftrag.toLowerCase()}" style="width:calc((100% - 150px) * ${(j.min / max).toFixed(3)})"></span>` +
-          `<span class="nw-dauer">${esc(j.dauer)}</span></span>`,
+          `<span class="nw-spur nw-${j.auftrag.toLowerCase()}">` +
+          `<span class="nw-voll" style="width:${anteil(j.min)}"></span>` +
+          `<span class="nw-schraffur" style="width:${anteil(j.vor.min)}"></span>` +
+          `<span class="nw-dauer">${esc(j.dauer)} <span class="nw-plus">+ ${esc(j.vor.dauer)}</span></span></span>`,
       )
       .join('') +
     `</div></div></div>`
@@ -1617,7 +1629,7 @@ export function folien(daten) {
   });
 
   // ------------------------------------------------------------ GD Dank und Fragen (spricht Niklas)
-  const nb34 = daten.nachweis.je.find((j) => j.was === '1B Schritte 3–4');
+  const nb12 = daten.nachweis.je.find((j) => j.was === '1B Schritte 1–2');
   // Bleibt während der Befragung stehen (Leitfaden E23); Link und QR-Code führen zu allen Belegen.
   const url = REPO_URL.replace(/^https:\/\//, '');
   F.push({
@@ -1639,11 +1651,12 @@ export function folien(daten) {
         nachweisLeiste(daten.nachweis) +
         `</div>`,
     ),
-    notiz: `Danke fürs Zuhören. Alle Belege, also Entscheidungen, Protokolle und Messdaten, liegen im Repository hinter diesem Link. Was dort liegt, steht darunter in Zahlen: ${gesprochenDauer(daten.nachweis.laborzeit)} gewertete Laborzeit aus Messläufen ${gesprochenZeitraum(daten.nachweis.zeitraum)}, davon ${gesprochenDauer(nb34.dauer)} für 1B Schritte 3 und 4, dazu ${daten.nachweis.tests} Tests, ${daten.nachweis.adrs} ADRs und ${daten.nachweis.hypothesen} vorab festgelegte Hypothesen. Wir freuen uns auf Ihre Fragen.`,
+    notiz: `Danke fürs Zuhören. Alle Belege, also Entscheidungen, Protokolle und Messdaten, liegen im Repository hinter diesem Link. Was dort liegt, steht darunter in Zahlen: ${gesprochenDauer(daten.nachweis.laborzeit)} gewertete Laborzeit aus Messläufen ${gesprochenZeitraum(daten.nachweis.zeitraum)}, dazu ${gesprochenDauer(daten.nachweis.vorarbeit)} Rechnerzeit für Aufbau, Tests und weitere Läufe, davon ${gesprochenDauer(nb12.vor.dauer)} VM-Laufzeit allein für das Labor von 1B, Schritte 1 und 2. Außerdem ${daten.nachweis.tests} Tests, ${daten.nachweis.adrs} ADRs und ${daten.nachweis.hypothesen} vorab festgelegte Hypothesen. Wir freuen uns auf Ihre Fragen.`,
     stichpunkte: [
       '„Danke fürs Zuhören.“',
       'Belege: Repository-Link und QR-Code',
-      `Im Repo: ${daten.nachweis.laborzeit} Laborzeit (${daten.nachweis.zeitraum}), davon 1B 3–4 ${nb34.dauer}`,
+      `Im Repo: ${daten.nachweis.laborzeit} gewertet (${daten.nachweis.zeitraum}) + ${daten.nachweis.vorarbeit} Aufbau, Tests, weitere Läufe`,
+      `1B 1–2: ${nb12.dauer} gewertet, ${nb12.vor.dauer} VM-Laufzeit für Aufbau und Tests`,
       `${daten.nachweis.tests} Tests, ${daten.nachweis.adrs} ADRs, ${daten.nachweis.hypothesen} Hypothesen; alles nachrechenbar`,
       '„Wir freuen uns auf Ihre Fragen.“',
     ],
@@ -2107,12 +2120,16 @@ export function folien(daten) {
     frage('Wie viel Messung und Prüfung steckt in den Belegen?', ['1A', '1B', '1C']) +
       `<div class="nw-reserve">` +
       nwSpalte(
-        `Gewertete Laborzeit: ${nw.laborzeit}`,
+        `Rechnerzeit: gewertet + Aufbau, Tests, weitere Läufe`,
         [
-          ...nw.je.map((j) => [j.was, j.zusatz ? `${j.dauer} (${j.zusatz})` : j.dauer]),
-          ['Zeitraum', nw.zeitraum],
+          ...nw.je.map((j) => [
+            j.was,
+            `${j.dauer} + ${j.vor.dauer} (${j.zusatz}; ${j.vor.zusatz})`,
+          ]),
+          ['Summe', `${nw.laborzeit} + ${nw.vorarbeit}`],
+          ['Gewertete Läufe', nw.zeitraum],
         ],
-        `<p class="nw-notiz">Aus den Zeitstempeln der Rohdaten. Nicht gezählt: Vorläufe, gestörte und abgebrochene Versuche, Entwicklungsläufe, Aufbau.</p>`,
+        `<p class="nw-notiz">Rechnerzeit, keine Arbeitszeit. Aufbau usw.: VM-Journal (1B 1–2), sonst Uhrzeiten in Protokollen.</p>`,
       ) +
       nwSpalte(
         `Automatisierte Tests: ${nw.tests}`,
@@ -2139,7 +2156,7 @@ export function folien(daten) {
         `<p class="nw-notiz">ADRs: ${esc(nw.zeilen.ADRs)}</p>`,
       ) +
       `</div>`,
-    `Falls nach dem Umfang gefragt wird: Gewertet sind ${gesprochenDauer(nw.laborzeit)} Laborzeit aus Messläufen ${gesprochenZeitraum(nw.zeitraum)}, gemessen an den Zeitstempeln der Rohdaten. ${nw.je.map((j) => `${j.was.replace('–', ' bis ')}: ${gesprochenDauer(j.dauer)}`).join('; ')}. Vorläufe, abgebrochene Versuche, Entwicklungsläufe und der Aufbau der Labore sind darin nicht enthalten. Dazu kommen ${nw.tests} automatisierte Tests für Last- und Messwerkzeuge, Laborskripte und Backend sowie ${nw.hypothesen} Hypothesen und Kriterien, die vor dem jeweiligen Lauf festgelegt wurden, und ${nw.adrs} Entscheidungen als ADR.`,
+    `Falls nach dem Umfang gefragt wird: Gewertet sind ${gesprochenDauer(nw.laborzeit)} Laborzeit aus Messläufen ${gesprochenZeitraum(nw.zeitraum)}, gemessen an den Zeitstempeln der Rohdaten. ${nw.je.map((j) => `${j.was.replace('–', ' bis ')}: ${gesprochenDauer(j.dauer)}`).join('; ')}. Getrennt davon stehen ${gesprochenDauer(nw.vorarbeit)} Rechnerzeit für Aufbau, Tests und weitere Läufe: für 1B Schritte 1 und 2 allein ${gesprochenDauer(nw.je[1].vor.dauer)} VM-Laufzeit laut Systemjournal, mit ${nw.je[1].vor.zusatz.replace(/, davon (\d+) Windows/, ', davon $1 der Windows-VM')}, für die anderen Aufträge die Zeitfenster mit Uhrzeit aus den Protokollen. Das ist keine Arbeitszeit; Planung, Code und Auswertung sind nirgends gezählt. Dazu kommen ${nw.tests} automatisierte Tests für Last- und Messwerkzeuge, Laborskripte und Backend sowie ${nw.hypothesen} Hypothesen und Kriterien, die vor dem jeweiligen Lauf festgelegt wurden, und ${nw.adrs} Entscheidungen als ADR.`,
     `${NACHWEIS}, alle Tabellen, Stand ${daten.nachweis.commit} (nachgerechnet von abgabe/jonas/nachweisumfang.mjs auf dem Checkout); Rechner je Lauf: 1C Laptop (ThinkPad P50) und PC (i7-8700), 1B Schritte 1–2 Laptop, 1A und 1B Schritte 3–4 wie in den Protokollen unter evidenz/1A und evidenz/1B`,
   );
 
@@ -2412,7 +2429,7 @@ export function folien(daten) {
       daten.nachweis.je
         .map((j) => `${j.was.replace(/ (Ressourcenisolation|Laborläufe)$/, '')} ${j.dauer}`)
         .join(' · '),
-      'Nicht gezählt: Vorläufe, Abbrüche, Entwicklungsläufe, Aufbau',
+      `Dazu ${daten.nachweis.vorarbeit} Aufbau, Tests, weitere Läufe; 1B 1–2 allein ${daten.nachweis.je[1].vor.dauer} VM-Laufzeit (Journal)`,
       `${daten.nachweis.tests} Tests, ${daten.nachweis.hypothesen} Hypothesen vorab, ${daten.nachweis.adrs} ADRs`,
     ],
     J11: [

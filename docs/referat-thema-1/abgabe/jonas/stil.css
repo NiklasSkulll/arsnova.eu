@@ -541,8 +541,8 @@
    ohne Wertung (nachweisumfang.md, Abschnitt Darstellung) */
 .dank-nachweis {
   grid-column: 1 / -1;
-  margin: 40px 0 0;
-  padding: 22px 0 0;
+  margin: 18px 0 0;
+  padding: 16px 0 0;
   border-top: 1px solid var(--linie);
   color: var(--text-2);
 }
@@ -552,17 +552,15 @@
   font-size: var(--s-min);
 }
 .nw-band {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  column-gap: 96px;
-  align-items: center;
-  margin: 16px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
 }
 .nw-zahlen {
-  display: grid;
-  grid-template-columns: repeat(2, auto);
-  column-gap: 56px;
-  row-gap: 18px;
+  display: flex;
+  justify-content: space-between;
+  column-gap: 40px;
 }
 .nw-zahl {
   display: flex;
@@ -570,7 +568,7 @@
 }
 .nw-wert {
   color: var(--tinte);
-  font-size: 44px;
+  font-size: 40px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   line-height: 1.1;
@@ -585,8 +583,28 @@
   grid-template-columns: auto 1fr;
   align-items: center;
   column-gap: 24px;
-  row-gap: 14px;
+  row-gap: 4px;
   font-size: var(--s-min);
+}
+.nw-legende {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--gedaempft);
+  font-size: 18px;
+}
+.nw-l-voll,
+.nw-l-schraffur {
+  display: inline-block;
+  width: 22px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--text-2);
+}
+.nw-l-schraffur {
+  margin-left: 18px;
+  background: repeating-linear-gradient(135deg, var(--text-2) 0 3px, transparent 3px 7px);
+  box-shadow: inset 0 0 0 1px var(--text-2);
 }
 .nw-auftrag {
   white-space: nowrap;
@@ -594,33 +612,46 @@
 .nw-spur {
   display: flex;
   align-items: center;
-  gap: 14px;
+  --farbe: var(--text-2);
 }
-.nw-spur > span:first-child {
+.nw-1a {
+  --farbe: var(--blau);
+}
+.nw-1b {
+  --farbe: var(--bernstein);
+}
+.nw-1c {
+  --farbe: var(--petrol);
+}
+.nw-voll,
+.nw-schraffur {
   flex: none;
   height: 16px;
+}
+.nw-voll {
   min-width: 4px;
-  border-radius: 3px;
+  border-radius: 3px 0 0 3px;
+  background: var(--farbe);
 }
-.nw-balken-1a {
-  background: var(--blau);
-}
-.nw-balken-1b {
-  background: var(--bernstein);
-}
-.nw-balken-1c {
-  background: var(--petrol);
+.nw-schraffur {
+  border-radius: 0 3px 3px 0;
+  background: repeating-linear-gradient(135deg, var(--farbe) 0 3px, transparent 3px 7px);
+  box-shadow: inset 0 0 0 1px var(--farbe);
 }
 .nw-dauer {
+  margin-left: 14px;
   color: var(--tinte);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+.nw-plus {
+  color: var(--gedaempft);
+}
 /* R17: Nachweisumfang im Einzelnen, drei Spalten */
 .nw-reserve {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, 1fr);
-  column-gap: 64px;
+  grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 48px;
   align-items: start;
 }
 .nw-tabelle .nw-kopf {

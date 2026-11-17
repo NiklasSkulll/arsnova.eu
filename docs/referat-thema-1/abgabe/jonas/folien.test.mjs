@@ -167,7 +167,8 @@ function whitelist() {
   blaetter(daten.abgeleitet);
   for (const f of daten.nachbau.fragen) ziffern(f);
   for (const v of Object.values(daten.nachweis)) if (typeof v === 'string') ziffern(v);
-  for (const j of daten.nachweis.je) for (const v of [j.dauer, j.zusatz]) ziffern(v);
+  for (const j of daten.nachweis.je)
+    for (const v of [j.dauer, j.zusatz, j.vor.dauer, j.vor.zusatz]) ziffern(v);
   for (const v of Object.values(daten.nachweis.zeilen)) ziffern(v);
   for (const f of Object.values(FESTWERTE)) zahl(f.wert);
   return w;
@@ -1043,12 +1044,13 @@ test('GD: Nachweisumfang aus nachweisumfang.md, gleich der Neuberechnung, ohne W
   const gd = sichtbar(nach('GD').inhalt);
   for (const [wert, was] of [
     [k.laborzeitStunden, 'gewertete Laborzeit'],
+    [k.vorarbeitStunden, 'Aufbau, Tests, weitere Läufe'],
     [k.tests, 'automatisierte Tests'],
     [k.adrs, 'ADRs'],
     [k.hypothesen, 'vorab festgelegte Hypothesen'],
   ])
     assert.ok(gd.replace(/\s+/g, ' ').includes(`${wert} ${was}`), `GD: „${wert} ${was}“ fehlt`);
-  assert.ok(gd.includes(`gewertete Messläufe ${k.zeitraum}`));
+  assert.ok(gd.includes(`gewertete Läufe ${k.zeitraum}`));
   // Laborzeit je Auftrag: Dauer wie in nachweisumfang.md, Balkenlänge proportional, längster Balken voll
   const { laborzeit, dauer } = await import('./nachweisumfang.mjs');
   const je = laborzeit().je;
@@ -1062,13 +1064,19 @@ test('GD: Nachweisumfang aus nachweisumfang.md, gleich der Neuberechnung, ohne W
     daten.nachweis.je.map((j) => j.dauer),
     Object.values(erwartet).map(dauer),
   );
+  // je Auftrag zwei Balken: gewertet (voll) und Aufbau usw. (schraffiert), Länge proportional zur Summe
   const anteile = [...nach('GD').inhalt.matchAll(/\* ([\d.]+)\)"/g)].map((m) => Number(m[1]));
-  const max = Math.max(...daten.nachweis.je.map((j) => j.min));
+  const max = Math.max(...daten.nachweis.je.map((j) => j.min + j.vor.min));
   assert.deepEqual(
     anteile,
-    daten.nachweis.je.map((j) => Number((j.min / max).toFixed(3))),
+    daten.nachweis.je.flatMap((j) => [j.min, j.vor.min].map((x) => Number((x / max).toFixed(3)))),
   );
-  assert.equal(Math.max(...anteile), 1);
+  const { vorarbeit } = await import('./nachweisumfang.mjs');
+  const v = vorarbeit().je;
+  assert.deepEqual(
+    daten.nachweis.je.map((j) => j.vor.dauer),
+    [v['1A'], v['1B'], v['1B 3–4'], v['1C']].map(dauer),
+  );
   // sachlich: keine Commit-Zahlen je Person, keine Wertung
   assert.doesNotMatch(
     gd + nach('GD').notiz,
@@ -1082,7 +1090,8 @@ test('R17: Nachweisumfang im Einzelnen, jede Zeile wie in nachweisumfang.md, ohn
   const r = sichtbar(nach('R17').inhalt);
   const ohneFett = (w) => w.replace(/\*\*/g, '');
   for (const [name, wert] of Object.entries(tabellenwerte())) {
-    if (/^(Gewertete Laborzeit|Automatisierte Tests|Vorab festgelegte)/.test(name)) continue;
+    if (/^(Gewertete Laborzeit|Automatisierte Tests|Vorab festgelegte|Aufbau, Tests)/.test(name))
+      continue;
     // Wert vor der Klammer steht auf der Folie, der Zusatz in der Klammer darunter
     const [kopf, zusatz] = ohneFett(wert)
       .match(/^([^(]+?)(?: \((.+)\))?$/)
@@ -1090,7 +1099,7 @@ test('R17: Nachweisumfang im Einzelnen, jede Zeile wie in nachweisumfang.md, ohn
     assert.ok(r.includes(kopf), `R17: ${name} → ${kopf} fehlt`);
     if (zusatz && name !== 'ADRs') assert.ok(r.includes(zusatz), `R17: ${name} → ${zusatz} fehlt`);
   }
-  assert.match(r, /Nicht gezählt: Vorläufe/);
+  assert.match(r, /Rechnerzeit, keine Arbeitszeit/);
   assert.doesNotMatch(r + nach('R17').notiz, /umfangreich|beeindruck|enorm|unverhältnis|aufwendig/);
   assert.equal(nach('R17').teil, 'reserve');
 });

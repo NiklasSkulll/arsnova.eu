@@ -109,8 +109,8 @@ function sek(von, bis) {
 }
 
 /** 1A: je Lauf warmup.manifest.startAt (lauf.json) bis timestamp (report.json). */
-function laufzeit1A(root) {
-  const reihe = join(root, REIHE_1A);
+function laufzeit1A(root, ordner = REIHE_1A) {
+  const reihe = join(root, ordner);
   let summe = 0;
   let laeufe = 0;
   let vollstaendig = 0;
@@ -138,6 +138,22 @@ function laufzeit1B(root, datei) {
     auftraege: treiber.auftraege.length,
     grenzen: [Date.parse(treiber.startedAt), Math.max(...enden)],
   };
+}
+
+/**
+ * 1B 3–4, Zählweise wie Niklas' PR #26: Laufbeginn aus der UTC-Lauf-ID (`lauf`, z. B. 20261115T215523-…) bis zur
+ * Ergebniserfassung `umgebung.erfasstAm`; S1 hat keine Lauf-ID, dort Treiberstart. Fehlt `erfasstAm`, gilt das
+ * Ende des letzten Auftrags.
+ */
+function laufzeit1B3u4(root, datei) {
+  const j = liesJson(join(root, MESSUNG_1B, datei));
+  const basis = laufzeit1B(root, datei);
+  const m = String(j.lauf ?? '').match(/^(\d{4})(\d\d)(\d\d)T(\d\d)(\d\d)(\d\d)/);
+  const start = m
+    ? Date.UTC(m[1], m[2] - 1, m[3], m[4], m[5], m[6])
+    : Date.parse(j.treiber.startedAt);
+  const ende = Date.parse(j.umgebung?.erfasstAm ?? '') || basis.grenzen[1];
+  return { sek: (ende - start) / 1000, auftraege: basis.auftraege, grenzen: [start, ende] };
 }
 
 /** 1C: environment.startedAt bis environment.endedAt. */
@@ -178,7 +194,7 @@ export function laborzeit(root = REFERAT) {
   const a = laufzeit1A(root);
   const b = GEWERTET_1B.map((d) => laufzeit1B(root, d));
   const c = GEWERTET_1C.map((d) => laufzeit1C(root, d));
-  const n = dateien1B3u4(root).map((d) => laufzeit1B(root, d));
+  const n = dateien1B3u4(root).map((d) => laufzeit1B3u4(root, d));
   const je = {
     '1A': a.sek,
     '1B': summe(b.map((x) => x.sek)),
@@ -262,10 +278,287 @@ export function tests() {
   return { ohneAbgabe, gesamt: ohneAbgabe + gruppen.abgabe.tests, gruppen };
 }
 
+/** VM-Starts und -Enden aus dem Systemjournal (systemd-machined), Protokoll evidenz/1B/2026-11-17-vm-laufzeiten.md */
+const VM_CSV = 'evidenz/1B/messung/2026-11-17-vm-laufzeiten.csv';
+
+/**
+ * Zeitfenster außerhalb der gewerteten Läufe, wie sie in Protokollen stehen: Aufbau, Entwicklungs- und
+ * Probeläufe, Kalibrierung, Ursachenversuch, Abbau. `belege` stehen wörtlich in `datei` (Test). Dauer aus
+ * `von`/`bis` (über Mitternacht erlaubt), aus `min` (nur Dauer im Protokoll) oder aus den Rohdaten (`json1C`,
+ * `vorlauf1A`). 1B Schritte 1–2 kommen vollständig aus dem VM-Journal, nicht aus dieser Liste.
+ */
+export const FENSTER = [
+  // 1A: Vorlauf der gewerteten Reihe (fünf verkürzte Varianten)
+  {
+    auftrag: '1A',
+    was: 'Vorlauf',
+    datei: `${REIHE_1A}/vorabnachtrag.md`,
+    vorlauf1A: `${REIHE_1A}/vorlauf`,
+  },
+  // 1B Schritte 3–4 (Niklas, Windows-Rechner)
+  {
+    auftrag: '1B 3–4',
+    was: 'Aufbau unter Windows',
+    datei: 'evidenz/1B/2026-11-15-aufbau-windows.md',
+    belege: ['log-up-20261115T190943', 'aufbau-20261115T192944'],
+    von: '19:09:43',
+    bis: '19:29:44',
+  },
+  {
+    auftrag: '1B 3–4',
+    was: 'Wiederanlauf',
+    datei: 'evidenz/1B/2026-11-15-aufbau-windows.md',
+    belege: ['log-start-20261115T194443', 'aufbau-20261115T194622'],
+    von: '19:44:43',
+    bis: '19:46:22',
+  },
+  {
+    auftrag: '1B 3–4',
+    was: 'Entwicklungslauf F1',
+    datei: 'evidenz/1B/2026-11-15-lauf-dev-f1-summary.md',
+    belege: ['21:44:43 UTC', '21:50:29 UTC'],
+    von: '21:44:43',
+    bis: '21:50:29',
+  },
+  {
+    auftrag: '1B 3–4',
+    was: 'Entwicklungslauf F2',
+    datei: 'evidenz/1B/2026-11-16-lauf-dev-f2-summary.md',
+    belege: ['00:02:26 Uhr MEZ', '00:08:12 Uhr MEZ'],
+    von: '00:02:26',
+    bis: '00:08:12',
+  },
+  {
+    auftrag: '1B 3–4',
+    was: 'Entwicklungslauf F2, zweiter',
+    datei: 'evidenz/1B/2026-11-16-lauf-dev-f2-summary-v2.md',
+    belege: ['23:32:50 UTC', '23:38:36 UTC'],
+    von: '23:32:50',
+    bis: '23:38:36',
+  },
+  {
+    auftrag: '1B 3–4',
+    was: 'Kalibrierung',
+    datei: 'evidenz/1B/2026-11-16-kalibrierung.md',
+    belege: ['101,099129 s'],
+    min: 101.099129 / 60,
+  },
+  {
+    auftrag: '1B 3–4',
+    was: 'Entwicklungslauf L3',
+    datei: 'evidenz/1B/2026-11-16-lauf-dev-l3-summary.md',
+    belege: ['01:35–01:42'],
+    von: '01:35',
+    bis: '01:42',
+  },
+  {
+    auftrag: '1B 3–4',
+    was: 'Entwicklungslauf Slot belegt',
+    datei: 'evidenz/1B/2026-11-16-lauf-dev-busy-summary.md',
+    belege: ['02:59–03:06'],
+    von: '02:59',
+    bis: '03:06',
+  },
+  {
+    auftrag: '1B 3–4',
+    was: 'Entwicklungslauf Label',
+    datei: 'evidenz/1B/2026-11-16-lauf-dev-normal-label.md',
+    belege: ['10:34–10:37'],
+    von: '10:34',
+    bis: '10:37',
+  },
+  {
+    auftrag: '1B 3–4',
+    was: 'Diagnose Label',
+    datei: 'evidenz/1B/2026-11-16-lauf-dev-normal-label-diagnose.md',
+    belege: ['10:56–10:57'],
+    von: '10:56',
+    bis: '10:57',
+  },
+  {
+    auftrag: '1B 3–4',
+    was: 'Entwicklungslauf Label, zweiter',
+    datei: 'evidenz/1B/2026-11-16-lauf-dev-normal-label-v2.md',
+    belege: ['11:10–11:17'],
+    von: '11:10',
+    bis: '11:17',
+  },
+  {
+    auftrag: '1B 3–4',
+    was: 'Entwicklungslauf L1',
+    datei: 'evidenz/1B/2026-11-16-lauf-dev-l1-label.md',
+    belege: ['16:32–16:39'],
+    von: '16:32',
+    bis: '16:39',
+  },
+  {
+    auftrag: '1B 3–4',
+    was: 'Entwicklungslauf S1',
+    datei: 'evidenz/1B/2026-11-16-lauf-dev-s1-label.md',
+    belege: ['20:19:30 UTC', '20:25:57 UTC'],
+    von: '20:19:30',
+    bis: '20:25:57',
+  },
+  {
+    auftrag: '1B 3–4',
+    was: 'Laborabbau',
+    datei: 'evidenz/1B/2026-11-16-laborabbau.md',
+    belege: ['22:32:50–22:33:03'],
+    von: '22:32:50',
+    bis: '22:33:03',
+  },
+  // 1C (Jonas): Kalibrierung und Ursachenversuch am PC, Messungen Teil 2/3, Probe- und Trockenläufe
+  {
+    auftrag: '1C',
+    was: 'Kalibrierung PC',
+    datei: 'evidenz/1C/2026-11-05-labor-pc.md',
+    belege: ['Kalibrierung 14:37–14:40'],
+    von: '14:37',
+    bis: '14:40',
+  },
+  {
+    auftrag: '1C',
+    was: 'Ursachenversuch U1',
+    datei: 'evidenz/1C/2026-11-05-labor-pc.md',
+    belege: ['U1 17:11–17:46'],
+    von: '17:11',
+    bis: '17:46',
+  },
+  {
+    auftrag: '1C',
+    was: 'Messung Teil 2, Primärlauf',
+    datei: 'evidenz/1C/2026-10-24-teil2.md',
+    belege: ['17:41:09–17:44:49 MESZ'],
+    von: '17:41:09',
+    bis: '17:44:49',
+  },
+  {
+    auftrag: '1C',
+    was: 'Messung Teil 2, Robustheit',
+    datei: 'evidenz/1C/2026-10-24-teil2.md',
+    belege: ['20:24:58–20:28:44 MESZ'],
+    von: '20:24:58',
+    bis: '20:28:44',
+  },
+  {
+    auftrag: '1C',
+    was: 'Messung Teil 3, M6/M7',
+    datei: 'evidenz/1C/2026-10-24-teil3.md',
+    belege: ['01:09:55–01:14:45 MESZ'],
+    von: '01:09:55',
+    bis: '01:14:45',
+  },
+  {
+    auftrag: '1C',
+    was: 'Messung Teil 3, M7b',
+    datei: 'evidenz/1C/2026-10-24-teil3.md',
+    belege: ['01:33:04–01:38:18 MESZ'],
+    von: '01:33:04',
+    bis: '01:38:18',
+  },
+  {
+    auftrag: '1C',
+    was: 'Messung Teil 3, M7c',
+    datei: 'evidenz/1C/2026-10-24-teil3.md',
+    belege: ['01:53:30–01:58:50 MESZ'],
+    von: '01:53:30',
+    bis: '01:58:50',
+  },
+  {
+    auftrag: '1C',
+    was: 'Probelauf 1',
+    datei: 'evidenz/1C/2026-10-24-teil3.md',
+    json1C: '2026-10-25-probelauf-1.json.gz',
+  },
+  {
+    auftrag: '1C',
+    was: 'Probelauf 2',
+    datei: 'evidenz/1C/2026-10-24-teil3.md',
+    json1C: '2026-10-25-probelauf-2.json.gz',
+  },
+  {
+    auftrag: '1C',
+    was: 'Trockenlauf Upstream',
+    datei: 'evidenz/1C/2026-11-06-trockenlauf-upstream.md',
+    json1C: '2026-11-06-trockenlauf-upstream.json.gz',
+  },
+];
+
+/** „19:09:43“ → Sekunden des Tages */
+function uhr(t) {
+  const [h, m, s = 0] = t.split(':').map(Number);
+  return h * 3600 + m * 60 + s;
+}
+
+/** Gesamtlänge der Vereinigung von Intervallen [a, b] in ms */
+function vereinigung(iv) {
+  let summe = 0;
+  let a = null;
+  let b = null;
+  for (const [x, y] of [...iv].sort((p, q) => p[0] - q[0])) {
+    if (a === null || x > b) {
+      if (a !== null) summe += b - a;
+      [a, b] = [x, y];
+    } else b = Math.max(b, y);
+  }
+  return a === null ? 0 : summe + b - a;
+}
+
+/** Schnitt zweier Intervallmengen (jeweils erst vereinigt), Länge in ms */
+function schnitt(p, q) {
+  return vereinigung(p) + vereinigung(q) - vereinigung([...p, ...q]);
+}
+
+/** VM-Laufzeit 1B 1–2 aus dem Journal-Auszug: je Instanz Start bis Ende, überlappend nur einmal. */
+function vmLaufzeit(root, gewertet) {
+  const zeilen = readFileSync(join(root, VM_CSV), 'utf8').trim().split('\n').slice(1);
+  const offen = new Map();
+  const iv = [];
+  for (const z of zeilen) {
+    const [zeit, ereignis, vm, instanz] = z.split(',');
+    if (ereignis === 'start') offen.set(instanz, Date.parse(zeit));
+    else if (offen.has(instanz)) {
+      iv.push({ vm, a: offen.get(instanz), b: Date.parse(zeit) });
+      offen.delete(instanz);
+    }
+  }
+  if (offen.size) throw new Error(`${VM_CSV}: VM ohne Ende (${[...offen.keys()]})`);
+  const paare = (l) => l.map((i) => [i.a, i.b]);
+  const win = iv.filter((i) => i.vm === 'arsnova-1b-win');
+  const labor = iv.filter((i) => i.vm !== 'arsnova-1b-win');
+  return {
+    starts: iv.length,
+    startsWindows: win.length,
+    alleSek: vereinigung(paare(iv)) / 1000,
+    laborSek: vereinigung(paare(labor)) / 1000,
+    windowsSek: vereinigung(paare(win)) / 1000,
+    gewertetDarinSek: schnitt(paare(iv), gewertet) / 1000,
+    zeitraum: zeitraum([{ grenzen: iv.flatMap((i) => [i.a, i.b]) }]),
+  };
+}
+
+/** Aufbau, Tests und weitere Läufe je Auftrag (Sekunden), getrennt von der gewerteten Laborzeit. */
+export function vorarbeit(root = REFERAT) {
+  const gewertet = GEWERTET_1B.map((d) => laufzeit1B(root, d).grenzen);
+  const vm = vmLaufzeit(root, gewertet);
+  const fenster = FENSTER.map((f) => {
+    let sek;
+    if (f.vorlauf1A) sek = laufzeit1A(root, f.vorlauf1A).sek;
+    else if (f.json1C) sek = laufzeit1C(root, f.json1C).sek;
+    else if (f.min !== undefined) sek = f.min * 60;
+    else sek = (uhr(f.bis) - uhr(f.von) + 86400) % 86400;
+    return { ...f, sek };
+  });
+  const je = { '1A': 0, '1B': vm.alleSek - vm.gewertetDarinSek, '1B 3–4': 0, '1C': 0 };
+  for (const f of fenster) je[f.auftrag] += f.sek;
+  return { je, gesamtSek: summe(Object.values(je)), vm, fenster };
+}
+
 export function berechneNachweisumfang(root = REFERAT) {
   return {
     commit: git('rev-parse', '--short=8', 'HEAD').trim(),
     laborzeit: laborzeit(root),
+    vorarbeit: vorarbeit(root),
     adrs: adrs(root),
     hypothesen: hypothesen(root),
     tests: tests(),
@@ -307,6 +600,7 @@ export function kopfzahlen(werte = berechneNachweisumfang()) {
     adrs: zahl(werte.adrs.gesamt),
     hypothesen: zahl(werte.hypothesen.gesamt),
     zeitraum: tageSpanne(werte.laborzeit.zeitraum),
+    vorarbeitStunden: `${zahl(werte.vorarbeit.gesamtSek / 3600, 1)} h`,
   };
 }
 
@@ -315,7 +609,7 @@ export function kopfzahlen(werte = berechneNachweisumfang()) {
  * docs/referat-thema-1/nachweisumfang.md; nachweisumfang.test.mjs vergleicht.
  */
 export function tabellenwerte(werte = berechneNachweisumfang()) {
-  const { laborzeit: l, adrs: a, hypothesen: h, tests: t } = werte;
+  const { laborzeit: l, adrs: a, hypothesen: h, tests: t, vorarbeit: v } = werte;
   const k = kopfzahlen(werte);
   const g = t.gruppen;
   return {
@@ -325,6 +619,11 @@ export function tabellenwerte(werte = berechneNachweisumfang()) {
     'davon 1B Schritte 3–4': `${dauer(l.je['1B 3–4'])} (${l.reihen1B3u4.laeufe} Läufe, ${l.reihen1B3u4.auftraege} Aufträge)`,
     'davon 1C Laborläufe': `${dauer(l.je['1C'])} (${l.laeufe1C} Läufe)`,
     'Zeitraum der gewerteten Läufe': k.zeitraum,
+    'Aufbau, Tests und weitere Läufe': `**${k.vorarbeitStunden}** (${dauer(v.gesamtSek)}, ${zahl(Math.round(v.gesamtSek))} s)`,
+    'zusätzlich 1A Ressourcenisolation': `${dauer(v.je['1A'])} (Vorlauf)`,
+    'zusätzlich 1B Schritte 1–2': `${dauer(v.je['1B'])} (${v.vm.starts} VM-Starts, davon ${v.vm.startsWindows} Windows)`,
+    'zusätzlich 1B Schritte 3–4': `${dauer(v.je['1B 3–4'])} (${v.fenster.filter((f) => f.auftrag === '1B 3–4').length} Zeitfenster)`,
+    'zusätzlich 1C Laborläufe': `${dauer(v.je['1C'])} (${v.fenster.filter((f) => f.auftrag === '1C').length} Zeitfenster)`,
     'Automatisierte Tests': `**${k.tests}**`,
     ADRs: `**${k.adrs}** (1B: ${a['1B']}, 1C: ${a['1C']})`,
     'Vorab festgelegte Hypothesen und Kriterien': `**${k.hypothesen}**`,
