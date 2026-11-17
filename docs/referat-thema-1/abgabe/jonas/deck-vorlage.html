@@ -202,13 +202,13 @@
         inset: 0;
         z-index: 5;
         box-sizing: border-box;
-        padding: 92px var(--rand);
+        padding: 72px var(--rand) 48px;
         background: var(--grund);
         color: var(--tinte);
         font-family: var(--f-text);
       }
       .reserve-uebersicht h2 {
-        margin: 0 0 44px;
+        margin: 0 0 32px;
         color: var(--blau);
         font-size: var(--s-titel);
         font-weight: 700;
@@ -217,7 +217,7 @@
       .reserve-uebersicht ol {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 18px 40px;
+        gap: 14px 40px;
         margin: 0;
         padding: 0;
         list-style: none;
@@ -227,7 +227,7 @@
         gap: 18px;
         align-items: baseline;
         width: 100%;
-        padding: 18px 24px;
+        padding: 14px 24px;
         border: var(--linie-min) solid var(--linie);
         border-radius: 10px;
         background: var(--grund);
@@ -247,11 +247,9 @@
         outline: 4px solid var(--blau);
         outline-offset: 3px;
       }
+      /* Hilfe im Fluss unter der Liste: überlappt nie, auch bei vielen Reservefolien */
       .reserve-hilfe {
-        position: absolute;
-        left: var(--rand);
-        bottom: 72px;
-        margin: 0;
+        margin: 24px 0 0;
         color: var(--gedaempft);
         font-size: var(--s-min);
       }

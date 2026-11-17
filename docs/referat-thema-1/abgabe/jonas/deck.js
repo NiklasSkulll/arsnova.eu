@@ -1,10 +1,10 @@
 // Laufzeit des Browser-Decks (wird von deck.mjs in deck-vorlage.html eingesetzt).
 // Steuerung: → / Leertaste / Bild ab vor, ← / Bild auf zurück, Pos1 / Ende, f Vollbild,
-// r Reserve-Übersicht, Esc zurück in den Vortrag. Bewegung nur für die Wegkarte oben links (Punkt fährt
+// r Reserve-Übersicht, Esc zurück in den Vortrag, n Referentenansicht (zweites Fenster, folgt Folie und Stufe). Bewegung nur für die Wegkarte oben links (Punkt fährt
 // 600 ms, Säume und Zeichen blenden 300 ms, Wechsel des Wegs blendet über) und den Zoom in J10; mit
 // prefers-reduced-motion springt alles in den Endzustand.
 /* global document, window, location, history, URLSearchParams, getComputedStyle, performance,
-   requestAnimationFrame, cancelAnimationFrame, setTimeout, clearTimeout */
+   requestAnimationFrame, cancelAnimationFrame, setTimeout, clearTimeout, KeyboardEvent */
 (() => {
   'use strict';
 
@@ -24,6 +24,7 @@
   const ruhig = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   let liste = haupt;
+  let referent = null;
   let index = 0;
   let hauptIndex = 0;
   let aktuell = null;
@@ -93,6 +94,7 @@
     setzeZoom(folie, stufenVon(folie)[stufe]);
     folie.dataset.zoomStufe = String(stufe);
     folie.dataset.zoomFertig = String(stufe);
+    if (folie === aktuell) sendeReferent();
   }
   /** Kamerafahrt zur Stufe: z läuft mit ease-in-out; w(z) ist exponentiell, der Zoom wirkt gleichmäßig. */
   function zoomeZu(folie, stufe) {
@@ -101,6 +103,7 @@
     const von = Number(folie.dataset.zoomIst);
     const nach = stufenVon(folie)[stufe];
     folie.dataset.zoomStufe = String(stufe);
+    if (folie === aktuell) sendeReferent();
     delete folie.dataset.zoomFertig;
     const dauer = 1500;
     const start = performance.now();
@@ -141,7 +144,10 @@
       else el.removeAttribute('data-an');
     }
     // Zeichen der Wegkarte je Stufe (M1)
-    if (folie === aktuell) setzeMarker(folie);
+    if (folie === aktuell) {
+      setzeMarker(folie);
+      sendeReferent();
+    }
   }
   /** Ein Aufbauschritt innerhalb der Folie; false, wenn die Folie keinen weiteren hat. */
   function aufbauSchritt(richtung) {
@@ -243,6 +249,34 @@
     setzeMarker(folie);
     live.textContent = folie.getAttribute('aria-label') || '';
     history.replaceState(null, '', `#${folie.dataset.id}`);
+    sendeReferent();
+  }
+
+  // ---------------------------------------------------------------- Referentenansicht (Taste n)
+  // Zweites Fenster mit dem Sprechheft (sprechheft.mjs baueReferentHtml); folgt Folie und Stufe.
+  const titelVon = (folie) =>
+    (folie.querySelector('.folie-titel, h1, h2')?.textContent ?? '').replace(/\s+/g, ' ').trim();
+  function sendeReferent() {
+    if (!referent || referent.closed || !aktuell || !referent.referentZeige) return;
+    const naechste = liste[liste.indexOf(aktuell) + 1];
+    referent.referentZeige({
+      id: aktuell.dataset.id,
+      stufe: Number(aktuell.dataset.aufbauStufe ?? aktuell.dataset.zoomStufe ?? 0),
+      naechste: naechste ? `${naechste.dataset.id} ${titelVon(naechste)}` : '',
+    });
+  }
+  function oeffneReferent() {
+    if (!konfig.referent) return;
+    if (referent && !referent.closed) {
+      referent.focus();
+      return;
+    }
+    referent = window.open('', 'referentenansicht', 'popup,width=1280,height=900');
+    if (!referent) return;
+    referent.document.open();
+    referent.document.write(konfig.referent);
+    referent.document.close();
+    sendeReferent();
   }
   function gehe(i, richtung) {
     index = Math.max(0, Math.min(liste.length - 1, i));
@@ -348,6 +382,9 @@
       case 'r':
         oeffneUebersicht();
         break;
+      case 'n':
+        oeffneReferent();
+        break;
       case 'Escape':
         if (liste === reserve) zurueckInDenVortrag();
         else return;
@@ -422,7 +459,14 @@
   document.fonts.load('600 24px "IBM Plex Mono"');
 
   // Für Tests und Bau (Task 10)
-  window.deck = { kameraViewBox, zoomDeckkraft, gehe: (id) => springeZu(id) };
+  window.deck = {
+    kameraViewBox,
+    zoomDeckkraft,
+    gehe: (id) => springeZu(id),
+    // Steuerung aus der Referentenansicht: dieselben Tasten wie im Deck
+    taste: (key) => document.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true })),
+    referent: () => referent,
+  };
 
   function springeZu(id) {
     const ziel = alle.find((s) => s.dataset.id === id);

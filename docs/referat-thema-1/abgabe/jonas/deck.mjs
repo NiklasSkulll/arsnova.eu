@@ -216,7 +216,7 @@ function niklasFolien(pngs, teil, kennung, titel) {
  */
 export function baueDeck(
   folien,
-  { niklas = { teil1: [], teil2: [] }, clip, clipInfo, standbild, eingebettet } = {},
+  { niklas = { teil1: [], teil2: [] }, clip, clipInfo, standbild, eingebettet, referent } = {},
 ) {
   if (eingebettet !== true) {
     throw new Error('baueDeck erzeugt nur eingebettete Decks (eingebettet: true).');
@@ -276,7 +276,7 @@ export function baueDeck(
           `<li><button type="button" data-ziel="${esc(f.id)}"><span class="mono">${i + 1}</span> ${esc(ohneTags(f.titel).replace(/^Reserve:\s*/, ''))}</button></li>`,
       )
       .join('') +
-    `</ol><p class="reserve-hilfe">Ziffer oder Klick öffnet · Esc zurück zum Vortrag</p></div>`;
+    `</ol><p class="reserve-hilfe">Ziffer 1–9, Pfeile und Enter oder Klick öffnet · Esc zurück zum Vortrag</p></div>`;
 
   const stil = readFileSync(join(HIER, 'stil.css'), 'utf8').replace(
     /url\('(schriften\/[^']+\.woff2)'\)/g,
@@ -293,7 +293,8 @@ export function baueDeck(
   const laeufer = Object.entries(namenJeWeg)
     .map(([weg, namen]) => wegLaeufer(weg, [...namen]))
     .join('');
-  const konfig = { marken };
+  // Referentenansicht (Taste n): fertige Seite aus sprechheft.mjs, im Deck als Text mitgeführt
+  const konfig = { marken, ...(referent ? { referent } : {}) };
   const vorlage = readFileSync(join(HIER, 'deck-vorlage.html'), 'utf8');
   // Platzhalter stehen als HTML-Kommentare in der Vorlage, damit Prettier sie nicht umformt.
   const fuellung = {

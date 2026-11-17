@@ -31,6 +31,13 @@ import { parseArgs } from 'node:util';
 import { baueDeck } from './deck.mjs';
 import { DIAGRAMME, FESTWERTE, NACHWEIS, folien, ladeFolienDaten } from './folien.mjs';
 import { niklasSeiten } from './niklas-seiten.mjs';
+import {
+  HEFT_ORDNER,
+  baueHeftHtml,
+  baueReferentHtml,
+  heftEintraege,
+  ladeHeft,
+} from './sprechheft.mjs';
 import { eingabenNiklas, niklasTeile } from '../niklas/teile.mjs';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
@@ -413,6 +420,8 @@ async function main() {
     ...alleDateien(join(HIER, 'schriften')),
     ...(mitClip ? [clip, clipJson, standbild] : []),
     ...eingabenNiklas(ROOT),
+    // Sprechheft: Verstehen, Begriffe, Fragen, Übergang je Folie
+    ...(existsSync(join(ROOT, HEFT_ORDNER)) ? alleDateien(join(ROOT, HEFT_ORDNER)) : []),
   ];
   const fehlend = festeEingaben.filter((p) => !existsSync(p));
   if (fehlend.length) {
@@ -434,7 +443,18 @@ async function main() {
         fehler(`${flag}: Seiten von ${niklasQuellen[teil].pfad} nicht einbettbar (pdftoppm?).`);
       }
     }
+    // Sprechheft je Person und Referentenansicht (alle Folien) aus denselben Foliendaten
+    const heft = ladeHeft(ROOT);
+    const heftJonas = heftEintraege(folienJonas(alle), heft);
+    const anhangNiklas = [...(niklas.teil1 ?? []), ...(niklas.teil2 ?? [])].filter(
+      (f) => typeof f === 'object' && f.anhang,
+    );
+    const listeNiklas = folienNiklas(alle, niklas);
+    const ersteReserve = listeNiklas.findIndex((f) => f.teil === 'reserve');
+    listeNiklas.splice(ersteReserve < 0 ? listeNiklas.length : ersteReserve, 0, ...anhangNiklas);
+    const heftNiklas = heftEintraege(listeNiklas, heft);
     const rohHtml = baueDeck(alle, {
+      referent: baueReferentHtml([...heftNiklas, ...heftJonas]),
       niklas,
       ...(mitClip ? { clip, clipInfo: JSON.parse(readFileSync(clipJson, 'utf8')), standbild } : {}),
       eingebettet: true,
@@ -516,6 +536,21 @@ async function main() {
       ),
     );
 
+    // Kein Datum im Heft: der Stand steht im Manifest (Eingaben mit SHA-256), der Bau bleibt reproduzierbar
+    const stand = 'siehe manifest.json';
+    for (const [datei, person, eintraege] of [
+      ['sprechheft-jonas.html', 'Jonas', heftJonas],
+      ['sprechheft-niklas.html', 'Niklas', heftNiklas],
+    ]) {
+      writeFileSync(
+        join(ausgabe, datei),
+        await format(baueHeftHtml(eintraege, { person, stand }), {
+          ...formatierung,
+          parser: 'html',
+        }),
+      );
+    }
+
     // Manifest: Eingaben (Daten, Vorlagen, Module, Schriften, Niklas-PDFs) und Ausgaben mit SHA-256.
     const eingaben = [
       ...festeEingaben,
@@ -540,6 +575,8 @@ async function main() {
       'sprechnotizen-niklas.md',
       'sprechkarten-jonas.pdf',
       'sprechkarten-niklas.pdf',
+      'sprechheft-jonas.html',
+      'sprechheft-niklas.html',
     ]) {
       const p = join(ausgabe, datei);
       const daten_ = readFileSync(p);

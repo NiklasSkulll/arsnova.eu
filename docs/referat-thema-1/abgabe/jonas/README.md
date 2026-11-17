@@ -126,15 +126,21 @@ die Herkunft von Niklas' Teilen.
 
 ## Ausgaben (`ausgabe/`)
 
-| Datei                                               | Inhalt                                                                          |
-| --------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `jonas-deck.html`                                   | Gemeinsames Deck zum Vortragen, selbstständig (Schriften, Bilder, Clip)         |
-| `gemeinsames-deck.pdf`                              | Druck des gemeinsamen Decks, eine Seite je Folie                                |
-| `jonas-folien.pdf`                                  | Titel GT, Jonas' Folien (J1–J10, J12, J13, J15, J16) und Reserve                |
-| `sprechnotizen.md`                                  | Notizen je Folie mit Sekunden, kumulierter Zeit und Kürzung auf die Kurzfassung |
-| `sprechnotizen-niklas.md`                           | dasselbe für Niklas (1A, 1B 3–4, G9), mit eigenem Sprungplan                    |
-| `sprechkarten-jonas.pdf`, `sprechkarten-niklas.pdf` | Sprechkarten zum Ausdrucken (A4): je Folie nur die Stichpunkte mit Startzeit    |
-| `manifest.json`                                     | SHA-256 aller Ein- und Ausgaben, Seitenzahlen                                   |
+| Datei                                               | Inhalt                                                                                                                                                                                                                                                        |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `jonas-deck.html`                                   | Gemeinsames Deck zum Vortragen, selbstständig (Schriften, Bilder, Clip)                                                                                                                                                                                       |
+| `gemeinsames-deck.pdf`                              | Druck des gemeinsamen Decks, eine Seite je Folie                                                                                                                                                                                                              |
+| `jonas-folien.pdf`                                  | Titel GT, Jonas' Folien (J1–J10, J12, J13, J15, J16) und Reserve                                                                                                                                                                                              |
+| `sprechnotizen.md`                                  | Notizen je Folie mit Sekunden, kumulierter Zeit und Kürzung auf die Kurzfassung                                                                                                                                                                               |
+| `sprechnotizen-niklas.md`                           | dasselbe für Niklas (1A, 1B 3–4, G9), mit eigenem Sprungplan                                                                                                                                                                                                  |
+| `sprechkarten-jonas.pdf`, `sprechkarten-niklas.pdf` | Sprechkarten zum Ausdrucken (A4): je Folie nur die Stichpunkte mit Startzeit                                                                                                                                                                                  |
+| `sprechheft-jonas.html`, `sprechheft-niklas.html`   | Sprechheft je Person, eine Seite je Folie: Vortrag, Stichpunkte, Verstehen, Begriffe, Fragen mit Antworten, Übergang; Glossar am Ende. Inhalte aus [`abgabe/sprechheft/`](../sprechheft/) (Design: [Sprechheft](../../specs/2026-11-17-sprechheft-design.md)) |
+| `manifest.json`                                     | SHA-256 aller Ein- und Ausgaben, Seitenzahlen                                                                                                                                                                                                                 |
+
+**Referentenansicht:** Im Deck öffnet Taste `n` ein zweites Fenster mit dem Sprechheft der aktuellen Folie. Es
+folgt Folie und Aufbaustufe (aktueller Absatz hervorgehoben), zeigt Uhr, Sollzeit und nächste Folie; Pfeiltasten
+dort steuern das Deck, `+`/`-` ändern die Schrift. Reserve: Taste `r`, Ziffer 1–9 oder Pfeile und Enter, `Esc`
+zurück.
 
 ## Abgabe mit Matrikelnummern (nur lokal)
 

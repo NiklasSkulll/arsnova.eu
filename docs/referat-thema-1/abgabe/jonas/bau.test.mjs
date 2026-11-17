@@ -42,6 +42,8 @@ const AUSGABEN = [
   'sprechnotizen-niklas.md',
   'sprechkarten-jonas.pdf',
   'sprechkarten-niklas.pdf',
+  'sprechheft-jonas.html',
+  'sprechheft-niklas.html',
 ];
 
 let wurzel;
