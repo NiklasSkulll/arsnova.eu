@@ -16,6 +16,7 @@ import { flaeche, frage, grafikBox, mono } from '../jonas/folien.mjs';
 import { fmt } from '../jonas/zahlen.mjs';
 import { huelle } from './grafik-1a.mjs';
 import { kurzbeleg1A } from './literatur-1a.mjs';
+import { VERZOEGERUNG_1B34_MS } from './daten-1b34.mjs';
 
 const N = '[Niklas]';
 const offen = (t) =>
@@ -29,8 +30,8 @@ const ZEILEN_M1 = [
   ['normal', 'Normal', 'Inferenz läuft', null],
   ['f1', 'Stopp', 'Container gestoppt, sofort abgewiesen', null],
   ['busy', 'Slot belegt', 'Runtime antwortet 503', 'summary'],
-  ['l1', 'Netz +50 ms', 'verzögert, Antwort kommt', 'label'],
-  ['l2', 'Netz +500 ms', 'verzögert, Antwort kommt', 'label'],
+  ['l1', `Netz +${VERZOEGERUNG_1B34_MS.l1} ms`, 'verzögert, Antwort kommt', 'label'],
+  ['l2', `Netz +${VERZOEGERUNG_1B34_MS.l2} ms`, 'verzögert, Antwort kommt', 'label'],
   ['f2', 'DROP', 'Firewall verwirft, keine Antwort', null],
   ['l3', 'Zu spät', 'Antwort erst nach der Frist', null],
 ];
@@ -43,8 +44,8 @@ const ZEILEN_M3 = {
   ],
   label: [
     ['normal', 'Normal'],
-    ['l1', 'Netz +50 ms'],
-    ['l2', 'Netz +500 ms'],
+    ['l1', `Netz +${VERZOEGERUNG_1B34_MS.l1} ms`],
+    ['l2', `Netz +${VERZOEGERUNG_1B34_MS.l2} ms`],
     ['l3', 'Zu spät'],
     ['f2', 'DROP'],
   ],

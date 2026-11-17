@@ -170,10 +170,37 @@ test(
       .replace(/\\z[A-Za-z]+/g, '')
       // Kennungen: Varianten, Hypothesen, Prinzipien, Aufträge, ADR, Release, Modell, Perzentilname, Schritte
       .replace(
-        /\b[VHPFLS]\d\b|\bp95\b|8\.9b|\b\d[ABC]\b|ADR-\d+|WSL2|cgroup v2|Release[~ ]1\.3|Opus~5\.5|95\.~Perzentil|Schritte \d--\d|\d und~?\s*\d/g,
+        /\b[VHPFLS]\d\b|\bp95\b|8\.9b|\b\d[ABC]\b|ADR-\d+|WSL2|cgroup v2|Release[~ ]1\.3|Opus~5\.5|GPT-\d\.\d Sol|95\.~Perzentil|Schritte \d--\d|\d und~?\s*\d/g,
         '',
       );
     const zahlen = [...rest.matchAll(/.{0,25}\d+(?:[.,]\d+)*.{0,5}/g)].map((x) => x[0]);
     assert.deepEqual(zahlen, [], `Zahlen von Hand: ${zahlen.join(' | ')}`);
   },
 );
+
+test('1B 3–4: Makros für Abschnitt 6 aus denselben Daten wie M1–M4 (Protokollwerte)', async () => {
+  const { makros1B34 } = await import('./handout-latex-1a.mjs');
+  const { ladeDaten1B34 } = await import('./daten-1b34.mjs');
+  const e = makros1B34(ladeDaten1B34(ROOT));
+  assert.equal(e.ebSFEinsMs, '48');
+  assert.equal(e.ebSFZweiS, '134,7');
+  assert.equal(e.ebSLDreiS, '300,1');
+  assert.equal(e.ebLNormalS, '3,5');
+  assert.equal(e.ebLNormalN, '30');
+  assert.equal(e.ebLUebernommen, '30');
+  assert.equal(e.ebLFEinsMs, '37,5');
+  assert.equal(e.ebLFZweiS, '30,0');
+  assert.equal(e.ebFristLabelS, '30');
+  assert.equal(e.ebFaktor, '2.800');
+  assert.equal(e.ebLiveFehl, '0');
+  assert.equal(e.ebMaxProzent, '128');
+  assert.equal(e.ebBreakerOffenMs, '44');
+  assert.equal(e.ebBreakerFristS, '90');
+  assert.equal(e.ebTransportMs, '8,7');
+  assert.equal(e.ebTransportProzent, '0,25');
+  assert.equal(e.ebSEinsBeitrittProzent, '23');
+  assert.equal(e.ebSEinsQuizProzent, '21');
+  // gültige Makronamen, keine Kollision mit 1A
+  for (const k of Object.keys(e)) assert.match(makroName(k), /^z[A-Za-z]+$/, k);
+  assert.ok(Object.keys(e).every((k) => !(k in m)));
+});

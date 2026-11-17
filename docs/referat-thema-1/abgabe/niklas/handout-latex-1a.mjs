@@ -16,7 +16,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { makroName, svgArial, svgMindestschrift, texEsc } from '../jonas/handout-latex.mjs';
 import { fmt } from '../jonas/zahlen.mjs';
 import { AKTIONEN, AUSWERTUNG_1A, ladeDaten1A } from './daten-1a.mjs';
-import { ladeDaten1B34 } from './daten-1b34.mjs';
+import { VERZOEGERUNG_1B34_MS, ladeDaten1B34 } from './daten-1b34.mjs';
 import { vergleichsMatrixSvg } from './grafik-1a.mjs';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
@@ -280,52 +280,103 @@ export function makros1A(d, roh, kontext) {
 }
 
 /**
- * Werte für 1B, Schritte 3–4 (Abschnitt 6 des Handouts) aus Niklas' gewerteten Störreihen
- * (daten-1b34.mjs); Schlüssel mit Präfix `eb`. Leer, wenn die Ergebnis-JSONs fehlen.
+ * Werte für 1B, Schritte 3–4 (Abschnitt 6 des Handouts) aus Niklas' gewerteten Reihen (daten-1b34.mjs, dieselben
+ * Daten wie M1–M4); Schlüssel mit Präfix `eb`. Leer, wenn Störreihen, Label, Breaker, S1 oder Transport fehlen.
+ * Summary mit Job-Zeit, Label mit Client-Zeit (die Label-API legt keine Job-Zeit offen).
  */
 export function makros1B34(d) {
-  if (!d.vorhanden || !d.finde('f1')) return {};
   const f1 = d.finde('f1');
+  const f1l = d.finde('f1', 'label');
+  if (!d.vorhanden || !f1 || !f1l || !d.breaker || !d.s1 || !d.transport?.label) return {};
   const sek = (ms, st = 1) => fmt(ms / 1000, st);
-  const kandidaten = ['busy', 'f2', 'l3'].map((v) => d.finde(v)).filter(Boolean);
-  const alle = ['normal', 'f1', 'busy', 'f2', 'l3'].map((v) => d.finde(v)).filter(Boolean);
-  const deltas = kandidaten.flatMap((l) =>
-    AKTIONEN.map(([k]) => l.live[k].p95Ms - f1.live[k].p95Ms),
+  const s = (v) => d.finde(v);
+  const l = (v) => d.finde(v, 'label');
+  const AKT = AKTIONEN.map(([k]) => k);
+  const stoer = {
+    summary: ['busy', 'f2', 'l3'],
+    label: ['normal', 'l1', 'l2', 'l3', 'f2'],
+  };
+  const ratios = Object.entries(stoer).flatMap(([c, vs]) =>
+    vs.flatMap((v) => {
+      const x = d.finde(v, c);
+      const ref = d.finde('f1', c);
+      return x ? AKT.map((a) => x.live[a].p95Ms / ref.live[a].p95Ms) : [];
+    }),
   );
-  const ratios = kandidaten.flatMap((l) =>
-    AKTIONEN.map(([k]) => l.live[k].p95Ms / f1.live[k].p95Ms),
+  const gehalten = Object.entries(stoer).flatMap(([c, vs]) =>
+    vs.filter((v) => {
+      const x = d.finde(v, c);
+      const ref = d.finde('f1', c);
+      return x && AKT.every((a) => x.live[a].p95Ms / ref.live[a].p95Ms <= d.schwellen.p95Faktor);
+    }),
   );
-  const m = (v) => d.finde(v);
+  const reihen = [...['f1', ...stoer.summary].map(s), ...['f1', ...stoer.label].map(l)].filter(
+    Boolean,
+  );
+  const pr = (r) => fmt((r - 1) * 100);
+  const { label: s1l } = d.s1;
+  const nl = l('normal');
   return {
     ebRechner: f1.rechner,
     ebVms: f1.vms.join(', '),
     ebCommitSchwellen: d.schwellen.commit,
     ebDatumSchwellen: d.schwellen.datum ? deutschesDatum(d.schwellen.datum) : '15.11.2026',
     ebCommitFEins: f1.commit,
-    ebCommitStoerung: m('f2')?.commit ?? '',
-    ebFristS: fmt(f1.timeoutMs / 1000),
-    ebNormalMedianS: sek(m('normal').jobMedianMs),
-    ebFEinsMedianMs: fmt(f1.jobMedianMs),
-    ebFEinsN: fmt(f1.n),
-    ebNormalN: fmt(m('normal').n),
-    ebBusyN: fmt(m('busy').n),
-    ebLDreiN: fmt(m('l3').n),
-    ebBusyMedianMs: fmt(m('busy').jobMedianMs),
-    ebFZweiMedianS: sek(m('f2').jobMedianMs),
-    ebFZweiN: fmt(m('f2').n),
-    ebLDreiMedianS: sek(m('l3').jobMedianMs),
-    ebLDreiMaxS: sek(m('l3').jobSpanneMs[1], 1),
-    ebFaktor: fmt(Math.round(m('f2').jobMedianMs / f1.jobMedianMs / 100) * 100),
+    ebCommitStoerung: s('f2')?.commit ?? '',
+    ebCommitLabel: nl.commit,
+    ebCommitSEins: s1l.commit,
     ebPufferS: fmt(d.schwellen.fallbackPufferMs / 1000),
     ebFEinsMaxS: fmt(d.schwellen.f1MedianMaxMs / 1000),
     ebFaktorMin: fmt(d.schwellen.f2ZuF1Min),
     ebPProzent: fmt(d.schwellen.p95Faktor * 100),
-    ebLiveGeplant: fmt(alle.reduce((x, l) => x + l.liveGeplant, 0)),
-    ebLiveFehl: fmt(alle.reduce((x, l) => x + l.liveFehler, 0)),
-    ebMaxDeltaMs: fmt(Math.max(...deltas), 1),
-    ebMaxProzent: fmt((Math.max(...ratios) - 1) * 100),
-    ebAppCpuMax: fmt(Math.max(...alle.map((l) => l.appCpuMax))),
-    ebAppRssMiB: fmt(Math.max(...alle.map((l) => l.appRssMaxMiB))),
+    ebFristS: fmt(f1.timeoutMs / 1000),
+    ebFristLabelS: fmt(f1l.timeoutMs / 1000),
+    // Summary (Job-Zeit)
+    ebSNormalN: fmt(s('normal').n),
+    ebSNormalS: sek(s('normal').zeitMedianMs, 0),
+    ebSFEinsN: fmt(f1.n),
+    ebSFEinsMs: fmt(f1.zeitMedianMs),
+    ebSBusyN: fmt(s('busy').n),
+    ebSBusyMs: fmt(s('busy').zeitMedianMs),
+    ebSFZweiN: fmt(s('f2').n),
+    ebSFZweiS: sek(s('f2').zeitMedianMs),
+    ebSLDreiN: fmt(s('l3').n),
+    ebSLDreiS: sek(s('l3').zeitMedianMs),
+    ebFaktor: fmt(Math.round(s('f2').zeitMedianMs / f1.zeitMedianMs / 100) * 100),
+    // Label (Client-Zeit)
+    ebLNormalN: fmt(nl.n),
+    ebLNormalS: sek(nl.zeitMedianMs),
+    ebLUebernommen: fmt(nl.uebernommen),
+    ebLFEinsN: fmt(f1l.n),
+    ebLFEinsMs: fmt(f1l.zeitMedianMs, f1l.zeitMedianMs % 1 ? 1 : 0),
+    ebLLEinsN: fmt(l('l1').n),
+    ebLLEinsS: sek(l('l1').zeitMedianMs),
+    ebLLZweiN: fmt(l('l2').n),
+    ebLLZweiS: sek(l('l2').zeitMedianMs),
+    ebLFZweiN: fmt(l('f2').n),
+    ebLFZweiS: sek(l('f2').zeitMedianMs),
+    ebLLDreiN: fmt(l('l3').n),
+    ebLLDreiS: sek(l('l3').zeitMedianMs),
+    // Live
+    ebLiveFehl: fmt(reihen.reduce((x, r) => x + r.liveFehler, 0)),
+    ebLiveGeplant: fmt(reihen.reduce((x, r) => x + r.liveGeplant, 0)),
+    ebMaxProzent: pr(Math.max(...ratios)),
+    ebGehaltenN: fmt(gehalten.length),
+    // Breaker gegen Queue
+    ebBreakerOffenMs: fmt(d.breaker.f1.jobs[3].jobMs),
+    ebBreakerFristS: fmt(d.breaker.l3.timeoutMs / 1000),
+    ebBreakerCommit: d.breaker.f1.commit,
+    // Transport
+    ebTransportMs: fmt(d.transport.label.transportMedianMs, 1),
+    ebTransportProzent: fmt(d.transport.label.anteilMedianProzent, 2),
+    // S1 gegen zwei Hosts (Label; Summary hält alle Schwellen)
+    ebSEinsN: fmt(s1l.n),
+    ebSEinsVcpu: fmt(s1l.placement?.vmVcpu ?? 8),
+    ebZweiHostVcpu: f1.vcpus.join(' + '),
+    ebLEinsVerzMs: fmt(VERZOEGERUNG_1B34_MS.l1),
+    ebLZweiVerzMs: fmt(VERZOEGERUNG_1B34_MS.l2),
+    ebSEinsBeitrittProzent: pr(s1l.live.join.p95Ms / nl.live.join.p95Ms),
+    ebSEinsQuizProzent: pr(s1l.live.vote.p95Ms / nl.live.vote.p95Ms),
   };
 }
 

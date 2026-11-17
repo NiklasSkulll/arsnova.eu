@@ -23,6 +23,12 @@ export const MESSUNG_1B = 'evidenz/1B/messung';
 const MUSTER =
   /^(\d{4}-\d{2}-\d{2})-lauf-(?!dev-)([a-z0-9]+(?:-[a-z0-9]+)?)-(summary|label)(?:-(\d{2}))?\.json(?:\.gz)?$/;
 const TRANSPORT = '2026-11-16-transportauswertung.json';
+/**
+ * Netzverzögerung der Label-Störungen L1/L2 in ms: Definition laut 1B-3u4-Planung.md (Störvarianten), in den
+ * Ergebnis-JSONs nicht enthalten; im Mitschnitt bestätigt (SYN bis SYN/ACK im Median 50,7 bzw. 500,6 ms,
+ * Protokolle l1-label-01/-02 und l2-label).
+ */
+export const VERZOEGERUNG_1B34_MS = { l1: 50, l2: 500 };
 const AKTIONEN = ['join', 'vote', 'qaSubmit', 'blitzlicht'];
 const MiB = 1048576;
 
@@ -115,6 +121,7 @@ function reihe(teile, { datei, dateien, datum, variante, auftrag }) {
     commits: [...new Set(teile.map((j) => String(j.commit ?? '').slice(0, 8)))],
     rechner: rechnerKurz(j0),
     vms: (j0.umgebung?.vms ?? []).map((v) => `${v.name} ${v.vcpu} vCPU/${v.ramGib} GiB`),
+    vcpus: (j0.umgebung?.vms ?? []).map((v) => v.vcpu),
     jobsMs: jobs,
     jobMedianMs: median(jobs),
     jobSpanneMs: jobs.length ? [Math.min(...jobs), Math.max(...jobs)] : null,
