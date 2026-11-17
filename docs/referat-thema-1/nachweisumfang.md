@@ -44,9 +44,9 @@ Protokolle und die Schwellen (`1B-3u4-Planung.md`) nur auf Niklas' Zweig
 `feature-1B-private-inference-3-4`; die Prüfung durch den Autor ist dort offen.
 Deshalb nicht in den Kopfzahlen.
 
-| Kennzahl                   | Wert                               | Rohdaten                                                                                              |
-| -------------------------- | ---------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| 1B Schritte 3–4 (Rohdaten) | 4 h 11 min (5 Reihen, 45 Aufträge) | `evidenz/1B/messung/2026-11-1{5,6}-lauf-{normal,f1,f2,l3,busy}-summary.json`, Zeitstempel wie 1B oben |
+| Kennzahl                   | Wert                               | Rohdaten                                                                                                 |
+| -------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| 1B Schritte 3–4 (Rohdaten) | 4 h 11 min (5 Reihen, 45 Aufträge) | `evidenz/1B/messung/2026-11-1{5,6}-lauf-{normal,f1,f2,l3,busy}-summary.json.gz`, Zeitstempel wie 1B oben |
 
 ## Tests
 

@@ -11,10 +11,11 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { liesJson } from '../../evidenz/1B/json-lesen.mjs';
 import { fasseLaufzeitenZusammen } from '../../../../scripts/load/lib/artillery-live-messungen.mjs';
 
 export const MESSUNG_1B = 'evidenz/1B/messung';
-const MUSTER = /^(\d{4}-\d{2}-\d{2})-lauf-(?!dev-)([a-z0-9]+)-(summary|label)\.json$/;
+const MUSTER = /^(\d{4}-\d{2}-\d{2})-lauf-(?!dev-)([a-z0-9]+)-(summary|label)\.json(?:\.gz)?$/;
 const AKTIONEN = ['join', 'vote', 'qaSubmit', 'blitzlicht'];
 const MiB = 1048576;
 
@@ -29,10 +30,11 @@ const median = (werte) => {
 export function eingaben1B34(root) {
   const ordner = join(root, MESSUNG_1B);
   if (!existsSync(ordner)) return [];
-  return readdirSync(ordner)
-    .filter((n) => MUSTER.test(n))
+  // Ein Lauf zählt einmal, auch wenn .json und .json.gz nebeneinander liegen (.json hat Vorrang).
+  const namen = readdirSync(ordner).filter((n) => MUSTER.test(n));
+  return [...new Set(namen.map((n) => n.replace(/\.gz$/, '')))]
     .sort()
-    .map((n) => `${MESSUNG_1B}/${n}`);
+    .map((n) => `${MESSUNG_1B}/${namen.includes(n) ? n : `${n}.gz`}`);
 }
 
 /** @param {string} root docs/referat-thema-1 */
@@ -40,7 +42,7 @@ export function ladeDaten1B34(root) {
   const laeufe = [];
   for (const pfad of eingaben1B34(root)) {
     const [, datum, variante, auftrag] = pfad.split('/').pop().match(MUSTER);
-    const j = JSON.parse(readFileSync(join(root, pfad), 'utf8'));
+    const j = liesJson(join(root, pfad));
     if (!j.experiment) continue; // Jonas' Läufe (Schritte 1–2) haben kein experiment-Feld
     const fenster = j.experiment.live?.windows ?? [];
     const live = Object.fromEntries(

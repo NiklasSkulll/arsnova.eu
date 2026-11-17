@@ -99,7 +99,7 @@ Beleg: Laufmanifeste `manifest.services.app.flags`; [Versuchsvertrag](../../1A-e
 
 **Nachlegen:** Genau das ist der Befund zu Schritt 3: Ein gestoppter Dienst (F1) kostet 48 ms, ein stummer Host (F2) über zwei Minuten je Auftrag. Fünf F2-Aufträge, alle mit Verbindungsversuch und ohne RST, Störung im Kernel nachgeprüft.
 
-Beleg: Folie M1; `2026-11-16-lauf-f2-summary.json` (`experiment.jobs[].jobMs`, `fallbackReason`), Protokoll `evidenz/1B/2026-11-16-lauf-f2-summary.md` auf Niklas’ Zweig
+Beleg: Folie M1; `2026-11-16-lauf-f2-summary.json.gz` (`experiment.jobs[].jobMs`, `fallbackReason`), Protokoll `evidenz/1B/2026-11-16-lauf-f2-summary.md` auf Niklas’ Zweig
 
 ### F11. Ihre Störreihen laufen auf einem anderen Commit als die Referenz. Ist das vergleichbar?
 
@@ -111,7 +111,7 @@ Beleg: Protokolle `2026-11-16-lauf-{f2,l3,busy}-summary.md`, Abschnitt Vergleich
 
 **Kurzantwort:** Beides: 0 Fehler bei 72.000 Live-Aktionen, und je Störreihe überschreitet mindestens eine Aktion die 110 % der Referenz, absolut um höchstens 8,1 ms. Die Reihen liefen nacheinander auf einem Rechner ohne CPU-Pinning, eine Ursache kann ich nicht belegen, und die Regel lasse ich stehen. Wie in 1A gilt: Die Unschädlichkeit ist nicht belegt, ein Schaden auch nicht.
 
-Beleg: Folie M2; `messung/2026-11-1{5,6}-lauf-*-summary.json` (`experiment.live.windows[]`, p95 gepoolt)
+Beleg: Folie M2; `messung/2026-11-1{5,6}-lauf-*-summary.json.gz` (`experiment.live.windows[]`, p95 gepoolt)
 
 ### F13. Lohnt sich der zweite Host?
 

@@ -10,6 +10,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gunzipSync } from 'node:zlib';
+import { liesJson } from '../../evidenz/1B/json-lesen.mjs';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
 /** docs/referat-thema-1 */
@@ -49,11 +50,11 @@ const GEWERTET_1C = [
 ];
 /** Niklas' 1B-Reihen 3–4: Rohdaten auf HEAD, Protokolle nur auf seinem Zweig. */
 const REIHEN_1B_3U4 = [
-  '2026-11-15-lauf-normal-summary.json',
-  '2026-11-15-lauf-f1-summary.json',
-  '2026-11-16-lauf-f2-summary.json',
-  '2026-11-16-lauf-l3-summary.json',
-  '2026-11-16-lauf-busy-summary.json',
+  '2026-11-15-lauf-normal-summary.json.gz',
+  '2026-11-15-lauf-f1-summary.json.gz',
+  '2026-11-16-lauf-f2-summary.json.gz',
+  '2026-11-16-lauf-l3-summary.json.gz',
+  '2026-11-16-lauf-busy-summary.json.gz',
 ];
 
 /** Quelle je Hypothesengruppe: Datei und Muster der definierenden Stelle. */
@@ -129,7 +130,7 @@ function laufzeit1A(root) {
 
 /** 1B: treiber.startedAt bis spätestes treiber.auftraege[].finishedAt. */
 function laufzeit1B(root, datei) {
-  const { treiber } = JSON.parse(readFileSync(join(root, MESSUNG_1B, datei), 'utf8'));
+  const { treiber } = liesJson(join(root, MESSUNG_1B, datei));
   const enden = treiber.auftraege.map((a) => Date.parse(a.finishedAt)).filter(Number.isFinite);
   return {
     sek: (Math.max(...enden) - Date.parse(treiber.startedAt)) / 1000,

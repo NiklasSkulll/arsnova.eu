@@ -13,8 +13,8 @@ PDF-Seiten bleibt `--niklas1 <pdf>`.
   [`grafik-1a.mjs`](grafik-1a.mjs), Kurzbelege nach ZL aus [`literatur-1a.mjs`](literatur-1a.mjs).
 - **1B 3–4 (M1 Ersatzzeit je Störung, M2 Live-Aktionen und Folgerung für Schritt 4):**
   [`folien-1b34.mjs`](folien-1b34.mjs) mit [`daten-1b34.mjs`](daten-1b34.mjs). Quelle sind Niklas' gewertete
-  Summary-Reihen (`evidenz/1B/messung/2026-11-15-lauf-{normal,f1}-summary.json`,
-  `2026-11-16-lauf-{f2,l3,busy}-summary.json`), unverändert aus seinem Zweig
+  Summary-Reihen (`evidenz/1B/messung/2026-11-15-lauf-{normal,f1}-summary.json.gz`,
+  `2026-11-16-lauf-{f2,l3,busy}-summary.json.gz`), unverändert aus seinem Zweig
   `feature-1B-private-inference-3-4` übernommen; die Protokolle dazu liegen dort. Fehlen die Dateien, steht
   eine Platzhalterfolie, die `abgabe-lokal.mjs` vor der Abgabe meldet.
 - **Reihenfolge und Zeit (_Ergänzt 2026-11-16_):** Niklas eröffnet (GT Titel, G0 Fahrplan, N1–N10),

@@ -1525,7 +1525,7 @@ export function folien(daten) {
     kurzfassung: true,
     sprecher: 'niklas',
     quelle:
-      '1B-ergebnis.md, 1C-ergebnis.md (Kurzantwort, Verlauf 9f230abc); 1A: abgabe/niklas/folien-1a.mjs (N1, N10); 1B Schritte 3–4: abgabe/niklas/folien-1b34.mjs (M1, M2), evidenz/1B/messung/2026-11-15-lauf-f1-summary.json, 2026-11-16-lauf-{f2,l3,busy}-summary.json (i7-10700K, Hyper-V · 5e758d0a, 2b39b9df)',
+      '1B-ergebnis.md, 1C-ergebnis.md (Kurzantwort, Verlauf 9f230abc); 1A: abgabe/niklas/folien-1a.mjs (N1, N10); 1B Schritte 3–4: abgabe/niklas/folien-1b34.mjs (M1, M2), evidenz/1B/messung/2026-11-15-lauf-f1-summary.json.gz, 2026-11-16-lauf-{f2,l3,busy}-summary.json (i7-10700K, Hyper-V · 5e758d0a, 2b39b9df)',
     station: null,
   });
 

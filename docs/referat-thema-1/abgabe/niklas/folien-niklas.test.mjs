@@ -9,6 +9,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { createRequire } from 'node:module';
 import process from 'node:process';
 import { tmpdir } from 'node:os';
+import { gzipSync } from 'node:zlib';
 import { join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -16,7 +17,7 @@ import { fmt } from '../jonas/zahlen.mjs';
 import { kopfBefunde, layoutBefunde } from '../jonas/layout-pruefung.mjs';
 import { baueEntwurf, notizenNiklas } from './bau-entwurf.mjs';
 import { ladeDaten1A } from './daten-1a.mjs';
-import { ladeDaten1B34 } from './daten-1b34.mjs';
+import { eingaben1B34, ladeDaten1B34 } from './daten-1b34.mjs';
 import { STUFE_1B34, folien1B34 } from './folien-1b34.mjs';
 import { LITERATUR_1A, kurzbeleg1A } from './literatur-1a.mjs';
 
@@ -825,4 +826,25 @@ test('M1: Störungen als Stufen (Stopp und Slot, DROP, zu spät) und Maßstab au
   assert.equal((m1.notiz.match(/\[Weiter\]/g) ?? []).length, 3);
   const minuten = Math.round(d1b.finde('f2').jobMedianMs / d1b.finde('f1').jobMedianMs / 60);
   assert.match(ohneTags(m1.inhalt), new RegExp(`wartete DROP rund ${minuten} Minuten`));
+});
+
+test('1B 3–4 liest .json.gz; liegen .json und .json.gz nebeneinander, zählt der Lauf einmal', () => {
+  const wurzel = mkdtempSync(join(tmpdir(), 'niklas-1b-gz-'));
+  try {
+    const dir = join(wurzel, 'evidenz/1B/messung');
+    mkdirSync(dir, { recursive: true });
+    const roh = JSON.stringify({ tag: 'x', experiment: { jobs: [{ jobMs: 5 }] } });
+    writeFileSync(join(dir, '2026-11-15-lauf-f1-summary.json.gz'), gzipSync(roh));
+    writeFileSync(join(dir, '2026-11-16-lauf-l3-summary.json'), roh);
+    writeFileSync(join(dir, '2026-11-16-lauf-l3-summary.json.gz'), gzipSync(roh));
+    assert.deepEqual(eingaben1B34(wurzel), [
+      'evidenz/1B/messung/2026-11-15-lauf-f1-summary.json.gz',
+      'evidenz/1B/messung/2026-11-16-lauf-l3-summary.json',
+    ]);
+    const dd = ladeDaten1B34(wurzel);
+    assert.equal(dd.laeufe.length, 2);
+    assert.equal(dd.finde('f1').jobMedianMs, 5);
+  } finally {
+    rmSync(wurzel, { recursive: true, force: true });
+  }
 });
