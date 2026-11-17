@@ -64,8 +64,7 @@ er läuft springt auf das letzte Bild (`deck.js`, `clipSchritt`).
 ## Sprechnotizen, Sprungplan, roter Faden
 
 - Jede Folie hat zwei Fassungen: `stichpunkte` (3–6, zum freien Vortrag, Zahlen mit Einheit) und `notiz`
-  (Fließtext zum Üben). `[Weiter]` markiert jeden Tastendruck einer Aufbaustufe (GK, J7, J9, J12, J13, J15; bei
-  Niklas N6, N7, M1). Auf J13 kommen erst die Stufen, dann der Clip.
+  (Fließtext zum Üben). `[Weiter]` markiert jeden Tastendruck einer Aufbaustufe (GK, J7, J9, J12, J13, J15, G9; bei Niklas N6, N7, N9, N10, M1–M4). Auf J13 kommen erst die Stufen, dann der Clip.
 - Der Sprungplan steht oben in den Sprechnotizen jeder Person, gezählt nur über die eigene Redezeit ab der
   ersten eigenen Folie: Jonas muss J13 und J15 bis 15:00 min erreichen, Niklas N10, 1B 3–4, G9 und GD (seine
   Uhr steht, während Jonas spricht; Notizen und Sprechkarten markieren die Übergabe nach N10). Überschreitet

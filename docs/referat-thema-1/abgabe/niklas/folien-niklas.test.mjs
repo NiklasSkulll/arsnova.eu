@@ -529,7 +529,7 @@ test('N6 baut in drei Stufen auf: 4, dann 7, dann 11 Treffer; rückwärts ins En
 test('N7 baut in zwei Stufen auf (Latenz, dann Analyse, dann CPU); reduzierte Bewegung ohne Übergang', async () => {
   const normal = await ablauf('N7', 2, 'no-preference');
   // Stufe 0: nichts mit data-ab; 1: Band und Analyse; 2: zusätzlich CPU
-  assert.deepEqual(normal.verlauf, ['N7:0:0', 'N7:1:2', 'N7:2:3', 'N9:-:0', 'N7:2:3']);
+  assert.deepEqual(normal.verlauf, ['N7:0:0', 'N7:1:2', 'N7:2:3', 'N9:0:0', 'N7:2:3']);
   const reduziert = await ablauf('N7', 2, 'reduce');
   assert.deepEqual(reduziert.verlauf, normal.verlauf);
   assert.equal(reduziert.uebergang, '0s');
@@ -729,7 +729,7 @@ test('Wegkarte N1–N10 und M1–M4: ein beständiger Läufer je Weg wie bei Jon
   assert.deepEqual(bei('N4').saeume, ['live|var(--blau)', 'analyse|var(--blau)|gestrichelt']);
   assert.deepEqual(bei('N5').saeume, ['live|var(--blau)']);
   assert.equal(bei('N7', '0').wirkung, true);
-  assert.equal(bei('N9').wirkung, false);
+  assert.equal(bei('N9', '0').wirkung, false);
   assert.deepEqual(bei('M1', '0').saeume, ['zweiterHost|var(--bernstein)']);
   assert.deepEqual(
     ['0', '1', '2', '3'].map((s) => bei('M1', s).satz),
@@ -750,7 +750,12 @@ test('Wegkarte: innerhalb von 1A fährt der Punkt, der Wechsel N10 → J1 blende
   const page = await context.newPage();
   await page.goto(`${pathToFileURL(deck).href}#N9`);
   await page.waitForTimeout(400);
-  await page.keyboard.press('ArrowRight'); // N9 → N10: Ersatz → Wortwolke
+  // N9 baut in zwei Stufen auf; danach N9 → N10: Ersatz → Wortwolke
+  for (let i = 0; i < 2; i++) {
+    await page.keyboard.press('ArrowRight');
+    await page.waitForTimeout(150);
+  }
+  await page.keyboard.press('ArrowRight');
   await page.waitForTimeout(200);
   const fahrt = await page.evaluate(() => {
     const p = document.querySelector('.weg-laeufer[data-weg="1a"] .weg-punkt');
@@ -762,7 +767,12 @@ test('Wegkarte: innerhalb von 1A fährt der Punkt, der Wechsel N10 → J1 blende
   });
   assert.ok(fahrt.laeuft && fahrt.ist < fahrt.soll, `Punkt fährt: ${JSON.stringify(fahrt)}`);
   await page.waitForTimeout(700);
-  await page.keyboard.press('ArrowRight'); // N10 → J1
+  // N10 baut in zwei Stufen auf (Diskussion, Übergabe); danach N10 → J1
+  for (let i = 0; i < 2; i++) {
+    await page.keyboard.press('ArrowRight');
+    await page.waitForTimeout(150);
+  }
+  await page.keyboard.press('ArrowRight');
   await page.waitForTimeout(120);
   const blende = await page.evaluate(() =>
     Object.fromEntries(

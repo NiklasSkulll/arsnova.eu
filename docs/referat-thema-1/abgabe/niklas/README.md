@@ -25,7 +25,7 @@ PDF-Seiten bleibt `--niklas1 <pdf>`.
   Niklas plant 14:25 min.
 - **Diskussion:** [`fragenkatalog-1a.md`](fragenkatalog-1a.md) (Übung, nicht Teil der Abgabe).
 - **Sprechnotizen:** je Folie `notiz` (Fließtext) und `stichpunkte` (zum freien Vortrag); `[Weiter]` markiert
-  jeden Tastendruck einer Aufbaustufe (GK: drei; N6: drei, Stufe 0 zeigt nur Umrisse; N7: zwei; M1: drei, je
+  jeden Tastendruck einer Aufbaustufe (GK: drei; N6: drei, Stufe 0 zeigt nur Umrisse; N7: zwei; N9: zwei wie M1, je Variante; N10: Diskussion, dann Übergabe; G9: „Gemeinsam“ zuletzt; M1: drei, je
   Störung eine Stufe; M2: Stopp, dann Zu spät; M3: Summary, dann
   Label; M4: Entscheidung).
 - **Handout (PaperLab):** [`handout-latex-1a.mjs`](handout-latex-1a.mjs) schreibt `zahlen.tex` und

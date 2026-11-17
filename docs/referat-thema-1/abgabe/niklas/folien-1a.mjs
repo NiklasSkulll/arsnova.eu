@@ -378,17 +378,19 @@ export function folien1A(d) {
         grafikBox(analyseSvg(d)) +
         `<p class="beleg">V4: Proxy hat ${fmt(d.v4.weitergeleitet)} Anfragen weitergeleitet, geprüft werden Frist und Ersatz; ${fmt(d.v4.ersatzGegendruck)} Ersatzfälle durch Gegendruck</p>`,
     ),
-    notiz: `Was sehen die Lehrenden? Die lexikalische Wortwolke ist in unter einer Zehntelsekunde da, mit spaCy im Normalbetrieb nach etwa einer halben Sekunde, gedrosselt nach zwei bis drei; das passt zur Drosselung von eben. In V4 greift nach rund fünf Sekunden der Timeout, und die App liefert den lexikalischen Ersatz; der Proxy hat keine Anfrage weitergeleitet, V4 prüft also Frist und Ersatz. ${fmt(d.v4.ersatzGegendruck)} Ersatzfälle meldet der Client als nicht erreichbar, je Lauf genau ${fmt(d.v4.gegendruckJeLauf)}: Das passt zur Grenze von zwei offenen Anfragen. Zur Reserve: Im Labor brauchte der ganze Stack weniger als eine halbe CPU von sechzehn, mindestens ${fmt(d.labor.minFreiGiBAb, 1)} Gibibyte blieben frei. Für den Zielhost habe ich das nicht gemessen.`,
+    notiz: `Was sehen die Lehrenden? Die lexikalische Wortwolke ist in unter einer Zehntelsekunde da. [Weiter] Mit spaCy im Normalbetrieb nach etwa einer halben Sekunde, gedrosselt nach zwei bis drei; das passt zur Drosselung von eben. [Weiter] In V4 greift nach rund fünf Sekunden der Timeout, und die App liefert den lexikalischen Ersatz; der Proxy hat keine Anfrage weitergeleitet, V4 prüft also Frist und Ersatz. ${fmt(d.v4.ersatzGegendruck)} Ersatzfälle meldet der Client als nicht erreichbar, je Lauf genau ${fmt(d.v4.gegendruckJeLauf)}: Das passt zur Grenze von zwei offenen Anfragen. Zur Reserve: Im Labor brauchte der ganze Stack weniger als eine halbe CPU von sechzehn, mindestens ${fmt(d.labor.minFreiGiBAb, 1)} Gibibyte blieben frei. Für den Zielhost habe ich das nicht gemessen.`,
     // Wegmarke: Nach 5 s liefert die App den lexikalischen Ersatz: Station Ersatz nach dem Aufstieg zur App.
     marke: '1a-ersatz',
     stichpunkte: [
-      'Lexikalisch < 0,1 s, spaCy ≈ 0,5 s, gedrosselt 2–3 s (passt zur Drosselung)',
-      `V4: Ersatz nach ≈ ${timeoutS} s, Proxy hat ${fmt(d.v4.weitergeleitet)} weitergeleitet: prüft Frist und Ersatz`,
+      'Lexikalisch < 0,1 s',
+      '[Weiter] spaCy ≈ 0,5 s, gedrosselt 2–3 s (passt zur Drosselung)',
+      `[Weiter] V4: Ersatz nach ≈ ${timeoutS} s, Proxy hat ${fmt(d.v4.weitergeleitet)} weitergeleitet: prüft Frist und Ersatz`,
       `${fmt(d.v4.ersatzGegendruck)} „nicht erreichbar“, je Lauf ${fmt(d.v4.gegendruckJeLauf)} = Gegendruckgrenze (${k.maxInFlight} offen)`,
       `Reserve im Labor: < 0,5 CPU von ${H.cpus}, ≥ ${fmt(d.labor.minFreiGiBAb, 1)} GiB frei; Zielhost nicht gemessen`,
     ],
     zeitS: 55,
     kurzfassung: true,
+    aufbau: 2,
     quelle: q(
       `${H.datei} runs[].analysis (successLatency, fallbackLatency, outcomes, fallbackReasons), runs[V4].proxy (delayMs, forwarded, cancelledBeforeForward; scope proxy-lifetime-including-warmup), runs[].resources[alias=spacy], runs[].collectorHost.minAvailableMemoryBytes (abgerundet); SIDECAR_UNAVAILABLE fasst Gegendruck und echte Unerreichbarkeit zusammen (apps/backend/src/lib/wordCloudNormalizer.ts, reasonFromSidecarError), Gegendruck daher erschlossen aus genau ${d.v4.gegendruckJeLauf} je Lauf; NLP_TIMEOUT_MS aus den Laufmanifesten; SPACY_MAX_IN_FLIGHT: apps/backend/src/lib/spacyClient.ts Z. 22, Prüfung Z. 187`,
     ),
@@ -421,20 +423,21 @@ export function folien1A(d) {
           'Kein Rendering, keine Aussage zu einem LLM',
         ]) +
         `</div>` +
-        `<p class="merksatz"><b>Zur Diskussion:</b> Wie kalibriert man eine Regel, die schon ohne spaCy ${kontrolle.length}-mal anschlägt?</p>` +
-        `<p class="uebergabe">Ein LLM rechnet rund ${fmt(LLM_MIN_WARM, 1)}&nbsp;min je Auftrag. Was, wenn wir die schwere Arbeit auslagern? <span class="uebergabe-ziel">→ Jonas ${etikett('1C')} ${etikett('1B')}</span></p>`,
+        `<p class="merksatz" data-ab="1"><b>Zur Diskussion:</b> Wie kalibriert man eine Regel, die schon ohne spaCy ${kontrolle.length}-mal anschlägt?</p>` +
+        `<p class="uebergabe" data-ab="2">Ein LLM rechnet rund ${fmt(LLM_MIN_WARM, 1)}&nbsp;min je Auftrag. Was, wenn wir die schwere Arbeit auslagern? <span class="uebergabe-ziel">→ Jonas ${etikett('1C')} ${etikett('1B')}</span></p>`,
     ),
-    notiz: `Meine Entscheidung ist die Gegenalternative aus dem Vertrag: keine Freigabe, spaCy bleibt aus, wie es die Produktionsvorlage ohnehin vorsieht. Das kostet im Betrieb nichts. Die Begründung: Die vorab festgelegte Regel ist verfehlt, und eine optionale Komponente muss ihre Unschädlichkeit belegen, nicht umgekehrt. Den Nutzen, zusammengeführte Wortformen, habe ich nicht gemessen; dagegen stehen Image, Modell, Limits und Überwachung. Ein Viertel CPU ist keine gleichwertige Einsparung. Die Grenzen: ein WSL2-Rechner mit dem Lastgenerator auf demselben Host und eine Beitrittswelle. Selbstkritisch: Die Regel war für p95-Werte um zwanzig Millisekunden zu empfindlich; für einen neuen Versuch würde ich sie an einem Vergleich ohne Änderung kalibrieren. Und spaCy ist klein: Ein Sprachmodell rechnet in Jonas' Labor rund zweieinhalb Minuten je Auftrag, das trägt der App-Host nicht. Was, wenn wir diese schwere Arbeit auslagern? Das zeigt Jonas.`,
+    notiz: `Meine Entscheidung ist die Gegenalternative aus dem Vertrag: keine Freigabe, spaCy bleibt aus, wie es die Produktionsvorlage ohnehin vorsieht. Das kostet im Betrieb nichts. Die Begründung: Die vorab festgelegte Regel ist verfehlt, und eine optionale Komponente muss ihre Unschädlichkeit belegen, nicht umgekehrt. Den Nutzen, zusammengeführte Wortformen, habe ich nicht gemessen; dagegen stehen Image, Modell, Limits und Überwachung. Ein Viertel CPU ist keine gleichwertige Einsparung. Die Grenzen: ein WSL2-Rechner mit dem Lastgenerator auf demselben Host und eine Beitrittswelle. [Weiter] Selbstkritisch: Die Regel war für p95-Werte um zwanzig Millisekunden zu empfindlich; für einen neuen Versuch würde ich sie an einem Vergleich ohne Änderung kalibrieren. [Weiter] Und spaCy ist klein: Ein Sprachmodell rechnet in Jonas' Labor rund zweieinhalb Minuten je Auftrag, das trägt der App-Host nicht. Was, wenn wir diese schwere Arbeit auslagern? Das zeigt Jonas.`,
     stichpunkte: [
       'Keine Freigabe, NLP_ENABLED=false bleibt (Standard, kostet nichts)',
       `Regel verfehlt (${mitSpacyFehl}/${mitSpacyGesamt}), Beweislast bei der Option, Nutzen ungemessen`,
       'Budget 1 CPU / 1 GiB für neue Versuche; 0,25 CPU keine Einsparung',
       'Grenzen: ein WSL2-Host mit Generator, Beitrittswelle',
-      'Selbstkritik: Regel zu empfindlich, künftig ohne Änderung kalibrieren',
-      `„Was, wenn wir die schwere Arbeit auslagern?“ LLM ≈ ${fmt(LLM_MIN_WARM, 1)} min je Auftrag → Jonas`,
+      '[Weiter] Selbstkritik: Regel zu empfindlich, künftig ohne Änderung kalibrieren',
+      `[Weiter] „Was, wenn wir die schwere Arbeit auslagern?“ LLM ≈ ${fmt(LLM_MIN_WARM, 1)} min je Auftrag → Jonas`,
     ],
     zeitS: 65,
     kurzfassung: true,
+    aufbau: 2,
     // Wegmarke: Entscheidung über das Ergebnis, das Lehrende sehen (lexikalische Wortwolke bleibt): Ende des Wegs.
     marke: '1a-wortwolke',
     quelle: q(

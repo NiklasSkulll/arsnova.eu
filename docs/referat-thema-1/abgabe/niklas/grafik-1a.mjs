@@ -712,10 +712,13 @@ export function analyseSvg(d) {
   t.push(linie(x0, yAchse, x1, yAchse, FARBEN.linie, 2));
   const timeoutS = d.konfig.timeoutMs / 1000;
   const proxyS = d.v4.verzoegerungMs / 1000;
-  t.push(
+  // Aufbau wie M1: Stufe 0 Referenz V1, Stufe 1 spaCy (V2, V3), Stufe 2 V4 mit Timeout und Proxy
+  const STUFE = { V1: 0, V2: 1, V3: 1, V4: 2 };
+  const frist = [];
+  frist.push(
     linie(sx(timeoutS), y0 - 50, sx(timeoutS), yAchse, FARBEN.rot, 3, ' stroke-dasharray="8 6"'),
   );
-  t.push(
+  frist.push(
     text(sx(timeoutS) - 10, y0 - 56, `Timeout ${fmt(timeoutS)} s`, {
       groesse: 22,
       gewicht: 600,
@@ -723,12 +726,13 @@ export function analyseSvg(d) {
       farbe: FARBEN.rot,
     }),
   );
-  t.push(
+  frist.push(
     linie(sx(proxyS), y0 - 20, sx(proxyS), yAchse, FARBEN.tinte, 2, ' stroke-dasharray="3 5"'),
   );
-  t.push(
+  frist.push(
     text(sx(proxyS) + 8, y0 - 26, `Proxy ${fmt(proxyS)} s`, { groesse: 22, farbe: FARBEN.tinte }),
   );
+  t.push(gruppe(STUFE.V4, frist.join('')));
   const zeilen = [
     ['V1', 'spaCy aus', 'lexikalisch', FARBEN.gedaempft],
     ['V2', 'spaCy 1 CPU', 'spaCy', FARBEN.blau],
@@ -738,13 +742,14 @@ export function analyseSvg(d) {
   zeilen.forEach(([v, was, ergebnis, farbe], zi) => {
     const y = y0 + zi * zeileH;
     const werte = d.analyseJeBlockS[v];
-    t.push(text(0, y + 2, `${v} · ${esc(was)}`, { groesse: 26, gewicht: 700 }));
-    t.push(text(0, y + 30, `Ergebnis: ${ergebnis}`, { groesse: 22, farbe: FARBEN.gedaempft }));
-    for (const w of werte) t.push(punkt(sx(w), y - 6, 11, farbe, 0.75));
+    const zeile = [];
+    zeile.push(text(0, y + 2, `${v} · ${esc(was)}`, { groesse: 26, gewicht: 700 }));
+    zeile.push(text(0, y + 30, `Ergebnis: ${ergebnis}`, { groesse: 22, farbe: FARBEN.gedaempft }));
+    for (const w of werte) zeile.push(punkt(sx(w), y - 6, 11, farbe, 0.75));
     const [a, b] = [Math.min(...werte), Math.max(...werte)];
     const lbl = b < 1 ? `${fmt(a * 1000)}–${fmt(b * 1000)} ms` : `${fmt(a, 1)}–${fmt(b, 1)} s`;
     const rechts = sx(b) + 20 + lbl.length * 13 < sx(timeoutS) - 10 || v === 'V4';
-    t.push(
+    zeile.push(
       text(rechts && v !== 'V4' ? sx(b) + 20 : sx(a) - 20, y + 2, lbl, {
         groesse: 24,
         gewicht: 600,
@@ -753,6 +758,7 @@ export function analyseSvg(d) {
         ...(rechts && v !== 'V4' ? {} : { anker: 'end' }),
       }),
     );
+    t.push(STUFE[v] ? gruppe(STUFE[v], zeile.join('')) : zeile.join(''));
   });
   t.push(
     text(x0, H - 4, 'Analysedauer, p95 je Block · Log-Achse, je Strich × 10', {
