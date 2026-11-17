@@ -68,7 +68,7 @@ Beleg: [ADR 1B-002](../../adr/1B-002-topologie-zwei-vms-ein-rechner.md#folgen), 
 
 ### F10. Bremst die geteilte CPU nicht die Inferenz und verfälscht so die Zerlegung?
 
-_(neu)_ Die Inferenz kann dadurch langsamer sein; getrennt gemessen habe ich das nicht, einen Same-Host-Vergleich S1 habe ich begründet weggelassen. Für die Zerlegung ist das nach dem Design unkritisch, weil die App während der Inferenz wartet. Die Kontrolle C0 nach M2 zeigt keinen messbaren Unterschied zwischen Strecke und lokal (−2,0 ms, ThinkPad P50, `9e111d35`); die Streuung je Seite ist größer als 5 ms, die eigentliche Zahl ist die Drahtmessung (0,43 ms).
+_(neu)_ Die Inferenz kann dadurch langsamer sein; getrennt gemessen habe ich das nicht, einen Same-Host-Vergleich S1 habe ich begründet weggelassen. Für die Zerlegung ist das nach dem Design unkritisch, weil die App während der Inferenz wartet. _Ergänzt 2026-11-17:_ Niklas hat S1 in Schritt 4 gemessen (Folie M4): Live-Latenz gemischt, kein Tempovorteil für einen Aufbau, die zweite Rolle ist betrieblich begründet ([ADR 1B-020](../../adr/1B-020-zweite-rolle-betrieblich-begruenden.md)). Die Kontrolle C0 nach M2 zeigt keinen messbaren Unterschied zwischen Strecke und lokal (−2,0 ms, ThinkPad P50, `9e111d35`); die Streuung je Seite ist größer als 5 ms, die eigentliche Zahl ist die Drahtmessung (0,43 ms).
 Beleg: [1B-Design 8](../../specs/2026-11-12-1b-zwei-host-design.md#8-gültigkeitsgrenzen), [1B-Ergebnis, Nachtrag M1–M4](../../1B-ergebnis.md#nachtrag-m1m4-kontrolle-ausfall-und-netzbelege)
 
 ### F11. n = 10 in einer Reihe, ohne Signifikanztest. Wie belastbar ist das?

@@ -1,9 +1,9 @@
 # Fragenkatalog für die Diskussion (Niklas: 1A und 1B Schritte 3–4)
 
-- **Stand:** 2026-11-16, Entwurf der KI (Claude Code) aus dem zweiten Audit · Prüfung durch den Autor: offen
+- **Stand:** 2026-11-16, Entwurf der KI (Claude Code) aus dem zweiten Audit; _Aktualisiert 2026-11-17:_ 1B Schritte 3–4 nach PR #26 (F10–F19) · Prüfung durch den Autor: offen
 - **Zweck:** nur zum Üben, nicht Teil der Abgabe. Die Diskussion zählt 40 % der Note ([Prüfungsdokument 6](../../../didaktik/CLOUD-COMPUTING-REFERAT-PRUEFUNG.md#6-bewertung)); der Diskussionskern zu 1A ist „Ressourcenisolation, Containergrenzen und Ursache einer gemessenen Live-Verzögerung“ (Gruppenauftrag 1A).
-- **Grundlage:** [1A-Auswertung](../../1A-auswertung.md), [Versuchsvertrag](../../1A-experiment-contract.md), [Vorabnachtrag](../../specs/2026-11-14-1a-messreihe-main-a19ca70f.md), die gewertete [Reihe vom 15.11.2026](../../evidenz/1A/reihe-main-a19ca70f-20261115-122547/), Niklas’ Störreihen zu 1B (`evidenz/1B/messung/2026-11-1{5,6}-lauf-*-summary.json`) und die Folien N1–N10, M1–M2 ([`folien-1a.mjs`](folien-1a.mjs), [`folien-1b34.mjs`](folien-1b34.mjs)).
-- **Regeln:** Zuerst die **Kurzantwort** (höchstens drei Sätze), Nachlegen nur auf Nachfrage. Jede Zahl gilt für Niklas’ WSL2-Rechner (16 logische CPUs, App-Commit `a19ca70f`, nach v1.4.0) bzw. für 1B für den i7-10700K mit zwei Hyper-V-VMs (Commits `5e758d0a`, `2b39b9df`). Was die Daten nicht hergeben, sage ich als offen, nicht als Ergebnis.
+- **Grundlage:** [1A-Auswertung](../../1A-auswertung.md), [Versuchsvertrag](../../1A-experiment-contract.md), [Vorabnachtrag](../../specs/2026-11-14-1a-messreihe-main-a19ca70f.md), die gewertete [Reihe vom 15.11.2026](../../evidenz/1A/reihe-main-a19ca70f-20261115-122547/), Niklas’ Reihen zu 1B (`evidenz/1B/messung/2026-11-1{5,6}-lauf-*.json.gz`, Breaker-Folgen, S1), [1B-Ergebnis](../../1B-ergebnis.md), [ADR 1B-020](../../adr/1B-020-zweite-rolle-betrieblich-begruenden.md) und die Folien N1–N10, M1–M4 ([`folien-1a.mjs`](folien-1a.mjs), [`folien-1b34.mjs`](folien-1b34.mjs)).
+- **Regeln:** Zuerst die **Kurzantwort** (höchstens drei Sätze), Nachlegen nur auf Nachfrage. Jede Zahl gilt für Niklas’ WSL2-Rechner (16 logische CPUs, App-Commit `a19ca70f`, nach v1.4.0) bzw. für 1B für den i7-10700K mit zwei Hyper-V-VMs (app-host 2 vCPU/4 GiB, llm-host 8 vCPU/10 GiB, ohne CPU-Pinning; Summary `5e758d0a`/`2b39b9df`, Label und Breaker `7c64dd6a`, S1 `4b135fe8`). Was die Daten nicht hergeben, sage ich als offen, nicht als Ergebnis.
 
 ## Die fünf wahrscheinlichsten Fragen
 
@@ -95,40 +95,76 @@ Beleg: Laufmanifeste `manifest.services.app.flags`; [Versuchsvertrag](../../1A-e
 
 ### F10. Warum dauert der Ersatz bei DROP 135 s, wenn die Frist 300 s beträgt?
 
-**Kurzantwort:** Bei DROP scheitert schon der Verbindungsaufbau, bevor das Summary-Budget greift; die App meldet `unavailable`, nicht `timeout`. Die rund 135 s sind deshalb keine eingestellte Frist der Anwendung. Plausibel sind die SYN-Wiederholungen des Linux-Kernels, gemessen habe ich das nicht.
+**Kurzantwort:** Bei DROP scheitert schon der Verbindungsaufbau, bevor das Summary-Budget greift; die App meldet `unavailable`, nicht `timeout`. Die rund 135 s sind keine eingestellte Frist der Anwendung; die Entwicklungsprobe zeigt elf SYN-Pakete derselben Verbindung, die genaue Ursache (Kernel oder Node) ist nicht belegt. Bei Labels endet das Warten schon an deren Frist von 30 s.
 
-**Nachlegen:** Genau das ist der Befund zu Schritt 3: Ein gestoppter Dienst (F1) kostet 48 ms, ein stummer Host (F2) über zwei Minuten je Auftrag. Fünf F2-Aufträge, alle mit Verbindungsversuch und ohne RST, Störung im Kernel nachgeprüft.
+**Nachlegen:** Ein gestoppter Dienst (F1) kostet 48 ms, ein stummer Host (F2) rund 2¼ min je Summary-Auftrag, das ist etwa das 2.800-Fache (134.732 / 48 ms). Fünf F2-Aufträge, alle mit Verbindungsversuch und ohne RST, Störung im Kernel nachgeprüft.
 
-Beleg: Folie M1; `2026-11-16-lauf-f2-summary.json.gz` (`experiment.jobs[].jobMs`, `fallbackReason`), Protokoll `evidenz/1B/2026-11-16-lauf-f2-summary.md` auf Niklas’ Zweig
+Beleg: Folie M1; [F2-Summary](../../evidenz/1B/2026-11-16-lauf-f2-summary.md), [F2-Label](../../evidenz/1B/2026-11-16-lauf-f2-label.md), [zweite F2-Entwicklungsprobe](../../evidenz/1B/2026-11-16-lauf-dev-f2-summary-v2.md)
 
-### F11. Ihre Störreihen laufen auf einem anderen Commit als die Referenz. Ist das vergleichbar?
+### F11. Warum zeigen Sie Summary mit Job-Zeit und Labels mit Client-Zeit?
 
-**Kurzantwort:** F2, L3 und „Slot belegt“ liefen auf `2b39b9df`, die Referenz F1 auf `5e758d0a`; der automatische Vergleich meldet deshalb korrekt „nicht vergleichbar“. Laut Versionsnachtrag sind Produktionscode, Treiber und Ablauf unverändert, geändert haben sich nur Störungsprüfung und Auswertung der TCP-Flags. Ich berichte den Vergleich deshalb ausdrücklich als versionsübergreifend und ziehe keinen kausalen Schluss.
+**Kurzantwort:** Die Kriterien für Summary sind auf die Job-Zeit formuliert, und die Label-API legt weder Job-Zeit noch Fallback-Grund offen. Für Labels gibt es deshalb nur die Zeit beim Client; das interne Fristkriterium ist für Labels nicht bewertbar, und ich gebe es nicht als bestanden aus. Die Summary-Clientzeit liegt wegen der Sekundenabfrage bei etwa 1,1 s statt 48 ms.
 
-Beleg: Protokolle `2026-11-16-lauf-{f2,l3,busy}-summary.md`, Abschnitt Vergleichbarkeit; `1B-3u4-Planung.md`, Nachtrag 2026-11-16 (Niklas’ Zweig)
+Beleg: Folie M1 (Legende); [Planung, Label-Nachträge](../../1B-3u4-Planung.md); [Beitragsabgleich](../../1B-3u4-beitragsabgleich.md)
 
-### F12. Kein Live-Fehler, aber jede Störreihe verfehlt die Latenzregel. Was gilt?
+### F12. Warum übernimmt die App Labels, aber keine Summary?
 
-**Kurzantwort:** Beides: 0 Fehler bei 72.000 Live-Aktionen, und je Störreihe überschreitet mindestens eine Aktion die 110 % der Referenz, absolut um höchstens 8,1 ms. Die Reihen liefen nacheinander auf einem Rechner ohne CPU-Pinning, eine Ursache kann ich nicht belegen, und die Regel lasse ich stehen. Wie in 1A gilt: Die Unschädlichkeit ist nicht belegt, ein Schaden auch nicht.
+**Kurzantwort:** Alle 30 Label-Antworten wurden übernommen (`labelModelAccepted`), alle Summaries verwirft das Qualitätstor mit `invalid_response`, auch in S1. Das ist Jonas’ Befund aus 1B/1C (ADR 1C-018) und hängt am Gate, nicht am zweiten Host. Mehr Zeit oder ein anderer Host garantiert keine akzeptierte Summary.
 
-Beleg: Folie M2; `messung/2026-11-1{5,6}-lauf-*-summary.json.gz` (`experiment.live.windows[]`, p95 gepoolt)
+Beleg: [Label-Normal, Teil 3](../../evidenz/1B/2026-11-16-lauf-normal-label-03.md); [Normal-Summary](../../evidenz/1B/2026-11-15-lauf-normal-summary.md); [ADR 1B-020, Folgen](../../adr/1B-020-zweite-rolle-betrieblich-begruenden.md#folgen)
 
-### F13. Lohnt sich der zweite Host?
+### F13. Ihre Summary-Störreihen laufen auf einem anderen Commit als die Referenz. Ist das vergleichbar?
 
-**Kurzantwort:** Gemessen ist der Gewinn: Keine Störung der Inferenz wurde zum Live-Fehler, und bei Ausfall kommt der Ersatz. Die Kosten, also zweiter Host, Token, Firewall, Deployment und Überwachung, habe ich benannt, aber nicht in Stunden gemessen; einen Same-Host-Vergleich (S1) gibt es nicht. Deshalb bleibe ich bei der Architekturentscheidung aus ADR-0035 und nenne als Betriebsrisiko, dass ein stummer Host jeden Auftrag bis zur Frist bindet.
+**Kurzantwort:** F2, L3 und „Slot belegt“ liefen auf `2b39b9df`, die Referenz F1 auf `5e758d0a`; der automatische Vergleich meldet deshalb korrekt „nicht vergleichbar“. Laut Versionsnachtrag sind Produktionscode, Treiber und Ablauf unverändert, geändert haben sich nur Störungsprüfung und Auswertung der TCP-Flags. Ich berichte den Vergleich ausdrücklich als versionsübergreifend und ziehe keinen kausalen Schluss.
 
-Beleg: Folie M2; [ADR-0035, Abschn. 2.1](../../../architecture/decisions/0035-self-hosted-llm-runtime-llama-cpp-over-ollama.md); [Runbook, Aufbau](../../evidenz/1B/runbook.md#2-aufbau)
+Beleg: Protokolle `2026-11-16-lauf-{f2,l3,busy}-summary.md`, Abschnitt Vergleichbarkeit; [Planung, Versionsnachtrag](../../1B-3u4-Planung.md)
 
-### F14. Schützt das private Netz die Runtime ausreichend?
+### F14. Kein Live-Fehler, aber viele Reihen verfehlen die Latenzregel. Was gilt?
 
-**Kurzantwort:** Ein privates Netz belegt weder Autorisierung noch Datenschutzkonformität; das ist die Gültigkeitsgrenze aus dem Auftrag. Die Runtime verlangt zusätzlich ein Token, und die Firewall erlaubt Port 8080 nur vom App-Host. Geprüft habe ich die Erreichbarkeit, nicht die Sicherheit.
+**Kurzantwort:** Beides: 0 Fehler bei 166.400 Live-Aktionen, und die meisten Reihen überschreiten bei mindestens einer Aktion 110 % ihrer Referenz, am stärksten DROP bei Labels im Tempo-Signal mit +128 % (17 → 39 ms). Nur L2 und L3 bei Labels halten die Regel, mit je drei Aufträgen. Die Reihen liefen nacheinander auf einem Rechner ohne CPU-Pinning; eine Ursache kann ich nicht belegen, und die Regel lasse ich stehen.
 
-Beleg: [Prüfungsdokument, Gruppenauftrag 1B](../../../didaktik/CLOUD-COMPUTING-REFERAT-PRUEFUNG.md); Aufbaubelege `evidenz/1B/messung/2026-11-13-belege/` (ufw, ss)
+**Nachlegen:** Teilreihen widersprechen sich: L1 Teil 2 hält alle Schwellen, gesamt nicht. Deshalb kein Isolationsgewinn und kein Isolationsschaden als Ergebnis.
+
+Beleg: Folie M3; [F1/B0-Label mit Normalvergleich](../../evidenz/1B/2026-11-16-lauf-f1-label.md); [L1 gesamt](../../evidenz/1B/2026-11-16-lauf-l1-label-02.md)
+
+### F15. Warum vergleichen Sie Summary-Normal nicht mit B0 wie bei Labels?
+
+**Kurzantwort:** Das Summary-Protokoll rechnet F1 gegen Normal, also die umgekehrte Richtung; deshalb steht Summary-Normal nicht im Raster auf M3, Folien zeigen nur Zahlen aus den Protokollen. Nachgerechnet in der Richtung von H2 (Normal gegen B0) lägen Q&A mit 1,24 und Blitzlicht mit 1,22 über 1,10. Das ist eine eigene Nachrechnung aus den Rohdaten, kein Protokollwert, und sie bestätigt das Bild von M3.
+
+Beleg: [Normal-Summary](../../evidenz/1B/2026-11-15-lauf-normal-summary.md), [F1-Summary, Live-Last](../../evidenz/1B/2026-11-15-lauf-f1-summary.md#live-last-und-app-ressourcen)
+
+### F16. Schützt der Circuit Breaker vor einem hängenden Host?
+
+**Kurzantwort:** Nein. Nach drei abgewiesenen Verbindungen öffnet er, und Auftrag vier endet nach 44 ms ohne Netzversuch; nach drei Fristabläufen geht Auftrag vier wieder zur Runtime und wartet erneut 90 s. Im Code gilt ein Abbruch durch die Warteschlange als `aborted` (`openWeightLlmClient.ts:188`), und nur `timeout`, `unavailable` und `invalid_response` zählen für den Breaker (`:476–478`).
+
+**Nachlegen:** Den internen Status habe ich nicht ausgelesen; Queue- und Client-Budget sind gleich lang, die Timer konkurrieren. Das Protokoll nennt die Funktion `processWithTimeout`; im Code heißt sie `runWithQueueTimeout` (`qaSummaryQueue.ts:259`).
+
+Beleg: Folie M2; [Breaker-F1](../../evidenz/1B/2026-11-16-lauf-breaker-f1-summary.md), [Queue-Folge](../../evidenz/1B/2026-11-16-lauf-breaker-l3-summary.md)
+
+### F17. Ihre Planung wurde gekürzt. Waren die Kriterien wirklich vorab festgelegt?
+
+**Kurzantwort:** Hypothesen und Schwellen (H2, H-F1, H-F1F2, H-Queue) stehen in Commit `5e758d0a` vom 15.11., 17 Minuten vor der ersten gewerteten Reihe. Der gekürzte Restumfang (je drei Aufträge für L2, L3 und F2 bei Labels) ist als datierter Nachtrag beschrieben, kam aber erst mit `aa0e90c7` (16.11., 20:43) ins Repo, nach diesen Läufen. Dass er vorher galt, belegt nur der Text; die Schwellen selbst haben sich nicht geändert.
+
+Beleg: [Planung, Hypothesentabelle und Nachträge](../../1B-3u4-Planung.md); `git log -- docs/referat-thema-1/1B-3u4-Planung.md`
+
+### F18. Lohnt sich der zweite Host?
+
+**Kurzantwort:** Nicht wegen Tempo: S1 mit allem auf einem Host hält bei Summary alle Live-Schwellen und reißt bei Labels Beitritt und Quiz um etwa 21–23 %, Fehler gab es keine. ADR 1B-020 begründet die zweite Rolle deshalb betrieblich: getrennte Ressourcen, Wartung und Zuständigkeit. Die Kosten (zweites System, Deployment mit Digest und Modellhash, Token-Rotation, Überwachung, bei Schutzbedarf TLS) sind qualitativ bewertet, nicht in Stunden.
+
+**Nachlegen:** S1 lief mit 8 vCPU statt 2 + 8 und HTTP auf derselben VM, Treiber und Collector auf demselben Host; daraus folgt keine Freigabe für einen produktiven Same-Host-Betrieb. Beide VMs liefen auf einem PC, unabhängige Ausfallbereiche sind nicht belegt.
+
+Beleg: Folie M4; [S1-Label](../../evidenz/1B/2026-11-16-lauf-s1-label.md), [S1-Summary](../../evidenz/1B/2026-11-16-lauf-s1-summary.md), [ADR 1B-020](../../adr/1B-020-zweite-rolle-betrieblich-begruenden.md)
+
+### F19. Schützt das private Netz die Runtime ausreichend?
+
+**Kurzantwort:** Ein privates Netz belegt weder Autorisierung noch Datenschutzkonformität; das ist die Gültigkeitsgrenze aus dem Auftrag. Die Runtime verlangt zusätzlich ein Token, und die Firewall erlaubt Port 8080 nur vom App-Host. Das Token läuft im Klartext über HTTP; TLS oder ein Tunnel wäre bei Schutzbedarf nötig (ADR 1B-020).
+
+Beleg: [Prüfungsdokument, Gruppenauftrag 1B](../../../didaktik/CLOUD-COMPUTING-REFERAT-PRUEFUNG.md); Aufbaubelege `evidenz/1B/messung/2026-11-13-belege/` (ufw, ss); [ADR 1B-020, Aufwand](../../adr/1B-020-zweite-rolle-betrieblich-begruenden.md#betriebsaufwand-und-gegenwert)
 
 ## Eigenanteil
 
-### F15. Was haben Sie selbst gemacht, was die KI?
+### F20. Was haben Sie selbst gemacht, was die KI?
 
-**Kurzantwort:** Codex hat Werkzeuge, Tests, Auswertung und Dokumententwürfe umgesetzt, Claude Code die Folien und das Handout entworfen. Auftrag, Labor, die realen Messreihen, die Freigaben und die Deutung sind meine. Jede Zahl auf Folien und Handout erzeugt ein Skript aus den committeten Rohdaten; einen Vergleich rechne ich vor der Prüfung von Hand nach (Rang `ceil(0,95·n)`), wie es die Prüfliste in `1A-abschluss-und-uebergabe.md` vorsieht.
+**Kurzantwort:** Codex (für 1B Schritte 3–4 mit GPT-6.1 Sol) hat Werkzeuge, Tests, Auswertung und Dokumententwürfe umgesetzt, Claude Code die Folien und das Handout entworfen. Auftrag, Labor, die realen Messreihen, die Freigaben und die Deutung sind meine. Jede Zahl auf Folien und Handout erzeugt ein Skript aus den committeten Rohdaten; einen Vergleich rechne ich vor der Prüfung von Hand nach (Rang `ceil(0,95·n)`), wie es die Prüfliste in `1A-abschluss-und-uebergabe.md` vorsieht.
 
-Beleg: [1A-Eigenanteil](../../1A-eigenanteil.md); Reservefolie RN2
+Beleg: [1A-Eigenanteil](../../1A-eigenanteil.md), [1B-Eigenanteil](../../1B-eigenanteil.md#schritte-34-niklas); Reservefolie RN2
