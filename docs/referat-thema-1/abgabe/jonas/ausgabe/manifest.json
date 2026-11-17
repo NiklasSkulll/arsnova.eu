@@ -189,7 +189,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/sprechheft.mjs",
-      "sha256": "9ddcdf33bc5824631ca3d0a313fde861b4fb88e85249648830ec2ebe3829e33c"
+      "sha256": "80aa2bc806453db16b7fb46abb01a8efaaab64619ab7ac62ec325362edda1aaf"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/stil.css",
@@ -605,19 +605,19 @@
     {
       "datei": "gemeinsames-deck.pdf",
       "bytes": 1602121,
-      "sha256": "c1e0b5355f7448083580ad48258170b3c390b8be3d99eef500397acf66e91db1",
+      "sha256": "525640dc076e51bc533039443bb370165efbaaf5fd553470ffc6e78b55ff7b18",
       "seiten": 53
     },
     {
       "datei": "jonas-folien.pdf",
       "bytes": 1079906,
-      "sha256": "fcd1d23b00897fc753de0c994cb92ab8f984ecd6ec48231b8b778ae6acf07cb4",
+      "sha256": "9a0550248932ca0256df9cb946fbf4b5d083f5a67c32072b4ea976b84fbc495d",
       "seiten": 32
     },
     {
       "datei": "niklas-folien.pdf",
       "bytes": 531938,
-      "sha256": "7ffa5d4fdd5e39ac3c0a17f2e52fce2637e09e7b9941c6e275c25a628bb3d328",
+      "sha256": "516f87df0bcd5dcd69748c973ec998dfecd4437ed616390cee3df471d1d9bcaa",
       "seiten": 18
     }
   ]

@@ -298,9 +298,10 @@ const REFERENT_SKRIPT = `(() => {
     const jetzt = document.querySelector('.vortrag p.jetzt');
     if (jetzt && !neu) jetzt.scrollIntoView({ block: 'nearest' });
   }
-  window.referentZeige = zeige;
-  setInterval(() => { $('r-uhr').textContent = start === null ? '0:00' : mmss((Date.now() - start) / 1000); }, 500);
-  $('r-start').onclick = () => { start = Date.now(); };
+  window.referentZeige = (z) => { zeige(z); takt(); };
+  const takt = () => { $('r-uhr').textContent = start === null ? '0:00' : mmss((Date.now() - start) / 1000); };
+  setInterval(takt, 500);
+  $('r-start').onclick = () => { start = Date.now(); takt(); };
   const groesse = (d) => { gr = Math.max(14, Math.min(28, gr + d)); document.body.style.setProperty('--gr', gr + 'px'); };
   $('r-klein').onclick = () => groesse(-2);
   $('r-gross').onclick = () => groesse(2);
