@@ -1485,9 +1485,9 @@ export function folien(daten) {
 
   // ------------------------------------------------------------ G9 Rahmen (gemeinsames Fazit, spricht Niklas)
   // Ein Satz je Person, dann die gemeinsame Antwort auf die Leitfrage. 1B Schritte 3–4 aus Niklas' gewerteten
-  // Störreihen vom 15./16.11. (abgabe/niklas/folien-1b34.mjs, M1–M2); die Überschrift ist nur so stark wie die
-  // Belege: Zeitkosten der Trennung (Jonas) und keine Live-Fehler unter Störung (Niklas), kein Isolationsgewinn
-  // gegenüber einem LLM auf dem App-Host (nicht gemessen).
+  // Reihen vom 15./16.11. (abgabe/niklas/folien-1b34.mjs, M1–M4); die Überschrift ist nur so stark wie die
+  // Belege: Zeitkosten der Trennung (Jonas) und keine Live-Fehler unter Störung (Niklas). Kein Tempovorteil
+  // des zweiten Hosts: S1 ist gemischt, ADR 1B-020 begründet die Rolle betrieblich.
   const person = (kopf, farbe, saetze) =>
     `<div style="border-top:6px solid ${farbe};padding-top:14px">` +
     `<p style="margin:0 0 8px;font-weight:700;font-size:28px">${kopf}</p>` +
@@ -1507,25 +1507,25 @@ export function folien(daten) {
         ]) +
         person('Niklas · 1A und 1B, Schritte 3–4', 'var(--blau)', [
           `${etikett('1A')} Der App-Host trägt die Live-Last fehlerfrei. Die spaCy-Glättung bekommt keine Freigabe: Die vorab festgelegte Regel hält nicht, der Nutzen ist ungemessen.`,
-          `${etikett('1B')} Fällt die Inferenz aus oder schweigt sie, kommt der Ersatz, und keine Live-Aktion scheitert; ein stummer Host kostet aber Zeit bis zur Frist.`,
+          `${etikett('1B')} Fällt die Inferenz aus oder schweigt sie, kommt der Ersatz, und keine Live-Aktion scheitert. Latenzneutral ist das nicht, und Hänger dämpft der Breaker nicht; der zweite Host ist betrieblich begründet, nicht durch Tempo.`,
         ]) +
         `</div>` +
-        `<p class="merksatz"><b>Gemeinsam:</b> Im Labor kostet die Trennung kaum Zeit, und Störungen der Inferenz werden nicht zu Live-Fehlern. Die Grenzen liegen in der Inferenz selbst, in optionaler Arbeit ohne Nutzenbeleg und im ungemessenen Betriebsaufwand.</p>`,
+        `<p class="merksatz"><b>Gemeinsam:</b> Im Labor kostet die Trennung kaum Zeit, und Störungen der Inferenz werden nicht zu Live-Fehlern. Die Grenzen liegen in der Inferenz selbst, in optionaler Arbeit ohne Nutzenbeleg und im nur qualitativ bewerteten Betriebsaufwand.</p>`,
     ),
     notiz:
-      'Zum Schluss unsere Antwort auf die gemeinsame Leitfrage. Jonas hat gezeigt: Der Kontextpfad hält seine Zusagen, der zweite Host kostet keine relevante Zeit, und die Zeit steckt in der Inferenz; nach Version 1.4.0 besteht aber keine geprüfte Modellantwort das Gate. Mein Teil: Der App-Host trägt die Live-Last fehlerfrei, optionale Analyse bekommt ohne Nutzenbeleg keine Freigabe. Fällt die Inferenz aus oder schweigt sie, kommt der Ersatz, und keine Live-Aktion scheitert; ein stummer Host kostet aber Zeit bis zur Frist. Gemeinsam heißt das: Im Labor kostet die Trennung kaum Zeit, und Störungen der Inferenz werden nicht zu Live-Fehlern. Die Grenzen liegen in der Inferenz selbst, in optionaler Arbeit ohne Nutzenbeleg und im Betriebsaufwand, den wir nicht gemessen haben.',
+      'Zum Schluss unsere Antwort auf die gemeinsame Leitfrage. Jonas hat gezeigt: Der Kontextpfad hält seine Zusagen, der zweite Host kostet keine relevante Zeit, und die Zeit steckt in der Inferenz; nach Version 1.4.0 besteht aber keine geprüfte Modellantwort das Gate. Mein Teil: Der App-Host trägt die Live-Last fehlerfrei, optionale Analyse bekommt ohne Nutzenbeleg keine Freigabe. Fällt die Inferenz aus oder schweigt sie, kommt der Ersatz, und keine Live-Aktion scheitert; latenzneutral ist das nicht, und Hänger dämpft der Breaker nicht. Den zweiten Host begründen wir deshalb betrieblich, nicht mit Tempo. Gemeinsam heißt das: Im Labor kostet die Trennung kaum Zeit, und Störungen der Inferenz werden nicht zu Live-Fehlern. Die Grenzen liegen in der Inferenz selbst, in optionaler Arbeit ohne Nutzenbeleg und im Betriebsaufwand, den wir nur qualitativ bewertet haben.',
     stichpunkte: [
       'Jonas: Kontextpfad hält, zweiter Host kostet keine Zeit, Zeit steckt in der Inferenz; Gate verwirft alle geprüften Antworten',
       'Niklas: App-Host trägt die Live-Last, spaCy ohne Freigabe',
-      'Niklas 1B: Ersatz bei Ausfall und Stille, kein Live-Fehler; stummer Host kostet Zeit',
-      'Gemeinsam: Trennung kostet kaum Zeit, Störung wird kein Live-Fehler; Grenzen: Inferenz, Option ohne Nutzen, Aufwand',
+      'Niklas 1B: Ersatz immer, kein Live-Fehler; nicht latenzneutral, Breaker hilft nicht bei Hängern; Host betrieblich begründet',
+      'Gemeinsam: Trennung kostet kaum Zeit, Störung wird kein Live-Fehler; Grenzen: Inferenz, Option ohne Nutzen, Aufwand qualitativ',
     ],
     zeitS: 45,
     // Gehört zu Niklas' Kurzfassung: das Fazit fällt nie weg (Sprungplan Niklas).
     kurzfassung: true,
     sprecher: 'niklas',
     quelle:
-      '1B-ergebnis.md, 1C-ergebnis.md (Kurzantwort, Verlauf 9f230abc); 1A: abgabe/niklas/folien-1a.mjs (N1, N10); 1B Schritte 3–4: abgabe/niklas/folien-1b34.mjs (M1, M2), evidenz/1B/messung/2026-11-15-lauf-f1-summary.json.gz, 2026-11-16-lauf-{f2,l3,busy}-summary.json (i7-10700K, Hyper-V · 5e758d0a, 2b39b9df)',
+      '1B-ergebnis.md, 1C-ergebnis.md (Kurzantwort, Verlauf 9f230abc); 1A: abgabe/niklas/folien-1a.mjs (N1, N10); 1B Schritte 3–4: abgabe/niklas/folien-1b34.mjs (M1–M4), evidenz/1B/messung/2026-11-1{5,6}-lauf-*.json.gz und Breaker-Folgen (i7-10700K, Hyper-V · 5e758d0a, 2b39b9df, 7c64dd6a, 4b135fe8), adr/1B-020-zweite-rolle-betrieblich-begruenden.md',
     station: null,
   });
 

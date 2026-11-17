@@ -99,7 +99,7 @@ const kernsatz = (html, linie = 'var(--blau)', groesse = 32) =>
 /** Status der nachträglichen Auswertung: gedämpft in der Fragezeile nach der Frage (Kopfgrammatik). */
 const explorativ = { status: 'nachträglich ausgewertet' };
 
-/** Folien N1–N10 mit N6b (Hauptteil), NL (Literatur, Anhang) und RN2 (Reserve). */
+/** Folien N1–N10 ohne N8 (Hauptteil), NL (Literatur, Anhang) und Reserve RN1 (bis 2026-11-16 N6b), RN2, RN4 (N8). */
 export function folien1A(d) {
   const H = d.herkunft;
   const sw = d.schwellen;
@@ -647,9 +647,28 @@ export function folien1A(d) {
     ],
     quelle: `1A-auswertung.md (Grenzen), 1A-eigenanteil.md, 00-rahmen-und-pruefung.md (Freigabe des aktuellen main) · ${umgebung}`,
   });
-  // Vortragsreihenfolge: N3 und N8 (bis 2026-11-16 RN3, RN4) und N6b (bis dahin RN1) an ihrer Stelle.
-  const ORDNUNG = ['N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'N6b', 'N7', 'N8', 'N9', 'N10'];
-  const rang = (f) => (ORDNUNG.includes(f.id) ? ORDNUNG.indexOf(f.id) : ORDNUNG.length);
+  // Seit 2026-11-17 wieder in der Reserve (Zeit für 1B Schritte 3–4, M1–M4): N6b als RN1, N8 als RN4.
+  // Inhalt, Notiz und Fuß bleiben; Reservefolien haben keine Redezeit.
+  const ZUR_RESERVE = { N6b: 'RN1', N8: 'RN4' };
+  for (const f of F) {
+    const neueId = ZUR_RESERVE[f.id];
+    if (!neueId) continue;
+    Object.assign(f, {
+      id: neueId,
+      teil: 'reserve',
+      autor: 'niklas',
+      titel: `Reserve: ${f.titel}`,
+      zeitS: 0,
+      kurzfassung: false,
+    });
+  }
+  // Vortragsreihenfolge: N3 (bis 2026-11-16 RN3) an seiner Stelle.
+  const ORDNUNG = ['N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'N7', 'N9', 'N10'];
+  const RESERVE = ['RN1', 'RN2', 'RN4'];
+  const rang = (f) =>
+    ORDNUNG.includes(f.id)
+      ? ORDNUNG.indexOf(f.id)
+      : ORDNUNG.length + 1 + (RESERVE.includes(f.id) ? RESERVE.indexOf(f.id) + 1 : 0);
   return F.map((f, i) => [f, i])
     .sort((a, b) => rang(a[0]) - rang(b[0]) || a[1] - b[1])
     .map(([f]) => f);

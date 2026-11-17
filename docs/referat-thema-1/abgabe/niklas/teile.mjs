@@ -24,6 +24,11 @@ export function eingabenNiklas(root) {
     ...eingaben1A(root).map((p) => resolve(root, p)),
     ...eingaben1B34(root).map((p) => resolve(root, p)),
     resolve(root, '../../scripts/load/lib/artillery-live-messungen.mjs'),
+    resolve(root, 'evidenz/1B/json-lesen.mjs'),
+    // M2 zitiert Zeilen aus diesen Dateien (folien-1b34.mjs, CODE_BELEGE_1B34; Test am Checkout)
+    ...['openWeightLlmClient.ts', 'openWeightLlmConfig.ts', 'qaSummaryQueue.ts'].map((n) =>
+      resolve(root, '../../apps/backend/src/lib', n),
+    ),
     ...readdirSync(HIER)
       .filter((n) => n.endsWith('.mjs') && !n.endsWith('.test.mjs'))
       .sort()

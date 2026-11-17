@@ -54,10 +54,10 @@ after(async () => {
 
 // ---------------------------------------------------------------- Aufbau und Zeit
 
-test('1A: elf Folien im Vortrag (N3, N6b, N8 seit 2026-11-16 aus der Reserve), Literatur NL im Anhang', () => {
+test('1A: neun Folien im Vortrag (N6b, N8 seit 2026-11-17 wieder Reserve RN1, RN4), Literatur NL im Anhang', () => {
   assert.deepEqual(
     haupt1A.map((f) => f.id),
-    ['N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'N6b', 'N7', 'N8', 'N9', 'N10'],
+    ['N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'N7', 'N9', 'N10'],
   );
   assert.deepEqual(
     n1a.filter((f) => f.anhang).map((f) => f.id),
@@ -65,23 +65,24 @@ test('1A: elf Folien im Vortrag (N3, N6b, N8 seit 2026-11-16 aus der Reserve), L
   );
   assert.deepEqual(
     reserve1A.map((f) => f.id),
-    ['RN2'],
+    ['RN1', 'RN2', 'RN4'],
   );
+  assert.ok(reserve1A.every((f) => /^Reserve: /.test(f.titel)));
   assert.ok(reserve1A.every((f) => f.autor === 'niklas' && f.zeitS === 0));
   assert.ok(haupt1A.every((f) => f.auftrag === '1A' && f.station === null));
 });
 
 test('Zeit: Niklas 14:00–15:00 min samt Rahmen (Titel, Fahrplan, Systembild, Fazit, Dank); N2, N4, N7; Kurzfassung', () => {
   const s = summe(haupt1A);
-  assert.ok(s >= 540 && s <= 580, `1A ${s} s`);
-  // Alle Rahmenfolien spricht Niklas (Absprache 2026-11-16); 1B 3–4 zwei Folien, höchstens 150 s
+  assert.ok(s >= 450 && s <= 490, `1A ${s} s`);
+  // Alle Rahmenfolien spricht Niklas (Absprache 2026-11-16); 1B 3–4 vier Folien, höchstens 240 s (2026-11-17)
   const rahmen = alle.filter((f) => f.teil === 'rahmen');
   assert.deepEqual(
     rahmen.map((f) => f.id),
     ['GT', 'G0', 'GK', 'G9', 'GD'],
   );
   for (const f of rahmen) assert.equal(f.sprecher, 'niklas', f.id);
-  assert.ok(n1b.length <= 2 && summe(n1b) <= 150, `1B 3–4 ${summe(n1b)} s`);
+  assert.ok(n1b.length === 4 && summe(n1b) <= 240, `1B 3–4 ${summe(n1b)} s`);
   const gesamt = s + summe(n1b) + summe(rahmen);
   // Entscheidung der Autoren 2026-11-16: 15 min Redezeit je Person (ersetzt höchstens 10:30 min)
   assert.ok(gesamt >= 840 && gesamt <= 900, `Niklas ${gesamt} s`);
@@ -298,10 +299,10 @@ test(
 
 // ---------------------------------------------------------------- 1B 3–4 Gerüst
 
-test('1B 3–4: M1–M2 aus den Ergebnis-JSONs ohne Platzhalter; ohne Daten eine Platzhalterfolie', () => {
+test('1B 3–4: M1–M4 aus den Ergebnis-JSONs ohne Platzhalter; ohne Daten eine Platzhalterfolie', () => {
   assert.deepEqual(
     n1b.map((f) => f.id),
-    ['M1', 'M2'],
+    ['M1', 'M2', 'M3', 'M4'],
   );
   for (const f of n1b) {
     const t = [f.titel, ohneTags(f.inhalt), f.fuss, f.notiz, ...f.stichpunkte].join(' ');
@@ -312,7 +313,11 @@ test('1B 3–4: M1–M2 aus den Ergebnis-JSONs ohne Platzhalter; ohne Daten eine
   assert.equal(d1b.finde('f1').jobMedianMs, 48);
   assert.equal(d1b.finde('f2').jobMedianMs, 134732);
   for (const l of d1b.laeufe) assert.equal(l.liveFehler, 0, l.datei);
-  assert.match(n1b[0].inhalt, /Median 48 ms/);
+  assert.match(n1b[0].inhalt, />48 ms</);
+  // überholte Aussagen von M2 alt (vor PR #26) kommen nicht wieder
+  const text = n1b.map((f) => [ohneTags(f.inhalt), f.notiz].join(' ')).join(' ');
+  assert.doesNotMatch(text, /kein Vergleich mit einem LLM|wie ADR-0035/i);
+  assert.match(n1b[3].fuss, /ADR 1B-020/);
   const leer = folien1B34();
   assert.equal(leer.length, 1);
   assert.match(leer[0].titel, /\[Titel\]/);
@@ -366,8 +371,9 @@ test('1B 3–4 füllt sich aus Ergebnis-JSONs (Median selbst gerechnet, p95 gepo
     assert.equal(f1.jobMedianMs, 48);
     assert.equal(f1.live.join.p95Ms, 30);
     assert.equal(f1.liveGeplant, 160);
-    const m1 = folien1B34(dd).find((f) => f.id === 'M1');
-    assert.match(m1.inhalt, /Median 48 ms/);
+    // ohne Label, Breaker, S1 und Transport bleibt die Platzhalterfolie: nichts Halbes im Deck
+    assert.equal(folien1B34(dd).length, 1);
+    assert.match(folien1B34(dd)[0].fuss, /\[Niklas\]/);
   } finally {
     rmSync(wurzel, { recursive: true, force: true });
   }
@@ -398,7 +404,7 @@ test('Kopfgrammatik im gemeinsamen Deck: Ort, Titel, Fragezeile im selben Abstan
   // Autorzeile nur auf der ersten Folie jedes Teils
   assert.deepEqual(autor, ['N1', 'J1']);
   // Status („nachträglich ausgewertet“) nach der Frage statt an der Stelle des Etiketts
-  for (const id of ['N6b', 'N7']) {
+  for (const id of ['N7']) {
     const f = haupt1A.find((x) => x.id === id);
     assert.match(
       f.inhalt,
@@ -515,7 +521,7 @@ test('N6 baut in drei Stufen auf: 4, dann 7, dann 11 Treffer; rückwärts ins En
   const { verlauf, uebergang } = await ablauf('N6', 3, 'no-preference');
   // je Stufe: Treffer-Zellen plus genau eine Erklärzeile
   // Stufe 0: nur Umrisse und Erklärzeile; ab Stufe 1 zusätzlich die graue Füllung samt Legende „hält“
-  assert.deepEqual(verlauf, ['N6:0:1', 'N6:1:6', 'N6:2:9', 'N6:3:13', 'N6b:-:0', 'N6:3:13']);
+  assert.deepEqual(verlauf, ['N6:0:1', 'N6:1:6', 'N6:2:9', 'N6:3:13', 'N7:0:0', 'N6:3:13']);
   const ms = parseFloat(uebergang.split(',')[0]) * 1000;
   assert.ok(ms >= 150 && ms <= 300, `Übergang ${uebergang}`);
 });
@@ -523,7 +529,7 @@ test('N6 baut in drei Stufen auf: 4, dann 7, dann 11 Treffer; rückwärts ins En
 test('N7 baut in zwei Stufen auf (Latenz, dann Analyse, dann CPU); reduzierte Bewegung ohne Übergang', async () => {
   const normal = await ablauf('N7', 2, 'no-preference');
   // Stufe 0: nichts mit data-ab; 1: Band und Analyse; 2: zusätzlich CPU
-  assert.deepEqual(normal.verlauf, ['N7:0:0', 'N7:1:2', 'N7:2:3', 'N8:-:0', 'N7:2:3']);
+  assert.deepEqual(normal.verlauf, ['N7:0:0', 'N7:1:2', 'N7:2:3', 'N9:-:0', 'N7:2:3']);
   const reduziert = await ablauf('N7', 2, 'reduce');
   assert.deepEqual(reduziert.verlauf, normal.verlauf);
   assert.equal(reduziert.uebergang, '0s');
@@ -562,13 +568,13 @@ test('Wegmarke: 1A auf eigenem Weg, je Folie die erwartete Station; 1B 3–4 auf
     N4: '1a-regel',
     N5: '1a-live',
     N6: '1a-regel',
-    N6b: '1a-regel',
     N7: '1a-wirkung',
-    N8: '1a-spacy',
     N9: '1a-ersatz',
     N10: '1a-wortwolke',
     M1: '1b-stoerung',
-    M2: '1b-alle',
+    M2: '1b-breaker',
+    M3: '1b-alle',
+    M4: '1b-s1',
   });
   // Station des Punkts und hervorgehobene Strecken je Marke
   const ort = (m) =>
@@ -580,13 +586,13 @@ test('Wegmarke: 1A auf eigenem Weg, je Folie die erwartete Station; 1B 3–4 auf
     N4: 'live live+analyse',
     N5: 'live live',
     N6: 'live live+analyse',
-    N6b: 'live live+analyse',
     N7: 'live ',
-    N8: 'spacy ',
     N9: 'ersatz ',
     N10: 'wortwolke ',
     M1: '- zweiterHost',
     M2: '- zweiterHost',
+    M3: '- zweiterHost',
+    M4: '- zweiterHost',
   });
   assert.equal(MARKEN['1a-wirkung'].wirkung, true);
   for (const f of haupt1A) {
@@ -597,7 +603,13 @@ test('Wegmarke: 1A auf eigenem Weg, je Folie die erwartete Station; 1B 3–4 auf
   for (const f of n1b) {
     const m = MARKEN[f.marke];
     assert.equal(m.weg, 'auftrag', f.id);
-    assert.deepEqual(m.abschnitte, [{ name: 'zweiterHost' }], f.id);
+    assert.deepEqual(
+      m.abschnitte.map((a) => a.name),
+      ['zweiterHost'],
+      f.id,
+    );
+    // S1 (M4): die Strecke über den zweiten Host entfällt, gestrichelt
+    assert.equal(Boolean(m.abschnitte[0].gestrichelt), f.id === 'M4', f.id);
     assert.equal(m.farbe, 'var(--bernstein)', f.id);
   }
   // Stufen der Marke auf M1 = Stufen der Störungen auf M1 (STUFE_1B34)
@@ -607,8 +619,10 @@ test('Wegmarke: 1A auf eigenem Weg, je Folie die erwartete Station; 1B 3–4 auf
     stopp: STUFE_1B34.f1,
     belegt: STUFE_1B34.busy,
     drop: STUFE_1B34.f2,
+    langsam: STUFE_1B34.l1,
     spaet: STUFE_1B34.l3,
   });
+  assert.equal(STUFE_1B34.l1, STUFE_1B34.l2);
   assert.deepEqual(MARKEN['1b-alle'].zeichen, Object.keys(STOERUNG_ZEICHEN));
   // Im Deck: Druckmarke je Folie mit Beschriftung und Etikett, keine Reste der Systembild-Miniatur
   for (const f of [...haupt1A, ...n1b]) {
@@ -636,6 +650,12 @@ test('Wegkarte: jede Station jedes Wegs wird besucht, je Teil in nicht fallender
       vorher = z.anteil;
       besucht[z.weg].add(z.station);
     }
+  }
+  // Seit 2026-11-17 zeigt nur noch die Reserve RN4 die Station spaCy (Zeit für 1B 3–4); sie zählt hier mit,
+  // die Reihenfolge prüft nur den Vortrag.
+  for (const f of reserve1A) {
+    const z = f.marke ? laeuferZustand(f.marke) : null;
+    if (z?.station) besucht[z.weg].add(z.station);
   }
   for (const [weg, stationen] of Object.entries(besucht))
     assert.deepEqual([...stationen].sort(), Object.keys(WEGE[weg].stationen).sort(), weg);
@@ -681,7 +701,7 @@ async function laeuferVerlauf(start, ende, reducedMotion = 'no-preference') {
   return verlauf;
 }
 
-test('Wegkarte N1–N10 und M1–M2: ein beständiger Läufer je Weg wie bei Jonas', async () => {
+test('Wegkarte N1–N10 und M1–M4: ein beständiger Läufer je Weg wie bei Jonas', async () => {
   const v = await laeuferVerlauf('N1', 'G9');
   const n = v.filter((x) => x.id.startsWith('N'));
   const m = v.filter((x) => x.id.startsWith('M'));
@@ -700,7 +720,7 @@ test('Wegkarte N1–N10 und M1–M2: ein beständiger Läufer je Weg wie bei Jon
   // der Punkt fährt die Stationen von 1A der Reihe nach an
   assert.deepEqual(
     [...new Set(n.map((x) => x.aktiv).filter(Boolean))],
-    ['app', 'live', 'spacy', 'ersatz', 'wortwolke'],
+    ['app', 'live', 'ersatz', 'wortwolke'],
   );
   // Säume und Zeichen nur, wo sie die Aussage der Folie zeigen
   const bei = (id, stufe = null) => v.find((x) => x.id === id && x.stufe === stufe);
@@ -709,13 +729,18 @@ test('Wegkarte N1–N10 und M1–M2: ein beständiger Läufer je Weg wie bei Jon
   assert.deepEqual(bei('N4').saeume, ['live|var(--blau)', 'analyse|var(--blau)|gestrichelt']);
   assert.deepEqual(bei('N5').saeume, ['live|var(--blau)']);
   assert.equal(bei('N7', '0').wirkung, true);
-  assert.equal(bei('N8').wirkung, false);
+  assert.equal(bei('N9').wirkung, false);
   assert.deepEqual(bei('M1', '0').saeume, ['zweiterHost|var(--bernstein)']);
   assert.deepEqual(
     ['0', '1', '2', '3'].map((s) => bei('M1', s).satz),
-    ['', 'stopp,belegt', 'drop', 'spaet'],
+    ['', 'stopp,belegt', 'drop,langsam', 'spaet'],
   );
-  assert.equal(bei('M2').satz, 'stopp,belegt,drop,spaet');
+  assert.deepEqual(
+    ['0', '1', '2'].map((s) => bei('M2', s).satz),
+    ['', 'stopp', 'spaet'],
+  );
+  assert.equal(bei('M3', '0').satz, 'stopp,belegt,drop,langsam,spaet');
+  assert.deepEqual(bei('M4', '0').saeume, ['zweiterHost|var(--bernstein)|gestrichelt']);
   // Rahmen danach (G9): keine Wegkarte
   assert.deepEqual(v.at(-1).wege, []);
 });
@@ -723,9 +748,9 @@ test('Wegkarte N1–N10 und M1–M2: ein beständiger Läufer je Weg wie bei Jon
 test('Wegkarte: innerhalb von 1A fährt der Punkt, der Wechsel N10 → J1 blendet über', async () => {
   const context = await browser.newContext({ viewport: { width: 1600, height: 900 } });
   const page = await context.newPage();
-  await page.goto(`${pathToFileURL(deck).href}#N8`);
+  await page.goto(`${pathToFileURL(deck).href}#N9`);
   await page.waitForTimeout(400);
-  await page.keyboard.press('ArrowRight'); // N8 → N9: spaCy → Ersatz
+  await page.keyboard.press('ArrowRight'); // N9 → N10: Ersatz → Wortwolke
   await page.waitForTimeout(200);
   const fahrt = await page.evaluate(() => {
     const p = document.querySelector('.weg-laeufer[data-weg="1a"] .weg-punkt');
@@ -736,8 +761,6 @@ test('Wegkarte: innerhalb von 1A fährt der Punkt, der Wechsel N10 → J1 blende
     };
   });
   assert.ok(fahrt.laeuft && fahrt.ist < fahrt.soll, `Punkt fährt: ${JSON.stringify(fahrt)}`);
-  await page.waitForTimeout(700);
-  await page.keyboard.press('ArrowRight'); // N9 → N10
   await page.waitForTimeout(700);
   await page.keyboard.press('ArrowRight'); // N10 → J1
   await page.waitForTimeout(120);
@@ -807,9 +830,11 @@ test('Druck: jede Folie von 1A und 1B 3–4 trägt ihre feste Wegkarte im Endbil
     assert.notEqual(z.display, 'none', f.id);
     assert.equal(z.aktiv, wegMarke(f.marke).match(/data-aktiv="([a-z]+)"/)?.[1] ?? null, f.id);
   }
-  // M1 im Endbild: Stufe 3 („zu spät“); M2 alle vier
+  // Endbild: M1 Stufe 3 („zu spät“), M2 Stufe 2 („zu spät“), M3 alle fünf, M4 keine
   assert.deepEqual(r.folien.M1.zeichen, ['spaet']);
-  assert.deepEqual(r.folien.M2.zeichen, ['stopp', 'belegt', 'drop', 'spaet']);
+  assert.deepEqual(r.folien.M2.zeichen, ['spaet']);
+  assert.deepEqual(r.folien.M3.zeichen, ['stopp', 'belegt', 'drop', 'langsam', 'spaet']);
+  assert.deepEqual(r.folien.M4.zeichen, []);
 });
 
 test('M1: Störungen als Stufen (Stopp und Slot, DROP, zu spät) und Maßstab aus dem Verhältnis der Mediane', () => {
@@ -822,10 +847,28 @@ test('M1: Störungen als Stufen (Stopp und Slot, DROP, zu spät) und Maßstab au
       Number(m[1]),
     ]),
   );
-  assert.deepEqual(stufen, { f1: 1, busy: 1, f2: 2, l3: 3 });
+  assert.deepEqual(stufen, { f1: 1, busy: 1, l1: 2, l2: 2, f2: 2, l3: 3 });
   assert.equal((m1.notiz.match(/\[Weiter\]/g) ?? []).length, 3);
-  const minuten = Math.round(d1b.finde('f2').jobMedianMs / d1b.finde('f1').jobMedianMs / 60);
-  assert.match(ohneTags(m1.inhalt), new RegExp(`wartete DROP rund ${minuten} Minuten`));
+  // Faktor DROP/Stopp wie im F2-Protokoll (134.732 / 48 ≈ 2.807), auf Hunderter gerundet
+  const faktor = Math.round(d1b.finde('f2').jobMedianMs / d1b.finde('f1').jobMedianMs / 100) * 100;
+  assert.equal(faktor, 2800);
+  assert.match(ohneTags(m1.inhalt), /rund 2\.800-mal so lang/);
+  // Kreis = Summary, Raute = Label; zwei Fristen
+  assert.match(m1.inhalt, /Frist Label 30 s/);
+  assert.match(m1.inhalt, /Frist Summary 300 s/);
+});
+
+test('M2: zitierte Codezeilen stimmen am Checkout (Breaker zählt aborted nicht)', async () => {
+  const { CODE_BELEGE_1B34 } = await import('./folien-1b34.mjs');
+  const repo = join(ROOT, '..', '..');
+  for (const [datei, zeile, inhalt] of CODE_BELEGE_1B34) {
+    const z = readFileSync(join(repo, datei), 'utf8').split('\n')[zeile - 1];
+    assert.ok(z.includes(inhalt), `${datei}:${zeile}: ${z.trim()}`);
+  }
+  const m2 = n1b.find((f) => f.id === 'M2');
+  assert.match(ohneTags(m2.inhalt), /openWeightLlmClient\.ts:188/);
+  assert.match(m2.quelle, /runWithQueueTimeout/);
+  assert.equal(m2.aufbau, 2);
 });
 
 test('1B 3–4 liest .json.gz; liegen .json und .json.gz nebeneinander, zählt der Lauf einmal', () => {
