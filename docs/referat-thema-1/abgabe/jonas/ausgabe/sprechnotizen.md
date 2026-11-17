@@ -457,11 +457,11 @@ _Quelle:_ 1C-diagrams.md, Abb. 2 (diagrams/1c-context-path-overview-sequence.lig
 
 - Laborzeit 20,3 h, nur gewertete Läufe 5.–16.11.2026, aus Zeitstempeln
 - 1A 2 h 32 min · 1B Schritte 1–2 55 min · 1B Schritte 3–4 12 h 39 min · 1C 4 h 15 min
-- Dazu 25,9 h Aufbau, Tests, weitere Läufe; 1B 1–2 allein 23 h 19 min VM-Laufzeit (Journal)
+- Dazu 29,3 h Aufbau, Tests, weitere Läufe; 1B 1–2 allein 23 h 19 min VM-Laufzeit (Journal)
 - 326 Tests, 50 Hypothesen vorab, 35 ADRs
 
 **Fließtext**
 
-Falls nach dem Umfang gefragt wird: Gewertet sind 20,3 Stunden Laborzeit aus Messläufen vom 5. bis 16. November, gemessen an den Zeitstempeln der Rohdaten. 1A Ressourcenisolation: 2 Stunden 32 Minuten; 1B Schritte 1 bis 2: 55 Minuten; 1B Schritte 3 bis 4: 12 Stunden 39 Minuten; 1C Laborläufe: 4 Stunden 15 Minuten. Getrennt davon stehen 25,9 Stunden Rechnerzeit für Aufbau, Tests und weitere Läufe: für 1B Schritte 1 und 2 allein 23 Stunden 19 Minuten VM-Laufzeit laut Systemjournal, mit 29 VM-Starts, davon 11 der Windows-VM, für die anderen Aufträge die Zeitfenster mit Uhrzeit aus den Protokollen. Das ist keine Arbeitszeit; Planung, Code und Auswertung sind nirgends gezählt. Dazu kommen 326 automatisierte Tests für Last- und Messwerkzeuge, Laborskripte und Backend sowie 50 Hypothesen und Kriterien, die vor dem jeweiligen Lauf festgelegt wurden, und 35 Entscheidungen als ADR.
+Falls nach dem Umfang gefragt wird: Gewertet sind 20,3 Stunden Laborzeit aus Messläufen vom 5. bis 16. November, gemessen an den Zeitstempeln der Rohdaten. 1A Ressourcenisolation: 2 Stunden 32 Minuten; 1B Schritte 1 bis 2: 55 Minuten; 1B Schritte 3 bis 4: 12 Stunden 39 Minuten; 1C Laborläufe: 4 Stunden 15 Minuten. Getrennt davon stehen 29,3 Stunden Rechnerzeit für Aufbau, Tests und weitere Läufe: für 1B Schritte 1 und 2 allein 23 Stunden 19 Minuten VM-Laufzeit laut Systemjournal, mit 29 VM-Starts, davon 11 der Windows-VM, für die anderen Aufträge die Zeitfenster mit Uhrzeit aus den Protokollen. Das ist keine Arbeitszeit; Planung, Code und Auswertung sind nirgends gezählt. Dazu kommen 326 automatisierte Tests für Last- und Messwerkzeuge, Laborskripte und Backend sowie 50 Hypothesen und Kriterien, die vor dem jeweiligen Lauf festgelegt wurden, und 35 Entscheidungen als ADR.
 
 _Quelle:_ nachweisumfang.md, alle Tabellen, Stand e3986902 (nachgerechnet von abgabe/jonas/nachweisumfang.mjs auf dem Checkout); Rechner je Lauf: 1C Laptop (ThinkPad P50) und PC (i7-8700), 1B Schritte 1–2 Laptop, 1A und 1B Schritte 3–4 wie in den Protokollen unter evidenz/1A und evidenz/1B
