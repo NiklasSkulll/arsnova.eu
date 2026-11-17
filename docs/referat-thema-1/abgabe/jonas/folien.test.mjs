@@ -28,6 +28,10 @@ import {
   zeitzerlegungSvg,
 } from './grafik.mjs';
 import { fmt } from './zahlen.mjs';
+import { mitNotizen } from './notizen.mjs';
+
+// Ablesetexte und Stichpunkte liegen privat (privat/notizen.mjs); ohne sie entfallen die Prüfungen dazu
+const OHNE_NOTIZEN = mitNotizen ? false : 'privat/notizen.mjs fehlt (eigenes Repo)';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const daten = ladeFolienDaten(ROOT);
@@ -194,41 +198,58 @@ test('Jonas-Folien in Reihenfolge mit den geplanten Zeiten, 14:00–15:00 min; R
   assert.ok(nach('GK').zeitS >= 45 && nach('GK').zeitS <= 60);
 });
 
-test('Stichpunkte: jede Jonas-Folie (außer J16) und Reserve 3–6, [Weiter] je Aufbaustufe', () => {
-  for (const f of F.filter((x) => x.sprecher !== 'niklas' && x.id !== 'J16')) {
-    assert.ok(f.stichpunkte?.length >= 3 && f.stichpunkte.length <= 6, `${f.id}: Stichpunkte`);
-    for (const p of f.stichpunkte) assert.ok(p.length <= 130, `${f.id}: Stichpunkt zu lang: ${p}`);
-    const stufen = f.aufbau ?? 0;
-    assert.equal((f.notiz.match(/\[Weiter\]/g) ?? []).length, stufen, `${f.id}: [Weiter] in notiz`);
-    assert.equal(
-      f.stichpunkte.filter((p) => p.startsWith('[Weiter]')).length,
-      stufen,
-      `${f.id}: [Weiter] in Stichpunkten`,
+test(
+  'Stichpunkte: jede Jonas-Folie (außer J16) und Reserve 3–6, [Weiter] je Aufbaustufe',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    for (const f of F.filter((x) => x.sprecher !== 'niklas' && x.id !== 'J16')) {
+      assert.ok(f.stichpunkte?.length >= 3 && f.stichpunkte.length <= 6, `${f.id}: Stichpunkte`);
+      for (const p of f.stichpunkte)
+        assert.ok(p.length <= 130, `${f.id}: Stichpunkt zu lang: ${p}`);
+      const stufen = f.aufbau ?? 0;
+      assert.equal(
+        (f.notiz.match(/\[Weiter\]/g) ?? []).length,
+        stufen,
+        `${f.id}: [Weiter] in notiz`,
+      );
+      assert.equal(
+        f.stichpunkte.filter((p) => p.startsWith('[Weiter]')).length,
+        stufen,
+        `${f.id}: [Weiter] in Stichpunkten`,
+      );
+    }
+    // Erster und letzter Satz wörtlich (Leitfaden F27): Jonas beginnt auf J1 mit der Übernahme von Niklas
+    const erster = F.find((f) => f.id === 'J1');
+    assert.ok(erster.notiz.startsWith(erster.stichpunkte[0].replace(/^„|“$/g, '')));
+    const letzter = F.find((f) => f.id === 'J15');
+    assert.ok(
+      letzter.notiz.trim().endsWith(letzter.stichpunkte.at(-1).replace(/^\[Weiter\] „|“$/g, '')),
     );
-  }
-  // Erster und letzter Satz wörtlich (Leitfaden F27): Jonas beginnt auf J1 mit der Übernahme von Niklas
-  const erster = F.find((f) => f.id === 'J1');
-  assert.ok(erster.notiz.startsWith(erster.stichpunkte[0].replace(/^„|“$/g, '')));
-  const letzter = F.find((f) => f.id === 'J15');
-  assert.ok(
-    letzter.notiz.trim().endsWith(letzter.stichpunkte.at(-1).replace(/^\[Weiter\] „|“$/g, '')),
-  );
-});
+  },
+);
 
-test('Aufbau: J7, J9, J12, J13, J15 bei Jonas und GK, je Stufe ein data-ab', () => {
-  const mit = F.filter((f) => f.aufbau && f.sprecher !== 'niklas').map((f) => f.id);
-  assert.deepEqual(mit, ['J7', 'J9', 'J12', 'J13', 'J15']);
-  for (const id of [...mit, 'GK']) {
-    const f = nach(id);
-    const ab = [...f.inhalt.matchAll(/data-ab="(\d+)"/g)].map((m) => Number(m[1]));
-    assert.deepEqual(
-      [...new Set(ab)].sort(),
-      Array.from({ length: f.aufbau }, (_, i) => i + 1),
-      id,
-    );
-    assert.equal((f.notiz.match(/\[Weiter\]/g) ?? []).length, f.aufbau, `${id}: [Weiter] je Stufe`);
-  }
-});
+test(
+  'Aufbau: J7, J9, J12, J13, J15 bei Jonas und GK, je Stufe ein data-ab',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    const mit = F.filter((f) => f.aufbau && f.sprecher !== 'niklas').map((f) => f.id);
+    assert.deepEqual(mit, ['J7', 'J9', 'J12', 'J13', 'J15']);
+    for (const id of [...mit, 'GK']) {
+      const f = nach(id);
+      const ab = [...f.inhalt.matchAll(/data-ab="(\d+)"/g)].map((m) => Number(m[1]));
+      assert.deepEqual(
+        [...new Set(ab)].sort(),
+        Array.from({ length: f.aufbau }, (_, i) => i + 1),
+        id,
+      );
+      assert.equal(
+        (f.notiz.match(/\[Weiter\]/g) ?? []).length,
+        f.aufbau,
+        `${id}: [Weiter] je Stufe`,
+      );
+    }
+  },
+);
 
 test('Teile: Fahrplan auf G0 in Vortragsreihenfolge, teilVon ordnet jede Hauptfolie zu', () => {
   const g0 = nach('G0').inhalt;
@@ -266,34 +287,50 @@ test('Kurzfassung: nur Jonas-Folien, Summe 300–420 s; G9 gehört zu Niklas’ 
   assert.ok(s >= 300 && s <= 420, `Summe ${s}`);
 });
 
-test('Pflichtfelder: quelle mit Rechner und Commit, notiz, auftrag, station', () => {
-  const stationen = new Set(['klick', 'kontext', 'netz', 'inferenz', 'nachpruefung', 'gate', null]);
-  for (const f of F) {
-    assert.ok(['rahmen', 'jonas', 'reserve'].includes(f.teil), f.id);
-    assert.ok(f.titel?.trim(), `${f.id} titel`);
-    assert.ok(f.inhalt?.trim(), `${f.id} inhalt`);
-    assert.ok(stationen.has(f.station), `${f.id} station ${f.station}`);
-    assert.equal(typeof f.kurzfassung, 'boolean', f.id);
-    // J16 ist das Literaturverzeichnis ohne eigene Messwerte (literatur.test.mjs prüft die Einträge).
-    if (f.teil === 'rahmen' || f.id === 'J16') continue;
-    assert.ok(f.quelle?.trim(), `${f.id} quelle`);
-    assert.ok(f.notiz?.trim(), `${f.id} notiz`);
-    assert.match(f.quelle, /\b[0-9a-f]{8}\b/, `${f.id}: Commit in der quelle`);
-    assert.match(f.quelle, /ThinkPad P50|i7-8700|Laptop|PC/, `${f.id}: Rechner in der quelle`);
-  }
-  for (const f of jonas) assert.ok(['1C', '1B', 'beide'].includes(f.auftrag), `${f.id} auftrag`);
-});
+test(
+  'Pflichtfelder: quelle mit Rechner und Commit, notiz, auftrag, station',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    const stationen = new Set([
+      'klick',
+      'kontext',
+      'netz',
+      'inferenz',
+      'nachpruefung',
+      'gate',
+      null,
+    ]);
+    for (const f of F) {
+      assert.ok(['rahmen', 'jonas', 'reserve'].includes(f.teil), f.id);
+      assert.ok(f.titel?.trim(), `${f.id} titel`);
+      assert.ok(f.inhalt?.trim(), `${f.id} inhalt`);
+      assert.ok(stationen.has(f.station), `${f.id} station ${f.station}`);
+      assert.equal(typeof f.kurzfassung, 'boolean', f.id);
+      // J16 ist das Literaturverzeichnis ohne eigene Messwerte (literatur.test.mjs prüft die Einträge).
+      if (f.teil === 'rahmen' || f.id === 'J16') continue;
+      assert.ok(f.quelle?.trim(), `${f.id} quelle`);
+      assert.ok(f.notiz?.trim(), `${f.id} notiz`);
+      assert.match(f.quelle, /\b[0-9a-f]{8}\b/, `${f.id}: Commit in der quelle`);
+      assert.match(f.quelle, /ThinkPad P50|i7-8700|Laptop|PC/, `${f.id}: Rechner in der quelle`);
+    }
+    for (const f of jonas) assert.ok(['1C', '1B', 'beide'].includes(f.auftrag), `${f.id} auftrag`);
+  },
+);
 
-test('Sprechnotizen passen zur Folienzeit (etwa 130 Wörter je Minute)', () => {
-  for (const f of jonas) {
-    const woerter = f.notiz.trim().split(/\s+/).length;
-    const soll = (f.zeitS * 130) / 60;
-    assert.ok(
-      woerter >= soll * 0.7 && woerter <= soll * 1.3,
-      `${f.id}: ${woerter} Wörter, Soll etwa ${Math.round(soll)}`,
-    );
-  }
-});
+test(
+  'Sprechnotizen passen zur Folienzeit (etwa 130 Wörter je Minute)',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    for (const f of jonas) {
+      const woerter = f.notiz.trim().split(/\s+/).length;
+      const soll = (f.zeitS * 130) / 60;
+      assert.ok(
+        woerter >= soll * 0.7 && woerter <= soll * 1.3,
+        `${f.id}: ${woerter} Wörter, Soll etwa ${Math.round(soll)}`,
+      );
+    }
+  },
+);
 
 test('Rahmen: GT, G0, G9, GD ohne Entwurfsvermerk und Platzhalter; G9 zitiert Niklas', () => {
   for (const id of ['GT', 'G0', 'GK', 'G9', 'GD']) assert.equal(nach(id)?.teil, 'rahmen', id);
@@ -381,43 +418,47 @@ test('Reservefolien R1, R5–R7, R9–R12, R15–R17 (R2–R4, R8, R13, R14 seit
   }
 });
 
-test('R15, R16: Abb. 1 und 2 aus 1C-diagrams.md offline eingebettet, eigene Ids, Notation und Stand', () => {
-  const r15 = nach('R15');
-  const r16 = nach('R16');
-  for (const [f, teile] of [
-    [r15, ['abb1', 'legende']],
-    [r16, ['abb2']],
-  ]) {
-    assert.equal(f.teil, 'reserve');
-    for (const k of teile) {
-      const d = daten.diagramme[k];
-      assert.ok(f.inhalt.includes(d.svg), `${f.id}: ${k} eingebettet`);
-      assert.match(
-        d.svg,
-        /^<svg[^>]+role="img"[^>]+aria-label="Abb\.|^<svg[^>]+role="img"[^>]+aria-label="Legende/,
-      );
-      assert.doesNotMatch(d.svg, /my-svg/, `${k}: Ids umbenannt`);
-      assert.doesNotMatch(
-        d.svg,
-        /<image\b|href="https?:|url\(\s*['"]?https?:|@import/,
-        `${k}: extern`,
-      );
-      assert.ok(d.verhaeltnis > 0.5 && d.verhaeltnis < 4, k);
+test(
+  'R15, R16: Abb. 1 und 2 aus 1C-diagrams.md offline eingebettet, eigene Ids, Notation und Stand',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    const r15 = nach('R15');
+    const r16 = nach('R16');
+    for (const [f, teile] of [
+      [r15, ['abb1', 'legende']],
+      [r16, ['abb2']],
+    ]) {
+      assert.equal(f.teil, 'reserve');
+      for (const k of teile) {
+        const d = daten.diagramme[k];
+        assert.ok(f.inhalt.includes(d.svg), `${f.id}: ${k} eingebettet`);
+        assert.match(
+          d.svg,
+          /^<svg[^>]+role="img"[^>]+aria-label="Abb\.|^<svg[^>]+role="img"[^>]+aria-label="Legende/,
+        );
+        assert.doesNotMatch(d.svg, /my-svg/, `${k}: Ids umbenannt`);
+        assert.doesNotMatch(
+          d.svg,
+          /<image\b|href="https?:|url\(\s*['"]?https?:|@import/,
+          `${k}: extern`,
+        );
+        assert.ok(d.verhaeltnis > 0.5 && d.verhaeltnis < 4, k);
+      }
+      assert.match(f.fuss, /Weirauch, 2026, Datei 1C-diagrams\.md/);
+      assert.match(sichtbar(f.inhalt), /def56700/);
     }
-    assert.match(f.fuss, /Weirauch, 2026, Datei 1C-diagrams\.md/);
-    assert.match(sichtbar(f.inhalt), /def56700/);
-  }
-  assert.match(sichtbar(r15.inhalt), /Aktivitätsdiagramm/);
-  assert.match(sichtbar(r16.inhalt), /UML-Sequenzdiagramm/);
-  // Ids je Abbildung verschieden, keine Kollision im Deck
-  const ids = (svg) => [...svg.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
-  const alle = Object.values(daten.diagramme).flatMap((d) => ids(d.svg));
-  assert.equal(new Set(alle).size, alle.length);
-  // J3 verweist ohne Unordnung auf die Reserve (eine Zeile Vermerk, Satz in Notiz und Stichpunkten)
-  assert.match(sichtbar(nach('J3').inhalt), /Vereinfacht aus Abb\. 1 und 2 \(1C-diagrams\.md\)/);
-  assert.match(nach('J3').notiz, /UML-Diagramme.*Reserve/);
-  assert.ok(nach('J3').stichpunkte.some((p) => /Reserve R15, R16/.test(p)));
-});
+    assert.match(sichtbar(r15.inhalt), /Aktivitätsdiagramm/);
+    assert.match(sichtbar(r16.inhalt), /UML-Sequenzdiagramm/);
+    // Ids je Abbildung verschieden, keine Kollision im Deck
+    const ids = (svg) => [...svg.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
+    const alle = Object.values(daten.diagramme).flatMap((d) => ids(d.svg));
+    assert.equal(new Set(alle).size, alle.length);
+    // J3 verweist ohne Unordnung auf die Reserve (eine Zeile Vermerk, Satz in Notiz und Stichpunkten)
+    assert.match(sichtbar(nach('J3').inhalt), /Vereinfacht aus Abb\. 1 und 2 \(1C-diagrams\.md\)/);
+    assert.match(nach('J3').notiz, /UML-Diagramme.*Reserve/);
+    assert.ok(nach('J3').stichpunkte.some((p) => /Reserve R15, R16/.test(p)));
+  },
+);
 
 test('J13 zeigt die echte, gekürzte Modellantwort, den Grund des Tors und den Platz für den Clip', () => {
   const j13 = nach('J13');
@@ -523,47 +564,63 @@ test('J2 nennt den Commit des Aufbaus von null aus dessen Bericht', () => {
   assert.ok(!j2.quelle.includes('747c8f7e'), 'J2 quelle nennt den Bericht vom 2026-11-12');
 });
 
-test('J2 legt die CPU-Abweichung offen und behauptet keine Limits wie im Release', () => {
-  const j2 = nach('J2');
-  const s = sichtbar(j2.inhalt);
-  assert.ok(!/Limits wie im Release/.test(s), 'Limits wie im Release');
-  assert.match(s, /4 statt 8 CPUs/);
-  assert.match(s, /Speicherlimits wie ab Werk v1\.4\.0/);
-  assert.match(j2.notiz, /4 statt 8/);
-});
+test(
+  'J2 legt die CPU-Abweichung offen und behauptet keine Limits wie im Release',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    const j2 = nach('J2');
+    const s = sichtbar(j2.inhalt);
+    assert.ok(!/Limits wie im Release/.test(s), 'Limits wie im Release');
+    assert.match(s, /4 statt 8 CPUs/);
+    assert.match(s, /Speicherlimits wie ab Werk v1\.4\.0/);
+    assert.match(j2.notiz, /4 statt 8/);
+  },
+);
 
-test('J1 nennt die Wartezeit des verfolgten Auftrags am Client (Klick bis Ergebnis), gerundet', () => {
-  const lauf = JSON.parse(
-    readFileSync(resolve(ROOT, 'evidenz/1B/messung/2026-11-13-lauf.json'), 'utf8'),
-  );
-  const nr = daten.antwort.auftrag;
-  const t = lauf.treiber.auftraege.find((a) => a.index === nr);
-  const sek = fmt(Math.round(t.clientWaitMs / 1000));
-  assert.equal(sek, '152');
-  const j1 = nach('J1');
-  assert.ok(j1.titel.includes(`${sek} Sekunden`), `Titel ohne ${sek} Sekunden: ${j1.titel}`);
-  assert.ok(!j1.titel.includes(fmt(daten.b1.jobWarmMs / 1000, 1)), 'Median im Titel');
-  assert.match(j1.notiz, /dieser Auftrag/i);
-  assert.match(j1.notiz, /Median/);
-  assert.match(sichtbar(j1.inhalt), /Median warm, n = 9/);
-  // T_job bleibt als serverseitige Jobdauer benannt, nie als Zeit ab dem Klick.
-  assert.match(sichtbar(j1.inhalt), /Jobdauer T_job/);
-  assert.ok(!/T_job[^.]*vom Klick/.test(j1.notiz + sichtbar(j1.inhalt)));
-});
+test(
+  'J1 nennt die Wartezeit des verfolgten Auftrags am Client (Klick bis Ergebnis), gerundet',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    const lauf = JSON.parse(
+      readFileSync(resolve(ROOT, 'evidenz/1B/messung/2026-11-13-lauf.json'), 'utf8'),
+    );
+    const nr = daten.antwort.auftrag;
+    const t = lauf.treiber.auftraege.find((a) => a.index === nr);
+    const sek = fmt(Math.round(t.clientWaitMs / 1000));
+    assert.equal(sek, '152');
+    const j1 = nach('J1');
+    assert.ok(j1.titel.includes(`${sek} Sekunden`), `Titel ohne ${sek} Sekunden: ${j1.titel}`);
+    assert.ok(!j1.titel.includes(fmt(daten.b1.jobWarmMs / 1000, 1)), 'Median im Titel');
+    assert.match(j1.notiz, /dieser Auftrag/i);
+    assert.match(j1.notiz, /Median/);
+    assert.match(sichtbar(j1.inhalt), /Median warm, n = 9/);
+    // T_job bleibt als serverseitige Jobdauer benannt, nie als Zeit ab dem Klick.
+    assert.match(sichtbar(j1.inhalt), /Jobdauer T_job/);
+    assert.ok(!/T_job[^.]*vom Klick/.test(j1.notiz + sichtbar(j1.inhalt)));
+  },
+);
 
-test('Mediane auf J9, J10 tragen die Gruppe warm, n = 9; Notizen trennen Auftrag und Median', () => {
-  for (const id of ['J9', 'J10']) {
-    assert.match(decode(nach(id).inhalt.replace(/<[^>]+>/g, '')), /warm, n = 9/, id);
-    assert.match(nach(id).notiz, /Median/, `${id} notiz`);
-  }
-});
+test(
+  'Mediane auf J9, J10 tragen die Gruppe warm, n = 9; Notizen trennen Auftrag und Median',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    for (const id of ['J9', 'J10']) {
+      assert.match(decode(nach(id).inhalt.replace(/<[^>]+>/g, '')), /warm, n = 9/, id);
+      assert.match(nach(id).notiz, /Median/, `${id} notiz`);
+    }
+  },
+);
 
-test('J12 nennt die Bedingung aus ADR 1C-016: nur Runden außer TEMPO', () => {
-  const j12 = nach('J12');
-  assert.match(sichtbar(j12.inhalt), /TEMPO/);
-  assert.match(j12.notiz, /TEMPO/);
-  assert.ok(!/Dann endet jeder Auftrag/.test(j12.notiz));
-});
+test(
+  'J12 nennt die Bedingung aus ADR 1C-016: nur Runden außer TEMPO',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    const j12 = nach('J12');
+    assert.match(sichtbar(j12.inhalt), /TEMPO/);
+    assert.match(j12.notiz, /TEMPO/);
+    assert.ok(!/Dann endet jeder Auftrag/.test(j12.notiz));
+  },
+);
 
 test('Jede Jonas-Folie zeigt ihr Auftragsetikett im Inhalt', () => {
   const hat = (html, a) => html.includes(`etikett-${a.toLowerCase()}`) || html.includes(`>${a}<`);
@@ -586,24 +643,28 @@ test('K1: Der Fallback trägt einen allgemeinen Hinweis; nirgends „ohne Hinwei
   assert.match(j13.quelle, /qaSummaryExtractive\.ts/);
 });
 
-test('K2: Messstand nach v1.4.0 benannt, Stand vor dem Gate mit 19 von 20 full-context', () => {
-  for (const id of ['J1', 'J13', 'G9']) {
-    assert.match(sichtbar(nach(id).inhalt), /1\.4\.0/, `${id}: Version 1.4.0 fehlt`);
-  }
-  for (const id of ['J13', 'G9']) {
-    assert.match(sichtbar(nach(id).inhalt), /19 von 20/, `${id}: Stand vor dem Gate fehlt`);
-  }
-  assert.match(nach('J13').notiz, /9f230abc|vor dem Gate|Vor Version 1\.4\.0/);
-  // „Release 1.3“ nur für die Architektur, nie als Messstand
-  for (const f of F) {
-    assert.ok(!/Release 1\.3 nachgebaut/.test(alles(f)), `${f.id}: Release 1.3 nachgebaut`);
-    assert.ok(
-      !/(gemessen|Messung)[^.]*Release 1\.3/.test(alles(f)),
-      `${f.id}: gemessen … Release 1.3`,
-    );
-  }
-  assert.match(sichtbar(nach('J2').inhalt), /1\.4\.0/);
-});
+test(
+  'K2: Messstand nach v1.4.0 benannt, Stand vor dem Gate mit 19 von 20 full-context',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    for (const id of ['J1', 'J13', 'G9']) {
+      assert.match(sichtbar(nach(id).inhalt), /1\.4\.0/, `${id}: Version 1.4.0 fehlt`);
+    }
+    for (const id of ['J13', 'G9']) {
+      assert.match(sichtbar(nach(id).inhalt), /19 von 20/, `${id}: Stand vor dem Gate fehlt`);
+    }
+    assert.match(nach('J13').notiz, /9f230abc|vor dem Gate|Vor Version 1\.4\.0/);
+    // „Release 1.3“ nur für die Architektur, nie als Messstand
+    for (const f of F) {
+      assert.ok(!/Release 1\.3 nachgebaut/.test(alles(f)), `${f.id}: Release 1.3 nachgebaut`);
+      assert.ok(
+        !/(gemessen|Messung)[^.]*Release 1\.3/.test(alles(f)),
+        `${f.id}: gemessen … Release 1.3`,
+      );
+    }
+    assert.match(sichtbar(nach('J2').inhalt), /1\.4\.0/);
+  },
+);
 
 test('W1: J8 erklärt den Abstand zwischen Wartezeit am Client und T_job', () => {
   const j8 = nach('J8');
@@ -613,32 +674,40 @@ test('W1: J8 erklärt den Abstand zwischen Wartezeit am Client und T_job', () =>
   assert.match(s, /T_job/);
 });
 
-test('W2: Das Gate prüft mehr als die Form; Sprache und Inhalt nennt die Folie getrennt', () => {
-  for (const f of F) {
-    assert.ok(
-      !/(prüft|scheitert)[^.]*nur (an )?(die|der) Form/.test(alles(f)),
-      `${f.id}: nur die Form`,
-    );
-  }
-  const j13 = nach('J13');
-  assert.match(j13.notiz, /Sprache/);
-  assert.match(j13.notiz, /mindestens zwei Aussagen|verschiedene Stichwörter/);
-  assert.match(sichtbar(nach('J15').inhalt), /inhaltlich/);
-});
+test(
+  'W2: Das Gate prüft mehr als die Form; Sprache und Inhalt nennt die Folie getrennt',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    for (const f of F) {
+      assert.ok(
+        !/(prüft|scheitert)[^.]*nur (an )?(die|der) Form/.test(alles(f)),
+        `${f.id}: nur die Form`,
+      );
+    }
+    const j13 = nach('J13');
+    assert.match(j13.notiz, /Sprache/);
+    assert.match(j13.notiz, /mindestens zwei Aussagen|verschiedene Stichwörter/);
+    assert.match(sichtbar(nach('J15').inhalt), /inhaltlich/);
+  },
+);
 
-test('W3: Karte J3 kennzeichnet je Station die Herkunft; Auftrag 2 mit eigenen Werten', () => {
-  const j3 = nach('J3');
-  const svg = j3.inhalt;
-  assert.ok(svg.includes(`${fmt(daten.auftrag.hostReturnMs)} ms`), 'T_host von Auftrag 2');
-  assert.ok(svg.includes(`Auftrag ${daten.auftrag.nr}`));
-  assert.ok(svg.includes('1C-Test · 248029dc'));
-  assert.ok(svg.includes('1C-Labor · def56700'));
-  assert.ok(
-    !svg.includes(`${fmt(daten.c1.requestMs.wert, 1)} ms`),
-    '1C-Klickwert auf dem app-host',
-  );
-  assert.match(j3.notiz, /1C/);
-});
+test(
+  'W3: Karte J3 kennzeichnet je Station die Herkunft; Auftrag 2 mit eigenen Werten',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    const j3 = nach('J3');
+    const svg = j3.inhalt;
+    assert.ok(svg.includes(`${fmt(daten.auftrag.hostReturnMs)} ms`), 'T_host von Auftrag 2');
+    assert.ok(svg.includes(`Auftrag ${daten.auftrag.nr}`));
+    assert.ok(svg.includes('1C-Test · 248029dc'));
+    assert.ok(svg.includes('1C-Labor · def56700'));
+    assert.ok(
+      !svg.includes(`${fmt(daten.c1.requestMs.wert, 1)} ms`),
+      '1C-Klickwert auf dem app-host',
+    );
+    assert.match(j3.notiz, /1C/);
+  },
+);
 
 test('W4/W5: Abweichungen und Grenzen je Auftrag offengelegt', () => {
   const j2 = sichtbar(nach('J2').inhalt);
@@ -667,16 +736,20 @@ test('W4/W5: Abweichungen und Grenzen je Auftrag offengelegt', () => {
   assert.match(j11, /9f230abc/);
 });
 
-test('W6/W7/W8: Speicher bei wechselnden Prompts, warm = identischer Snapshot, R1 mit den richtigen Kalibrierungen', () => {
-  assert.match(sichtbar(nach('J11').inhalt), /wechselnden Prompts/);
-  const r5 = sichtbar(nach('R5').inhalt);
-  assert.match(r5, /identische/);
-  assert.match(nach('J9').notiz, /identisch/);
-  const r1 = alles(nach('R1'));
-  assert.match(r1, /196/);
-  assert.match(r1, /202/);
-  assert.match(r1, /Laptop/);
-});
+test(
+  'W6/W7/W8: Speicher bei wechselnden Prompts, warm = identischer Snapshot, R1 mit den richtigen Kalibrierungen',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    assert.match(sichtbar(nach('J11').inhalt), /wechselnden Prompts/);
+    const r5 = sichtbar(nach('R5').inhalt);
+    assert.match(r5, /identische/);
+    assert.match(nach('J9').notiz, /identisch/);
+    const r1 = alles(nach('R1'));
+    assert.match(r1, /196/);
+    assert.match(r1, /202/);
+    assert.match(r1, /Laptop/);
+  },
+);
 
 test('W12: R12 nennt je Entscheidung Kosten, Risiko oder Betriebsfolge; J15 verweist auf R12', () => {
   const s = sichtbar(nach('R12').inhalt);
@@ -689,10 +762,14 @@ test('W12: R12 nennt je Entscheidung Kosten, Risiko oder Betriebsfolge; J15 verw
   assert.match(j15, /1B/);
 });
 
-test('W14/I-06: Ohne freigegebenen Clip zeigt J13 den Nachbau; die Notiz nennt ihn so', () => {
-  const ohneClip = folien({ ...daten, clip: null }).find((f) => f.id === 'J13');
-  assert.match(ohneClip.notiz, /Nachbau/);
-});
+test(
+  'W14/I-06: Ohne freigegebenen Clip zeigt J13 den Nachbau; die Notiz nennt ihn so',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    const ohneClip = folien({ ...daten, clip: null }).find((f) => f.id === 'J13');
+    assert.match(ohneClip.notiz, /Nachbau/);
+  },
+);
 
 test('Abdeckung: R8–R10 nennen Berechtigung, Konsistenzfälle und Rollen mit Belegen', () => {
   assert.match(sichtbar(nach('J5b').inhalt), /assertHostSessionAccessFromContext/);
@@ -708,13 +785,17 @@ test('Abdeckung: R8–R10 nennen Berechtigung, Konsistenzfälle und Rollen mit B
 
 const sichtbarAlle = () => F.map((f) => `${f.id}: ${alles(f)}`).join('\n');
 
-test('I-01: Netz in ms zuerst; Prozentanteil nur mit Hinweis auf die langsame CPU', () => {
-  assert.match(nach('J9').notiz, /langsame/);
-  const j9svg = nach('J9').inhalt;
-  assert.match(j9svg, /langsame CPU/);
-  assert.match(alles(nach('R11')), /langsame/);
-  assert.ok(!/Transport ist damit rund/.test(nach('J9').notiz));
-});
+test(
+  'I-01: Netz in ms zuerst; Prozentanteil nur mit Hinweis auf die langsame CPU',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    assert.match(nach('J9').notiz, /langsame/);
+    const j9svg = nach('J9').inhalt;
+    assert.match(j9svg, /langsame CPU/);
+    assert.match(alles(nach('R11')), /langsame/);
+    assert.ok(!/Transport ist damit rund/.test(nach('J9').notiz));
+  },
+);
 
 test('I-02: Start ohne Wrapper mit dem richtigen Grund (Override)', () => {
   const j2 = alles(nach('J2'));
@@ -723,18 +804,22 @@ test('I-02: Start ohne Wrapper mit dem richtigen Grund (Override)', () => {
   assert.ok(!/Laptop nicht mehr hat/.test(j2), 'B-01');
 });
 
-test('I-03: Gate-Befund mit Geltungsbereich (38 beobachtete Antworten, ein Modell, eine Fixture)', () => {
-  assert.ok(
-    !/verwirft (das Gate )?jede (Modell)?[Aa]ntwort/.test(sichtbarAlle()),
-    'unbegrenzt „jede Antwort“',
-  );
-  const j13 = nach('J13');
-  assert.match(j13.titel, new RegExp(`${daten.abgeleitet.gateBeobachtet}`));
-  assert.match(sichtbar(j13.inhalt), /ein Modell/);
-  assert.match(sichtbar(j13.inhalt), /eine Fixture/);
-  assert.match(j13.notiz, /failed|ohne Aussagen/);
-  assert.match(sichtbar(nach('G9').inhalt), /geprüft/);
-});
+test(
+  'I-03: Gate-Befund mit Geltungsbereich (38 beobachtete Antworten, ein Modell, eine Fixture)',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    assert.ok(
+      !/verwirft (das Gate )?jede (Modell)?[Aa]ntwort/.test(sichtbarAlle()),
+      'unbegrenzt „jede Antwort“',
+    );
+    const j13 = nach('J13');
+    assert.match(j13.titel, new RegExp(`${daten.abgeleitet.gateBeobachtet}`));
+    assert.match(sichtbar(j13.inhalt), /ein Modell/);
+    assert.match(sichtbar(j13.inhalt), /eine Fixture/);
+    assert.match(j13.notiz, /failed|ohne Aussagen/);
+    assert.match(sichtbar(nach('G9').inhalt), /geprüft/);
+  },
+);
 
 test('I-04: KI-Anteil und Methode nennen die Ausnahmen der Vorabfestlegung', () => {
   for (const id of ['J4', 'R6']) {
@@ -759,21 +844,25 @@ test('I-05/R3-I4: Nachprüfung mit belegtem Preis unter Voting, ohne Vorhersage 
   assert.ok(!/kein neues Risiko/.test(sichtbarAlle()));
 });
 
-test('I-06: J13 zeigt den Nachbau der Lehrenden-Sicht mit echtem Inhalt und Hinweistext aus dem App-Code', () => {
-  const j13 = nach('J13').inhalt;
-  assert.ok(!/Platz für den Clip/.test(j13));
-  assert.match(j13, /data-nachbau/);
-  assert.match(j13, /Nachbau/);
-  for (const frage of daten.nachbau.fragen) assert.ok(decode(j13).includes(frage), frage);
-  const quelle = readFileSync(
-    resolve(ROOT, '../../apps/backend/src/lib/qaSummaryExtractive.ts'),
-    'utf8',
-  );
-  assert.ok(quelle.includes(daten.nachbau.hinweis), 'Hinweis wörtlich aus dem App-Code');
-  assert.ok(decode(j13).includes(daten.nachbau.hinweis));
-  // Die Notiz nennt den Nachbau nur ohne Clip (mit Clip ersetzt deck.mjs den Nachbau).
-  assert.match(folien({ ...daten, clip: null }).find((f) => f.id === 'J13').notiz, /Nachbau/);
-});
+test(
+  'I-06: J13 zeigt den Nachbau der Lehrenden-Sicht mit echtem Inhalt und Hinweistext aus dem App-Code',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    const j13 = nach('J13').inhalt;
+    assert.ok(!/Platz für den Clip/.test(j13));
+    assert.match(j13, /data-nachbau/);
+    assert.match(j13, /Nachbau/);
+    for (const frage of daten.nachbau.fragen) assert.ok(decode(j13).includes(frage), frage);
+    const quelle = readFileSync(
+      resolve(ROOT, '../../apps/backend/src/lib/qaSummaryExtractive.ts'),
+      'utf8',
+    );
+    assert.ok(quelle.includes(daten.nachbau.hinweis), 'Hinweis wörtlich aus dem App-Code');
+    assert.ok(decode(j13).includes(daten.nachbau.hinweis));
+    // Die Notiz nennt den Nachbau nur ohne Clip (mit Clip ersetzt deck.mjs den Nachbau).
+    assert.match(folien({ ...daten, clip: null }).find((f) => f.id === 'J13').notiz, /Nachbau/);
+  },
+);
 
 test('I-10: Messstand mit git describe; kein „Fork-main, Version 1.4.0 (8e9d1317)“', () => {
   const t = sichtbarAlle();
@@ -783,15 +872,19 @@ test('I-10: Messstand mit git describe; kein „Fork-main, Version 1.4.0 (8e9d13
   assert.match(sichtbar(nach('J1').inhalt), /v1\.4\.0-14/);
 });
 
-test('Minor: OOM-Vergleich, Speicherursache, Kaltaussage, Blitzlicht-Typen', () => {
-  const j11 = sichtbar(nach('J11').inhalt);
-  assert.match(j11, /10 GiB/);
-  assert.match(j11, /Laptop und PC/);
-  assert.match(nach('J11').notiz, /vermutlich|nicht getrennt gemessen/);
-  assert.ok(!/Alle drei Hypothesen sind erfüllt, auch kalt/.test(nach('J9').notiz));
-  assert.match(sichtbar(nach('J12').inhalt), /geprüft: YESNO/);
-  assert.match(sichtbar(nach('J7').inhalt), /keinem Lauf/);
-});
+test(
+  'Minor: OOM-Vergleich, Speicherursache, Kaltaussage, Blitzlicht-Typen',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    const j11 = sichtbar(nach('J11').inhalt);
+    assert.match(j11, /10 GiB/);
+    assert.match(j11, /Laptop und PC/);
+    assert.match(nach('J11').notiz, /vermutlich|nicht getrennt gemessen/);
+    assert.ok(!/Alle drei Hypothesen sind erfüllt, auch kalt/.test(nach('J9').notiz));
+    assert.match(sichtbar(nach('J12').inhalt), /geprüft: YESNO/);
+    assert.match(sichtbar(nach('J7').inhalt), /keinem Lauf/);
+  },
+);
 
 // ---------------------------------------------------------------- Fachliche Prüfung 3
 
@@ -812,36 +905,44 @@ test('R3-I1: Werte ab Werk mit Version; v1.3.0 und der Grund für den Messstand 
   assert.match(nach('J11').inhalt, /ab Werk v1\.4\.0/);
 });
 
-test('R3-I2: 19 von 20 mit Instruktion v2 und ohne Gate; nicht allein dem Gate zugeschrieben', () => {
-  for (const id of ['J13', 'J15', 'G9']) {
-    const t = alles(nach(id));
-    assert.match(t, /Instruktion/, id);
-    assert.ok(!/bestand[^.]*vorher/.test(t), `${id}: „bestand … vorher“`);
-    assert.ok(!/Vor dem Gate/.test(sichtbar(nach(id).inhalt)), `${id}: „Vor dem Gate“`);
-  }
-  assert.match(nach('J13').notiz, /zugleich|beides/);
-});
+test(
+  'R3-I2: 19 von 20 mit Instruktion v2 und ohne Gate; nicht allein dem Gate zugeschrieben',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    for (const id of ['J13', 'J15', 'G9']) {
+      const t = alles(nach(id));
+      assert.match(t, /Instruktion/, id);
+      assert.ok(!/bestand[^.]*vorher/.test(t), `${id}: „bestand … vorher“`);
+      assert.ok(!/Vor dem Gate/.test(sichtbar(nach(id).inhalt)), `${id}: „Vor dem Gate“`);
+    }
+    assert.match(nach('J13').notiz, /zugleich|beides/);
+  },
+);
 
 test('R3-I5: Kurzfassung enthält J13 und J15', () => {
   for (const id of ['J13', 'J15']) assert.equal(nach(id).kurzfassung, true, id);
 });
 
-test('R3-Minor: geprüfte Antworten, App-Überschrift im Nachbau, Ausnahmen in G9, Risiken in J15', () => {
-  assert.match(nach('J13').titel, /geprüfte/);
-  const html = readFileSync(
-    resolve(
-      ROOT,
-      '../../apps/frontend/src/app/features/session/session-host/moderation-compass-dialog.component.html',
-    ),
-    'utf8',
-  );
-  assert.ok(html.includes(daten.nachbau.titel), 'Überschrift aus dem Template');
-  assert.ok(decode(nach('J13').inhalt).includes(daten.nachbau.titel));
-  assert.match(sichtbar(nach('G9').inhalt), /Ausnahmen/);
-  assert.ok((sichtbar(nach('R12').inhalt).match(/Risiko/g) ?? []).length >= 4);
-  assert.match(sichtbar(nach('J15').inhalt), /Details: R12/);
-  assert.match(nach('J10').notiz, /langsame/);
-});
+test(
+  'R3-Minor: geprüfte Antworten, App-Überschrift im Nachbau, Ausnahmen in G9, Risiken in J15',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    assert.match(nach('J13').titel, /geprüfte/);
+    const html = readFileSync(
+      resolve(
+        ROOT,
+        '../../apps/frontend/src/app/features/session/session-host/moderation-compass-dialog.component.html',
+      ),
+      'utf8',
+    );
+    assert.ok(html.includes(daten.nachbau.titel), 'Überschrift aus dem Template');
+    assert.ok(decode(nach('J13').inhalt).includes(daten.nachbau.titel));
+    assert.match(sichtbar(nach('G9').inhalt), /Ausnahmen/);
+    assert.ok((sichtbar(nach('R12').inhalt).match(/Risiko/g) ?? []).length >= 4);
+    assert.match(sichtbar(nach('J15').inhalt), /Details: R12/);
+    assert.match(nach('J10').notiz, /langsame/);
+  },
+);
 
 // ---------------------------------------------------------------- Fachliche Prüfung 4
 
@@ -856,48 +957,66 @@ test('R4-I1: Früherer OOM ohne Kausalaussage „weil mehr Tokens“ (ADR 1C-024
   assert.match(sichtbar(nach('J11').inhalt), /nicht getrennt gemessen/);
 });
 
-test('R4-Minor: J4-Notiz ohne „Release“, Swap des Hosts unbekannt, Netz über beide Anfragen', () => {
-  assert.ok(!/als im Release/.test(nach('J4').notiz));
-  assert.match(sichtbar(nach('J11').inhalt), /Swap des Hosts unbekannt/);
-  assert.match(sichtbar(nach('J8').inhalt), /GET \/slots und POST/);
-  assert.ok(!/Uhrendrift/.test(alles(nach('J8'))));
-  assert.match(nach('J8b').notiz, /Streuung/);
-});
+test(
+  'R4-Minor: J4-Notiz ohne „Release“, Swap des Hosts unbekannt, Netz über beide Anfragen',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    assert.ok(!/als im Release/.test(nach('J4').notiz));
+    assert.match(sichtbar(nach('J11').inhalt), /Swap des Hosts unbekannt/);
+    assert.match(sichtbar(nach('J8').inhalt), /GET \/slots und POST/);
+    assert.ok(!/Uhrendrift/.test(alles(nach('J8'))));
+    assert.match(nach('J8b').notiz, /Streuung/);
+  },
+);
 
 // ---------------------------------------------------------------- Fachliche Prüfung 5
 
-test('R5: Gate-Wechsel mit a998ada0, Validierung am Stand 248029dc, Nutzlastpfad, Aufteilung der 38', () => {
-  const j13 = nach('J13');
-  assert.match(sichtbar(j13.inhalt), /a998ada0/);
-  assert.match(sichtbar(j13.inhalt), /uncertain/);
-  // Korrigiert 2026-11-16 (Codeprüfung): 12f1d8e4 änderte Instruktion und Gate, a998ada0 nur das Gate
-  assert.match(j13.notiz, /Ein Upstream-Commit änderte Instruktion und Gate zugleich, ein zweiter/);
-  assert.match(sichtbar(j13.inhalt), /12f1d8e4\s+änderte Instruktion und Gate/);
-  assert.match(nach('J6').notiz, /nur auf dem älteren Stand/);
-  for (const id of ['J6', 'J7']) assert.match(nach(id).quelle, /labor\.quiet\.runs\[/, id);
-  // J13 nennt die Nutzlast nur mit dem Nachbau (ohne Clip).
-  const j13OhneClip = folien({ ...daten, clip: null }).find((f) => f.id === 'J13');
-  assert.match(j13OhneClip.quelle, /labor\.quiet\.runs\[/);
-  assert.match(
-    sichtbar(nach('G9').inhalt),
-    new RegExp(`1B ${daten.b1.verworfen}, 1C ${daten.c1.gateAntwortenGesamt.wert}`),
-  );
-  assert.equal(nach('J11').station, 'inferenz');
-});
+test(
+  'R5: Gate-Wechsel mit a998ada0, Validierung am Stand 248029dc, Nutzlastpfad, Aufteilung der 38',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    const j13 = nach('J13');
+    assert.match(sichtbar(j13.inhalt), /a998ada0/);
+    assert.match(sichtbar(j13.inhalt), /uncertain/);
+    // Korrigiert 2026-11-16 (Codeprüfung): 12f1d8e4 änderte Instruktion und Gate, a998ada0 nur das Gate
+    assert.match(
+      j13.notiz,
+      /Ein Upstream-Commit änderte Instruktion und Gate zugleich, ein zweiter/,
+    );
+    assert.match(sichtbar(j13.inhalt), /12f1d8e4\s+änderte Instruktion und Gate/);
+    assert.match(nach('J6').notiz, /nur auf dem älteren Stand/);
+    for (const id of ['J6', 'J7']) assert.match(nach(id).quelle, /labor\.quiet\.runs\[/, id);
+    // J13 nennt die Nutzlast nur mit dem Nachbau (ohne Clip).
+    const j13OhneClip = folien({ ...daten, clip: null }).find((f) => f.id === 'J13');
+    assert.match(j13OhneClip.quelle, /labor\.quiet\.runs\[/);
+    assert.match(
+      sichtbar(nach('G9').inhalt),
+      new RegExp(`1B ${daten.b1.verworfen}, 1C ${daten.c1.gateAntwortenGesamt.wert}`),
+    );
+    assert.equal(nach('J11').station, 'inferenz');
+  },
+);
 
-test('J13: Clip-Angaben stimmen mit dem App-Hinweis überein, die Notiz nennt den Grund des Clip-Laufs', () => {
-  assert.ok(daten.clip, 'medien/clip.json fehlt');
-  assert.equal(daten.clip.hinweis.startsWith(daten.nachbau.hinweis.replace(/…$/, '').trim()), true);
-  const j13 = folien(daten).find((f) => f.id === 'J13');
-  assert.equal(/Timeout/.test(j13.notiz), daten.clip.grund === 'timeout');
-  assert.doesNotMatch(`${j13.notiz} ${j13.fuss}`, /power-saver|balanced|Energieprofil/);
-  assert.doesNotMatch(j13.notiz, /Rechts ein Nachbau/);
-  assert.doesNotMatch(`${j13.fuss} ${j13.quelle}`, /Nachbau/);
-  assert.match(j13.quelle, /Hinweis qaSummaryExtractive\.ts/);
-  assert.match(j13.quelle, /evidenz\/1B\/2026-11-15-clip\.md/);
-  const ohne = folien({ ...daten, clip: null }).find((f) => f.id === 'J13');
-  assert.match(ohne.notiz, /Rechts ein Nachbau/);
-});
+test(
+  'J13: Clip-Angaben stimmen mit dem App-Hinweis überein, die Notiz nennt den Grund des Clip-Laufs',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    assert.ok(daten.clip, 'medien/clip.json fehlt');
+    assert.equal(
+      daten.clip.hinweis.startsWith(daten.nachbau.hinweis.replace(/…$/, '').trim()),
+      true,
+    );
+    const j13 = folien(daten).find((f) => f.id === 'J13');
+    assert.equal(/Timeout/.test(j13.notiz), daten.clip.grund === 'timeout');
+    assert.doesNotMatch(`${j13.notiz} ${j13.fuss}`, /power-saver|balanced|Energieprofil/);
+    assert.doesNotMatch(j13.notiz, /Rechts ein Nachbau/);
+    assert.doesNotMatch(`${j13.fuss} ${j13.quelle}`, /Nachbau/);
+    assert.match(j13.quelle, /Hinweis qaSummaryExtractive\.ts/);
+    assert.match(j13.quelle, /evidenz\/1B\/2026-11-15-clip\.md/);
+    const ohne = folien({ ...daten, clip: null }).find((f) => f.id === 'J13');
+    assert.match(ohne.notiz, /Rechts ein Nachbau/);
+  },
+);
 
 // ZL S. 2–3 und Anhang B: Kurzbelege auf jeder Folie, vollständiges Literaturverzeichnis am Ende.
 test('ZL: jede Folie von Jonas, Rahmen und Reserve trägt eine Quellenzeile mit Kurzbeleg', async () => {
@@ -949,38 +1068,42 @@ test('Fußzeile: eine Quellenzeile nur mit Kurzbelegen, ohne Commit und Rechner'
   assert.ok(!/\b(a19ca70f|def56700)\b/.test(sichtbar(nach('J1').inhalt)));
 });
 
-test('Defensive Formulierungen: Laptop-CPU, Nachlaufwert benannt, Konsistenzprüfung, Transport, Messunsicherheit', () => {
-  assert.match(sichtbar(nach('J1').inhalt), /Laptop/);
-  assert.match(sichtbar(nach('J1').inhalt), /CPU/);
-  // 223,7 s nur als Nachlaufwert benannt; die geringe Nebenlast bleibt im Protokoll (Entscheidung des Autors 2026-11-16)
-  const nachlauf = fmt(daten.c1.inferenzS.wert, 1);
-  for (const f of F) {
-    const t = `${sichtbar(f.inhalt)} ${f.notiz ?? ''}`;
-    for (const satz of t.split(/(?<=[.;])\s/)) {
-      if (satz.includes(nachlauf))
-        assert.match(satz, /Nachlauf|v1\.4\.0/, `${f.id}: ${nachlauf} ohne Nachlauf-Bezug`);
+test(
+  'Defensive Formulierungen: Laptop-CPU, Nachlaufwert benannt, Konsistenzprüfung, Transport, Messunsicherheit',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    assert.match(sichtbar(nach('J1').inhalt), /Laptop/);
+    assert.match(sichtbar(nach('J1').inhalt), /CPU/);
+    // 223,7 s nur als Nachlaufwert benannt; die geringe Nebenlast bleibt im Protokoll (Entscheidung des Autors 2026-11-16)
+    const nachlauf = fmt(daten.c1.inferenzS.wert, 1);
+    for (const f of F) {
+      const t = `${sichtbar(f.inhalt)} ${f.notiz ?? ''}`;
+      for (const satz of t.split(/(?<=[.;])\s/)) {
+        if (satz.includes(nachlauf))
+          assert.match(satz, /Nachlauf|v1\.4\.0/, `${f.id}: ${nachlauf} ohne Nachlauf-Bezug`);
+      }
+      assert.doesNotMatch(t, /Nebenlast/, `${f.id}: Nebenlast gehört nicht auf Folie oder Notiz`);
     }
-    assert.doesNotMatch(t, /Nebenlast/, `${f.id}: Nebenlast gehört nicht auf Folie oder Notiz`);
-  }
-  assert.match(alles(nach('J11')), /zu kurz auf beiden Laborrechnern/);
-  assert.match(sichtbar(nach('J11').inhalt), new RegExp(fmt(daten.c1.inferenzRuhigS.wert, 1)));
-  assert.match(alles(nach('J11')), /nicht dem Cache zu(zu)?ordnen|nicht dem Cache zuordenbar/);
-  assert.match(nach('J11').fuss, /Server-specific params/);
-  assert.match(sichtbar(nach('J10b').inhalt), /gestoppt/);
-  assert.match(alles(nach('J8b')), /nicht nachweisbar/);
-  assert.match(sichtbar(nach('J4').inhalt), /Konsistenzprüfung/);
-  assert.match(sichtbar(nach('J4').inhalt), /Orientiert an Papadopoulos/);
-  assert.match(sichtbar(nach('J8').inhalt), /Messunsicherheit der Uhren/);
-  assert.match(sichtbar(nach('J8').inhalt), /Server ohne Inferenz/);
-  for (const f of F)
-    assert.ok(!/Auflösung|schnellerer Hardware|nicht langsamer/.test(alles(f)), f.id);
-  assert.match(nach('J9').notiz, new RegExp(`über ${daten.abgeleitet.anteilPcMin} Prozent`));
-  // Qwen: Variante aus dem Manifest, nicht aus Yang et al.
-  assert.match(sichtbar(nach('J2').inhalt), /Instruct-2507 Q4_K_M \(Manifest\)/);
-  // Warme Spanne neben dem warmen Median (ein Lauf, keine unabhängigen Wiederholungen)
-  const spanne = `${fmt(daten.b1.jobWarmSpanneS[0], 1)}–${fmt(daten.b1.jobWarmSpanneS[1], 1)} s`;
-  for (const id of ['J1', 'J10a']) assert.ok(sichtbar(nach(id).inhalt).includes(spanne), id);
-});
+    assert.match(alles(nach('J11')), /zu kurz auf beiden Laborrechnern/);
+    assert.match(sichtbar(nach('J11').inhalt), new RegExp(fmt(daten.c1.inferenzRuhigS.wert, 1)));
+    assert.match(alles(nach('J11')), /nicht dem Cache zu(zu)?ordnen|nicht dem Cache zuordenbar/);
+    assert.match(nach('J11').fuss, /Server-specific params/);
+    assert.match(sichtbar(nach('J10b').inhalt), /gestoppt/);
+    assert.match(alles(nach('J8b')), /nicht nachweisbar/);
+    assert.match(sichtbar(nach('J4').inhalt), /Konsistenzprüfung/);
+    assert.match(sichtbar(nach('J4').inhalt), /Orientiert an Papadopoulos/);
+    assert.match(sichtbar(nach('J8').inhalt), /Messunsicherheit der Uhren/);
+    assert.match(sichtbar(nach('J8').inhalt), /Server ohne Inferenz/);
+    for (const f of F)
+      assert.ok(!/Auflösung|schnellerer Hardware|nicht langsamer/.test(alles(f)), f.id);
+    assert.match(nach('J9').notiz, new RegExp(`über ${daten.abgeleitet.anteilPcMin} Prozent`));
+    // Qwen: Variante aus dem Manifest, nicht aus Yang et al.
+    assert.match(sichtbar(nach('J2').inhalt), /Instruct-2507 Q4_K_M \(Manifest\)/);
+    // Warme Spanne neben dem warmen Median (ein Lauf, keine unabhängigen Wiederholungen)
+    const spanne = `${fmt(daten.b1.jobWarmSpanneS[0], 1)}–${fmt(daten.b1.jobWarmSpanneS[1], 1)} s`;
+    for (const id of ['J1', 'J10a']) assert.ok(sichtbar(nach(id).inhalt).includes(spanne), id);
+  },
+);
 
 test('J13 nennt die Gate-Ablation in einer Zeile', () => {
   const s = sichtbar(nach('J13').inhalt);
@@ -1032,61 +1155,65 @@ test('J13b (bis 2026-11-16 R14): Einordnung Cloud Computing als Rechnung aus dem
   assert.ok(r14.fuss.includes('Mell & Grance, 2011, S. 2–3'));
 });
 
-test('GD: Nachweisumfang aus nachweisumfang.md, gleich der Neuberechnung, ohne Wertung', async () => {
-  const { berechneNachweisumfang, kopfzahlen } = await import('./nachweisumfang.mjs');
-  const k = kopfzahlen(berechneNachweisumfang());
-  assert.deepEqual(
-    {
-      laborzeit: daten.nachweis.laborzeit,
-      tests: daten.nachweis.tests,
-      adrs: daten.nachweis.adrs,
-      hypothesen: daten.nachweis.hypothesen,
-    },
-    { laborzeit: k.laborzeitStunden, tests: k.tests, adrs: k.adrs, hypothesen: k.hypothesen },
-  );
-  const gd = sichtbar(nach('GD').inhalt);
-  for (const [wert, was] of [
-    [k.laborzeitStunden, 'gewertete Laborzeit'],
-    [k.vorarbeitStunden, 'Aufbau, Tests, weitere Läufe'],
-    [k.tests, 'automatisierte Tests'],
-    [k.adrs, 'ADRs'],
-    [k.hypothesen, 'vorab festgelegte Hypothesen'],
-  ])
-    assert.ok(gd.replace(/\s+/g, ' ').includes(`${wert} ${was}`), `GD: „${wert} ${was}“ fehlt`);
-  assert.ok(gd.includes(`gewertete Läufe ${k.zeitraum}`));
-  // Laborzeit je Auftrag: Dauer wie in nachweisumfang.md, Balkenlänge proportional, längster Balken voll
-  const { laborzeit, dauer } = await import('./nachweisumfang.mjs');
-  const je = laborzeit().je;
-  const erwartet = {
-    '1A': je['1A'],
-    '1B Schritte 1–2': je['1B'],
-    '1B Schritte 3–4': je['1B 3–4'],
-    '1C': je['1C'],
-  };
-  assert.deepEqual(
-    daten.nachweis.je.map((j) => j.dauer),
-    Object.values(erwartet).map(dauer),
-  );
-  // je Auftrag zwei Balken: gewertet (voll) und Aufbau usw. (schraffiert), Länge proportional zur Summe
-  const anteile = [...nach('GD').inhalt.matchAll(/\* ([\d.]+)\)"/g)].map((m) => Number(m[1]));
-  const max = Math.max(...daten.nachweis.je.map((j) => j.min + j.vor.min));
-  assert.deepEqual(
-    anteile,
-    daten.nachweis.je.flatMap((j) => [j.min, j.vor.min].map((x) => Number((x / max).toFixed(3)))),
-  );
-  const { vorarbeit } = await import('./nachweisumfang.mjs');
-  const v = vorarbeit().je;
-  assert.deepEqual(
-    daten.nachweis.je.map((j) => j.vor.dauer),
-    [v['1A'], v['1B'], v['1B 3–4'], v['1C']].map(dauer),
-  );
-  // sachlich: keine Commit-Zahlen je Person, keine Wertung
-  assert.doesNotMatch(
-    gd + nach('GD').notiz,
-    /Commits|umfangreich|beeindruck|enorm|unverhältnis|aufwendig/,
-  );
-  assert.match(nach('GD').notiz, /vom 5\. bis 16\. November/);
-});
+test(
+  'GD: Nachweisumfang aus nachweisumfang.md, gleich der Neuberechnung, ohne Wertung',
+  { skip: OHNE_NOTIZEN },
+  async () => {
+    const { berechneNachweisumfang, kopfzahlen } = await import('./nachweisumfang.mjs');
+    const k = kopfzahlen(berechneNachweisumfang());
+    assert.deepEqual(
+      {
+        laborzeit: daten.nachweis.laborzeit,
+        tests: daten.nachweis.tests,
+        adrs: daten.nachweis.adrs,
+        hypothesen: daten.nachweis.hypothesen,
+      },
+      { laborzeit: k.laborzeitStunden, tests: k.tests, adrs: k.adrs, hypothesen: k.hypothesen },
+    );
+    const gd = sichtbar(nach('GD').inhalt);
+    for (const [wert, was] of [
+      [k.laborzeitStunden, 'gewertete Laborzeit'],
+      [k.vorarbeitStunden, 'Aufbau, Tests, weitere Läufe'],
+      [k.tests, 'automatisierte Tests'],
+      [k.adrs, 'ADRs'],
+      [k.hypothesen, 'vorab festgelegte Hypothesen'],
+    ])
+      assert.ok(gd.replace(/\s+/g, ' ').includes(`${wert} ${was}`), `GD: „${wert} ${was}“ fehlt`);
+    assert.ok(gd.includes(`gewertete Läufe ${k.zeitraum}`));
+    // Laborzeit je Auftrag: Dauer wie in nachweisumfang.md, Balkenlänge proportional, längster Balken voll
+    const { laborzeit, dauer } = await import('./nachweisumfang.mjs');
+    const je = laborzeit().je;
+    const erwartet = {
+      '1A': je['1A'],
+      '1B Schritte 1–2': je['1B'],
+      '1B Schritte 3–4': je['1B 3–4'],
+      '1C': je['1C'],
+    };
+    assert.deepEqual(
+      daten.nachweis.je.map((j) => j.dauer),
+      Object.values(erwartet).map(dauer),
+    );
+    // je Auftrag zwei Balken: gewertet (voll) und Aufbau usw. (schraffiert), Länge proportional zur Summe
+    const anteile = [...nach('GD').inhalt.matchAll(/\* ([\d.]+)\)"/g)].map((m) => Number(m[1]));
+    const max = Math.max(...daten.nachweis.je.map((j) => j.min + j.vor.min));
+    assert.deepEqual(
+      anteile,
+      daten.nachweis.je.flatMap((j) => [j.min, j.vor.min].map((x) => Number((x / max).toFixed(3)))),
+    );
+    const { vorarbeit } = await import('./nachweisumfang.mjs');
+    const v = vorarbeit().je;
+    assert.deepEqual(
+      daten.nachweis.je.map((j) => j.vor.dauer),
+      [v['1A'], v['1B'], v['1B 3–4'], v['1C']].map(dauer),
+    );
+    // sachlich: keine Commit-Zahlen je Person, keine Wertung
+    assert.doesNotMatch(
+      gd + nach('GD').notiz,
+      /Commits|umfangreich|beeindruck|enorm|unverhältnis|aufwendig/,
+    );
+    assert.match(nach('GD').notiz, /vom 5\. bis 16\. November/);
+  },
+);
 
 test('R17: Nachweisumfang im Einzelnen, jede Zeile wie in nachweisumfang.md, ohne Wertung', async () => {
   const { tabellenwerte } = await import('./nachweisumfang.mjs');

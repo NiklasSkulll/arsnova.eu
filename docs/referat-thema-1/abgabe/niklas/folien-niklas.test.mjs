@@ -20,6 +20,10 @@ import { ladeDaten1A } from './daten-1a.mjs';
 import { eingaben1B34, ladeDaten1B34 } from './daten-1b34.mjs';
 import { STUFE_1B34, folien1B34 } from './folien-1b34.mjs';
 import { LITERATUR_1A, kurzbeleg1A } from './literatur-1a.mjs';
+import { mitNotizen } from '../jonas/notizen.mjs';
+
+// Ablesetexte und Stichpunkte liegen privat (privat/notizen.mjs); ohne sie entfallen die Prüfungen dazu
+const OHNE_NOTIZEN = mitNotizen ? false : 'privat/notizen.mjs fehlt (eigenes Repo)';
 
 const HIER = resolve(fileURLToPath(import.meta.url), '..');
 const ROOT = resolve(HIER, '../..');
@@ -104,51 +108,63 @@ test('Titel: Behauptung in einer Zeile (höchstens 44 Zeichen), Reserve mit „R
   }
 });
 
-test('Sprechnotizen: Fließtext etwa 130 Wörter je Minute, 3–6 Stichpunkte, [Weiter] je Stufe', () => {
-  for (const f of haupt1A) {
-    const woerter = f.notiz.trim().split(/\s+/).length;
-    const soll = (f.zeitS * 130) / 60;
-    assert.ok(
-      woerter >= soll * 0.7 && woerter <= soll * 1.3,
-      `${f.id}: ${woerter} Wörter, Soll etwa ${Math.round(soll)}`,
-    );
-    assert.ok(f.stichpunkte.length >= 3 && f.stichpunkte.length <= 6, `${f.id}: Stichpunkte`);
-    const stufen = f.aufbau ?? 0;
-    assert.equal((f.notiz.match(/\[Weiter\]/g) ?? []).length, stufen, `${f.id}: [Weiter] in notiz`);
-    assert.equal(
-      f.stichpunkte.filter((p) => p.startsWith('[Weiter]')).length,
-      stufen,
-      `${f.id}: [Weiter] in Stichpunkten`,
-    );
-  }
-  for (const f of reserve1A) assert.ok(f.notiz && f.stichpunkte.length >= 3, f.id);
-  const md = notizenNiklas(alle, n1a, n1b);
-  assert.match(md, /^# Sprechnotizen Niklas/);
-  assert.match(md, /\*\*Stichpunkte\*\*/);
-  assert.match(md, /\*\*Fließtext\*\*/);
-  assert.match(md, /## G9 /);
-  assert.match(md, /## RN2 /);
-  assert.doesNotMatch(md, /## NL /, 'Literatur ohne Redezeit nicht in den Notizen');
-});
+test(
+  'Sprechnotizen: Fließtext etwa 130 Wörter je Minute, 3–6 Stichpunkte, [Weiter] je Stufe',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    for (const f of haupt1A) {
+      const woerter = f.notiz.trim().split(/\s+/).length;
+      const soll = (f.zeitS * 130) / 60;
+      assert.ok(
+        woerter >= soll * 0.7 && woerter <= soll * 1.3,
+        `${f.id}: ${woerter} Wörter, Soll etwa ${Math.round(soll)}`,
+      );
+      assert.ok(f.stichpunkte.length >= 3 && f.stichpunkte.length <= 6, `${f.id}: Stichpunkte`);
+      const stufen = f.aufbau ?? 0;
+      assert.equal(
+        (f.notiz.match(/\[Weiter\]/g) ?? []).length,
+        stufen,
+        `${f.id}: [Weiter] in notiz`,
+      );
+      assert.equal(
+        f.stichpunkte.filter((p) => p.startsWith('[Weiter]')).length,
+        stufen,
+        `${f.id}: [Weiter] in Stichpunkten`,
+      );
+    }
+    for (const f of reserve1A) assert.ok(f.notiz && f.stichpunkte.length >= 3, f.id);
+    const md = notizenNiklas(alle, n1a, n1b);
+    assert.match(md, /^# Sprechnotizen Niklas/);
+    assert.match(md, /\*\*Stichpunkte\*\*/);
+    assert.match(md, /\*\*Fließtext\*\*/);
+    assert.match(md, /## G9 /);
+    assert.match(md, /## RN2 /);
+    assert.doesNotMatch(md, /## NL /, 'Literatur ohne Redezeit nicht in den Notizen');
+  },
+);
 
-test('Erzählbogen: G0 eröffnet, N10 übergibt an Jonas, J15 zurück an Niklas, M1 nimmt die Frage auf', () => {
-  // Design 2026-11-15, Abschnitt 3: zwei Sprecherwechsel mit den abgestimmten Übergangssätzen
-  assert.match(alle.find((f) => f.id === 'G0').notiz, /Ich beginne mit 1A auf dem App-Host/);
-  assert.match(haupt1A[0].notiz, /^Ich beginne auf dem App-Host/);
-  assert.match(
-    ohneTags(haupt1A.at(-1).inhalt),
-    /Was, wenn wir die schwere Arbeit auslagern\?.*Jonas/,
-  );
-  const j1 = alle.find((f) => f.id === 'J1');
-  assert.match(j1.notiz, /^Danke, Niklas\./);
-  const j15 = alle.find((f) => f.id === 'J15');
-  assert.match(
-    ohneTags(j15.inhalt),
-    /Und wenn der zweite Host langsam ist oder ausfällt\?.*Niklas/,
-  );
-  assert.match(n1b[0].notiz, /^Danke, Jonas\. .*zweite Host langsam ist oder ausfällt/);
-  assert.match(alle.find((f) => f.id === 'GD').notiz, /Fragen/);
-});
+test(
+  'Erzählbogen: G0 eröffnet, N10 übergibt an Jonas, J15 zurück an Niklas, M1 nimmt die Frage auf',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    // Design 2026-11-15, Abschnitt 3: zwei Sprecherwechsel mit den abgestimmten Übergangssätzen
+    assert.match(alle.find((f) => f.id === 'G0').notiz, /Ich beginne mit 1A auf dem App-Host/);
+    assert.match(haupt1A[0].notiz, /^Ich beginne auf dem App-Host/);
+    assert.match(
+      ohneTags(haupt1A.at(-1).inhalt),
+      /Was, wenn wir die schwere Arbeit auslagern\?.*Jonas/,
+    );
+    const j1 = alle.find((f) => f.id === 'J1');
+    assert.match(j1.notiz, /^Danke, Niklas\./);
+    const j15 = alle.find((f) => f.id === 'J15');
+    assert.match(
+      ohneTags(j15.inhalt),
+      /Und wenn der zweite Host langsam ist oder ausfällt\?.*Niklas/,
+    );
+    assert.match(n1b[0].notiz, /^Danke, Jonas\. .*zweite Host langsam ist oder ausfällt/);
+    assert.match(alle.find((f) => f.id === 'GD').notiz, /Fragen/);
+  },
+);
 
 test('Schreibregeln: kein Geviertstrich, kein „sondern“, keine Hex-Farbe im HTML, keine Nebenlast', () => {
   for (const f of [...n1a, ...n1b]) {
@@ -206,7 +222,7 @@ const FESTWERTE_NIKLAS = {
   100: 'Kernel-Doku cgroup v2, cpu.max „max 100000“',
 };
 
-test('Keine Zahl auf den 1A-Folien, die nicht aus den Daten kommt', () => {
+test('Keine Zahl auf den 1A-Folien, die nicht aus den Daten kommt', { skip: OHNE_NOTIZEN }, () => {
   const adr = readFileSync(
     resolve(
       ROOT,
@@ -299,30 +315,34 @@ test(
 
 // ---------------------------------------------------------------- 1B 3–4 Gerüst
 
-test('1B 3–4: M1–M4 aus den Ergebnis-JSONs ohne Platzhalter; ohne Daten eine Platzhalterfolie', () => {
-  assert.deepEqual(
-    n1b.map((f) => f.id),
-    ['M1', 'M2', 'M3', 'M4'],
-  );
-  for (const f of n1b) {
-    const t = [f.titel, ohneTags(f.inhalt), f.fuss, f.notiz, ...f.stichpunkte].join(' ');
-    assert.doesNotMatch(t, /\[Niklas|\[Satz|\[Titel|Entwurf/, f.id);
-    assert.match(f.quelle, /i7-10700K/, f.id);
-  }
-  const d1b = ladeDaten1B34(ROOT);
-  assert.equal(d1b.finde('f1').jobMedianMs, 48);
-  assert.equal(d1b.finde('f2').jobMedianMs, 134732);
-  for (const l of d1b.laeufe) assert.equal(l.liveFehler, 0, l.datei);
-  assert.match(n1b[0].inhalt, />48 ms</);
-  // überholte Aussagen von M2 alt (vor PR #26) kommen nicht wieder
-  const text = n1b.map((f) => [ohneTags(f.inhalt), f.notiz].join(' ')).join(' ');
-  assert.doesNotMatch(text, /kein Vergleich mit einem LLM|wie ADR-0035/i);
-  assert.match(n1b[3].fuss, /ADR 1B-020/);
-  const leer = folien1B34();
-  assert.equal(leer.length, 1);
-  assert.match(leer[0].titel, /\[Titel\]/);
-  assert.match(ohneTags(leer[0].inhalt) + leer[0].fuss, /\[Niklas\]/);
-});
+test(
+  '1B 3–4: M1–M4 aus den Ergebnis-JSONs ohne Platzhalter; ohne Daten eine Platzhalterfolie',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    assert.deepEqual(
+      n1b.map((f) => f.id),
+      ['M1', 'M2', 'M3', 'M4'],
+    );
+    for (const f of n1b) {
+      const t = [f.titel, ohneTags(f.inhalt), f.fuss, f.notiz, ...f.stichpunkte].join(' ');
+      assert.doesNotMatch(t, /\[Niklas|\[Satz|\[Titel|Entwurf/, f.id);
+      assert.match(f.quelle, /i7-10700K/, f.id);
+    }
+    const d1b = ladeDaten1B34(ROOT);
+    assert.equal(d1b.finde('f1').jobMedianMs, 48);
+    assert.equal(d1b.finde('f2').jobMedianMs, 134732);
+    for (const l of d1b.laeufe) assert.equal(l.liveFehler, 0, l.datei);
+    assert.match(n1b[0].inhalt, />48 ms</);
+    // überholte Aussagen von M2 alt (vor PR #26) kommen nicht wieder
+    const text = n1b.map((f) => [ohneTags(f.inhalt), f.notiz].join(' ')).join(' ');
+    assert.doesNotMatch(text, /kein Vergleich mit einem LLM|wie ADR-0035/i);
+    assert.match(n1b[3].fuss, /ADR 1B-020/);
+    const leer = folien1B34();
+    assert.equal(leer.length, 1);
+    assert.match(leer[0].titel, /\[Titel\]/);
+    assert.match(ohneTags(leer[0].inhalt) + leer[0].fuss, /\[Niklas\]/);
+  },
+);
 
 test('1B 3–4 füllt sich aus Ergebnis-JSONs (Median selbst gerechnet, p95 gepoolt)', () => {
   const wurzel = mkdtempSync(join(tmpdir(), 'niklas-1b-'));
@@ -847,26 +867,31 @@ test('Druck: jede Folie von 1A und 1B 3–4 trägt ihre feste Wegkarte im Endbil
   assert.deepEqual(r.folien.M4.zeichen, []);
 });
 
-test('M1: Störungen als Stufen (Stopp und Slot, DROP, zu spät) und Maßstab aus dem Verhältnis der Mediane', () => {
-  const d1b = ladeDaten1B34(ROOT);
-  const m1 = n1b.find((f) => f.id === 'M1');
-  assert.equal(m1.aufbau, 3);
-  const stufen = Object.fromEntries(
-    [...m1.inhalt.matchAll(/data-ab="(\d)" data-stoerung="([a-z0-9]+)"/g)].map((m) => [
-      m[2],
-      Number(m[1]),
-    ]),
-  );
-  assert.deepEqual(stufen, { f1: 1, busy: 1, l1: 2, l2: 2, f2: 2, l3: 3 });
-  assert.equal((m1.notiz.match(/\[Weiter\]/g) ?? []).length, 3);
-  // Faktor DROP/Stopp wie im F2-Protokoll (134.732 / 48 ≈ 2.807), auf Hunderter gerundet
-  const faktor = Math.round(d1b.finde('f2').jobMedianMs / d1b.finde('f1').jobMedianMs / 100) * 100;
-  assert.equal(faktor, 2800);
-  assert.match(ohneTags(m1.inhalt), /rund 2\.800-mal so lang/);
-  // Kreis = Summary, Raute = Label; zwei Fristen
-  assert.match(m1.inhalt, /Frist Label 30 s/);
-  assert.match(m1.inhalt, /Frist Summary 300 s/);
-});
+test(
+  'M1: Störungen als Stufen (Stopp und Slot, DROP, zu spät) und Maßstab aus dem Verhältnis der Mediane',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    const d1b = ladeDaten1B34(ROOT);
+    const m1 = n1b.find((f) => f.id === 'M1');
+    assert.equal(m1.aufbau, 3);
+    const stufen = Object.fromEntries(
+      [...m1.inhalt.matchAll(/data-ab="(\d)" data-stoerung="([a-z0-9]+)"/g)].map((m) => [
+        m[2],
+        Number(m[1]),
+      ]),
+    );
+    assert.deepEqual(stufen, { f1: 1, busy: 1, l1: 2, l2: 2, f2: 2, l3: 3 });
+    assert.equal((m1.notiz.match(/\[Weiter\]/g) ?? []).length, 3);
+    // Faktor DROP/Stopp wie im F2-Protokoll (134.732 / 48 ≈ 2.807), auf Hunderter gerundet
+    const faktor =
+      Math.round(d1b.finde('f2').jobMedianMs / d1b.finde('f1').jobMedianMs / 100) * 100;
+    assert.equal(faktor, 2800);
+    assert.match(ohneTags(m1.inhalt), /rund 2\.800-mal so lang/);
+    // Kreis = Summary, Raute = Label; zwei Fristen
+    assert.match(m1.inhalt, /Frist Label 30 s/);
+    assert.match(m1.inhalt, /Frist Summary 300 s/);
+  },
+);
 
 test('M2: zitierte Codezeilen stimmen am Checkout (Breaker zählt aborted nicht)', async () => {
   const { CODE_BELEGE_1B34 } = await import('./folien-1b34.mjs');

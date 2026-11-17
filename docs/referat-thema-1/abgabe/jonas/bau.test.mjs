@@ -22,6 +22,10 @@ import { fileURLToPath } from 'node:url';
 import { baueDeck } from './deck.mjs';
 import { folien, ladeFolienDaten } from './folien.mjs';
 import { niklasTeile } from '../niklas/teile.mjs';
+import { mitNotizen } from './notizen.mjs';
+
+// Ablesetexte und Stichpunkte liegen privat (privat/notizen.mjs); ohne sie entfallen die Prüfungen dazu
+const OHNE_NOTIZEN = mitNotizen ? false : 'privat/notizen.mjs fehlt (eigenes Repo)';
 
 const HIER = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HIER, '../..');
@@ -85,7 +89,11 @@ before(() => {
 after(() => rmSync(wurzel, { recursive: true, force: true }));
 
 test('alle Ausgaben und das Manifest existieren und sind nicht leer', () => {
-  for (const name of [...AUSGABEN, 'manifest.json', ...PRIVAT.map((n) => join('privat', n))]) {
+  for (const name of [
+    ...AUSGABEN,
+    'manifest.json',
+    ...(mitNotizen ? PRIVAT.map((n) => join('privat', n)) : []),
+  ]) {
     const p = join(platzhalter, name);
     assert.ok(existsSync(p), name);
     assert.ok(statSync(p).size > 500, `${name} zu klein`);
@@ -148,13 +156,17 @@ test('jonas-folien.pdf: Titel, J1–J16 plus Reserve, eine Seite je Folie, 1600 
   assert.match(roh, /\/MediaBox\s*\[\s*0\s+0\s+1200(\.\d+)?\s+675(\.\d+)?\s*\]/);
 });
 
-test('öffentliches Deck ohne Sprechheft; Vortragsdeck mit Referentenansicht nur privat', () => {
-  const offen = readFileSync(join(platzhalter, 'jonas-deck.html'), 'utf8');
-  assert.doesNotMatch(offen, /"referent"\s*:/);
-  assert.doesNotMatch(offen, /r-daten|details class=\\?"frage/);
-  const vortrag = readFileSync(join(platzhalter, 'privat', 'vortrag-deck.html'), 'utf8');
-  assert.match(vortrag, /"referent"\s*:/);
-});
+test(
+  'öffentliches Deck ohne Sprechheft; Vortragsdeck mit Referentenansicht nur privat',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    const offen = readFileSync(join(platzhalter, 'jonas-deck.html'), 'utf8');
+    assert.doesNotMatch(offen, /"referent"\s*:/);
+    assert.doesNotMatch(offen, /r-daten|details class=\\?"frage/);
+    const vortrag = readFileSync(join(platzhalter, 'privat', 'vortrag-deck.html'), 'utf8');
+    assert.match(vortrag, /"referent"\s*:/);
+  },
+);
 
 test('jonas-deck.html ist selbstständig (kein http(s), kein externes Skript)', () => {
   // URLs nur als Text im Literaturverzeichnis (J16, zwischen den Quellen-Marken), keine externen Ressourcen.
@@ -166,39 +178,42 @@ test('jonas-deck.html ist selbstständig (kein http(s), kein externes Skript)', 
   assert.doesNotMatch(h, /<script[^>]+src=/);
 });
 
-test('sprechnotizen.md: Summen und Folien stimmen mit folien.mjs überein (ohne Rahmen, den Niklas spricht)', () => {
-  const md = readFileSync(join(platzhalter, 'privat', 'sprechnotizen.md'), 'utf8');
-  const haupt = F.filter((f) => f.teil !== 'reserve' && f.sprecher !== 'niklas');
-  for (const id of ['GT', 'G0', 'G9', 'GD']) {
-    assert.ok(!md.includes(`## ${id} `), `${id} steht in Niklas’ Notizen`);
-  }
-  const gesamt = haupt.reduce((s, f) => s + f.zeitS, 0);
-  const kurz = haupt.filter((f) => f.kurzfassung).reduce((s, f) => s + f.zeitS, 0);
-  const mmss = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-  assert.ok(md.includes(`Gesamt ${mmss(gesamt)}`), `Gesamt ${mmss(gesamt)}`);
-  assert.ok(md.includes(`Kurzfassung ${mmss(kurz)}`), `Kurzfassung ${mmss(kurz)}`);
-  let kumuliert = 0;
-  for (const f of haupt) {
-    kumuliert += f.zeitS;
-    const zeile = md.split('\n').find((l) => l.startsWith(`## ${f.id} `));
-    assert.ok(zeile, f.id);
-    assert.ok(zeile.includes(`${f.zeitS} s`), zeile);
-    assert.ok(zeile.includes(`kumuliert ${mmss(kumuliert)}`), zeile);
-    assert.equal(zeile.includes('Kurzfassung'), f.kurzfassung, zeile);
-    assert.ok(md.includes(f.notiz.trim().split('\n')[0].trim().slice(0, 40)), f.id);
-  }
-  for (const f of F.filter((x) => x.teil === 'reserve')) {
-    assert.ok(md.includes(`## ${f.id} `), f.id);
-  }
-});
+test(
+  'sprechnotizen.md: Summen und Folien stimmen mit folien.mjs überein (ohne Rahmen, den Niklas spricht)',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    const md = readFileSync(join(platzhalter, 'privat', 'sprechnotizen.md'), 'utf8');
+    const haupt = F.filter((f) => f.teil !== 'reserve' && f.sprecher !== 'niklas');
+    for (const id of ['GT', 'G0', 'G9', 'GD']) {
+      assert.ok(!md.includes(`## ${id} `), `${id} steht in Niklas’ Notizen`);
+    }
+    const gesamt = haupt.reduce((s, f) => s + f.zeitS, 0);
+    const kurz = haupt.filter((f) => f.kurzfassung).reduce((s, f) => s + f.zeitS, 0);
+    const mmss = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    assert.ok(md.includes(`Gesamt ${mmss(gesamt)}`), `Gesamt ${mmss(gesamt)}`);
+    assert.ok(md.includes(`Kurzfassung ${mmss(kurz)}`), `Kurzfassung ${mmss(kurz)}`);
+    let kumuliert = 0;
+    for (const f of haupt) {
+      kumuliert += f.zeitS;
+      const zeile = md.split('\n').find((l) => l.startsWith(`## ${f.id} `));
+      assert.ok(zeile, f.id);
+      assert.ok(zeile.includes(`${f.zeitS} s`), zeile);
+      assert.ok(zeile.includes(`kumuliert ${mmss(kumuliert)}`), zeile);
+      assert.equal(zeile.includes('Kurzfassung'), f.kurzfassung, zeile);
+      assert.ok(md.includes(f.notiz.trim().split('\n')[0].trim().slice(0, 40)), f.id);
+    }
+    for (const f of F.filter((x) => x.teil === 'reserve')) {
+      assert.ok(md.includes(`## ${f.id} `), f.id);
+    }
+  },
+);
 
 test('generierte Textausgaben sind Prettier-formatiert (Pre-commit würde sie sonst ändern)', async () => {
   const { check, resolveConfig } = requireRepo('prettier');
   const konfig = (await resolveConfig(resolve(ROOT, '../../package.json'))) ?? {};
   for (const name of [
     'jonas-deck.html',
-    'privat/sprechnotizen.md',
-    'privat/sprechnotizen-niklas.md',
+    ...(mitNotizen ? ['privat/sprechnotizen.md', 'privat/sprechnotizen-niklas.md'] : []),
     'manifest.json',
   ]) {
     const text = readFileSync(join(platzhalter, name), 'utf8');
@@ -217,7 +232,7 @@ test('--abgabe gibt es nicht mehr: das Handout mit Matrikel entsteht in PaperLab
 
 test('fehlgeschlagener Bau hinterlässt kein altes Manifest', () => {
   const aus = join(wurzel, 'stale');
-  mkdirSync(join(aus, 'privat', 'sprechnotizen.md'), { recursive: true }); // Schreiben schlägt fehl
+  mkdirSync(join(aus, 'jonas-deck.html'), { recursive: true }); // Schreiben schlägt fehl
   writeFileSync(join(aus, 'manifest.json'), '{"alt":true}');
   const r = bau(['--ausgabe', aus], { HOME: home });
   assert.notEqual(r.status, 0);
@@ -277,74 +292,93 @@ test('eingechecktes ausgabe/manifest.json passt zu den eingecheckten Ausgaben un
   }
 });
 
-test('Sprechnotizen: Sprungplan zu J13 und J15 bei Abbruch (Prüfung 3, I5)', async () => {
-  const { baueSprechnotizen } = await import('./bau.mjs');
-  const md = baueSprechnotizen(F);
-  assert.match(md, /Sprungplan/);
-  assert.match(md, /J13/);
-  assert.match(md, /J15/);
-  assert.match(md, /15:00/);
-});
+test(
+  'Sprechnotizen: Sprungplan zu J13 und J15 bei Abbruch (Prüfung 3, I5)',
+  { skip: OHNE_NOTIZEN },
+  async () => {
+    const { baueSprechnotizen } = await import('./bau.mjs');
+    const md = baueSprechnotizen(F);
+    assert.match(md, /Sprungplan/);
+    assert.match(md, /J13/);
+    assert.match(md, /J15/);
+    assert.match(md, /15:00/);
+  },
+);
 
-test('sprechnotizen-niklas.md: Stichpunkte und Fließtext je Folie, Rahmen und Reserve, ohne Literatur', () => {
-  const md = readFileSync(join(platzhalter, 'privat', 'sprechnotizen-niklas.md'), 'utf8');
-  assert.match(md, /^# Sprechnotizen Niklas/);
-  const rahmen = F.filter((x) => x.teil === 'rahmen');
-  for (const f of [...NIKLAS_ALLE.filter((x) => !x.anhang), ...rahmen]) {
-    assert.ok(md.includes(`## ${f.id} `), f.id);
-  }
-  // Vortragsreihenfolge: GT, G0, 1A, (Jonas), 1B 3–4, G9, GD
-  const pos = (id) => md.indexOf(`## ${id} `);
-  assert.ok(pos('GT') < pos('G0') && pos('G0') < pos('N1') && pos('N10') < pos('M1'));
-  assert.ok(pos('M2') < pos('G9') && pos('G9') < pos('GD'));
-  assert.match(md, /_Übergabe:_ Nach N10 spricht Jonas \(J1–J15/);
-  assert.ok(!md.includes('## NL '));
-  assert.ok((md.match(/\*\*Stichpunkte\*\*/g) ?? []).length >= 10);
-  // Sprungplan für Niklas: N10, 1B 3–4, G9 und GD müssen gesprochen sein; Budgethinweis bei Überlänge.
-  assert.match(md, /## Sprungplan/);
-  assert.match(md, /N10 bis GD/);
-  assert.match(md, /15:00/);
-  assert.match(md, /Uhr für den Sprungplan läuft nur während der eigenen Folien/);
-  const haupt = [...NIKLAS_ALLE.filter((x) => x.teil !== 'reserve' && !x.anhang), ...rahmen];
-  const gesamt = haupt.reduce((s, f) => s + f.zeitS, 0);
-  assert.equal(/\*\*Zeitbudget:\*\*/.test(md), gesamt > 900);
-  // Entscheidung der Autoren 2026-11-16: 15 min Redezeit je Person samt Rahmen (vorher 10:30 min)
-  assert.ok(gesamt >= 840 && gesamt <= 900, `Niklas geplant ${gesamt} s`);
-});
-
-test('Sprechnotizen: Jonas’ Sprungplan zählt ab J1; jede Folie mit Stichpunkten vor dem Fließtext', () => {
-  const md = readFileSync(join(platzhalter, 'privat', 'sprechnotizen.md'), 'utf8');
-  assert.match(md, /ab der ersten Folie \(J1\) gezählt\. J13 beginnt im Plan/);
-  assert.doesNotMatch(md, /\*\*Zeitbudget:\*\*/, 'Jonas bleibt im Budget von 15:00 min');
-  for (const f of F.filter((x) => x.sprecher !== 'niklas' && x.id !== 'J16')) {
-    const abschnitt = md.split(`## ${f.id} `)[1].split('\n## ')[0];
-    assert.ok(abschnitt.indexOf('**Stichpunkte**') < abschnitt.indexOf('**Fließtext**'), f.id);
-  }
-});
-
-test('Sprechkarten: je Person ein PDF mit allen Stichpunkten, ohne Fließtext', async () => {
-  const { PDFParse } = requireRepo('pdf-parse');
-  const text = async (datei) => {
-    const p = new PDFParse({
-      data: new Uint8Array(readFileSync(join(platzhalter, 'privat', datei))),
-    });
-    try {
-      return (await p.getText()).text.replace(/\s+/g, ' ');
-    } finally {
-      await p.destroy();
+test(
+  'sprechnotizen-niklas.md: Stichpunkte und Fließtext je Folie, Rahmen und Reserve, ohne Literatur',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    const md = readFileSync(join(platzhalter, 'privat', 'sprechnotizen-niklas.md'), 'utf8');
+    assert.match(md, /^# Sprechnotizen Niklas/);
+    const rahmen = F.filter((x) => x.teil === 'rahmen');
+    for (const f of [...NIKLAS_ALLE.filter((x) => !x.anhang), ...rahmen]) {
+      assert.ok(md.includes(`## ${f.id} `), f.id);
     }
-  };
-  const jonas = await text('sprechkarten-jonas.pdf');
-  assert.match(jonas, /Sprechkarten Jonas/);
-  for (const f of F.filter((x) => x.sprecher !== 'niklas' && x.stichpunkte)) {
-    assert.ok(jonas.includes(f.stichpunkte[0].slice(0, 25)), `${f.id}: erster Stichpunkt`);
-  }
-  // Der erste Satz steht wörtlich auch als Stichpunkt; geprüft wird ein Stück aus der Mitte.
-  assert.ok(!jonas.includes(F.find((x) => x.id === 'J1').notiz.slice(120, 180)), 'kein Fließtext');
-  const niklas = await text('sprechkarten-niklas.pdf');
-  assert.match(niklas, /Sprechkarten Niklas/);
-  assert.match(niklas, /N10/);
-  assert.match(niklas, /G9/);
-  assert.match(niklas, /GD/);
-  assert.match(niklas, /Nach N10 spricht Jonas/);
-});
+    // Vortragsreihenfolge: GT, G0, 1A, (Jonas), 1B 3–4, G9, GD
+    const pos = (id) => md.indexOf(`## ${id} `);
+    assert.ok(pos('GT') < pos('G0') && pos('G0') < pos('N1') && pos('N10') < pos('M1'));
+    assert.ok(pos('M2') < pos('G9') && pos('G9') < pos('GD'));
+    assert.match(md, /_Übergabe:_ Nach N10 spricht Jonas \(J1–J15/);
+    assert.ok(!md.includes('## NL '));
+    assert.ok((md.match(/\*\*Stichpunkte\*\*/g) ?? []).length >= 10);
+    // Sprungplan für Niklas: N10, 1B 3–4, G9 und GD müssen gesprochen sein; Budgethinweis bei Überlänge.
+    assert.match(md, /## Sprungplan/);
+    assert.match(md, /N10 bis GD/);
+    assert.match(md, /15:00/);
+    assert.match(md, /Uhr für den Sprungplan läuft nur während der eigenen Folien/);
+    const haupt = [...NIKLAS_ALLE.filter((x) => x.teil !== 'reserve' && !x.anhang), ...rahmen];
+    const gesamt = haupt.reduce((s, f) => s + f.zeitS, 0);
+    assert.equal(/\*\*Zeitbudget:\*\*/.test(md), gesamt > 900);
+    // Entscheidung der Autoren 2026-11-16: 15 min Redezeit je Person samt Rahmen (vorher 10:30 min)
+    assert.ok(gesamt >= 840 && gesamt <= 900, `Niklas geplant ${gesamt} s`);
+  },
+);
+
+test(
+  'Sprechnotizen: Jonas’ Sprungplan zählt ab J1; jede Folie mit Stichpunkten vor dem Fließtext',
+  { skip: OHNE_NOTIZEN },
+  () => {
+    const md = readFileSync(join(platzhalter, 'privat', 'sprechnotizen.md'), 'utf8');
+    assert.match(md, /ab der ersten Folie \(J1\) gezählt\. J13 beginnt im Plan/);
+    assert.doesNotMatch(md, /\*\*Zeitbudget:\*\*/, 'Jonas bleibt im Budget von 15:00 min');
+    for (const f of F.filter((x) => x.sprecher !== 'niklas' && x.id !== 'J16')) {
+      const abschnitt = md.split(`## ${f.id} `)[1].split('\n## ')[0];
+      assert.ok(abschnitt.indexOf('**Stichpunkte**') < abschnitt.indexOf('**Fließtext**'), f.id);
+    }
+  },
+);
+
+test(
+  'Sprechkarten: je Person ein PDF mit allen Stichpunkten, ohne Fließtext',
+  { skip: OHNE_NOTIZEN },
+  async () => {
+    const { PDFParse } = requireRepo('pdf-parse');
+    const text = async (datei) => {
+      const p = new PDFParse({
+        data: new Uint8Array(readFileSync(join(platzhalter, 'privat', datei))),
+      });
+      try {
+        return (await p.getText()).text.replace(/\s+/g, ' ');
+      } finally {
+        await p.destroy();
+      }
+    };
+    const jonas = await text('sprechkarten-jonas.pdf');
+    assert.match(jonas, /Sprechkarten Jonas/);
+    for (const f of F.filter((x) => x.sprecher !== 'niklas' && x.stichpunkte)) {
+      assert.ok(jonas.includes(f.stichpunkte[0].slice(0, 25)), `${f.id}: erster Stichpunkt`);
+    }
+    // Der erste Satz steht wörtlich auch als Stichpunkt; geprüft wird ein Stück aus der Mitte.
+    assert.ok(
+      !jonas.includes(F.find((x) => x.id === 'J1').notiz.slice(120, 180)),
+      'kein Fließtext',
+    );
+    const niklas = await text('sprechkarten-niklas.pdf');
+    assert.match(niklas, /Sprechkarten Niklas/);
+    assert.match(niklas, /N10/);
+    assert.match(niklas, /G9/);
+    assert.match(niklas, /GD/);
+    assert.match(niklas, /Nach N10 spricht Jonas/);
+  },
+);

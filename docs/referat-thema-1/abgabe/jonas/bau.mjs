@@ -31,6 +31,7 @@ import { parseArgs } from 'node:util';
 import { baueDeck } from './deck.mjs';
 import { DIAGRAMME, FESTWERTE, NACHWEIS, folien, ladeFolienDaten } from './folien.mjs';
 import { niklasSeiten } from './niklas-seiten.mjs';
+import { mitNotizen } from './notizen.mjs';
 import { baueHeftHtml, baueReferentHtml, heftEintraege, ladeHeft } from './sprechheft.mjs';
 import { eingabenNiklas, niklasTeile } from '../niklas/teile.mjs';
 
@@ -485,8 +486,11 @@ async function main() {
     rmSync(join(ausgabe, 'manifest.json'), { force: true });
     const deckPfad = join(ausgabe, 'jonas-deck.html');
     writeFileSync(deckPfad, html);
-    mkdirSync(privatAusgabe, { recursive: true });
-    writeFileSync(join(privatAusgabe, 'vortrag-deck.html'), rohVortrag);
+    // Ohne privat/notizen.mjs (öffentlicher Klon) entstehen nur die öffentlichen Ausgaben.
+    if (mitNotizen) {
+      mkdirSync(privatAusgabe, { recursive: true });
+      writeFileSync(join(privatAusgabe, 'vortrag-deck.html'), rohVortrag);
+    }
 
     const browser = await chromium.launch();
     try {
@@ -505,72 +509,74 @@ async function main() {
       await browser.close();
     }
 
-    // Sprechkarten (nur Stichpunkte) je Person zum Ausdrucken, Schriften wie im Deck eingebettet.
-    const schriften = (
-      readFileSync(join(HIER, 'stil.css'), 'utf8').match(/@font-face\s*\{[^}]*\}/g) ?? []
-    )
-      .join('')
-      .replace(
-        /url\('(schriften\/[^']+\.woff2)'\)/g,
-        (_, pfad) =>
-          `url('data:font/woff2;base64,${readFileSync(join(HIER, pfad)).toString('base64')}')`,
-      );
-    const kartenBrowser = await chromium.launch();
-    try {
-      for (const [datei, person, liste, pause] of [
-        ['sprechkarten-jonas.pdf', 'Jonas', folienJonas(alle)],
-        [
-          'sprechkarten-niklas.pdf',
-          'Niklas',
-          folienNiklas(alle, niklas),
-          pauseNiklas(alle, niklas),
-        ],
-      ]) {
-        const seite = await kartenBrowser.newPage();
-        try {
-          await seite.setContent(baueSprechkarten(liste, { person, schriften, pause }));
-          await seite.evaluate(() => document.fonts.ready);
-          await seite.pdf({ path: join(privatAusgabe, datei), preferCSSPageSize: true });
-        } finally {
-          await seite.close();
+    if (mitNotizen) {
+      // Sprechkarten (nur Stichpunkte) je Person zum Ausdrucken, Schriften wie im Deck eingebettet.
+      const schriften = (
+        readFileSync(join(HIER, 'stil.css'), 'utf8').match(/@font-face\s*\{[^}]*\}/g) ?? []
+      )
+        .join('')
+        .replace(
+          /url\('(schriften\/[^']+\.woff2)'\)/g,
+          (_, pfad) =>
+            `url('data:font/woff2;base64,${readFileSync(join(HIER, pfad)).toString('base64')}')`,
+        );
+      const kartenBrowser = await chromium.launch();
+      try {
+        for (const [datei, person, liste, pause] of [
+          ['sprechkarten-jonas.pdf', 'Jonas', folienJonas(alle)],
+          [
+            'sprechkarten-niklas.pdf',
+            'Niklas',
+            folienNiklas(alle, niklas),
+            pauseNiklas(alle, niklas),
+          ],
+        ]) {
+          const seite = await kartenBrowser.newPage();
+          try {
+            await seite.setContent(baueSprechkarten(liste, { person, schriften, pause }));
+            await seite.evaluate(() => document.fonts.ready);
+            await seite.pdf({ path: join(privatAusgabe, datei), preferCSSPageSize: true });
+          } finally {
+            await seite.close();
+          }
         }
+      } finally {
+        await kartenBrowser.close();
       }
-    } finally {
-      await kartenBrowser.close();
-    }
 
-    writeFileSync(
-      join(privatAusgabe, 'sprechnotizen.md'),
-      await format(baueSprechnotizen(folienJonas(alle)), { ...formatierung, parser: 'markdown' }),
-    );
-    writeFileSync(
-      join(privatAusgabe, 'sprechnotizen-niklas.md'),
-      await format(
-        baueSprechnotizen(folienNiklas(alle, niklas), {
-          person: 'Niklas',
-          quelle:
-            '`abgabe/niklas/folien-1a.mjs`, `folien-1b34.mjs` und GT, G0, G9, GD in `folien.mjs`',
-          sprungziele: sprungzieleNiklas(alle, niklas),
-          pause: pauseNiklas(alle, niklas),
-        }),
-        { ...formatierung, parser: 'markdown' },
-      ),
-    );
-
-    // Kein Datum im Heft: der Stand steht im Manifest (Eingaben mit SHA-256), der Bau bleibt reproduzierbar
-    const stand = 'siehe manifest.json';
-    for (const [datei, person, eintraege, zeitBezug] of [
-      ['sprechheft-jonas.html', 'Jonas', heftJonas, 'eigener Teil'],
-      ['sprechheft-niklas.html', 'Niklas', heftNiklas, 'eigener Teil'],
-      ['sprechheft-gesamt.html', 'Jonas und Niklas', heftGesamt, 'gesamt'],
-    ]) {
       writeFileSync(
-        join(privatAusgabe, datei),
-        await format(baueHeftHtml(eintraege, { person, stand, zeitBezug }), {
-          ...formatierung,
-          parser: 'html',
-        }),
+        join(privatAusgabe, 'sprechnotizen.md'),
+        await format(baueSprechnotizen(folienJonas(alle)), { ...formatierung, parser: 'markdown' }),
       );
+      writeFileSync(
+        join(privatAusgabe, 'sprechnotizen-niklas.md'),
+        await format(
+          baueSprechnotizen(folienNiklas(alle, niklas), {
+            person: 'Niklas',
+            quelle:
+              '`abgabe/niklas/folien-1a.mjs`, `folien-1b34.mjs` und GT, G0, G9, GD in `folien.mjs`',
+            sprungziele: sprungzieleNiklas(alle, niklas),
+            pause: pauseNiklas(alle, niklas),
+          }),
+          { ...formatierung, parser: 'markdown' },
+        ),
+      );
+
+      // Kein Datum im Heft: der Stand steht im Manifest (Eingaben mit SHA-256), der Bau bleibt reproduzierbar
+      const stand = 'siehe manifest.json';
+      for (const [datei, person, eintraege, zeitBezug] of [
+        ['sprechheft-jonas.html', 'Jonas', heftJonas, 'eigener Teil'],
+        ['sprechheft-niklas.html', 'Niklas', heftNiklas, 'eigener Teil'],
+        ['sprechheft-gesamt.html', 'Jonas und Niklas', heftGesamt, 'gesamt'],
+      ]) {
+        writeFileSync(
+          join(privatAusgabe, datei),
+          await format(baueHeftHtml(eintraege, { person, stand, zeitBezug }), {
+            ...formatierung,
+            parser: 'html',
+          }),
+        );
+      }
     }
 
     // Manifest: Eingaben (Daten, Vorlagen, Module, Schriften, Niklas-PDFs) und Ausgaben mit SHA-256.
@@ -639,7 +645,9 @@ async function main() {
     }
     console.log(`Ausgabe: ${ausgabe}; Handout: PaperLab (./paperlab check|final)`);
     console.log(
-      `Privat (nicht im Repo): ${privatAusgabe} (vortrag-deck.html mit Taste n, Sprechhefte, Notizen, Karten)`,
+      mitNotizen
+        ? `Privat (nicht im Repo): ${privatAusgabe} (vortrag-deck.html mit Taste n, Sprechhefte, Notizen, Karten)`
+        : 'Privat: übersprungen, privat/notizen.mjs fehlt (eigenes Repo)',
     );
   } finally {
     rmSync(arbeit, { recursive: true, force: true });

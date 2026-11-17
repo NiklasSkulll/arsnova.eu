@@ -17,6 +17,7 @@ import { fmt } from '../jonas/zahlen.mjs';
 import { huelle } from './grafik-1a.mjs';
 import { kurzbeleg1A } from './literatur-1a.mjs';
 import { VERZOEGERUNG_1B34_MS } from './daten-1b34.mjs';
+import { privat } from '../jonas/notizen.mjs';
 
 const N = '[Niklas]';
 const offen = (t) =>
@@ -326,8 +327,8 @@ export function folien1B34(
           ) +
             `<p style="font-size:28px">${offen(`${N}: Ergebnis-JSONs evidenz/1B/messung/&lt;Datum&gt;-lauf-&lt;variante&gt;-&lt;consumer&gt;.json.gz fehlen`)}</p>`,
         ),
-        notiz: `${N} Ergebnisse fehlen.`,
-        stichpunkte: [`${N} Ergebnisse fehlen`, '[Satz: Störungen]', '[Satz: Entscheidung]'],
+        notiz: privat('M1.notiz', { N }),
+        stichpunkte: privat('M1.stichpunkte', { N }),
         zeitS: 90,
         quelle: `${N}: Ergebnis-JSONs mit Rechner und Commit`,
         fuss: `Quelle: ${kb('schneider2026', 'Ordner evidenz/1B')} ${N}`,
@@ -376,15 +377,22 @@ export function folien1B34(
           )} min auf, bei Label endet die Frist von ${fmt(fristL)} s früher.</p>` +
         `<p class="beleg">Vorab (${mono(sw.commit)}${swDatum ? `, ${swDatum}` : ''}): Ersatz ≤ Frist + ${fmt(sw.fallbackPufferMs / 1000)} s, Stopp im Median ≤ ${fmt(sw.f1MedianMaxMs / 1000)} s, DROP > ${fmt(sw.f2ZuF1Min)} × Stopp; Summary erfüllt, DROP über zwei Commits</p>`,
     ),
-    notiz: `Danke, Jonas. Er hat gefragt: Was, wenn der zweite Host langsam ist oder ausfällt? Ich habe die Runtime im Labor gezielt gestört, unter derselben Beitrittswelle wie in 1A, für zwei Aufträge: die Q&A-Zusammenfassung als Kreis und die Wortwolken-Labels als Raute. Die Achse ist logarithmisch, rot stehen die Fristen, ${fmt(fristL)} Sekunden für Labels und ${fmt(fristS)} für Summaries. Grau ist der Normalbetrieb. Labels übernimmt die App nach etwa ${fmt(nl.zeitMedianMs / 1000, 1)} Sekunden, Summaries verwirft das Gate wie bei Jonas. [Weiter] Ist der Container gestoppt, kommt der Ersatz nach ${gesprochen(f1.zeitMedianMs)}, bei belegtem Slot nach ${gesprochen(busy.zeitMedianMs)}. [Weiter] Bremse ich das Netz um fünfhundert Millisekunden, kommt die Antwort trotzdem. Verwirft die Firewall die Pakete, merkt die App das bei Summaries erst nach ${gesprochen(f2.zeitMedianMs)}, rund ${fmt(faktor)}-mal so spät wie beim Stopp; bei Labels beendet die Frist das Warten nach ${fmt(fristL)} Sekunden. [Weiter] Antwortet die Runtime zu spät, wartet die App die volle Frist. In jeder Reihe kam der Ersatz; ein gestoppter Host kostet Millisekunden, ein stummer bei Summaries Minuten, bei Labels die Frist.`,
-    stichpunkte: [
-      '„Danke, Jonas.“ Seine Frage: Was, wenn der zweite Host langsam ist oder ausfällt?',
-      `Kreis Summary, Raute Label; Fristen ${fmt(fristL)} s und ${fmt(fristS)} s; grau normal`,
-      `[Weiter] Stopp ${dauer(f1.zeitMedianMs)}, Slot belegt ${dauer(busy.zeitMedianMs)}`,
-      `[Weiter] Netz langsam: Antwort kommt; DROP Summary ${dauer(f2.zeitMedianMs)} (× ${fmt(faktor)}), Label ${dauer(f2l.zeitMedianMs)}`,
-      `[Weiter] Zu spät: volle Frist (${dauer(l3.zeitMedianMs)}, Label ${dauer(l3l.zeitMedianMs)})`,
-      `Kriterien vorab (${sw.commit})${alleErsatzImBudget ? ' erfüllt' : ''}; gestoppt Millisekunden, stumm bei Summary Minuten`,
-    ],
+    notiz: privat('M1.notiz~2', { fmt, fristL, fristS, nl, gesprochen, f1, busy, f2, faktor }),
+    stichpunkte: privat('M1.stichpunkte~2', {
+      fmt,
+      fristL,
+      fristS,
+      dauer,
+      f1,
+      busy,
+      f2,
+      faktor,
+      f2l,
+      l3,
+      l3l,
+      sw,
+      alleErsatzImBudget,
+    }),
     zeitS: 75,
     aufbau: 3,
     // Wegmarke (jonas/wegkarte.mjs): Strecke über den zweiten Host in Bernstein; Zeichen folgen STUFE_1B34.
@@ -404,13 +412,8 @@ export function folien1B34(
         grafikBox(breakerSvg(b)) +
         `<p class="beleg">Code: Queue-Abbruch gilt als ${mono('aborted')} (${mono('openWeightLlmClient.ts:188')}) und zählt nicht für den Breaker (${mono(':476–478')})</p>`,
     ),
-    notiz: `Der Client hat einen Circuit Breaker: Nach drei Fehlern schaltet er dreißig Sekunden lang ab und liefert sofort den Ersatz. Meine Folge prüft mit vier Aufträgen direkt hintereinander, ob er auch Hänger abfängt. Oben ist die Runtime gestoppt: drei Ablehnungen, dann öffnet der Breaker, und Auftrag vier endet nach ${gesprochen(b.f1.jobs[3].jobMs)} ohne Netzversuch. [Weiter] Unten antwortet die Runtime zu spät: Jeder Auftrag wartet die Frist von ${fmt(b.l3.timeoutMs / 1000)} Sekunden, und auch Auftrag vier geht wieder zur Runtime. Der Code stützt die Erklärung: Bricht die Warteschlange den Aufruf ab, gilt das als abgebrochen und zählt nicht als Fehler; den internen Zustand habe ich nicht ausgelesen. Der Breaker dämpft also Ausfälle, aber keine Hänger.`,
-    stichpunkte: [
-      'Breaker: nach 3 Fehlern 30 s aus, Ersatz sofort; vier Aufträge ohne Pause',
-      `Stopp: 3 × abgewiesen, Auftrag 4 nach ${dauer(b.f1.jobs[3].jobMs)} ohne Netz`,
-      `[Weiter] Zu spät: 4 × ${fmt(b.l3.timeoutMs / 1000)} s, auch Auftrag 4 erreicht die Runtime`,
-      'Code: Queue-Abbruch = aborted, zählt nicht; dämpft Ausfälle, keine Hänger',
-    ],
+    notiz: privat('M2.notiz', { gesprochen, b, fmt }),
+    stichpunkte: privat('M2.stichpunkte', { dauer, b, fmt }),
     zeitS: 50,
     aufbau: 1,
     marke: '1b-breaker',
@@ -491,14 +494,8 @@ export function folien1B34(
         `<p class="vermerk">Bernstein: über ${fmt(sw.p95Faktor * 100)} % der Referenz (vorab festgelegt); serielle Reihen auf einem Rechner, Ursache nicht belegt</p>` +
         `<p class="merksatz"><b>${fmt(fehler)} Fehler</b> bei ${fmt(geplant)} Live-Aktionen. Netz bei Labels: ${fmt(t.transportMedianMs, 1)} ms, im Median ${fmt(t.anteilMedianProzent, 2)}&nbsp;% der Zeit beim Client</p>`,
     ),
-    notiz: `Und die Live-Aktionen? Die Tabelle zeigt das p95 jeder Störreihe gegen den Stopp desselben Auftrags, so war es vorab festgelegt. Bei Summaries reißen belegter Slot, DROP und die späte Antwort die Zehn-Prozent-Regel bei mindestens einer Aktion. [Weiter] Bei Labels schon der Normalbetrieb, beim Beitritt um ${prozent(nl.live.join.p95Ms / f1l.live.join.p95Ms).replace('&nbsp;', ' ')}; am stärksten DROP beim Tempo mit ${prozent(maxR).replace('&nbsp;', ' ')}. ${gehalten.length ? `Gehalten wird die Regel nur in ${fmt(gehalten.length)} kleinen Reihen mit je drei Aufträgen. ` : ''}Gescheitert ist keine einzige Aktion: ${fmt(fehler)} Fehler bei ${fmt(geplant)}. Die Reihen liefen nacheinander auf einem Rechner, eine Ursache kann ich nicht belegen. Das Netz selbst kostet bei Labels ${fmt(t.transportMedianMs, 1)} Millisekunden, im Median ${fmt(t.anteilMedianProzent, 2)} Prozent der Zeit beim Client; das bestätigt Jonas' Ergebnis für einen zweiten Auftrag.`,
-    stichpunkte: [
-      'p95 je Störreihe gegen den Stopp desselben Auftrags, Regel +10 %',
-      'Summary: Slot belegt, DROP, zu spät reißen die Regel',
-      `[Weiter] Label: schon normal; DROP Tempo ${prozent(maxR).replace('&nbsp;', ' ')}; ${gehalten.map(([, n]) => n).join(', ')} halten (n = 3)`,
-      `${fmt(fehler)} Fehler bei ${fmt(geplant)} Aktionen; seriell, Ursache offen`,
-      `Netz bei Labels ${fmt(t.transportMedianMs, 1)} ms = ${fmt(t.anteilMedianProzent, 2)} % (wie Jonas)`,
-    ],
+    notiz: privat('M3.notiz', { prozent, nl, f1l, maxR, gehalten, fmt, fehler, geplant, t }),
+    stichpunkte: privat('M3.stichpunkte', { prozent, maxR, gehalten, fmt, fehler, geplant, t }),
     zeitS: 60,
     aufbau: 1,
     marke: '1b-alle',
@@ -541,14 +538,8 @@ export function folien1B34(
         `<p data-ab="1" class="merksatz"><b>Schritt 4, Empfehlung (ADR 1B-020):</b> Die Leitplanke bleibt, S1 ist keine Freigabe. Die zweite Rolle ist nur betrieblich zu begründen (getrennte Ressourcen, Wartung, Zuständigkeit), nicht mit Tempo. Kosten: zweites System, Deployment mit Digest und Modellhash, Token-Rotation, Überwachung beider Rollen, bei Schutzbedarf TLS. Folge: Fristen je Host kalibrieren, Ersatzgründe überwachen, Hänger nicht dem Breaker überlassen.</p>` +
         `<p class="beleg">Grenze: Kosten qualitativ, nicht in Stunden; beide VMs auf einem Rechner, also kein unabhängiger Ausfallbereich</p>`,
     ),
-    notiz: `Für Schritt 4 habe ich den App-Stack auf die LLM-VM gelegt, alles auf einem Host, je drei Aufträge unter derselben Last. Gegen zwei Hosts reißen Labels die Regel bei ${s1lUeber.join(' und ')}, Summaries halten alle vier Aktionen; Fehler gab es keine. Ein Tempovorteil für einen der beiden Aufbauten folgt daraus nicht, zumal S1 andere Kapazität hatte. [Weiter] ADR 1B-020 empfiehlt deshalb: Die Leitplanke bleibt, S1 ist keine Freigabe, und die zweite Rolle ist nur betrieblich zu begründen, über getrennte Ressourcen, Wartung und Zuständigkeit. Ob diese Trennung den Aufwand trägt, entscheidet der Betrieb. Die Kosten sind ein zweites System mit eigenem Deployment, Token-Rotation, Überwachung und bei Schutzbedarf TLS; bewertet habe ich sie qualitativ, nicht in Stunden. Daraus folgt: Fristen je Host kalibrieren, Ersatzgründe überwachen und Hänger nicht dem Breaker überlassen.`,
-    stichpunkte: [
-      'S1: App-Stack auf der LLM-VM, je 3 Aufträge, gleiche Last',
-      `Label reißt ${s1lUeber.join(' und ')}, Summary hält alle; ${fmt(s1Fehler)} Fehler`,
-      'Kein Tempovorteil belegt; S1 mit anderer Kapazität',
-      '[Weiter] ADR 1B-020: Leitplanke bleibt; Rolle nur betrieblich begründen',
-      'Kosten qualitativ; Fristen je Host, Ersatzgründe überwachen, Hänger ≠ Breaker',
-    ],
+    notiz: privat('M4.notiz', { s1lUeber }),
+    stichpunkte: privat('M4.stichpunkte', { s1lUeber, fmt, s1Fehler }),
     zeitS: 55,
     aufbau: 1,
     marke: '1b-s1',

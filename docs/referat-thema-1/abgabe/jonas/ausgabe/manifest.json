@@ -137,7 +137,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/bau.mjs",
-      "sha256": "86380ff357953915ca0be2eceb36c837ebb96f302bc8830b85ae45da7fc34407"
+      "sha256": "a0403f761d773c618dca12de1af6b4ce11a81274141cc7941b3328dc726040c5"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/deck-vorlage.html",
@@ -153,7 +153,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/folien.mjs",
-      "sha256": "8653eddb1c67a13eb64e988c64e657ed6179e695252cf63b406ef0db77dd2e4e"
+      "sha256": "3236dc56cca2064c1f46646d9ad17767fa83ef6b5f29e2ebed2a4a2d6f8cd69c"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/grafik.mjs",
@@ -186,6 +186,10 @@
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/niklas-seiten.mjs",
       "sha256": "5f729a5a510688921d68f1551da30ca9d2bd88ea85eb0a7188c8e86ff168e3be"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/jonas/notizen.mjs",
+      "sha256": "d91e0f403c928fe4b19ff428bdb13ddf169b5867ed41d497655c89b7b116b270"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/sprechheft.mjs",
@@ -573,11 +577,11 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/niklas/folien-1a.mjs",
-      "sha256": "33f963ae15343df30182c0ec20eb8ed09598e0fa88856c160e8f4990c7b4bffe"
+      "sha256": "d6cf98c44a0e2fe39e3604714681714cf515697c5d2d10122c2a33afca46ca95"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/niklas/folien-1b34.mjs",
-      "sha256": "255b163d79802a8ea5dec276904b8d69ef8f488d943e9f8026be458ca8edca0d"
+      "sha256": "20457ff102a675c757efcbe3c179241ae0a52b41421b93258e90fd229df1628d"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/niklas/grafik-1a.mjs",
@@ -605,19 +609,19 @@
     {
       "datei": "gemeinsames-deck.pdf",
       "bytes": 1602121,
-      "sha256": "f0dfc25c7c4007c235946ecc152dff2c971609d7bddc949a7610f72dcf816a0b",
+      "sha256": "fd2b71c221c672fa649c8d54db2836addd1087a7adf638ecd2164ba020d48e66",
       "seiten": 53
     },
     {
       "datei": "jonas-folien.pdf",
       "bytes": 1079906,
-      "sha256": "5317d4a279dee2f800518ca0e52a577d3d538a1078a63a2a47e13941aa46f716",
+      "sha256": "10d301ddad1ea83bad6cf6b24ffd01cdba54ae5138052e9efce7f86242de9695",
       "seiten": 32
     },
     {
       "datei": "niklas-folien.pdf",
       "bytes": 531938,
-      "sha256": "4c60d7bf4fcde4f2fe6577c96fd380d4b1ba74fa61467b79f68d16a1318a52fe",
+      "sha256": "5d698deb0db8150ec667799c1a19b1b74c7e8352d6d3c2f11f69eb48052d37f4",
       "seiten": 18
     }
   ]
