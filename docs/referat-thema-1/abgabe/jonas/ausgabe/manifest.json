@@ -129,7 +129,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/fragenkatalog.md",
-      "sha256": "b1c52abde2e07056c75d21275118e71b6d9a022a31053b5e4d7e7ef1f0ecb6ee"
+      "sha256": "cc177278b3a560657a2775c920998a87dba3753a69f107dc6270c35c1f5d6bc1"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/abgabe-lokal.mjs",
@@ -137,19 +137,19 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/bau.mjs",
-      "sha256": "901cb4f4c4002d45d67105e7695957a8a7ea1ede07d3255699e1b5c40cb724ef"
+      "sha256": "0e7f44f9b7a21e2079801f19073d4fb87b924f902f915180cb5241b184fc18df"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/deck-vorlage.html",
-      "sha256": "7c87cbf38417e582047812b6a35ba36ef41e7cef232f7a8af996d71d6d4e35bd"
+      "sha256": "1b07f6c37c98687508b51f6d64297b4aef885db8e3260948989cc8fe081dc87f"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/deck.js",
-      "sha256": "8790cc0af9cf87a7ef0024816b452316e89cbc61127c217c801666e05dac638f"
+      "sha256": "c66f7a3b7b6a9c3d13b5cf3da9f7666b19530c67b130d6bca5d9640d34066bf4"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/deck.mjs",
-      "sha256": "f9264fc4dc5a9ef34994ec8cff3d067fd23ac4788388bb275bcb489c4d342270"
+      "sha256": "389a4a76a2bc927feb7e81a5375102dd7e79b29c7d6f14a38775e3578f6517f5"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/folien.mjs",
@@ -186,6 +186,10 @@
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/niklas-seiten.mjs",
       "sha256": "5f729a5a510688921d68f1551da30ca9d2bd88ea85eb0a7188c8e86ff168e3be"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/jonas/sprechheft.mjs",
+      "sha256": "05bf154b8041c9093853aabd4976586ecb0bd333961ee14833f67c3c5d931221"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/stil.css",
@@ -590,30 +594,242 @@
     {
       "pfad": "docs/referat-thema-1/abgabe/niklas/teile.mjs",
       "sha256": "2d424a0dfea189eb979b45b73c97d4061b2f870d864bcf625250cdc2bdcd0b3c"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/G0.md",
+      "sha256": "430fd240d9835188c7a33b2e1f9445f42fddbeeb04b8b8a031f75faff304d53b"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/G9.md",
+      "sha256": "babf1c080e2e8bbe6e32702a3226cfba15671381e58f8c15d04c68b608a85cde"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/GD.md",
+      "sha256": "b4ea72c123e3537730941b2848af30d1c87a8f86138cb3e7f0fc2108ce6bb47e"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/GK.md",
+      "sha256": "a7fc2238884dfdb40fdfa47bf60ec88d92ebf3f9a3c433bb48957ac7c7729d95"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/GT.md",
+      "sha256": "6d64d6b87b9db9e690eaa78a982407d8593e4827b15a5b53f1cf9d3d8d973fbb"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/J1.md",
+      "sha256": "9375f0a3c4301f345fcd356bcd6e50a940d279592aa13ad649e8477015d625b5"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/J10.md",
+      "sha256": "0db457ed30d15e3cd79f40c444c60226531a893c7fdfa677df467cf69ae8d27c"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/J10a.md",
+      "sha256": "60b256470d060bfde13bbd51dd991656675823b792508062bd92b55003c9dbbf"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/J10b.md",
+      "sha256": "6a049ece2cd2b9b4d98b6b2751662e8e3ef1bba82dfc346cf8488c92568571d1"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/J11.md",
+      "sha256": "9aa550c69b2a2ac59eeea498c8925359e1b6117cf028bdc6f5694304ee84dbcb"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/J12.md",
+      "sha256": "d83a70f1f349c8bd33fb45a4af9a443538d6b48043f91e544694ad5a33799381"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/J13.md",
+      "sha256": "45023d18f55cf551dcb81fbfb96d3425e629ff9f950615ba9fa88b25c36d167f"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/J13b.md",
+      "sha256": "889337c987db2848b85b3198b86efe2f3bf3c00301066f6eb20088f5101451e0"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/J15.md",
+      "sha256": "3940fc2c1fc01deef80001ad874c74af4d4fc352f36117991002496f16ac389f"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/J16.md",
+      "sha256": "edb9933f17dbdcb741f735e6e25ec7de737860b0f467d06abc31648a70a1dcb7"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/J2.md",
+      "sha256": "94ac59760f4ce97e93609bb7931ba9e479cdc3d8516f1fa5ec3b8b593f747481"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/J3.md",
+      "sha256": "d5bc0715605482b98b752ed0f8d5435928d470d9969c8abe549affc636094f03"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/J4.md",
+      "sha256": "44703087aa17206825b4bd3939069e7ade83f4f36e5e332cc121fe67ac669492"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/J5.md",
+      "sha256": "5851df419d7930b07cd38bd681e6ad19df60d496db5593cdb6e90d62188ec0cc"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/J5b.md",
+      "sha256": "1f8903dc2652b5d802f15ac625f3da98d37ed1aed79c1c3e58c18e69f6d305b8"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/J6.md",
+      "sha256": "26162c1caa324e9d3cccbdd73cc8c8d70812b60a770fc918275a66fc45238fe5"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/J7.md",
+      "sha256": "9dfd05ea3fff37e90c02e8f9e5189e1a75b63b1a59dfc7d553af606721886f70"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/J8.md",
+      "sha256": "700fa5720b53946bde878e9f953276babfe035810ea1e318f25a2deb12ba0d96"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/J8b.md",
+      "sha256": "776a739ce7d08888dec1083630e74a5d40d91a745037963de5e9b01aa74021cd"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/J9.md",
+      "sha256": "99472569defa44c21456470abe38a398959e7cd1d727ec1344909de05e6fa73d"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/M1.md",
+      "sha256": "d1a59ff0422e8c17bc4a3eb181f0e417697e6f82902e0c4dd9fd1390025106c7"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/M2.md",
+      "sha256": "f30c54a7c721f6b8d2b04f51abf61ac1dc1a9dcdc799e1a2c93eb9229f66a93c"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/M3.md",
+      "sha256": "b2b5a0ce8d83e789ac70789c4b7714fa22fe34739697eb4cf60f1bf6767e7eed"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/M4.md",
+      "sha256": "e6fee040fd22d92c12cf92fe08e52708d7696a50af5538093a38874c989fd578"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/N1.md",
+      "sha256": "ba8fc7fc6411df9ae8a7de5f564488135012a421504b8a3644e51a2bea9ea2d5"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/N10.md",
+      "sha256": "77efe35f6df93bb7b1ddb5b251bb9e578152ce0ecbf3ccd5b90727c549c6b98a"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/N2.md",
+      "sha256": "5b850b4180ff1888dc7baff99888b629c9718bff21d679508af1705cea20ab74"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/N3.md",
+      "sha256": "61e046f57694670d4d9226b248b6c08cd2a28c28ad83f718988a0196fe3a8d3c"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/N4.md",
+      "sha256": "ff7cde2b25d8ec412ec7ab00ee19f3ecacf69aff7fe140205cbc800ab2eb9edc"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/N5.md",
+      "sha256": "a7789a76d0e214cf9df5596c91ea0c3094603de653750e06a47d0c515e4b72b1"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/N6.md",
+      "sha256": "d45c4b267d89ed4916b1cdadd27fd887fc083210384628491a51559cabe4568e"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/N7.md",
+      "sha256": "18de681f6b57f0ca08e4bec8ced34d9d0db84f8ed6da86aca8a7ccb6ddf4085a"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/N9.md",
+      "sha256": "a09acfaa34a0a1267aade21d8b499996d4e6b0fbbfda4caa075fe51135eab73b"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/NL.md",
+      "sha256": "b86e57855977a0cd8453fff64d54d8390094284506ab629dd3532be8100d5d89"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/R1.md",
+      "sha256": "44ec276212b06d00bca32204967a2d32cd7a24a334012efef8969ef2786d62dc"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/R10.md",
+      "sha256": "aec2a3827969c9d249fd7fa6c1182da392a2cd02c0def3fc40aef5101c486f27"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/R11.md",
+      "sha256": "bc84b7e1a2878d2adcd73548814e19c52332d1f62e4995857045c9f6e6c40731"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/R12.md",
+      "sha256": "5eb709ff7fd3c0aaea95dfcf63bf21142777ca8d57f34ae57d0c79c78167785e"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/R15.md",
+      "sha256": "8bfc9040cc3abae324b686b838a3e99f226ace6e8b8e183341136c70729c4b38"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/R16.md",
+      "sha256": "0aeea2978bf94077f41d953d27a1f443cc249267e63b37d95253374d3c75079f"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/R17.md",
+      "sha256": "19fe99a601826ecb8da994384eb3d7dd52d6f6cac44dc1650ab1dbb15a967f12"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/R5.md",
+      "sha256": "983d1bb70fdc101d8326a2ffbcf4525533ec50ebdeefe52848a2ab6d8ccc18a0"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/R6.md",
+      "sha256": "885cff199ca4e2ffa96bbd231367fa500c43365244307e0b53f87e5af655e7fa"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/R7.md",
+      "sha256": "b8acb9a247d2519b1e046c19697e4b124175bd3e84ecc95cc44ff416f04d67a9"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/R9.md",
+      "sha256": "5dd7d9a23297ea2edbeaac9452a4431caf9e787f3e5dcb09e9dc5193de411611"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/RN1.md",
+      "sha256": "3525ecd24768d2fa4cd610ce7505b3633e29e343debf62a418f89617ed44459c"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/RN2.md",
+      "sha256": "36c4d70c07a3cee77fff4a5229c72035daf1879fd0f1100619caa05aa270365f"
+    },
+    {
+      "pfad": "docs/referat-thema-1/abgabe/sprechheft/RN4.md",
+      "sha256": "b833973fc6502456c4094048411c7a13ed5cf4e6264e218b904f6aea63451e4e"
     }
   ],
   "ausgaben": [
     {
       "datei": "jonas-deck.html",
-      "bytes": 2142819,
-      "sha256": "277d515cc26f38a3831e6cc02566d6b722d06283d1ecf2cf28c38c0b7cded0a6"
+      "bytes": 2657711,
+      "sha256": "59d64ef670df91b4c759b89e32b9a35b9e25fa20b49fe4e6e19da292a0234bc0"
     },
     {
       "datei": "gemeinsames-deck.pdf",
       "bytes": 1602121,
-      "sha256": "669dc3b85a4dbe9e8e9cb7ab8bef9f90bb1fda88138b267f4e302f867bdc210d",
+      "sha256": "6451886191ce1228e2583c53e96bfee9ffcda79f52acb94bfaefa177eebe7a64",
       "seiten": 53
     },
     {
       "datei": "jonas-folien.pdf",
       "bytes": 1079906,
-      "sha256": "d0c981daec2abf2640c382980966fed595c83d908eb011d25e8d9bb8c4e1aa82",
+      "sha256": "c4d3a5b077507ce5a86afc9052184fae43e75307772206d574ff6f528d59327e",
       "seiten": 32
     },
     {
       "datei": "niklas-folien.pdf",
       "bytes": 531938,
-      "sha256": "d7ae22488d4cb066b93d8da737747421a5b8e7edc5bad8ace40f3fa1e3bbb7f3",
+      "sha256": "4feb360455f62ff86aa60e61e32c6cc410a8f2e8c99fa26ea35e2502ae969c1c",
       "seiten": 18
     },
     {
@@ -629,14 +845,24 @@
     {
       "datei": "sprechkarten-jonas.pdf",
       "bytes": 76263,
-      "sha256": "2a8343c665287fa5adb0be30b71ec3d05c82ece742506c938f143dc6804c94b2",
+      "sha256": "30ac84c29aabc6ec5b56823f10be563720ba9c8e10bff3effe40f47a5010dd7b",
       "seiten": 5
     },
     {
       "datei": "sprechkarten-niklas.pdf",
       "bytes": 72047,
-      "sha256": "c7ba44e0e386da962efe87da78558c93ca81627871994f3d80706f41d8a1bc0c",
+      "sha256": "51594421e58b7c58b228553eda81cf74acceee8fd6438ba1e904dac07b101f6d",
       "seiten": 4
+    },
+    {
+      "datei": "sprechheft-jonas.html",
+      "bytes": 422857,
+      "sha256": "37e6ed275ee721cc23909df474f75fea3808dbb293683408e5bda38ff9c074f6"
+    },
+    {
+      "datei": "sprechheft-niklas.html",
+      "bytes": 363163,
+      "sha256": "8237cc66e3331cf4713bf225230fceecbbcfbbda9794bb39a662dab98683418f"
     }
   ]
 }
