@@ -405,9 +405,32 @@
         border-bottom-color: var(--blau);
       }
 
-      /* Rahmenfolien (GT Titel, G0 Fahrplan, GD Dank): gleiche Ränder und Titelzeile wie alle Folien. */
+      /* Rahmenfolien (GT Titel, G0 Fahrplan, GD Dank): gleiche Ränder wie alle Folien. Titel- und Dankfolie
+   tragen den großen Titel (96 px, Entwurf A der Durchsicht 2026-11-18). */
       .folie[data-id='GT'] .flaeche-inhalt::before {
         flex-grow: 1;
+      }
+      .titel-oberzeile {
+        flex: none;
+        margin: 0 0 10px;
+        color: var(--gedaempft);
+        font-size: 28px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .folie[data-titelfolie] .folie-titel,
+      .folie[data-id='GD'] .folie-titel {
+        max-width: 1100px;
+        font-size: 96px;
+        font-weight: 800;
+        line-height: 1.02;
+        letter-spacing: -0.02em;
+      }
+      /* 1B mit Schritten als ein Chip: die Schritte stehen kleiner im selben Etikett. */
+      .etikett-schritte {
+        font-size: 0.86em;
+        font-weight: 600;
       }
       .titel-unter {
         margin: 0;
@@ -546,6 +569,12 @@
         text-decoration-thickness: 2px;
         text-underline-offset: 4px;
       }
+      .dank-fork {
+        margin: 20px 0 0;
+        color: var(--text-2);
+        font-size: var(--s-sek);
+        line-height: 1.35;
+      }
       .dank-namen {
         margin: 28px 0 0;
         color: var(--gedaempft);
@@ -661,7 +690,54 @@
       .nw-plus {
         color: var(--gedaempft);
       }
-      /* R17: Nachweisumfang im Einzelnen, drei Spalten */
+      /* GN: Kennzahlen und Balken oben, darunter gerafft Tests je Werkzeug und Hypothesen je Auftrag */
+      .folie[data-id='GN'] .dank-nachweis {
+        margin: 0;
+        padding: 0;
+        border-top: 0;
+      }
+      .nw-gerafft {
+        display: grid;
+        grid-template-columns: 640px minmax(0, 1fr);
+        column-gap: 56px;
+        margin: 26px 0 0;
+        padding: 18px 0 0;
+        border-top: 1px solid var(--linie);
+      }
+      .nw-kacheln .nw-kopf {
+        margin: 0 0 10px;
+        color: var(--tinte);
+        font-size: var(--s-sek);
+        font-weight: 700;
+      }
+      .nw-kacheln dl {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px 28px;
+        margin: 0;
+      }
+      .nw-kacheln:last-child dl {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+      .nw-kacheln dl > div {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 4px 0;
+        border-bottom: 1px solid var(--raster);
+        font-size: var(--s-min);
+      }
+      .nw-kacheln dt {
+        color: var(--text-2);
+        white-space: nowrap;
+      }
+      .nw-kacheln dd {
+        margin: 0;
+        color: var(--tinte);
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      /* R17 (bis 2026-11-18): Nachweisumfang im Einzelnen, drei Spalten */
       .nw-reserve {
         display: grid;
         grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr) minmax(0, 1fr);
@@ -994,14 +1070,19 @@
         .live {
           display: none !important;
         }
-        /* Einzel-PDFs: eigene Folien und Reserve; die Titelfolie (beide Namen) steht in jedem. */
+        /* Einzel-PDFs: eigene Folien und Reserve; die Titelfolie (beide Namen) und das gemeinsame
+           Literaturverzeichnis stehen in jedem. */
         html[data-druck='jonas']
-          .folie:not([data-teil='jonas']):not([data-teil='reserve']):not([data-titelfolie]),
+          .folie:not([data-teil='jonas']):not([data-teil='reserve']):not([data-titelfolie]):not(
+            [data-gemeinsam]
+          ),
         html[data-druck='jonas'] .folie[data-autor='niklas'] {
           display: none !important;
         }
         html[data-druck='niklas']
-          .folie:not([data-teil='niklas']):not([data-autor='niklas']):not([data-titelfolie]) {
+          .folie:not([data-teil='niklas']):not([data-autor='niklas']):not([data-titelfolie]):not(
+            [data-gemeinsam]
+          ) {
           display: none !important;
         }
       }
@@ -1014,9 +1095,10 @@
         data-id="GT"
         data-teil="rahmen"
         data-titelfolie
-        aria-label="1 von 39: Thema 1: KI-Inferenz im Moderationskompass"
+        aria-label="1 von 40: KI-Inferenz im Moderationskompass"
       >
-        <h1 class="folie-titel">Thema 1: KI-Inferenz im Moderationskompass</h1>
+        <p class="titel-oberzeile">Thema 1 · Cloud Computing</p>
+        <h1 class="folie-titel">KI-Inferenz im Moderationskompass</h1>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
             <p class="titel-unter">
@@ -1027,8 +1109,9 @@
                 <p class="titel-name">Niklas Schneider</p>
                 <p class="titel-auftraege">
                   <span class="etikett etikett-1a">1A</span>
-                  <span class="etikett etikett-1b">1B</span>
-                  <span class="zusatz">Schritte 3–4</span>
+                  <span class="etikett etikett-1b"
+                    >1B <span class="etikett-schritte">Schritte 3–4</span></span
+                  >
                 </p>
                 <p class="matrikel" data-matrikel="Niklas Schneider">
                   Matrikelnummer in der Abgabefassung
@@ -1038,8 +1121,9 @@
                 <p class="titel-name">Jonas Weirauch</p>
                 <p class="titel-auftraege">
                   <span class="etikett etikett-1c">1C</span>
-                  <span class="etikett etikett-1b">1B</span>
-                  <span class="zusatz">Schritte 1–2</span>
+                  <span class="etikett etikett-1b"
+                    >1B <span class="etikett-schritte">Schritte 1–2</span></span
+                  >
                 </p>
                 <p class="matrikel" data-matrikel="Jonas Weirauch">
                   Matrikelnummer in der Abgabefassung
@@ -1071,14 +1155,14 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">1 / 39</span> · Quelle: arsnova.eu-Projektteam, 2026b, Abschn. 4.3
+          <span class="fuss-nr">1 / 40</span> · Quelle: arsnova.eu-Projektteam, 2026b, Kap. 4.3
         </div>
       </section>
       <section
         class="folie"
         data-id="G0"
         data-teil="rahmen"
-        aria-label="2 von 39: Eine Leitfrage, vier Teile"
+        aria-label="2 von 40: Eine Leitfrage, vier Teile"
       >
         <h1 class="folie-titel">Eine Leitfrage, vier Teile</h1>
         <div class="folie-flaeche">
@@ -1103,8 +1187,9 @@
                 <p class="fahrplan-wer"><span class="mono">2</span> Jonas</p>
                 <p class="fahrplan-etiketten">
                   <span class="etikett etikett-1c">1C</span>
-                  <span class="etikett etikett-1b">1B</span>
-                  <span class="zusatz">Schritte 1–2</span>
+                  <span class="etikett etikett-1b"
+                    >1B <span class="etikett-schritte">Schritte 1–2</span></span
+                  >
                 </p>
                 <p class="fahrplan-was">Ein Auftrag über zwei Hosts: Kontextpfad und Zeit</p>
               </li>
@@ -1112,22 +1197,27 @@
                 <div class="fahrplan-linie"><span style="background: var(--bernstein)"></span></div>
                 <p class="fahrplan-wer"><span class="mono">3</span> Niklas</p>
                 <p class="fahrplan-etiketten">
-                  <span class="etikett etikett-1b">1B</span>
-                  <span class="zusatz">Schritte 3–4</span>
+                  <span class="etikett etikett-1b"
+                    >1B <span class="etikett-schritte">Schritte 3–4</span></span
+                  >
                 </p>
                 <p class="fahrplan-was">Zweiter Host gestört: Ersatz und Aufwand</p>
               </li>
               <li>
                 <div class="fahrplan-linie"><span style="background: var(--text-2)"></span></div>
                 <p class="fahrplan-wer"><span class="mono">4</span> Gemeinsam</p>
-                <p class="fahrplan-etiketten"><span class="zusatz">alle Aufträge</span></p>
-                <p class="fahrplan-was">Antwort auf die Leitfrage</p>
+                <p class="fahrplan-etiketten">
+                  <span class="etikett etikett-1a">1A</span>
+                  <span class="etikett etikett-1b">1B</span>
+                  <span class="etikett etikett-1c">1C</span>
+                </p>
+                <p class="fahrplan-was">Fazit: Antwort auf die Leitfrage</p>
               </li>
             </ol>
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">2 / 39</span> · Quelle: arsnova.eu-Projektteam, 2026b, Abschn. 4.3
+          <span class="fuss-nr">2 / 40</span> · Quelle: arsnova.eu-Projektteam, 2026b, Kap. 4.3
         </div>
       </section>
       <section
@@ -1135,24 +1225,23 @@
         data-id="GK"
         data-teil="rahmen"
         data-aufbau="3"
-        aria-label="3 von 39: Live-App für den Hörsaal, KI nur als Zusatz"
+        aria-label="3 von 40: arsnova.eu im Überblick"
       >
-        <h1 class="folie-titel">Live-App für den Hörsaal, KI nur als Zusatz</h1>
+        <h1 class="folie-titel">arsnova.eu im Überblick</h1>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
             <p class="sekundaer" style="margin: 0 0 var(--abstand-eng); color: var(--tinte)">
-              arsnova.eu: Open-Source-App (MIT) für Live-Interaktion in der Lehre, ohne
-              Pflichtkonten. Lehrende sehen im Moderationskompass Hinweiskarten aus den
-              Live-Signalen.
+              Open-Source-Live-App (MIT) für den Hörsaal mit Live-Interaktion in der Lehre, ohne
+              Pflichtkonten, KI nur als Zusatz.
             </p>
             <div class="grafik-box">
-              <!-- prettier-ignore --><svg viewBox="0 0 1380 470" role="img" aria-label="Systembild: Hörsaal mit mindestens 500 gleichzeitigen Clients, App-Host mit Live-App, Moderationskompass, spaCy-Sidecar (1A) und Kontextpfad (1C), über ein privates Netz der zweite Host mit der Inferenz (1B)."><rect width="1380" height="470" fill="#ffffff"/><rect x="0" y="90" width="240" height="260" rx="10" fill="#e8edf3" stroke="#c9d2de" stroke-width="2"/><text x="20" y="136" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="28" font-weight="700" fill="#16202c">Hörsaal</text><text x="20" y="186" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="30" font-weight="600" fill="#16202c">≥ 500</text><text x="20" y="218" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">Clients zugleich,</text><text x="20" y="248" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">auch hinter einem</text><text x="20" y="278" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">gemeinsamen NAT</text><text x="20" y="326" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="600" fill="#16202c">Lehrperson</text><rect x="300" y="0" width="690" height="440" rx="14" fill="#ffffff" stroke="#c9d2de" stroke-width="2"/><line x1="240" y1="116" x2="318" y2="116" stroke="#3d4757" stroke-width="3"/><path d="M330,116 l-14,-8 v16 z" fill="#3d4757"/><line x1="240" y1="264" x2="318" y2="264" stroke="#3d4757" stroke-width="3"/><path d="M330,264 l-14,-8 v16 z" fill="#3d4757"/><text x="324" y="42" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="28" font-weight="700" fill="#16202c">App-Host</text><text x="966" y="42" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#566173" text-anchor="end">Live-Pfad wartet nie auf Analyse</text><rect x="330" y="64" width="630" height="104" rx="10" fill="#ffffff" stroke="#c9d2de" stroke-width="2"/><text x="350" y="102" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">Live-App</text><text x="350" y="134" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">Quiz, Q&amp;A, Blitzlicht · Backend, PostgreSQL, Redis</text><rect x="330" y="186" width="630" height="96" rx="10" fill="#ffffff" stroke="#c9d2de" stroke-width="2"/><text x="350" y="224" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">Moderationskompass</text><text x="350" y="256" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">Hinweiskarten für die Lehrperson, regelbasiert</text><rect x="330" y="300" width="300" height="116" rx="10" fill="#ffffff" stroke="#c9d2de" stroke-width="2"/><text x="350" y="338" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">spaCy-Sidecar</text><text x="350" y="370" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">glättet die Wortwolke</text><text x="350" y="398" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">optional, mit Ersatz</text><rect x="660" y="300" width="300" height="116" rx="10" fill="#ffffff" stroke="#c9d2de" stroke-width="2"/><text x="680" y="338" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">Kontextpfad</text><text x="680" y="370" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">baut den Q&amp;A-Kontext</text><text x="680" y="398" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">für die Zusammenfassung</text><rect x="1080" y="230" width="300" height="210" rx="14" fill="#ffffff" stroke="#c9d2de" stroke-width="2"/><text x="1104" y="272" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="28" font-weight="700" fill="#16202c">Zweiter Host</text><rect x="1104" y="290" width="252" height="126" rx="10" fill="#ffffff" stroke="#c9d2de" stroke-width="2"/><text x="1124" y="328" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">Inferenz</text><text x="1124" y="360" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">llama-server, privat</text><text x="1124" y="388" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">Modell auf der CPU</text><line x1="960" y1="358" x2="1104" y2="358" stroke="#566173" stroke-width="3"/><text x="1000" y="216" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#566173">privates Netz, Token</text><g data-ab="1" data-teil-system="1a"><rect x="324" y="294" width="312" height="128" rx="14" fill="none" stroke="#0b5ea8" stroke-width="6"/><rect x="570" y="312" width="48" height="32" rx="6" fill="#e8edf3"/><text x="594" y="336" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#0b5ea8" text-anchor="middle">1A</text></g><g data-ab="2" data-teil-system="jonas"><rect x="654" y="294" width="312" height="128" rx="14" fill="none" stroke="#0f766e" stroke-width="6"/><rect x="900" y="312" width="48" height="32" rx="6" fill="#e3f1ee"/><text x="924" y="336" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#0f766e" text-anchor="middle">1C</text><line x1="960" y1="358" x2="1104" y2="358" stroke="#b45309" stroke-width="6"/><rect x="1098" y="284" width="264" height="138" rx="14" fill="none" stroke="#b45309" stroke-width="6"/><rect x="1236" y="302" width="108" height="32" rx="6" fill="#fbefe0"/><text x="1290" y="326" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#9a4a0b" text-anchor="middle">1B 1–2</text></g><g data-ab="3" data-teil-system="1b34"><rect x="1083" y="233" width="294" height="204" rx="12" fill="none" stroke="#b45309" stroke-width="6" stroke-dasharray="14 10"/><rect x="1256" y="214" width="108" height="32" rx="6" fill="#fbefe0"/><text x="1310" y="238" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#9a4a0b" text-anchor="middle">1B 3–4</text><text x="1080" y="466" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="600" fill="#9a4a0b">gestoppt, stumm, zu spät</text></g></svg>
+              <!-- prettier-ignore --><svg viewBox="0 0 1380 470" role="img" aria-label="Systembild: Hörsaal mit Lehrperson und mindestens 500 gleichzeitigen Clients zur Live-App, Lehrperson zum Moderationskompass, App-Host mit Live-App, Moderationskompass, spaCy-Sidecar (1A) und Kontextpfad (1C), über ein privates Netz der zweite Host mit der Inferenz (1B)."><rect width="1380" height="470" fill="#ffffff"/><g data-kasten="hoersaal"><rect x="0" y="0" width="240" height="206" rx="10" fill="#e8edf3" stroke="#c9d2de" stroke-width="2"/><text x="20" y="40" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="28" font-weight="700" fill="#16202c">Hörsaal</text><text x="20" y="68" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="600" fill="#3d4757">(+Lehrperson)</text><text x="20" y="112" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="30" font-weight="600" fill="#16202c">≥ 500</text><text x="20" y="140" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">Clients zugleich,</text><text x="20" y="166" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">auch hinter einem</text><text x="20" y="192" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">gemeinsamen NAT</text></g><g data-kasten="lehrperson"><rect x="0" y="218" width="240" height="82" rx="10" fill="#e8edf3" stroke="#c9d2de" stroke-width="2"/><text x="20" y="268" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="28" font-weight="700" fill="#16202c">Lehrperson</text></g><rect x="300" y="0" width="690" height="440" rx="14" fill="#ffffff" stroke="#c9d2de" stroke-width="2"/><g data-pfeil="hoersaal-live" data-y="116"><line x1="240" y1="116" x2="318" y2="116" stroke="#3d4757" stroke-width="3"/><path d="M330,116 l-14,-8 v16 z" fill="#3d4757"/></g><g data-pfeil="lehrperson-kompass" data-y="259"><line x1="240" y1="259" x2="318" y2="259" stroke="#3d4757" stroke-width="3"/><path d="M330,259 l-14,-8 v16 z" fill="#3d4757"/></g><text x="324" y="42" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="28" font-weight="700" fill="#16202c">App-Host</text><text x="966" y="42" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#566173" text-anchor="end">Live-Pfad wartet nie auf Analyse</text><rect x="330" y="64" width="630" height="104" rx="10" fill="#ffffff" stroke="#c9d2de" stroke-width="2"/><text x="350" y="102" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">Live-App</text><text x="350" y="134" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">Quiz, Q&amp;A, Blitzlicht · Backend, PostgreSQL, Redis</text><rect x="330" y="186" width="630" height="96" rx="10" fill="#ffffff" stroke="#c9d2de" stroke-width="2"/><text x="350" y="224" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">Moderationskompass</text><text x="350" y="256" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">Hinweiskarten für die Lehrperson, regelbasiert</text><rect x="330" y="300" width="300" height="116" rx="10" fill="#ffffff" stroke="#c9d2de" stroke-width="2"/><text x="350" y="338" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">spaCy-Sidecar</text><text x="350" y="370" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">glättet die Wortwolke</text><text x="350" y="398" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">optional, mit Ersatz</text><rect x="660" y="300" width="300" height="116" rx="10" fill="#ffffff" stroke="#c9d2de" stroke-width="2"/><text x="680" y="338" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">Kontextpfad</text><text x="680" y="370" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">baut den Q&amp;A-Kontext</text><text x="680" y="398" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">für die Zusammenfassung</text><rect x="1080" y="230" width="300" height="210" rx="14" fill="#ffffff" stroke="#c9d2de" stroke-width="2"/><text x="1104" y="272" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="28" font-weight="700" fill="#16202c">Zweiter Host</text><rect x="1104" y="290" width="252" height="126" rx="10" fill="#ffffff" stroke="#c9d2de" stroke-width="2"/><text x="1124" y="328" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">Inferenz</text><text x="1124" y="360" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">llama-server, privat</text><text x="1124" y="388" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">Modell auf der CPU</text><line x1="960" y1="358" x2="1104" y2="358" stroke="#566173" stroke-width="3"/><text x="1000" y="216" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#566173">privates Netz, Token</text><g data-ab="1" data-teil-system="1a"><rect x="324" y="294" width="312" height="128" rx="14" fill="none" stroke="#0b5ea8" stroke-width="6"/><rect x="570" y="312" width="48" height="32" rx="6" fill="#e8edf3"/><text x="594" y="336" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#0b5ea8" text-anchor="middle">1A</text></g><g data-ab="2" data-teil-system="jonas"><rect x="654" y="294" width="312" height="128" rx="14" fill="none" stroke="#0f766e" stroke-width="6"/><rect x="900" y="312" width="48" height="32" rx="6" fill="#e3f1ee"/><text x="924" y="336" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#0f766e" text-anchor="middle">1C</text><line x1="960" y1="358" x2="1104" y2="358" stroke="#b45309" stroke-width="6"/><rect x="1098" y="284" width="264" height="138" rx="14" fill="none" stroke="#b45309" stroke-width="6"/><rect x="1236" y="302" width="108" height="32" rx="6" fill="#fbefe0"/><text x="1290" y="326" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#9a4a0b" text-anchor="middle">1B 1–2</text></g><g data-ab="3" data-teil-system="1b34"><rect x="1083" y="233" width="294" height="204" rx="12" fill="none" stroke="#b45309" stroke-width="6" stroke-dasharray="14 10"/><rect x="1256" y="214" width="108" height="32" rx="6" fill="#fbefe0"/><text x="1310" y="238" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#9a4a0b" text-anchor="middle">1B 3–4</text><text x="1080" y="466" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="600" fill="#9a4a0b">gestoppt, stumm, zu spät</text></g></svg>
             </div>
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">3 / 39</span> · Quelle: arsnova.eu-Projektteam, 2026b, Abschn.
-          4.1.1; arsnova.eu-Projektteam, 2026a, Abschn. 2.1
+          <span class="fuss-nr">3 / 40</span> · Quelle: arsnova.eu-Projektteam, 2026a, Kap. 2.1;
+          arsnova.eu-Projektteam, 2026b, Kap. 4.1.1
         </div>
       </section>
       <section
@@ -1160,7 +1249,7 @@
         data-id="N1"
         data-teil="niklas"
         data-hauptfolie
-        aria-label="4 von 39: Keine Freigabe für die spaCy-Glättung"
+        aria-label="4 von 40: Keine Freigabe für die spaCy-Glättung"
       >
         <div
           class="weg-mini weg-marke"
@@ -1305,7 +1394,7 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">4 / 39</span> · Quelle: arsnova.eu-Projektteam, 2026b, Abschn. 4.3;
+          <span class="fuss-nr">4 / 40</span> · Quelle: arsnova.eu-Projektteam, 2026b, Kap. 4.3;
           Schneider, 2026, Reihe 1A
         </div>
       </section>
@@ -1314,7 +1403,7 @@
         data-id="N2"
         data-teil="niklas"
         data-hauptfolie
-        aria-label="5 von 39: Fünf Dienste teilen sich den App-Host"
+        aria-label="5 von 40: Fünf Dienste teilen sich den App-Host"
       >
         <div
           class="weg-mini weg-marke"
@@ -1537,8 +1626,8 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">5 / 39</span> · Quelle: Schneider, 2026, Laufmanifeste; Heo, 2024,
-          Abschn. „CPU Interface Files“; arsnova.eu-Projektteam, 2026a, Abschn. 2.1
+          <span class="fuss-nr">5 / 40</span> · Quelle: arsnova.eu-Projektteam, 2026a, Kap. 2.1;
+          Heo, 2024, Abschnitt CPU Interface Files; Schneider, 2026, Laufmanifeste
         </div>
       </section>
       <section
@@ -1546,7 +1635,7 @@
         data-id="N3"
         data-teil="niklas"
         data-hauptfolie
-        aria-label="6 von 39: Fünf Varianten, je Block gemischt"
+        aria-label="6 von 40: Fünf Varianten, je Block gemischt"
       >
         <div
           class="weg-mini weg-marke"
@@ -1723,8 +1812,8 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">6 / 39</span> · Quelle: Schneider, 2026, 1A-Versuchsvertrag;
-          Papadopoulos et al., 2021, Kap. 2.3
+          <span class="fuss-nr">6 / 40</span> · Quelle: Papadopoulos et al., 2021, Kap. 2.3;
+          Schneider, 2026, 1A-Versuchsvertrag
         </div>
       </section>
       <section
@@ -1732,7 +1821,7 @@
         data-id="N4"
         data-teil="niklas"
         data-hauptfolie
-        aria-label="7 von 39: Die Regel stand eine Woche vorher fest"
+        aria-label="7 von 40: Die Regel stand eine Woche vorher fest"
       >
         <div
           class="weg-mini weg-marke"
@@ -1834,7 +1923,7 @@
         </p>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
-            <p style="margin: 0 0 22px; font-size: 24px; line-height: 1.35; color: var(--text-2)">
+            <p style="margin: 0 0 14px; font-size: 24px; line-height: 1.35; color: var(--text-2)">
               <b style="color: var(--tinte)">Fünf Varianten, je Block gemischt:</b> V0 ohne Analyse
               · V1 lexikalisch (Basis) · V2 spaCy 1&nbsp;CPU · V3 0,25&nbsp;CPU · V4 Proxy
               +6&nbsp;s, Timeout 5&nbsp;s
@@ -1843,15 +1932,23 @@
               style="
                 font-size: 30px;
                 line-height: 1.35;
-                padding: 18px 26px;
+                padding: 14px 26px;
                 border-left: 6px solid var(--blau);
                 background: var(--raster);
-                margin: 0 0 30px;
+                margin: 0 0 20px;
               "
             >
               Je Aktion und Block steigt der p95 gegenüber V1 um höchstens <b>10 %</b>
               <b>und</b> höchstens <b>50 ms</b>. Alle fünf Blöcke müssen bestehen; kein Ausreißer
               wird entfernt.
+              <p style="margin: 12px 0 0; font-size: 24px; line-height: 1.35; color: var(--text-2)">
+                <b style="color: var(--tinte)">H1:</b> Normales spaCy (V2) hält gegenüber V1 die
+                p95- und Fehlergrenzen für Live-Aktionen ein.
+              </p>
+              <p style="margin: 4px 0 0; font-size: 24px; line-height: 1.35; color: var(--text-2)">
+                <b style="color: var(--tinte)">H2:</b> Auch unter CPU-Drosselung (V3) und bei
+                verzögerten Antworten (V4).
+              </p>
             </div>
             <div style="display: grid; grid-template-columns: repeat(4, 1fr); column-gap: 24px">
               <div style="border-top: 6px solid var(--blau); padding-top: 12px">
@@ -1909,8 +2006,8 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">7 / 39</span> · Quelle: Schneider, 2026, 1A-Versuchsvertrag; Nosek
-          et al., 2018, S. 2600; Papadopoulos et al., 2021, Kap. 2.3
+          <span class="fuss-nr">7 / 40</span> · Quelle: Nosek et al., 2018, S. 2600; Papadopoulos et
+          al., 2021, Kap. 2.3; Schneider, 2026, 1A-Versuchsvertrag
         </div>
       </section>
       <section
@@ -1918,7 +2015,7 @@
         data-id="N5"
         data-teil="niklas"
         data-hauptfolie
-        aria-label="8 von 39: Alle 40.000 Live-Aktionen kamen an"
+        aria-label="8 von 40: Alle 40.000 Live-Aktionen kamen an"
       >
         <div
           class="weg-mini weg-marke"
@@ -2018,8 +2115,8 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">8 / 39</span> · Quelle: Schneider, 2026, auswertung.json;
-          Papadopoulos et al., 2021, Kap. 2.3
+          <span class="fuss-nr">8 / 40</span> · Quelle: Papadopoulos et al., 2021, Kap. 2.3;
+          Schneider, 2026, auswertung.json
         </div>
       </section>
       <section
@@ -2028,7 +2125,7 @@
         data-teil="niklas"
         data-hauptfolie
         data-aufbau="3"
-        aria-label="9 von 39: Deutlich verletzt wird die Regel nur einmal"
+        aria-label="9 von 40: Deutlich verletzt wird die Regel nur einmal"
       >
         <div
           class="weg-mini weg-marke"
@@ -2136,7 +2233,7 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">9 / 39</span> · Quelle: Schneider, 2026, live-vergleiche.csv
+          <span class="fuss-nr">9 / 40</span> · Quelle: Schneider, 2026, live-vergleiche.csv
         </div>
       </section>
       <section
@@ -2145,7 +2242,7 @@
         data-teil="niklas"
         data-hauptfolie
         data-aufbau="2"
-        aria-label="10 von 39: Der Ausreißer dauerte rund zehn Sekunden"
+        aria-label="10 von 40: Der Ausreißer dauerte rund zehn Sekunden"
       >
         <div
           class="weg-mini weg-marke"
@@ -2247,8 +2344,8 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">10 / 39</span> · Quelle: Schneider, 2026, V3/block-05; Nosek et al.,
-          2018, S. 2600
+          <span class="fuss-nr">10 / 40</span> · Quelle: Nosek et al., 2018, S. 2600; Schneider,
+          2026, V3/block-05
         </div>
       </section>
       <section
@@ -2257,7 +2354,7 @@
         data-teil="niklas"
         data-hauptfolie
         data-aufbau="2"
-        aria-label="11 von 39: Nach 5 s liefert die App den Ersatz"
+        aria-label="11 von 40: Nach 5 s liefert die App den Ersatz"
       >
         <div
           class="weg-mini weg-marke"
@@ -2347,8 +2444,8 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">11 / 39</span> · Quelle: Schneider, 2026, auswertung.json; Ulrich,
-          2016, Abschn. „Test Noncritical Backends“
+          <span class="fuss-nr">11 / 40</span> · Quelle: Schneider, 2026, auswertung.json; Ulrich,
+          2016, Abschnitt Test Noncritical Backends
         </div>
       </section>
       <section
@@ -2357,7 +2454,7 @@
         data-teil="niklas"
         data-hauptfolie
         data-aufbau="2"
-        aria-label="12 von 39: Entscheidung: lexikalische Wortwolke bleibt"
+        aria-label="12 von 40: Entscheidung: lexikalische Wortwolke bleibt"
       >
         <div
           class="weg-mini weg-marke"
@@ -2500,8 +2597,8 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">12 / 39</span> · Quelle: Schneider, 2026, 1A-auswertung.md; Dean
-          &amp; Barroso, 2013, S. 76; Weirauch, 2026, 1B-ergebnis.md
+          <span class="fuss-nr">12 / 40</span> · Quelle: Dean &amp; Barroso, 2013, S. 76; Schneider,
+          2026, 1A-auswertung.md; Weirauch, 2026, 1B-ergebnis.md
         </div>
       </section>
       <section
@@ -2509,7 +2606,7 @@
         data-id="J1"
         data-teil="jonas"
         data-hauptfolie
-        aria-label="13 von 39: Ein Klick. 152 Sekunden. Keine Modellantwort."
+        aria-label="13 von 40: Ein Klick. 152 Sekunden. Keine Modellantwort."
       >
         <div
           class="weg-mini weg-marke"
@@ -2624,8 +2721,9 @@
                 </p>
               </div>
               <div style="border-left: 6px solid var(--bernstein); padding-left: 24px">
-                <span class="etikett etikett-1b">1B</span>
-                <span style="font-size: var(--s-min); color: var(--gedaempft)">Schritte 1–2</span>
+                <span class="etikett etikett-1b"
+                  >1B <span class="etikett-schritte">Schritte 1–2</span></span
+                >
                 <p style="margin: 14px 0 0">
                   Wo steckt die Zeit, wenn die Inferenz auf einem zweiten Host läuft?
                 </p>
@@ -2638,7 +2736,7 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">13 / 39</span> · Quelle: arsnova.eu-Projektteam, 2026b, Abschn. 4.3;
+          <span class="fuss-nr">13 / 40</span> · Quelle: arsnova.eu-Projektteam, 2026b, Kap. 4.3;
           Weirauch, 2026, Ordner evidenz/1B, ADR 1B-011
         </div>
       </section>
@@ -2647,7 +2745,7 @@
         data-id="J2"
         data-teil="jonas"
         data-hauptfolie
-        aria-label="14 von 39: Zwei Hosts nachgebaut, Produktionscode unverändert"
+        aria-label="14 von 40: Zwei Hosts nachgebaut, Produktionscode unverändert"
       >
         <div
           class="weg-mini weg-marke"
@@ -2741,43 +2839,183 @@
                 flex: 1 1 auto;
                 min-height: 0;
                 display: grid;
-                grid-template-columns: 820px 1fr;
-                column-gap: 60px;
+                grid-template-columns: 1010px 1fr;
+                column-gap: 48px;
               "
             >
               <div style="display: flex; flex-direction: column">
-                <p style="margin: 0 0 22px; font-size: 28px; line-height: 1.38">
+                <p style="margin: 0 0 18px; font-size: 28px; line-height: 1.38">
                   Aufbau von null mit
                   <span class="mono"><span class="nowrap">labor.sh</span> up</span>, Prüfungen grün;
                   privates Netz, Firewall, Token; Speicherlimits wie ab Werk v1.4.0, Modell per
                   SHA-256 gepinnt
                 </p>
-                <div
+                <table data-konfig style="border-collapse: collapse; font-size: 24px; width: 100%">
+                  <tr>
+                    <th></th>
+                    <th
+                      style="
+                        padding: 0 0 8px 18px;
+                        font-weight: 600;
+                        font-size: 20px;
+                        line-height: 1.2;
+                        color: var(--gedaempft);
+                        text-align: right;
+                        vertical-align: bottom;
+                      "
+                    >
+                      Release 1.3<br />(Tag v1.3.0)
+                    </th>
+                    <th
+                      style="
+                        padding: 0 0 8px 18px;
+                        font-weight: 600;
+                        font-size: 20px;
+                        line-height: 1.2;
+                        color: var(--gedaempft);
+                        text-align: right;
+                        vertical-align: bottom;
+                      "
+                    >
+                      v1.4.0 ab Werk<br />(gemessener Code)
+                    </th>
+                    <th
+                      style="
+                        padding: 0 0 8px 18px;
+                        font-weight: 600;
+                        font-size: 20px;
+                        line-height: 1.2;
+                        color: var(--gedaempft);
+                        text-align: right;
+                        vertical-align: bottom;
+                      "
+                    >
+                      Labor 1B<br />(zwei VMs)
+                    </th>
+                    <th
+                      style="
+                        padding: 0 0 8px 18px;
+                        font-weight: 600;
+                        font-size: 20px;
+                        line-height: 1.2;
+                        color: var(--gedaempft);
+                        text-align: right;
+                        vertical-align: bottom;
+                      "
+                    >
+                      Labor 1C<br />(ein Rechner)
+                    </th>
+                  </tr>
+                  <tr style="border-top: var(--linie-min) solid var(--linie)">
+                    <td style="padding: 8px 0; font-weight: 600; white-space: nowrap">
+                      CPUs und Threads
+                    </td>
+                    <td
+                      class="mono"
+                      style="padding: 8px 0 8px 18px; text-align: right; white-space: nowrap"
+                    >
+                      4
+                    </td>
+                    <td
+                      class="mono"
+                      style="padding: 8px 0 8px 18px; text-align: right; white-space: nowrap"
+                    >
+                      8
+                    </td>
+                    <td
+                      class="mono"
+                      style="padding: 8px 0 8px 18px; text-align: right; white-space: nowrap"
+                    >
+                      <b>4</b>
+                    </td>
+                    <td
+                      class="mono"
+                      style="padding: 8px 0 8px 18px; text-align: right; white-space: nowrap"
+                    >
+                      <b>4</b>
+                    </td>
+                  </tr>
+                  <tr style="border-top: var(--linie-min) solid var(--linie)">
+                    <td style="padding: 8px 0; font-weight: 600; white-space: nowrap">
+                      Speicher Runtime
+                    </td>
+                    <td
+                      class="mono"
+                      style="padding: 8px 0 8px 18px; text-align: right; white-space: nowrap"
+                    >
+                      5 GiB
+                    </td>
+                    <td
+                      class="mono"
+                      style="padding: 8px 0 8px 18px; text-align: right; white-space: nowrap"
+                    >
+                      8 GiB
+                    </td>
+                    <td
+                      class="mono"
+                      style="padding: 8px 0 8px 18px; text-align: right; white-space: nowrap"
+                    >
+                      8 GiB
+                    </td>
+                    <td
+                      class="mono"
+                      style="padding: 8px 0 8px 18px; text-align: right; white-space: nowrap"
+                    >
+                      <b>5 GiB</b>
+                    </td>
+                  </tr>
+                  <tr style="border-top: var(--linie-min) solid var(--linie)">
+                    <td style="padding: 8px 0; font-weight: 600; white-space: nowrap">
+                      Summary-Timeout
+                    </td>
+                    <td
+                      class="mono"
+                      style="padding: 8px 0 8px 18px; text-align: right; white-space: nowrap"
+                    >
+                      8 s
+                    </td>
+                    <td
+                      class="mono"
+                      style="padding: 8px 0 8px 18px; text-align: right; white-space: nowrap"
+                    >
+                      90 s
+                    </td>
+                    <td
+                      class="mono"
+                      style="padding: 8px 0 8px 18px; text-align: right; white-space: nowrap"
+                    >
+                      <b>300 s</b>
+                    </td>
+                    <td
+                      class="mono"
+                      style="padding: 8px 0 8px 18px; text-align: right; white-space: nowrap"
+                    >
+                      <b>300 s</b>
+                    </td>
+                  </tr>
+                </table>
+                <ul
                   style="
-                    border: var(--linie-min) solid var(--bernstein);
-                    border-radius: 10px;
-                    padding: 18px 24px 10px;
+                    margin: 14px 0 12px;
+                    padding-left: 24px;
+                    font-size: 22px;
+                    line-height: 1.35;
+                    color: var(--text-2);
                   "
                 >
-                  <p style="margin: 0 0 10px; font-weight: 700; font-size: 26px">
-                    Abweichungen und Grenzen
-                  </p>
-                  <ul style="margin: 0; padding-left: 26px; font-size: 24px; line-height: 1.35">
-                    <li style="margin: 0 0 10px">
-                      4 statt 8 CPUs, Timeout 300 s statt 90 s ab Werk v1.4.0
-                      <span class="nowrap">(Kalibrierung I = 202 s)</span>
-                    </li>
-                    <li style="margin: 0 0 10px">
-                      v1.3.0: 4 CPUs, 5 GiB, 8 s; gemessen: aktueller Stand (Prüfer)
-                    </li>
-                    <li style="margin: 0 0 10px">
-                      Images selbst gebaut; Start ohne Wrapper (CPU-Override)
-                    </li>
-                    <li style="margin: 0 0 10px">
-                      Summary-Schalter an; Hintergrunddienste von Hand aus
-                    </li>
-                  </ul>
-                </div>
+                  <li>
+                    <b>Fett</b> weicht vom gemessenen Stand ab; gemessen wurde der aktuelle Stand,
+                    auf Wunsch des Prüfers
+                  </li>
+                  <li>
+                    Timeout 300 s nach Kalibrierung (1B: I = 202 s); 1C: ein Rechner, Loopback,
+                    Messproxy
+                  </li>
+                  <li>
+                    Images selbst gebaut; Start ohne Wrapper (CPU-Override); Summary-Schalter an,
+                    Hintergrunddienste von Hand aus
+                  </li>
+                </ul>
                 <p class="vermerk" style="margin-top: auto">
                   Code <span class="mono">a19ca70f</span> (<span class="nowrap">v1.4.0-184</span>);
                   Lauf-Commit <span class="mono">8e9d1317</span> nur Laborskripte
@@ -2792,28 +3030,21 @@
                     justify-content: center;
                     border: var(--linie-min) solid var(--bernstein);
                     border-radius: 12px;
-                    padding: 18px 26px;
+                    padding: 16px 20px;
                     background: var(--bernstein-hell);
                   "
                 >
-                  <div style="font-weight: 700; font-size: 32px">
-                    app-host
-                    <span
+                  <div style="font-weight: 700; font-size: 32px; line-height: 1.2">
+                    app-host<br /><span
                       class="mono"
                       style="font-weight: 400; font-size: 24px; color: var(--text-2)"
                       >192.168.150.10</span
                     >
                   </div>
                   <div
-                    style="
-                      font-size: 24px;
-                      color: var(--text-2);
-                      line-height: 1.35;
-                      margin-top: 6px;
-                    "
+                    style="font-size: 22px; color: var(--text-2); line-height: 1.3; margin-top: 6px"
                   >
-                    App mit App-Adapter, PostgreSQL, Redis<br />Encoder nicht gestartet (ab Werk
-                    aus)
+                    App, App-Adapter, PostgreSQL, Redis; Encoder nicht gestartet (ab Werk aus)
                   </div>
                 </div>
                 <div
@@ -2837,27 +3068,21 @@
                     justify-content: center;
                     border: var(--linie-min) solid var(--bernstein);
                     border-radius: 12px;
-                    padding: 18px 26px;
+                    padding: 16px 20px;
                     background: var(--bernstein-hell);
                   "
                 >
-                  <div style="font-weight: 700; font-size: 32px">
-                    llm-host
-                    <span
+                  <div style="font-weight: 700; font-size: 32px; line-height: 1.2">
+                    llm-host<br /><span
                       class="mono"
                       style="font-weight: 400; font-size: 24px; color: var(--text-2)"
                       >192.168.150.20</span
                     >
                   </div>
                   <div
-                    style="
-                      font-size: 24px;
-                      color: var(--text-2);
-                      line-height: 1.35;
-                      margin-top: 6px;
-                    "
+                    style="font-size: 22px; color: var(--text-2); line-height: 1.3; margin-top: 6px"
                   >
-                    LLM-Server llama-server, ein Slot<br />Qwen3-4B-Instruct-2507 Q4_K_M (Manifest)
+                    llama-server, ein Slot; Qwen3-4B-Instruct-2507 Q4_K_M (Manifest)
                   </div>
                 </div>
               </div>
@@ -2865,8 +3090,8 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">14 / 39</span> · Quelle: Weirauch, 2026, Ordner evidenz/1B, ADR
-          1B-005; arsnova.eu-Projektteam, 2026a; Yang et al., 2025, S. 3; ggml-org, 2026
+          <span class="fuss-nr">14 / 40</span> · Quelle: arsnova.eu-Projektteam, 2026a, Kap. 2.2,
+          Abschnitt Performance-Steckbrief; Weirauch, 2026, ADR 1B-005; Yang et al., 2025, S. 3
         </div>
       </section>
       <section
@@ -2876,7 +3101,7 @@
         data-station="klick"
         data-eigener-weg
         data-hauptfolie
-        aria-label="15 von 39: Host nach 67 ms frei, Inferenz 151 s"
+        aria-label="15 von 40: Host nach 67 ms frei, Inferenz 151 s"
       >
         <div
           class="weg-mini weg-marke"
@@ -2976,7 +3201,7 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">15 / 39</span> · Quelle: Weirauch, 2026, Ordner evidenz/1B,
+          <span class="fuss-nr">15 / 40</span> · Quelle: Weirauch, 2026, Ordner evidenz/1B,
           1C-Nachlauf
         </div>
       </section>
@@ -2985,7 +3210,7 @@
         data-id="J4"
         data-teil="jonas"
         data-hauptfolie
-        aria-label="16 von 39: Erst die Hypothese, dann die Messung"
+        aria-label="16 von 40: Erst die Hypothese, dann die Messung"
       >
         <div
           class="weg-mini weg-marke"
@@ -3113,64 +3338,38 @@
                 </div>
               </div>
             </div>
-            <div
-              style="
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                column-gap: 40px;
-                align-items: start;
-              "
-            >
-              <div
-                style="
-                  border: var(--linie-min) solid var(--petrol);
-                  border-radius: 10px;
-                  padding: 12px 20px 6px;
-                "
-              >
-                <p style="margin: 0 0 6px; font-weight: 700; font-size: 24px">
-                  <span class="etikett etikett-1c">1C</span> Abweichungen und Grenzen im Labor
-                </p>
-                <ul style="margin: 0; padding-left: 26px; font-size: 22px; line-height: 1.35">
-                  <li style="margin: 0 0 4px">ein Rechner, Loopback, kein zweiter Host</li>
-                  <li style="margin: 0 0 4px">4 CPUs, 5 GiB statt 8 CPUs, 8 GiB ab Werk v1.4.0</li>
-                  <li style="margin: 0 0 4px">Timeout 300 s statt 90 s; Image lokal, Messproxy</li>
-                </ul>
-              </div>
-              <div>
-                <p style="margin: 0 0 6px; font-weight: 700; font-size: 24px">
-                  <span class="etikett etikett-1b">1B</span> Hypothesen und Schwellen, vorab
-                </p>
-                <table style="border-collapse: collapse; font-size: 22px; width: 100%">
-                  <tr style="color: var(--gedaempft); text-align: left">
-                    <th style="padding: 4px 12px 6px 0; font-weight: 600">Hypothese</th>
-                    <th style="padding: 4px 12px 6px 0; font-weight: 600">Messgröße</th>
-                    <th style="padding: 4px 0 6px; font-weight: 600">Schwelle</th>
-                  </tr>
-                  <tr style="border-top: var(--linie-min) solid var(--linie)">
-                    <td style="padding: 8px 12px 8px 0; font-weight: 600">H_B1</td>
-                    <td style="padding: 8px 12px 8px 0">Netz je Auftrag</td>
-                    <td style="padding: 8px 0">
-                      <span class="mono">Median ≤ 50 ms</span><br /><span class="mono"
-                        >Max. ≤ 200 ms</span
-                      >
-                    </td>
-                  </tr>
-                  <tr style="border-top: var(--linie-min) solid var(--linie)">
-                    <td style="padding: 8px 12px 8px 0; font-weight: 600">H_B2</td>
-                    <td style="padding: 8px 12px 8px 0">Adapter je Auftrag</td>
-                    <td style="padding: 8px 0"><span class="mono">Median ≤ 2 s</span></td>
-                  </tr>
-                  <tr style="border-top: var(--linie-min) solid var(--linie)">
-                    <td style="padding: 8px 12px 8px 0; font-weight: 600">H_B3</td>
-                    <td style="padding: 8px 12px 8px 0">
-                      Inferenzanteil
-                      <span style="color: var(--gedaempft)">(Konsistenzprüfung)</span>
-                    </td>
-                    <td style="padding: 8px 0"><span class="mono">Median ≥ 95 %</span></td>
-                  </tr>
-                </table>
-              </div>
+            <div style="max-width: 1000px">
+              <p style="margin: 0 0 6px; font-weight: 700; font-size: 24px">
+                <span class="etikett etikett-1b">1B</span> Hypothesen und Schwellen, vorab
+              </p>
+              <table style="border-collapse: collapse; font-size: 22px; width: 100%">
+                <tr style="color: var(--gedaempft); text-align: left">
+                  <th style="padding: 4px 12px 6px 0; font-weight: 600">Hypothese</th>
+                  <th style="padding: 4px 12px 6px 0; font-weight: 600">Messgröße</th>
+                  <th style="padding: 4px 0 6px; font-weight: 600">Schwelle</th>
+                </tr>
+                <tr style="border-top: var(--linie-min) solid var(--linie)">
+                  <td style="padding: 8px 12px 8px 0; font-weight: 600">H_B1</td>
+                  <td style="padding: 8px 12px 8px 0">Netz je Auftrag</td>
+                  <td style="padding: 8px 0">
+                    <span class="mono">Median ≤ 50 ms</span><br /><span class="mono"
+                      >Max. ≤ 200 ms</span
+                    >
+                  </td>
+                </tr>
+                <tr style="border-top: var(--linie-min) solid var(--linie)">
+                  <td style="padding: 8px 12px 8px 0; font-weight: 600">H_B2</td>
+                  <td style="padding: 8px 12px 8px 0">Adapter je Auftrag</td>
+                  <td style="padding: 8px 0"><span class="mono">Median ≤ 2 s</span></td>
+                </tr>
+                <tr style="border-top: var(--linie-min) solid var(--linie)">
+                  <td style="padding: 8px 12px 8px 0; font-weight: 600">H_B3</td>
+                  <td style="padding: 8px 12px 8px 0">
+                    Inferenzanteil <span style="color: var(--gedaempft)">(Konsistenzprüfung)</span>
+                  </td>
+                  <td style="padding: 8px 0"><span class="mono">Median ≥ 95 %</span></td>
+                </tr>
+              </table>
             </div>
             <p class="beleg">
               Orientiert an Papadopoulos et al. (2021); es fehlen Konfidenzintervalle und
@@ -3179,8 +3378,8 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">16 / 39</span> · Quelle: Weirauch, 2026, ADR 1B-008, 1C-003, 1C-021;
-          Papadopoulos et al., 2021, Kap. 2.3
+          <span class="fuss-nr">16 / 40</span> · Quelle: Papadopoulos et al., 2021, Kap. 2.3;
+          Weirauch, 2026, ADR 1B-008, 1C-003, 1C-021
         </div>
       </section>
       <section
@@ -3189,7 +3388,7 @@
         data-teil="jonas"
         data-station="klick"
         data-hauptfolie
-        aria-label="17 von 39: Der Host wartet nicht auf das Modell"
+        aria-label="17 von 40: Der Host wartet nicht auf das Modell"
       >
         <div
           class="weg-mini weg-marke"
@@ -3338,7 +3537,7 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">17 / 39</span> · Quelle: Weirauch, 2026, ADR 1C-012, Test E5,
+          <span class="fuss-nr">17 / 40</span> · Quelle: Weirauch, 2026, ADR 1C-012, Test E5,
           Nachlauf N3
         </div>
       </section>
@@ -3348,7 +3547,7 @@
         data-teil="jonas"
         data-station="kontext"
         data-hauptfolie
-        aria-label="18 von 39: Jeder Kontextaufbau prüft die Rechte erneut"
+        aria-label="18 von 40: Jeder Kontextaufbau prüft die Rechte erneut"
       >
         <div
           class="weg-mini weg-marke"
@@ -3520,7 +3719,7 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">18 / 39</span> · Quelle: Weirauch, 2026, Datei 1C-diagrams.md,
+          <span class="fuss-nr">18 / 40</span> · Quelle: Weirauch, 2026, Datei 1C-diagrams.md,
           #456-Bereiche, Test E2
         </div>
       </section>
@@ -3530,7 +3729,7 @@
         data-teil="jonas"
         data-station="kontext"
         data-hauptfolie
-        aria-label="19 von 39: Was die Vorschau zeigt, kommt an"
+        aria-label="19 von 40: Was die Vorschau zeigt, kommt an"
       >
         <div
           class="weg-mini weg-marke"
@@ -3680,7 +3879,7 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">19 / 39</span> · Quelle: Weirauch, 2026, ADR 1C-011, 1C-013, Datei
+          <span class="fuss-nr">19 / 40</span> · Quelle: Weirauch, 2026, ADR 1C-011, 1C-013, Datei
           1C-diagrams.md
         </div>
       </section>
@@ -3691,7 +3890,7 @@
         data-station="kontext"
         data-hauptfolie
         data-aufbau="1"
-        aria-label="20 von 39: Sicher geschätzt, aber Platz verschenkt"
+        aria-label="20 von 40: Sicher geschätzt, aber Platz verschenkt"
       >
         <div
           class="weg-mini weg-marke"
@@ -3869,7 +4068,7 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">20 / 39</span> · Quelle: Weirauch, 2026, ADR 1C-014, Nachlauf N2
+          <span class="fuss-nr">20 / 40</span> · Quelle: Weirauch, 2026, ADR 1C-014, Nachlauf N2
         </div>
       </section>
       <section
@@ -3878,7 +4077,7 @@
         data-teil="jonas"
         data-station="netz"
         data-hauptfolie
-        aria-label="21 von 39: Gemessen am Draht, auf beiden Hosts"
+        aria-label="21 von 40: Gemessen am Draht, auf beiden Hosts"
       >
         <div
           class="weg-mini weg-marke"
@@ -4029,8 +4228,8 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">21 / 39</span> · Quelle: Weirauch, 2026, ADR 1B-006, 1B-011;
-          ggml-org, 2026, Abschn. „Timings and context usage“
+          <span class="fuss-nr">21 / 40</span> · Quelle: ggml-org, 2026, Abschnitt Timings and
+          context usage; Weirauch, 2026, ADR 1B-006, 1B-011
         </div>
       </section>
       <section
@@ -4039,7 +4238,7 @@
         data-teil="jonas"
         data-station="netz"
         data-hauptfolie
-        aria-label="22 von 39: Strecke und lokal: kein Unterschied messbar"
+        aria-label="22 von 40: Strecke und lokal: kein Unterschied messbar"
       >
         <div
           class="weg-mini weg-marke"
@@ -4181,7 +4380,7 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">22 / 39</span> · Quelle: Weirauch, 2026,
+          <span class="fuss-nr">22 / 40</span> · Quelle: Weirauch, 2026,
           evidenz/1B/2026-11-13-lauf.md, Nachtrag M2
         </div>
       </section>
@@ -4192,7 +4391,7 @@
         data-station="inferenz"
         data-hauptfolie
         data-aufbau="2"
-        aria-label="23 von 39: Die Zeit steckt in der Inferenz"
+        aria-label="23 von 40: Die Zeit steckt in der Inferenz"
       >
         <div
           class="weg-mini weg-marke"
@@ -4297,8 +4496,8 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">23 / 39</span> · Quelle: Weirauch, 2026, Ordner evidenz/1B, ADR
-          1B-008; Kwon et al., 2023, Kap. 2.2
+          <span class="fuss-nr">23 / 40</span> · Quelle: Kwon et al., 2023, Kap. 2.2; Weirauch,
+          2026, Ordner evidenz/1B, ADR 1B-008
         </div>
       </section>
       <section
@@ -4308,7 +4507,7 @@
         data-station="inferenz"
         data-zoom-stufen="[0,0.421,0.67,1]"
         data-hauptfolie
-        aria-label="24 von 39: Das Netz ist 0,3 mm auf 105 m"
+        aria-label="24 von 40: Das Netz ist 0,3 mm auf 105 m"
       >
         <div
           class="weg-mini weg-marke"
@@ -4404,8 +4603,8 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">24 / 39</span> · Quelle: Weirauch, 2026, Ordner evidenz/1B; Kwon et
-          al., 2023, Kap. 2.2
+          <span class="fuss-nr">24 / 40</span> · Quelle: Kwon et al., 2023, Kap. 2.2; Weirauch,
+          2026, Ordner evidenz/1B
         </div>
       </section>
       <section
@@ -4414,7 +4613,7 @@
         data-teil="jonas"
         data-station="inferenz"
         data-hauptfolie
-        aria-label="25 von 39: Frisch gestartet: 200,5 s statt 148,6 s"
+        aria-label="25 von 40: Frisch gestartet: 200,5 s statt 148,6 s"
       >
         <div
           class="weg-mini weg-marke"
@@ -4542,7 +4741,7 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">25 / 39</span> · Quelle: Weirauch, 2026,
+          <span class="fuss-nr">25 / 40</span> · Quelle: Weirauch, 2026,
           evidenz/1B/2026-11-13-lauf.md, Nachtrag M4
         </div>
       </section>
@@ -4552,7 +4751,7 @@
         data-teil="jonas"
         data-station="inferenz"
         data-hauptfolie
-        aria-label="26 von 39: Runtime gestoppt: Ersatz nach 88,5 ms"
+        aria-label="26 von 40: Runtime gestoppt: Ersatz nach 88,5 ms"
       >
         <div
           class="weg-mini weg-marke"
@@ -4689,7 +4888,7 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">26 / 39</span> · Quelle: Weirauch, 2026,
+          <span class="fuss-nr">26 / 40</span> · Quelle: Weirauch, 2026,
           evidenz/1B/2026-11-13-lauf.md, Nachtrag M3
         </div>
       </section>
@@ -4699,7 +4898,7 @@
         data-teil="jonas"
         data-station="inferenz"
         data-hauptfolie
-        aria-label="27 von 39: 90 s Timeout ab Werk sind auf der CPU zu kurz"
+        aria-label="27 von 40: 90 s Timeout ab Werk sind auf der CPU zu kurz"
       >
         <div
           class="weg-mini weg-marke"
@@ -4869,8 +5068,8 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">27 / 39</span> · Quelle: Weirauch, 2026, ADR 1C-023, 1C-024;
-          ggml-org, 2026, Abschn. „Server-specific params“
+          <span class="fuss-nr">27 / 40</span> · Quelle: ggml-org, 2026, Abschnitt Server-specific
+          params; Weirauch, 2026, ADR 1C-023, 1C-024
         </div>
       </section>
       <section
@@ -4880,7 +5079,7 @@
         data-station="nachpruefung"
         data-hauptfolie
         data-aufbau="2"
-        aria-label="28 von 39: Nachprüfung: wenig Zeit, unter Voting riskant"
+        aria-label="28 von 40: Nachprüfung: wenig Zeit, unter Voting riskant"
       >
         <div
           class="weg-mini weg-marke"
@@ -5016,7 +5215,7 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">28 / 39</span> · Quelle: Weirauch, 2026, ADR 1C-010, 1C-016, 1C-017,
+          <span class="fuss-nr">28 / 40</span> · Quelle: Weirauch, 2026, ADR 1C-010, 1C-016, 1C-017,
           Tests E7, E8
         </div>
       </section>
@@ -5027,7 +5226,7 @@
         data-station="gate"
         data-hauptfolie
         data-aufbau="2"
-        aria-label="29 von 39: 38 geprüfte Antworten, keine besteht das Gate"
+        aria-label="29 von 40: 38 geprüfte Antworten, keine besteht das Gate"
       >
         <div
           class="weg-mini weg-marke"
@@ -5230,8 +5429,8 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">29 / 39</span> · Quelle: Weirauch, 2026, ADR 1C-018, Gate-Ablation,
-          Ordner evidenz/1B; Shankar et al., 2024, S. 1–2
+          <span class="fuss-nr">29 / 40</span> · Quelle: Shankar et al., 2024, S. 1–2; Weirauch,
+          2026, ADR 1C-018, Gate-Ablation, Ordner evidenz/1B
         </div>
       </section>
       <section
@@ -5239,7 +5438,7 @@
         data-id="J13b"
         data-teil="jonas"
         data-hauptfolie
-        aria-label="30 von 39: Cloud-Sicht: Bulkhead ja, Elastizität nein"
+        aria-label="30 von 40: Cloud-Sicht: Bulkhead ja, Elastizität nein"
       >
         <div
           class="weg-mini weg-marke"
@@ -5450,8 +5649,8 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">30 / 39</span> · Quelle: Mell &amp; Grance, 2011, S. 2–3; Dean &amp;
-          Barroso, 2013, S. 74; Weirauch, 2026, ADR 1C-018
+          <span class="fuss-nr">30 / 40</span> · Quelle: Dean &amp; Barroso, 2013, S. 74; Mell &amp;
+          Grance, 2011, S. 2–3; Weirauch, 2026, ADR 1C-018
         </div>
       </section>
       <section
@@ -5460,7 +5659,7 @@
         data-teil="jonas"
         data-hauptfolie
         data-aufbau="2"
-        aria-label="31 von 39: Entkopplung bleibt, Gate neu abstimmen"
+        aria-label="31 von 40: Entkopplung bleibt, Gate neu abstimmen"
       >
         <div
           class="weg-mini weg-marke"
@@ -5615,8 +5814,8 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">31 / 39</span> · Quelle: Weirauch, 2026, 1C-ergebnis.md, Abschn. 5;
-          Ulrich, 2016, Abschn. „Load Shedding and Graceful Degradation“
+          <span class="fuss-nr">31 / 40</span> · Quelle: Ulrich, 2016, Abschnitt Load Shedding and
+          Graceful Degradation; Weirauch, 2026, 1C-ergebnis.md, Kap. 5
         </div>
       </section>
       <section
@@ -5625,7 +5824,7 @@
         data-teil="niklas"
         data-hauptfolie
         data-aufbau="3"
-        aria-label="32 von 39: Ersatz in jeder Reihe, Stille kostet Zeit"
+        aria-label="32 von 40: Ersatz in jeder Reihe, Stille kostet Zeit"
       >
         <div
           class="weg-mini weg-marke"
@@ -5827,7 +6026,7 @@
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
             <div class="grafik-box">
-              <!-- prettier-ignore --><svg viewBox="0 0 1380 616" role="img" aria-label="Zeit bis Ersatz oder Antwort je Auftrag: gestoppte Runtime Summary 48 ms, DROP Summary 135 s, Label durch die Frist von 30 s begrenzt, Antwort nach der Frist 300 s."><rect width="1380" height="616" fill="#ffffff"/><circle cx="370" cy="26" r="10" fill="#566173" fill-opacity="0.7"/><text x="390" y="34" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">Summary, Job-Zeit</text><path d="M630 14L642 26L630 38L618 26Z" fill="#566173" fill-opacity="0.75"/><text x="652" y="34" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">Label, Zeit beim Client</text><text x="1150" y="34" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#16202c" text-anchor="end">Summary</text><text x="1340" y="34" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#16202c" text-anchor="end">Label</text><text x="1340" y="60" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="400" fill="#566173" text-anchor="end">Median</text><line x1="360" y1="78" x2="360" y2="530" stroke="#e8edf3" stroke-width="2"/><text x="360" y="562" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">10 ms</text><line x1="488" y1="78" x2="488" y2="530" stroke="#e8edf3" stroke-width="2"/><text x="488" y="562" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">0,1 s</text><line x1="616" y1="78" x2="616" y2="530" stroke="#e8edf3" stroke-width="2"/><text x="616" y="562" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">1 s</text><line x1="744" y1="78" x2="744" y2="530" stroke="#e8edf3" stroke-width="2"/><text x="744" y="562" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">10 s</text><line x1="872" y1="78" x2="872" y2="530" stroke="#e8edf3" stroke-width="2"/><text x="872" y="562" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">100 s</text><line x1="1000" y1="78" x2="1000" y2="530" stroke="#e8edf3" stroke-width="2"/><text x="1000" y="562" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">1000 s</text><line x1="360" y1="530" x2="1000" y2="530" stroke="#c9d2de" stroke-width="2"/><line x1="805.07" y1="72" x2="805.07" y2="530" stroke="#b42318" stroke-width="3" stroke-dasharray="8 6"/><text x="797.07" y="78" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="600" fill="#b42318" text-anchor="end">Frist Label 30 s</text><line x1="933.07" y1="72" x2="933.07" y2="530" stroke="#b42318" stroke-width="3" stroke-dasharray="8 6"/><text x="941.07" y="78" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="600" fill="#b42318" text-anchor="start">Frist Summary 300 s</text><text x="0" y="110" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">Normal</text><text x="0" y="136" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="400" fill="#566173">Inferenz läuft</text><circle cx="875.25" cy="102" r="10" fill="#566173" fill-opacity="0.7"/><circle cx="850.42" cy="102" r="10" fill="#566173" fill-opacity="0.7"/><circle cx="850.18" cy="102" r="10" fill="#566173" fill-opacity="0.7"/><circle cx="850.09" cy="102" r="10" fill="#566173" fill-opacity="0.7"/><circle cx="850.24" cy="102" r="10" fill="#566173" fill-opacity="0.7"/><circle cx="850.36" cy="102" r="10" fill="#566173" fill-opacity="0.7"/><circle cx="850.11" cy="102" r="10" fill="#566173" fill-opacity="0.7"/><circle cx="852.49" cy="102" r="10" fill="#566173" fill-opacity="0.7"/><circle cx="850.18" cy="102" r="10" fill="#566173" fill-opacity="0.7"/><circle cx="850.13" cy="102" r="10" fill="#566173" fill-opacity="0.7"/><path d="M714.96 90L726.96 102L714.96 114L702.96 102Z" fill="#566173" fill-opacity="0.75"/><path d="M686.05 90L698.05 102L686.05 114L674.05 102Z" fill="#566173" fill-opacity="0.75"/><path d="M685.88 90L697.88 102L685.88 114L673.88 102Z" fill="#566173" fill-opacity="0.75"/><path d="M685.43 90L697.43 102L685.43 114L673.43 102Z" fill="#566173" fill-opacity="0.75"/><path d="M685.62 90L697.62 102L685.62 114L673.62 102Z" fill="#566173" fill-opacity="0.75"/><path d="M685.15 90L697.15 102L685.15 114L673.15 102Z" fill="#566173" fill-opacity="0.75"/><path d="M685.8 90L697.8 102L685.8 114L673.8 102Z" fill="#566173" fill-opacity="0.75"/><path d="M685.37 90L697.37 102L685.37 114L673.37 102Z" fill="#566173" fill-opacity="0.75"/><path d="M685.47 90L697.47 102L685.47 114L673.47 102Z" fill="#566173" fill-opacity="0.75"/><path d="M686.16 90L698.16 102L686.16 114L674.16 102Z" fill="#566173" fill-opacity="0.75"/><path d="M714.15 90L726.15 102L714.15 114L702.15 102Z" fill="#566173" fill-opacity="0.75"/><path d="M685.48 90L697.48 102L685.48 114L673.48 102Z" fill="#566173" fill-opacity="0.75"/><path d="M686.05 90L698.05 102L686.05 114L674.05 102Z" fill="#566173" fill-opacity="0.75"/><path d="M685.45 90L697.45 102L685.45 114L673.45 102Z" fill="#566173" fill-opacity="0.75"/><path d="M685.93 90L697.93 102L685.93 114L673.93 102Z" fill="#566173" fill-opacity="0.75"/><path d="M686.26 90L698.26 102L686.26 114L674.26 102Z" fill="#566173" fill-opacity="0.75"/><path d="M685.08 90L697.08 102L685.08 114L673.08 102Z" fill="#566173" fill-opacity="0.75"/><path d="M685.97 90L697.97 102L685.97 114L673.97 102Z" fill="#566173" fill-opacity="0.75"/><path d="M685.26 90L697.26 102L685.26 114L673.26 102Z" fill="#566173" fill-opacity="0.75"/><path d="M686.07 90L698.07 102L686.07 114L674.07 102Z" fill="#566173" fill-opacity="0.75"/><path d="M714.75 90L726.75 102L714.75 114L702.75 102Z" fill="#566173" fill-opacity="0.75"/><path d="M685.39 90L697.39 102L685.39 114L673.39 102Z" fill="#566173" fill-opacity="0.75"/><path d="M686.15 90L698.15 102L686.15 114L674.15 102Z" fill="#566173" fill-opacity="0.75"/><path d="M685.48 90L697.48 102L685.48 114L673.48 102Z" fill="#566173" fill-opacity="0.75"/><path d="M685.93 90L697.93 102L685.93 114L673.93 102Z" fill="#566173" fill-opacity="0.75"/><path d="M685.43 90L697.43 102L685.43 114L673.43 102Z" fill="#566173" fill-opacity="0.75"/><path d="M685.19 90L697.19 102L685.19 114L673.19 102Z" fill="#566173" fill-opacity="0.75"/><path d="M685.24 90L697.24 102L685.24 114L673.24 102Z" fill="#566173" fill-opacity="0.75"/><path d="M685.86 90L697.86 102L685.86 114L673.86 102Z" fill="#566173" fill-opacity="0.75"/><path d="M686.49 90L698.49 102L686.49 114L674.49 102Z" fill="#566173" fill-opacity="0.75"/><text x="1150" y="110" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#16202c" text-anchor="end">68 s</text><text x="1340" y="110" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#16202c" text-anchor="end">3,5 s</text><g data-ab="1" data-stoerung="f1"><text x="0" y="174" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">Stopp</text><text x="0" y="200" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="400" fill="#566173">Container gestoppt, sofort abgewiesen</text><circle cx="456.75" cy="166" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="501.72" cy="166" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="447.2" cy="166" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="441.08" cy="166" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="496.73" cy="166" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="446.03" cy="166" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="446.03" cy="166" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="444.83" cy="166" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="447.2" cy="166" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="529.77" cy="166" r="10" fill="#0b5ea8" fill-opacity="0.7"/><path d="M458.67 154L470.67 166L458.67 178L446.67 166Z" fill="#0b5ea8" fill-opacity="0.75"/><path d="M449.47 154L461.47 166L449.47 178L437.47 166Z" fill="#0b5ea8" fill-opacity="0.75"/><path d="M429.64 154L441.64 166L429.64 178L417.64 166Z" fill="#0b5ea8" fill-opacity="0.75"/><path d="M426.37 154L438.37 166L426.37 178L414.37 166Z" fill="#0b5ea8" fill-opacity="0.75"/><path d="M431.21 154L443.21 166L431.21 178L419.21 166Z" fill="#0b5ea8" fill-opacity="0.75"/><path d="M439.78 154L451.78 166L439.78 178L427.78 166Z" fill="#0b5ea8" fill-opacity="0.75"/><path d="M434.21 154L446.21 166L434.21 178L422.21 166Z" fill="#0b5ea8" fill-opacity="0.75"/><path d="M431.21 154L443.21 166L431.21 178L419.21 166Z" fill="#0b5ea8" fill-opacity="0.75"/><path d="M435.66 154L447.66 166L435.66 178L423.66 166Z" fill="#0b5ea8" fill-opacity="0.75"/><path d="M432.73 154L444.73 166L432.73 178L420.73 166Z" fill="#0b5ea8" fill-opacity="0.75"/><text x="1150" y="174" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#16202c" text-anchor="end">48 ms</text><text x="1340" y="174" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#16202c" text-anchor="end">37,5 ms</text></g><g data-ab="1" data-stoerung="busy"><text x="0" y="238" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">Slot belegt</text><text x="0" y="264" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="400" fill="#566173">Runtime antwortet 503</text><circle cx="448.35" cy="230" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="493.8" cy="230" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="486.31" cy="230" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="491.24" cy="230" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="466.56" cy="230" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="497.67" cy="230" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="448.35" cy="230" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="515.16" cy="230" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="446.03" cy="230" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="481.52" cy="230" r="10" fill="#0b5ea8" fill-opacity="0.7"/><text x="1150" y="238" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#16202c" text-anchor="end">93 ms</text><text x="1340" y="238" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#566173" text-anchor="end">–</text></g><g data-ab="2" data-stoerung="l1"><text x="0" y="302" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">Netz +50 ms</text><text x="0" y="328" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="400" fill="#566173">verzögert, Antwort kommt</text><path d="M716.09 282L728.09 294L716.09 306L704.09 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M688.2 282L700.2 294L688.2 306L676.2 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M690.53 282L702.53 294L690.53 306L678.53 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M687.67 282L699.67 294L687.67 306L675.67 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M688.05 282L700.05 294L688.05 306L676.05 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M690.11 282L702.11 294L690.11 306L678.11 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M689.4 282L701.4 294L689.4 306L677.4 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M688.58 282L700.58 294L688.58 306L676.58 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M688.97 282L700.97 294L688.97 306L676.97 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M687.61 282L699.61 294L687.61 306L675.61 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M716.73 282L728.73 294L716.73 306L704.73 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M688 282L700 294L688 306L676 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M688.25 282L700.25 294L688.25 306L676.25 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M687.81 282L699.81 294L687.81 306L675.81 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M687.78 282L699.78 294L687.78 306L675.78 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M688.82 282L700.82 294L688.82 306L676.82 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M688.26 282L700.26 294L688.26 306L676.26 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M688.35 282L700.35 294L688.35 306L676.35 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M687.85 282L699.85 294L687.85 306L675.85 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M688.65 282L700.65 294L688.65 306L676.65 294Z" fill="#b45309" fill-opacity="0.75"/><text x="1150" y="302" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#566173" text-anchor="end">–</text><text x="1340" y="302" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#9a4a0b" text-anchor="end">3,7 s</text></g><g data-ab="2" data-stoerung="l2"><text x="0" y="366" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">Netz +500 ms</text><text x="0" y="392" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="400" fill="#566173">verzögert, Antwort kommt</text><path d="M727.39 346L739.39 358L727.39 370L715.39 358Z" fill="#b45309" fill-opacity="0.75"/><path d="M706.42 346L718.42 358L706.42 370L694.42 358Z" fill="#b45309" fill-opacity="0.75"/><path d="M706.14 346L718.14 358L706.14 370L694.14 358Z" fill="#b45309" fill-opacity="0.75"/><text x="1150" y="366" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#566173" text-anchor="end">–</text><text x="1340" y="366" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#9a4a0b" text-anchor="end">5,1 s</text></g><g data-ab="2" data-stoerung="f2"><text x="0" y="430" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">DROP</text><text x="0" y="456" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="400" fill="#566173">Firewall verwirft, keine Antwort</text><circle cx="887.87" cy="422" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="888.57" cy="422" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="889.22" cy="422" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="888.21" cy="422" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="888.89" cy="422" r="10" fill="#b45309" fill-opacity="0.7"/><path d="M805.15 410L817.15 422L805.15 434L793.15 422Z" fill="#b45309" fill-opacity="0.75"/><path d="M805.14 410L817.14 422L805.14 434L793.14 422Z" fill="#b45309" fill-opacity="0.75"/><path d="M805.15 410L817.15 422L805.15 434L793.15 422Z" fill="#b45309" fill-opacity="0.75"/><text x="1150" y="430" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#9a4a0b" text-anchor="end">135 s</text><text x="1340" y="430" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#9a4a0b" text-anchor="end">30 s</text></g><g data-ab="3" data-stoerung="l3"><text x="0" y="494" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">Zu spät</text><text x="0" y="520" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="400" fill="#566173">Antwort erst nach der Frist</text><circle cx="933.09" cy="486" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="933.09" cy="486" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="933.08" cy="486" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="933.08" cy="486" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="933.08" cy="486" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="933.08" cy="486" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="933.09" cy="486" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="933.08" cy="486" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="933.08" cy="486" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="933.08" cy="486" r="10" fill="#b45309" fill-opacity="0.7"/><path d="M805.13 474L817.13 486L805.13 498L793.13 486Z" fill="#b45309" fill-opacity="0.75"/><path d="M805.15 474L817.15 486L805.15 498L793.15 486Z" fill="#b45309" fill-opacity="0.75"/><path d="M805.15 474L817.15 486L805.15 498L793.15 486Z" fill="#b45309" fill-opacity="0.75"/><text x="1150" y="494" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#9a4a0b" text-anchor="end">300 s</text><text x="1340" y="494" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#9a4a0b" text-anchor="end">30 s</text></g><text x="360" y="610" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#566173">Zeit bis Ersatz oder Antwort je Auftrag · Log-Achse, je Strich × 10</text></svg>
+              <!-- prettier-ignore --><svg viewBox="0 0 1380 646" role="img" aria-label="Zeit bis Ersatz oder Antwort je Auftrag: gestoppte Runtime Summary 48 ms, DROP Summary 135 s, Label durch die Frist von 30 s begrenzt, Antwort nach der Frist 300 s. Jeder Punkt ist ein Auftrag, die Zahl der Aufträge (n) steht je Consumer neben dem Median."><rect width="1380" height="646" fill="#ffffff"/><circle cx="370" cy="26" r="10" fill="#566173" fill-opacity="0.7"/><text x="390" y="34" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">Summary, Job-Zeit</text><path d="M630 14L642 26L630 38L618 26Z" fill="#566173" fill-opacity="0.75"/><text x="652" y="34" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#3d4757">Label, Zeit beim Client</text><text x="1110" y="30" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#16202c" text-anchor="end">Summary</text><text x="1350" y="30" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#16202c" text-anchor="end">Label</text><text x="1040" y="54" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="400" fill="#566173" text-anchor="end">Median</text><text x="1110" y="54" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="400" fill="#566173" text-anchor="end">n</text><text x="1270" y="54" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="400" fill="#566173" text-anchor="end">Median</text><text x="1350" y="54" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="400" fill="#566173" text-anchor="end">n</text><line x1="360" y1="78" x2="360" y2="530" stroke="#e8edf3" stroke-width="2"/><text x="360" y="562" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">10 ms</text><line x1="468" y1="78" x2="468" y2="530" stroke="#e8edf3" stroke-width="2"/><text x="468" y="562" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">0,1 s</text><line x1="576" y1="78" x2="576" y2="530" stroke="#e8edf3" stroke-width="2"/><text x="576" y="562" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">1 s</text><line x1="684" y1="78" x2="684" y2="530" stroke="#e8edf3" stroke-width="2"/><text x="684" y="562" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">10 s</text><line x1="792" y1="78" x2="792" y2="530" stroke="#e8edf3" stroke-width="2"/><text x="792" y="562" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">100 s</text><line x1="900" y1="78" x2="900" y2="530" stroke="#e8edf3" stroke-width="2"/><text x="900" y="562" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="22" font-weight="400" fill="#566173" text-anchor="middle">1000 s</text><line x1="360" y1="530" x2="900" y2="530" stroke="#c9d2de" stroke-width="2"/><line x1="735.53" y1="72" x2="735.53" y2="530" stroke="#b42318" stroke-width="3" stroke-dasharray="8 6"/><text x="727.53" y="78" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="600" fill="#b42318" text-anchor="end">Frist Label 30 s</text><line x1="843.53" y1="72" x2="843.53" y2="530" stroke="#b42318" stroke-width="3" stroke-dasharray="8 6"/><text x="851.53" y="78" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="600" fill="#b42318" text-anchor="start">Frist Summary 300 s</text><text x="0" y="110" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">Normal</text><text x="0" y="136" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="400" fill="#566173">Inferenz läuft</text><text data-n="normal-summary" x="1110" y="110" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="end">10</text><text data-n="normal-label" x="1350" y="110" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="end">30</text><circle cx="794.74" cy="102" r="10" fill="#566173" fill-opacity="0.7"/><circle cx="773.79" cy="102" r="10" fill="#566173" fill-opacity="0.7"/><circle cx="773.59" cy="102" r="10" fill="#566173" fill-opacity="0.7"/><circle cx="773.51" cy="102" r="10" fill="#566173" fill-opacity="0.7"/><circle cx="773.64" cy="102" r="10" fill="#566173" fill-opacity="0.7"/><circle cx="773.74" cy="102" r="10" fill="#566173" fill-opacity="0.7"/><circle cx="773.53" cy="102" r="10" fill="#566173" fill-opacity="0.7"/><circle cx="775.53" cy="102" r="10" fill="#566173" fill-opacity="0.7"/><circle cx="773.59" cy="102" r="10" fill="#566173" fill-opacity="0.7"/><circle cx="773.55" cy="102" r="10" fill="#566173" fill-opacity="0.7"/><path d="M659.5 90L671.5 102L659.5 114L647.5 102Z" fill="#566173" fill-opacity="0.75"/><path d="M635.11 90L647.11 102L635.11 114L623.11 102Z" fill="#566173" fill-opacity="0.75"/><path d="M634.96 90L646.96 102L634.96 114L622.96 102Z" fill="#566173" fill-opacity="0.75"/><path d="M634.58 90L646.58 102L634.58 114L622.58 102Z" fill="#566173" fill-opacity="0.75"/><path d="M634.75 90L646.75 102L634.75 114L622.75 102Z" fill="#566173" fill-opacity="0.75"/><path d="M634.34 90L646.34 102L634.34 114L622.34 102Z" fill="#566173" fill-opacity="0.75"/><path d="M634.89 90L646.89 102L634.89 114L622.89 102Z" fill="#566173" fill-opacity="0.75"/><path d="M634.53 90L646.53 102L634.53 114L622.53 102Z" fill="#566173" fill-opacity="0.75"/><path d="M634.61 90L646.61 102L634.61 114L622.61 102Z" fill="#566173" fill-opacity="0.75"/><path d="M635.2 90L647.2 102L635.2 114L623.2 102Z" fill="#566173" fill-opacity="0.75"/><path d="M658.81 90L670.81 102L658.81 114L646.81 102Z" fill="#566173" fill-opacity="0.75"/><path d="M634.63 90L646.63 102L634.63 114L622.63 102Z" fill="#566173" fill-opacity="0.75"/><path d="M635.11 90L647.11 102L635.11 114L623.11 102Z" fill="#566173" fill-opacity="0.75"/><path d="M634.6 90L646.6 102L634.6 114L622.6 102Z" fill="#566173" fill-opacity="0.75"/><path d="M635 90L647 102L635 114L623 102Z" fill="#566173" fill-opacity="0.75"/><path d="M635.28 90L647.28 102L635.28 114L623.28 102Z" fill="#566173" fill-opacity="0.75"/><path d="M634.29 90L646.29 102L634.29 114L622.29 102Z" fill="#566173" fill-opacity="0.75"/><path d="M635.04 90L647.04 102L635.04 114L623.04 102Z" fill="#566173" fill-opacity="0.75"/><path d="M634.44 90L646.44 102L634.44 114L622.44 102Z" fill="#566173" fill-opacity="0.75"/><path d="M635.12 90L647.12 102L635.12 114L623.12 102Z" fill="#566173" fill-opacity="0.75"/><path d="M659.32 90L671.32 102L659.32 114L647.32 102Z" fill="#566173" fill-opacity="0.75"/><path d="M634.54 90L646.54 102L634.54 114L622.54 102Z" fill="#566173" fill-opacity="0.75"/><path d="M635.19 90L647.19 102L635.19 114L623.19 102Z" fill="#566173" fill-opacity="0.75"/><path d="M634.63 90L646.63 102L634.63 114L622.63 102Z" fill="#566173" fill-opacity="0.75"/><path d="M635 90L647 102L635 114L623 102Z" fill="#566173" fill-opacity="0.75"/><path d="M634.58 90L646.58 102L634.58 114L622.58 102Z" fill="#566173" fill-opacity="0.75"/><path d="M634.38 90L646.38 102L634.38 114L622.38 102Z" fill="#566173" fill-opacity="0.75"/><path d="M634.42 90L646.42 102L634.42 114L622.42 102Z" fill="#566173" fill-opacity="0.75"/><path d="M634.95 90L646.95 102L634.95 114L622.95 102Z" fill="#566173" fill-opacity="0.75"/><path d="M635.48 90L647.48 102L635.48 114L623.48 102Z" fill="#566173" fill-opacity="0.75"/><text x="1040" y="110" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#16202c" text-anchor="end">68 s</text><text x="1270" y="110" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#16202c" text-anchor="end">3,5 s</text><g data-ab="1" data-stoerung="f1"><text x="0" y="174" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">Stopp</text><text x="0" y="200" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="400" fill="#566173">Container gestoppt, sofort abgewiesen</text><text data-n="f1-summary" x="1110" y="174" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="end">10</text><text data-n="f1-label" x="1350" y="174" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="end">10</text><circle cx="441.63" cy="166" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="479.58" cy="166" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="433.57" cy="166" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="428.41" cy="166" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="475.36" cy="166" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="432.59" cy="166" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="432.59" cy="166" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="431.58" cy="166" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="433.57" cy="166" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="503.24" cy="166" r="10" fill="#0b5ea8" fill-opacity="0.7"/><path d="M443.25 154L455.25 166L443.25 178L431.25 166Z" fill="#0b5ea8" fill-opacity="0.75"/><path d="M435.49 154L447.49 166L435.49 178L423.49 166Z" fill="#0b5ea8" fill-opacity="0.75"/><path d="M418.76 154L430.76 166L418.76 178L406.76 166Z" fill="#0b5ea8" fill-opacity="0.75"/><path d="M416 154L428 166L416 178L404 166Z" fill="#0b5ea8" fill-opacity="0.75"/><path d="M420.08 154L432.08 166L420.08 178L408.08 166Z" fill="#0b5ea8" fill-opacity="0.75"/><path d="M427.31 154L439.31 166L427.31 178L415.31 166Z" fill="#0b5ea8" fill-opacity="0.75"/><path d="M422.62 154L434.62 166L422.62 178L410.62 166Z" fill="#0b5ea8" fill-opacity="0.75"/><path d="M420.08 154L432.08 166L420.08 178L408.08 166Z" fill="#0b5ea8" fill-opacity="0.75"/><path d="M423.83 154L435.83 166L423.83 178L411.83 166Z" fill="#0b5ea8" fill-opacity="0.75"/><path d="M421.37 154L433.37 166L421.37 178L409.37 166Z" fill="#0b5ea8" fill-opacity="0.75"/><text x="1040" y="174" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#16202c" text-anchor="end">48 ms</text><text x="1270" y="174" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#16202c" text-anchor="end">37,5 ms</text></g><g data-ab="1" data-stoerung="busy"><text x="0" y="238" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">Slot belegt</text><text x="0" y="264" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="400" fill="#566173">Runtime antwortet 503</text><text data-n="busy-summary" x="1110" y="238" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="end">10</text><text data-n="busy-label" x="1350" y="238" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="end">–</text><circle cx="434.54" cy="230" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="472.89" cy="230" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="466.57" cy="230" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="470.73" cy="230" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="449.91" cy="230" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="476.16" cy="230" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="434.54" cy="230" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="490.92" cy="230" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="432.59" cy="230" r="10" fill="#0b5ea8" fill-opacity="0.7"/><circle cx="462.53" cy="230" r="10" fill="#0b5ea8" fill-opacity="0.7"/><text x="1040" y="238" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#16202c" text-anchor="end">93 ms</text><text x="1270" y="238" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#566173" text-anchor="end">–</text></g><g data-ab="2" data-stoerung="l1"><text x="0" y="302" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">Netz +50 ms</text><text x="0" y="328" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="400" fill="#566173">verzögert, Antwort kommt</text><text data-n="l1-summary" x="1110" y="302" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="end">–</text><text data-n="l1-label" x="1350" y="302" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="end">20</text><path d="M660.45 282L672.45 294L660.45 306L648.45 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M636.92 282L648.92 294L636.92 306L624.92 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M638.89 282L650.89 294L638.89 306L626.89 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M636.47 282L648.47 294L636.47 306L624.47 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M636.79 282L648.79 294L636.79 306L624.79 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M638.53 282L650.53 294L638.53 306L626.53 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M637.93 282L649.93 294L637.93 306L625.93 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M637.24 282L649.24 294L637.24 306L625.24 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M637.57 282L649.57 294L637.57 306L625.57 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M636.42 282L648.42 294L636.42 306L624.42 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M660.99 282L672.99 294L660.99 306L648.99 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M636.75 282L648.75 294L636.75 306L624.75 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M636.96 282L648.96 294L636.96 306L624.96 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M636.59 282L648.59 294L636.59 306L624.59 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M636.56 282L648.56 294L636.56 306L624.56 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M637.44 282L649.44 294L637.44 306L625.44 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M636.97 282L648.97 294L636.97 306L624.97 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M637.05 282L649.05 294L637.05 306L625.05 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M636.62 282L648.62 294L636.62 306L624.62 294Z" fill="#b45309" fill-opacity="0.75"/><path d="M637.3 282L649.3 294L637.3 306L625.3 294Z" fill="#b45309" fill-opacity="0.75"/><text x="1040" y="302" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#566173" text-anchor="end">–</text><text x="1270" y="302" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#9a4a0b" text-anchor="end">3,7 s</text></g><g data-ab="2" data-stoerung="l2"><text x="0" y="366" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">Netz +500 ms</text><text x="0" y="392" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="400" fill="#566173">verzögert, Antwort kommt</text><text data-n="l2-summary" x="1110" y="366" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="end">–</text><text data-n="l2-label" x="1350" y="366" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="end">3</text><path d="M669.98 346L681.98 358L669.98 370L657.98 358Z" fill="#b45309" fill-opacity="0.75"/><path d="M652.29 346L664.29 358L652.29 370L640.29 358Z" fill="#b45309" fill-opacity="0.75"/><path d="M652.06 346L664.06 358L652.06 370L640.06 358Z" fill="#b45309" fill-opacity="0.75"/><text x="1040" y="366" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#566173" text-anchor="end">–</text><text x="1270" y="366" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#9a4a0b" text-anchor="end">5,1 s</text></g><g data-ab="2" data-stoerung="f2"><text x="0" y="430" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">DROP</text><text x="0" y="456" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="400" fill="#566173">Firewall verwirft, keine Antwort</text><text data-n="f2-summary" x="1110" y="430" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="end">5</text><text data-n="f2-label" x="1350" y="430" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="end">3</text><circle cx="805.39" cy="422" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="805.98" cy="422" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="806.53" cy="422" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="805.68" cy="422" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="806.25" cy="422" r="10" fill="#b45309" fill-opacity="0.7"/><path d="M735.59 410L747.59 422L735.59 434L723.59 422Z" fill="#b45309" fill-opacity="0.75"/><path d="M735.59 410L747.59 422L735.59 434L723.59 422Z" fill="#b45309" fill-opacity="0.75"/><path d="M735.6 410L747.6 422L735.6 434L723.6 422Z" fill="#b45309" fill-opacity="0.75"/><text x="1040" y="430" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#9a4a0b" text-anchor="end">135 s</text><text x="1270" y="430" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#9a4a0b" text-anchor="end">30 s</text></g><g data-ab="3" data-stoerung="l3"><text x="0" y="494" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="700" fill="#16202c">Zu spät</text><text x="0" y="520" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="400" fill="#566173">Antwort erst nach der Frist</text><text data-n="l3-summary" x="1110" y="494" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="end">10</text><text data-n="l3-label" x="1350" y="494" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="400" fill="#566173" text-anchor="end">3</text><circle cx="843.54" cy="486" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="843.55" cy="486" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="843.54" cy="486" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="843.54" cy="486" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="843.54" cy="486" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="843.54" cy="486" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="843.54" cy="486" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="843.54" cy="486" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="843.54" cy="486" r="10" fill="#b45309" fill-opacity="0.7"/><circle cx="843.54" cy="486" r="10" fill="#b45309" fill-opacity="0.7"/><path d="M735.57 474L747.57 486L735.57 498L723.57 486Z" fill="#b45309" fill-opacity="0.75"/><path d="M735.6 474L747.6 486L735.6 498L723.6 486Z" fill="#b45309" fill-opacity="0.75"/><path d="M735.6 474L747.6 486L735.6 498L723.6 486Z" fill="#b45309" fill-opacity="0.75"/><text x="1040" y="494" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#9a4a0b" text-anchor="end">300 s</text><text x="1270" y="494" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" font-size="24" font-weight="600" fill="#9a4a0b" text-anchor="end">30 s</text></g><text x="360" y="610" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#566173">Zeit bis Ersatz oder Antwort je Auftrag · Log-Achse, je Strich × 10</text><text x="360" y="640" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="400" fill="#566173">Jeder Punkt ein Auftrag; gleiche Zeiten liegen übereinander</text></svg>
             </div>
             <p data-ab="2" class="sekundaer" style="margin: 6px 0 0">
               DROP gegen Stopp bei Summary: rund 2.800-mal so lang. Der Verbindungsaufbau gibt nach
@@ -5840,8 +6039,8 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">32 / 39</span> · Quelle: Schneider, 2026, Ordner evidenz/1B; Ulrich,
-          2016, Abschn. „Load Shedding and Graceful Degradation“
+          <span class="fuss-nr">32 / 40</span> · Quelle: Schneider, 2026, Ordner evidenz/1B; Ulrich,
+          2016, Abschnitt Load Shedding and Graceful Degradation
         </div>
       </section>
       <section
@@ -5850,7 +6049,7 @@
         data-teil="niklas"
         data-hauptfolie
         data-aufbau="1"
-        aria-label="33 von 39: Der Breaker dämpft Ausfälle, keine Hänger"
+        aria-label="33 von 40: Der Breaker dämpft Ausfälle, keine Hänger"
       >
         <div
           class="weg-mini weg-marke"
@@ -6013,7 +6212,7 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">33 / 39</span> · Quelle: Schneider, 2026, Ordner evidenz/1B,
+          <span class="fuss-nr">33 / 40</span> · Quelle: Schneider, 2026, Ordner evidenz/1B,
           Breaker-Folgen
         </div>
       </section>
@@ -6023,7 +6222,7 @@
         data-teil="niklas"
         data-hauptfolie
         data-aufbau="1"
-        aria-label="34 von 39: Kein Live-Fehler, aber nicht latenzneutral"
+        aria-label="34 von 40: Kein Live-Fehler, aber nicht latenzneutral"
       >
         <div
           class="weg-mini weg-marke"
@@ -6675,7 +6874,7 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">34 / 39</span> · Quelle: Schneider, 2026, Ordner evidenz/1B,
+          <span class="fuss-nr">34 / 40</span> · Quelle: Schneider, 2026, Ordner evidenz/1B,
           Transportauswertung
         </div>
       </section>
@@ -6685,7 +6884,7 @@
         data-teil="niklas"
         data-hauptfolie
         data-aufbau="1"
-        aria-label="35 von 39: Zweiter Host: Betriebsfrage, nicht Tempo"
+        aria-label="35 von 40: Zweiter Host: Betriebsfrage, nicht Tempo"
       >
         <div
           class="weg-mini weg-marke"
@@ -6906,8 +7105,8 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">35 / 39</span> · Quelle: Schneider, 2026, ADR 1B-020, S1-Protokolle;
-          arsnova.eu-Projektteam, 2026a, Abschn. 2.1
+          <span class="fuss-nr">35 / 40</span> · Quelle: arsnova.eu-Projektteam, 2026a, Kap. 2.1;
+          Schneider, 2026, ADR 1B-020, S1-Protokolle
         </div>
       </section>
       <section
@@ -6915,7 +7114,7 @@
         data-id="G9"
         data-teil="rahmen"
         data-aufbau="1"
-        aria-label="36 von 39: Zweiter Host: kaum Zeitkosten, keine Live-Fehler"
+        aria-label="36 von 40: Zweiter Host: kaum Zeitkosten, keine Live-Fehler"
       >
         <ol class="teilleiste" aria-label="Teil des Vortrags: Fazit, Gemeinsam">
           <li>1A</li>
@@ -6942,7 +7141,10 @@
             >
               <div style="border-top: 6px solid var(--petrol); padding-top: 14px">
                 <p style="margin: 0 0 8px; font-weight: 700; font-size: 28px">
-                  Jonas · 1C und 1B, Schritte 1–2
+                  Jonas <span class="etikett etikett-1c">1C</span>
+                  <span class="etikett etikett-1b"
+                    >1B <span class="etikett-schritte">Schritte 1–2</span></span
+                  >
                 </p>
                 <p style="margin: 0 0 10px">
                   <span class="etikett etikett-1c">1C</span> Vertrag, Konsistenz und Entkopplung
@@ -6957,7 +7159,10 @@
               </div>
               <div style="border-top: 6px solid var(--blau); padding-top: 14px">
                 <p style="margin: 0 0 8px; font-weight: 700; font-size: 28px">
-                  Niklas · 1A und 1B, Schritte 3–4
+                  Niklas <span class="etikett etikett-1a">1A</span>
+                  <span class="etikett etikett-1b"
+                    >1B <span class="etikett-schritte">Schritte 3–4</span></span
+                  >
                 </p>
                 <p style="margin: 0 0 10px">
                   <span class="etikett etikett-1a">1A</span> Der App-Host trägt die Live-Last
@@ -6980,8 +7185,161 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">36 / 39</span> · Quelle: Weirauch, 2026, 1B-ergebnis.md,
-          1C-ergebnis.md; Schneider, 2026, Ordner evidenz/1A und evidenz/1B
+          <span class="fuss-nr">36 / 40</span> · Quelle: Schneider, 2026, Ordner evidenz/1A und
+          evidenz/1B; Weirauch, 2026, 1B-ergebnis.md, 1C-ergebnis.md
+        </div>
+      </section>
+      <section
+        class="folie"
+        data-id="GN"
+        data-teil="rahmen"
+        data-gemeinsam
+        aria-label="37 von 40: Nachweisumfang: Rechnerzeit, Tests, Hypothesen"
+      >
+        <ol class="teilleiste" aria-label="Teil des Vortrags: Fazit, Gemeinsam">
+          <li>1A</li>
+          <li>1C, 1B 1–2</li>
+          <li>1B 3–4</li>
+          <li data-aktiv aria-current="step">Fazit</li>
+        </ol>
+        <h1 class="folie-titel">Nachweisumfang: Rechnerzeit, Tests, Hypothesen</h1>
+        <p class="folie-frage">
+          <span class="etikett etikett-1a">1A</span><span class="etikett etikett-1b">1B</span
+          ><span class="etikett etikett-1c">1C</span>Wie viel Messung und Prüfung steckt in den
+          Belegen?
+        </p>
+        <div class="folie-flaeche">
+          <div class="flaeche-inhalt">
+            <div class="dank-nachweis" data-nachweis>
+              <div class="nw-band">
+                <div class="nw-zahlen">
+                  <div class="nw-zahl">
+                    <span class="nw-wert">20,3 h</span
+                    ><span class="nw-was">gewertete Laborzeit</span>
+                  </div>
+                  <div class="nw-zahl">
+                    <span class="nw-wert">29,3 h</span
+                    ><span class="nw-was">Aufbau, Tests, weitere Läufe</span>
+                  </div>
+                  <div class="nw-zahl">
+                    <span class="nw-wert">326</span><span class="nw-was">automatisierte Tests</span>
+                  </div>
+                  <div class="nw-zahl">
+                    <span class="nw-wert">35</span><span class="nw-was">ADRs</span>
+                  </div>
+                  <div class="nw-zahl">
+                    <span class="nw-wert">50</span
+                    ><span class="nw-was">vorab festgelegte Hypothesen</span>
+                  </div>
+                </div>
+                <div class="nw-balken" data-nachweis-je>
+                  <span></span
+                  ><span class="nw-legende"
+                    ><span class="nw-l-voll"></span>gewertete Läufe 5.–16.11.2026<span
+                      class="nw-l-schraffur"
+                    ></span
+                    >Aufbau, Tests, weitere Läufe</span
+                  ><span class="nw-auftrag">1A Ressourcenisolation</span
+                  ><span class="nw-spur nw-1a"
+                    ><span class="nw-voll" style="width: calc((100% - 280px) * 0.105)"></span
+                    ><span class="nw-schraffur" style="width: calc((100% - 280px) * 0.142)"></span
+                    ><span class="nw-dauer"
+                      >2 h 32 min <span class="nw-plus">+ 3 h 26 min</span></span
+                    ></span
+                  ><span class="nw-auftrag">1B Schritte 1–2</span
+                  ><span class="nw-spur nw-1b"
+                    ><span class="nw-voll" style="width: calc((100% - 280px) * 0.038)"></span
+                    ><span class="nw-schraffur" style="width: calc((100% - 280px) * 0.962)"></span
+                    ><span class="nw-dauer"
+                      >55 min <span class="nw-plus">+ 23 h 19 min</span></span
+                    ></span
+                  ><span class="nw-auftrag">1B Schritte 3–4</span
+                  ><span class="nw-spur nw-1b"
+                    ><span class="nw-voll" style="width: calc((100% - 280px) * 0.522)"></span
+                    ><span class="nw-schraffur" style="width: calc((100% - 280px) * 0.054)"></span
+                    ><span class="nw-dauer"
+                      >12 h 39 min <span class="nw-plus">+ 1 h 19 min</span></span
+                    ></span
+                  ><span class="nw-auftrag">1C Laborläufe</span
+                  ><span class="nw-spur nw-1c"
+                    ><span class="nw-voll" style="width: calc((100% - 280px) * 0.175)"></span
+                    ><span class="nw-schraffur" style="width: calc((100% - 280px) * 0.049)"></span
+                    ><span class="nw-dauer"
+                      >4 h 15 min <span class="nw-plus">+ 1 h 11 min</span></span
+                    ></span
+                  >
+                </div>
+              </div>
+            </div>
+            <div class="nw-gerafft">
+              <div class="nw-kacheln">
+                <p class="nw-kopf">Automatisierte Tests je Werkzeug</p>
+                <dl>
+                  <div>
+                    <dt>1A Lastwerkzeuge</dt>
+                    <dd>108</dd>
+                  </div>
+                  <div>
+                    <dt>Messwerkzeuge 1B/1C</dt>
+                    <dd>126</dd>
+                  </div>
+                  <div>
+                    <dt>Pester 1B (Windows)</dt>
+                    <dd>57</dd>
+                  </div>
+                  <div>
+                    <dt>Backend 1C</dt>
+                    <dd>35</dd>
+                  </div>
+                </dl>
+              </div>
+              <div class="nw-kacheln">
+                <p class="nw-kopf">Vorab festgelegte Hypothesen je Auftrag</p>
+                <dl>
+                  <div>
+                    <dt>1A Vertrag</dt>
+                    <dd>2</dd>
+                  </div>
+                  <div>
+                    <dt>1B 1–2</dt>
+                    <dd>5</dd>
+                  </div>
+                  <div>
+                    <dt>1B 3–4</dt>
+                    <dd>6</dd>
+                  </div>
+                  <div>
+                    <dt>1C E</dt>
+                    <dd>16</dd>
+                  </div>
+                  <div>
+                    <dt>1C M</dt>
+                    <dd>7</dd>
+                  </div>
+                  <div>
+                    <dt>1C L</dt>
+                    <dd>6</dd>
+                  </div>
+                  <div>
+                    <dt>1C N</dt>
+                    <dd>6</dd>
+                  </div>
+                  <div>
+                    <dt>1C H_A</dt>
+                    <dd>2</dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+            <p class="vermerk" style="margin-top: 20px">
+              Rechnerzeit, keine Arbeitszeit · Tests statisch gezählt, ohne die Tests dieses Decks ·
+              ADRs: 35 (1B: 13, 1C: 22)
+            </p>
+          </div>
+        </div>
+        <div class="folie-fuss">
+          <span class="fuss-nr">37 / 40</span> · Quelle: Schneider, 2026, Ordner evidenz/1A und
+          evidenz/1B; Weirauch, 2026, Ordner docs/referat-thema-1, Datei nachweisumfang.md
         </div>
       </section>
       <!--quellen-->
@@ -6989,7 +7347,7 @@
         class="folie"
         data-id="GD"
         data-teil="rahmen"
-        aria-label="37 von 39: Danke. Wir freuen uns auf Ihre Fragen."
+        aria-label="38 von 40: Danke. Wir freuen uns auf Ihre Fragen."
       >
         <h1 class="folie-titel">Danke. Wir freuen uns auf Ihre Fragen.</h1>
         <div class="folie-flaeche">
@@ -6999,6 +7357,10 @@
                 <p class="dank-kopf">Alle Belege zum Nachprüfen</p>
                 <p class="dank-was">
                   Entscheidungen als ADR, Laufprotokolle, Messdaten und der Bau dieses Decks
+                </p>
+                <p class="dank-fork">
+                  Gemeinsam entwickelt im Fork von Niklas Schneider; der Fork von Jonas Weirauch ist
+                  auf denselben Stand synchronisiert.
                 </p>
                 <p class="dank-url mono">
                   <a
@@ -7012,75 +7374,11 @@
                 <!-- prettier-ignore --><svg viewBox="0 0 45 45" width="280" height="280" role="img" aria-label="QR-Code zum Belegrepository" shape-rendering="crispEdges"><rect width="45" height="45" style="fill:var(--grund)"/><path d="M4,4h1v1h-1zM5,4h1v1h-1zM6,4h1v1h-1zM7,4h1v1h-1zM8,4h1v1h-1zM9,4h1v1h-1zM10,4h1v1h-1zM13,4h1v1h-1zM16,4h1v1h-1zM17,4h1v1h-1zM18,4h1v1h-1zM19,4h1v1h-1zM21,4h1v1h-1zM22,4h1v1h-1zM23,4h1v1h-1zM25,4h1v1h-1zM26,4h1v1h-1zM29,4h1v1h-1zM34,4h1v1h-1zM35,4h1v1h-1zM36,4h1v1h-1zM37,4h1v1h-1zM38,4h1v1h-1zM39,4h1v1h-1zM40,4h1v1h-1zM4,5h1v1h-1zM10,5h1v1h-1zM12,5h1v1h-1zM14,5h1v1h-1zM17,5h1v1h-1zM18,5h1v1h-1zM20,5h1v1h-1zM21,5h1v1h-1zM22,5h1v1h-1zM23,5h1v1h-1zM25,5h1v1h-1zM28,5h1v1h-1zM29,5h1v1h-1zM32,5h1v1h-1zM34,5h1v1h-1zM40,5h1v1h-1zM4,6h1v1h-1zM6,6h1v1h-1zM7,6h1v1h-1zM8,6h1v1h-1zM10,6h1v1h-1zM12,6h1v1h-1zM14,6h1v1h-1zM15,6h1v1h-1zM19,6h1v1h-1zM20,6h1v1h-1zM22,6h1v1h-1zM23,6h1v1h-1zM24,6h1v1h-1zM25,6h1v1h-1zM26,6h1v1h-1zM30,6h1v1h-1zM32,6h1v1h-1zM34,6h1v1h-1zM36,6h1v1h-1zM37,6h1v1h-1zM38,6h1v1h-1zM40,6h1v1h-1zM4,7h1v1h-1zM6,7h1v1h-1zM7,7h1v1h-1zM8,7h1v1h-1zM10,7h1v1h-1zM12,7h1v1h-1zM13,7h1v1h-1zM15,7h1v1h-1zM20,7h1v1h-1zM21,7h1v1h-1zM23,7h1v1h-1zM29,7h1v1h-1zM31,7h1v1h-1zM32,7h1v1h-1zM34,7h1v1h-1zM36,7h1v1h-1zM37,7h1v1h-1zM38,7h1v1h-1zM40,7h1v1h-1zM4,8h1v1h-1zM6,8h1v1h-1zM7,8h1v1h-1zM8,8h1v1h-1zM10,8h1v1h-1zM13,8h1v1h-1zM14,8h1v1h-1zM15,8h1v1h-1zM18,8h1v1h-1zM20,8h1v1h-1zM23,8h1v1h-1zM24,8h1v1h-1zM26,8h1v1h-1zM27,8h1v1h-1zM32,8h1v1h-1zM34,8h1v1h-1zM36,8h1v1h-1zM37,8h1v1h-1zM38,8h1v1h-1zM40,8h1v1h-1zM4,9h1v1h-1zM10,9h1v1h-1zM13,9h1v1h-1zM14,9h1v1h-1zM16,9h1v1h-1zM17,9h1v1h-1zM18,9h1v1h-1zM19,9h1v1h-1zM20,9h1v1h-1zM22,9h1v1h-1zM24,9h1v1h-1zM29,9h1v1h-1zM34,9h1v1h-1zM40,9h1v1h-1zM4,10h1v1h-1zM5,10h1v1h-1zM6,10h1v1h-1zM7,10h1v1h-1zM8,10h1v1h-1zM9,10h1v1h-1zM10,10h1v1h-1zM12,10h1v1h-1zM14,10h1v1h-1zM16,10h1v1h-1zM18,10h1v1h-1zM20,10h1v1h-1zM22,10h1v1h-1zM24,10h1v1h-1zM26,10h1v1h-1zM28,10h1v1h-1zM30,10h1v1h-1zM32,10h1v1h-1zM34,10h1v1h-1zM35,10h1v1h-1zM36,10h1v1h-1zM37,10h1v1h-1zM38,10h1v1h-1zM39,10h1v1h-1zM40,10h1v1h-1zM12,11h1v1h-1zM13,11h1v1h-1zM16,11h1v1h-1zM17,11h1v1h-1zM18,11h1v1h-1zM19,11h1v1h-1zM20,11h1v1h-1zM28,11h1v1h-1zM31,11h1v1h-1zM32,11h1v1h-1zM4,12h1v1h-1zM10,12h1v1h-1zM12,12h1v1h-1zM13,12h1v1h-1zM15,12h1v1h-1zM16,12h1v1h-1zM17,12h1v1h-1zM18,12h1v1h-1zM19,12h1v1h-1zM22,12h1v1h-1zM24,12h1v1h-1zM26,12h1v1h-1zM29,12h1v1h-1zM30,12h1v1h-1zM33,12h1v1h-1zM34,12h1v1h-1zM37,12h1v1h-1zM38,12h1v1h-1zM39,12h1v1h-1zM4,13h1v1h-1zM6,13h1v1h-1zM7,13h1v1h-1zM8,13h1v1h-1zM9,13h1v1h-1zM13,13h1v1h-1zM15,13h1v1h-1zM24,13h1v1h-1zM26,13h1v1h-1zM27,13h1v1h-1zM29,13h1v1h-1zM30,13h1v1h-1zM31,13h1v1h-1zM32,13h1v1h-1zM35,13h1v1h-1zM36,13h1v1h-1zM38,13h1v1h-1zM39,13h1v1h-1zM6,14h1v1h-1zM8,14h1v1h-1zM9,14h1v1h-1zM10,14h1v1h-1zM13,14h1v1h-1zM18,14h1v1h-1zM21,14h1v1h-1zM22,14h1v1h-1zM24,14h1v1h-1zM29,14h1v1h-1zM30,14h1v1h-1zM31,14h1v1h-1zM32,14h1v1h-1zM33,14h1v1h-1zM34,14h1v1h-1zM35,14h1v1h-1zM37,14h1v1h-1zM38,14h1v1h-1zM39,14h1v1h-1zM40,14h1v1h-1zM5,15h1v1h-1zM6,15h1v1h-1zM7,15h1v1h-1zM9,15h1v1h-1zM11,15h1v1h-1zM12,15h1v1h-1zM13,15h1v1h-1zM15,15h1v1h-1zM18,15h1v1h-1zM19,15h1v1h-1zM20,15h1v1h-1zM26,15h1v1h-1zM30,15h1v1h-1zM31,15h1v1h-1zM33,15h1v1h-1zM36,15h1v1h-1zM37,15h1v1h-1zM40,15h1v1h-1zM5,16h1v1h-1zM10,16h1v1h-1zM12,16h1v1h-1zM13,16h1v1h-1zM15,16h1v1h-1zM16,16h1v1h-1zM23,16h1v1h-1zM24,16h1v1h-1zM28,16h1v1h-1zM31,16h1v1h-1zM32,16h1v1h-1zM34,16h1v1h-1zM35,16h1v1h-1zM37,16h1v1h-1zM40,16h1v1h-1zM4,17h1v1h-1zM12,17h1v1h-1zM15,17h1v1h-1zM17,17h1v1h-1zM18,17h1v1h-1zM19,17h1v1h-1zM20,17h1v1h-1zM21,17h1v1h-1zM22,17h1v1h-1zM23,17h1v1h-1zM24,17h1v1h-1zM27,17h1v1h-1zM31,17h1v1h-1zM35,17h1v1h-1zM37,17h1v1h-1zM39,17h1v1h-1zM5,18h1v1h-1zM7,18h1v1h-1zM8,18h1v1h-1zM10,18h1v1h-1zM13,18h1v1h-1zM15,18h1v1h-1zM16,18h1v1h-1zM17,18h1v1h-1zM19,18h1v1h-1zM20,18h1v1h-1zM21,18h1v1h-1zM24,18h1v1h-1zM25,18h1v1h-1zM26,18h1v1h-1zM28,18h1v1h-1zM30,18h1v1h-1zM31,18h1v1h-1zM33,18h1v1h-1zM35,18h1v1h-1zM36,18h1v1h-1zM37,18h1v1h-1zM39,18h1v1h-1zM40,18h1v1h-1zM4,19h1v1h-1zM6,19h1v1h-1zM7,19h1v1h-1zM8,19h1v1h-1zM9,19h1v1h-1zM12,19h1v1h-1zM13,19h1v1h-1zM16,19h1v1h-1zM17,19h1v1h-1zM21,19h1v1h-1zM22,19h1v1h-1zM23,19h1v1h-1zM31,19h1v1h-1zM32,19h1v1h-1zM35,19h1v1h-1zM37,19h1v1h-1zM38,19h1v1h-1zM40,19h1v1h-1zM4,20h1v1h-1zM9,20h1v1h-1zM10,20h1v1h-1zM15,20h1v1h-1zM16,20h1v1h-1zM17,20h1v1h-1zM19,20h1v1h-1zM20,20h1v1h-1zM23,20h1v1h-1zM26,20h1v1h-1zM27,20h1v1h-1zM28,20h1v1h-1zM29,20h1v1h-1zM30,20h1v1h-1zM31,20h1v1h-1zM32,20h1v1h-1zM34,20h1v1h-1zM36,20h1v1h-1zM38,20h1v1h-1zM39,20h1v1h-1zM40,20h1v1h-1zM4,21h1v1h-1zM5,21h1v1h-1zM6,21h1v1h-1zM9,21h1v1h-1zM11,21h1v1h-1zM12,21h1v1h-1zM14,21h1v1h-1zM16,21h1v1h-1zM18,21h1v1h-1zM21,21h1v1h-1zM22,21h1v1h-1zM24,21h1v1h-1zM25,21h1v1h-1zM27,21h1v1h-1zM28,21h1v1h-1zM29,21h1v1h-1zM31,21h1v1h-1zM32,21h1v1h-1zM35,21h1v1h-1zM37,21h1v1h-1zM39,21h1v1h-1zM4,22h1v1h-1zM7,22h1v1h-1zM9,22h1v1h-1zM10,22h1v1h-1zM14,22h1v1h-1zM15,22h1v1h-1zM16,22h1v1h-1zM17,22h1v1h-1zM18,22h1v1h-1zM19,22h1v1h-1zM24,22h1v1h-1zM26,22h1v1h-1zM27,22h1v1h-1zM28,22h1v1h-1zM29,22h1v1h-1zM31,22h1v1h-1zM33,22h1v1h-1zM36,22h1v1h-1zM38,22h1v1h-1zM40,22h1v1h-1zM4,23h1v1h-1zM5,23h1v1h-1zM8,23h1v1h-1zM9,23h1v1h-1zM12,23h1v1h-1zM13,23h1v1h-1zM15,23h1v1h-1zM17,23h1v1h-1zM22,23h1v1h-1zM23,23h1v1h-1zM24,23h1v1h-1zM26,23h1v1h-1zM30,23h1v1h-1zM31,23h1v1h-1zM33,23h1v1h-1zM34,23h1v1h-1zM37,23h1v1h-1zM40,23h1v1h-1zM10,24h1v1h-1zM12,24h1v1h-1zM14,24h1v1h-1zM17,24h1v1h-1zM19,24h1v1h-1zM21,24h1v1h-1zM23,24h1v1h-1zM26,24h1v1h-1zM28,24h1v1h-1zM29,24h1v1h-1zM31,24h1v1h-1zM33,24h1v1h-1zM34,24h1v1h-1zM36,24h1v1h-1zM37,24h1v1h-1zM38,24h1v1h-1zM4,25h1v1h-1zM8,25h1v1h-1zM12,25h1v1h-1zM14,25h1v1h-1zM15,25h1v1h-1zM18,25h1v1h-1zM19,25h1v1h-1zM22,25h1v1h-1zM23,25h1v1h-1zM24,25h1v1h-1zM25,25h1v1h-1zM27,25h1v1h-1zM30,25h1v1h-1zM31,25h1v1h-1zM33,25h1v1h-1zM36,25h1v1h-1zM38,25h1v1h-1zM39,25h1v1h-1zM8,26h1v1h-1zM10,26h1v1h-1zM12,26h1v1h-1zM14,26h1v1h-1zM15,26h1v1h-1zM16,26h1v1h-1zM19,26h1v1h-1zM22,26h1v1h-1zM25,26h1v1h-1zM26,26h1v1h-1zM29,26h1v1h-1zM30,26h1v1h-1zM31,26h1v1h-1zM32,26h1v1h-1zM33,26h1v1h-1zM35,26h1v1h-1zM36,26h1v1h-1zM37,26h1v1h-1zM39,26h1v1h-1zM40,26h1v1h-1zM4,27h1v1h-1zM5,27h1v1h-1zM6,27h1v1h-1zM7,27h1v1h-1zM8,27h1v1h-1zM9,27h1v1h-1zM14,27h1v1h-1zM16,27h1v1h-1zM18,27h1v1h-1zM19,27h1v1h-1zM20,27h1v1h-1zM24,27h1v1h-1zM26,27h1v1h-1zM27,27h1v1h-1zM28,27h1v1h-1zM32,27h1v1h-1zM33,27h1v1h-1zM35,27h1v1h-1zM36,27h1v1h-1zM37,27h1v1h-1zM39,27h1v1h-1zM8,28h1v1h-1zM9,28h1v1h-1zM10,28h1v1h-1zM11,28h1v1h-1zM15,28h1v1h-1zM16,28h1v1h-1zM17,28h1v1h-1zM20,28h1v1h-1zM21,28h1v1h-1zM22,28h1v1h-1zM24,28h1v1h-1zM31,28h1v1h-1zM32,28h1v1h-1zM34,28h1v1h-1zM35,28h1v1h-1zM4,29h1v1h-1zM5,29h1v1h-1zM7,29h1v1h-1zM8,29h1v1h-1zM9,29h1v1h-1zM12,29h1v1h-1zM13,29h1v1h-1zM14,29h1v1h-1zM15,29h1v1h-1zM16,29h1v1h-1zM17,29h1v1h-1zM18,29h1v1h-1zM20,29h1v1h-1zM21,29h1v1h-1zM27,29h1v1h-1zM29,29h1v1h-1zM31,29h1v1h-1zM32,29h1v1h-1zM35,29h1v1h-1zM37,29h1v1h-1zM4,30h1v1h-1zM8,30h1v1h-1zM10,30h1v1h-1zM11,30h1v1h-1zM13,30h1v1h-1zM21,30h1v1h-1zM24,30h1v1h-1zM25,30h1v1h-1zM26,30h1v1h-1zM29,30h1v1h-1zM30,30h1v1h-1zM31,30h1v1h-1zM32,30h1v1h-1zM33,30h1v1h-1zM34,30h1v1h-1zM35,30h1v1h-1zM39,30h1v1h-1zM40,30h1v1h-1zM4,31h1v1h-1zM6,31h1v1h-1zM8,31h1v1h-1zM9,31h1v1h-1zM12,31h1v1h-1zM15,31h1v1h-1zM18,31h1v1h-1zM19,31h1v1h-1zM24,31h1v1h-1zM28,31h1v1h-1zM31,31h1v1h-1zM34,31h1v1h-1zM35,31h1v1h-1zM38,31h1v1h-1zM39,31h1v1h-1zM40,31h1v1h-1zM4,32h1v1h-1zM6,32h1v1h-1zM10,32h1v1h-1zM12,32h1v1h-1zM14,32h1v1h-1zM17,32h1v1h-1zM18,32h1v1h-1zM21,32h1v1h-1zM26,32h1v1h-1zM28,32h1v1h-1zM30,32h1v1h-1zM32,32h1v1h-1zM33,32h1v1h-1zM34,32h1v1h-1zM35,32h1v1h-1zM36,32h1v1h-1zM37,32h1v1h-1zM38,32h1v1h-1zM12,33h1v1h-1zM13,33h1v1h-1zM14,33h1v1h-1zM16,33h1v1h-1zM18,33h1v1h-1zM19,33h1v1h-1zM21,33h1v1h-1zM23,33h1v1h-1zM24,33h1v1h-1zM27,33h1v1h-1zM31,33h1v1h-1zM32,33h1v1h-1zM36,33h1v1h-1zM4,34h1v1h-1zM5,34h1v1h-1zM6,34h1v1h-1zM7,34h1v1h-1zM8,34h1v1h-1zM9,34h1v1h-1zM10,34h1v1h-1zM17,34h1v1h-1zM18,34h1v1h-1zM19,34h1v1h-1zM23,34h1v1h-1zM24,34h1v1h-1zM25,34h1v1h-1zM26,34h1v1h-1zM27,34h1v1h-1zM29,34h1v1h-1zM32,34h1v1h-1zM34,34h1v1h-1zM36,34h1v1h-1zM39,34h1v1h-1zM40,34h1v1h-1zM4,35h1v1h-1zM10,35h1v1h-1zM14,35h1v1h-1zM16,35h1v1h-1zM21,35h1v1h-1zM22,35h1v1h-1zM24,35h1v1h-1zM26,35h1v1h-1zM28,35h1v1h-1zM30,35h1v1h-1zM31,35h1v1h-1zM32,35h1v1h-1zM36,35h1v1h-1zM39,35h1v1h-1zM40,35h1v1h-1zM4,36h1v1h-1zM6,36h1v1h-1zM7,36h1v1h-1zM8,36h1v1h-1zM10,36h1v1h-1zM13,36h1v1h-1zM17,36h1v1h-1zM19,36h1v1h-1zM20,36h1v1h-1zM23,36h1v1h-1zM24,36h1v1h-1zM27,36h1v1h-1zM28,36h1v1h-1zM29,36h1v1h-1zM30,36h1v1h-1zM31,36h1v1h-1zM32,36h1v1h-1zM33,36h1v1h-1zM34,36h1v1h-1zM35,36h1v1h-1zM36,36h1v1h-1zM38,36h1v1h-1zM39,36h1v1h-1zM40,36h1v1h-1zM4,37h1v1h-1zM6,37h1v1h-1zM7,37h1v1h-1zM8,37h1v1h-1zM10,37h1v1h-1zM13,37h1v1h-1zM16,37h1v1h-1zM17,37h1v1h-1zM18,37h1v1h-1zM20,37h1v1h-1zM22,37h1v1h-1zM23,37h1v1h-1zM24,37h1v1h-1zM25,37h1v1h-1zM26,37h1v1h-1zM27,37h1v1h-1zM29,37h1v1h-1zM32,37h1v1h-1zM33,37h1v1h-1zM34,37h1v1h-1zM37,37h1v1h-1zM40,37h1v1h-1zM4,38h1v1h-1zM6,38h1v1h-1zM7,38h1v1h-1zM8,38h1v1h-1zM10,38h1v1h-1zM13,38h1v1h-1zM15,38h1v1h-1zM19,38h1v1h-1zM20,38h1v1h-1zM21,38h1v1h-1zM24,38h1v1h-1zM25,38h1v1h-1zM26,38h1v1h-1zM28,38h1v1h-1zM29,38h1v1h-1zM30,38h1v1h-1zM31,38h1v1h-1zM32,38h1v1h-1zM38,38h1v1h-1zM39,38h1v1h-1zM40,38h1v1h-1zM4,39h1v1h-1zM10,39h1v1h-1zM15,39h1v1h-1zM16,39h1v1h-1zM22,39h1v1h-1zM24,39h1v1h-1zM27,39h1v1h-1zM28,39h1v1h-1zM32,39h1v1h-1zM33,39h1v1h-1zM34,39h1v1h-1zM36,39h1v1h-1zM37,39h1v1h-1zM40,39h1v1h-1zM4,40h1v1h-1zM5,40h1v1h-1zM6,40h1v1h-1zM7,40h1v1h-1zM8,40h1v1h-1zM9,40h1v1h-1zM10,40h1v1h-1zM12,40h1v1h-1zM13,40h1v1h-1zM15,40h1v1h-1zM17,40h1v1h-1zM18,40h1v1h-1zM19,40h1v1h-1zM20,40h1v1h-1zM24,40h1v1h-1zM27,40h1v1h-1zM28,40h1v1h-1zM32,40h1v1h-1zM33,40h1v1h-1zM34,40h1v1h-1zM35,40h1v1h-1zM37,40h1v1h-1zM40,40h1v1h-1z" style="fill:var(--tinte)"/></svg>
                 <figcaption class="vermerk">Repository, Ordner docs/referat-thema-1</figcaption>
               </figure>
-              <div class="dank-nachweis" data-nachweis>
-                <div class="nw-band">
-                  <div class="nw-zahlen">
-                    <div class="nw-zahl">
-                      <span class="nw-wert">20,3 h</span
-                      ><span class="nw-was">gewertete Laborzeit</span>
-                    </div>
-                    <div class="nw-zahl">
-                      <span class="nw-wert">29,3 h</span
-                      ><span class="nw-was">Aufbau, Tests, weitere Läufe</span>
-                    </div>
-                    <div class="nw-zahl">
-                      <span class="nw-wert">326</span
-                      ><span class="nw-was">automatisierte Tests</span>
-                    </div>
-                    <div class="nw-zahl">
-                      <span class="nw-wert">35</span><span class="nw-was">ADRs</span>
-                    </div>
-                    <div class="nw-zahl">
-                      <span class="nw-wert">50</span
-                      ><span class="nw-was">vorab festgelegte Hypothesen</span>
-                    </div>
-                  </div>
-                  <div class="nw-balken" data-nachweis-je>
-                    <span></span
-                    ><span class="nw-legende"
-                      ><span class="nw-l-voll"></span>gewertete Läufe 5.–16.11.2026<span
-                        class="nw-l-schraffur"
-                      ></span
-                      >Aufbau, Tests, weitere Läufe</span
-                    ><span class="nw-auftrag">1A Ressourcenisolation</span
-                    ><span class="nw-spur nw-1a"
-                      ><span class="nw-voll" style="width: calc((100% - 280px) * 0.105)"></span
-                      ><span class="nw-schraffur" style="width: calc((100% - 280px) * 0.142)"></span
-                      ><span class="nw-dauer"
-                        >2 h 32 min <span class="nw-plus">+ 3 h 26 min</span></span
-                      ></span
-                    ><span class="nw-auftrag">1B Schritte 1–2</span
-                    ><span class="nw-spur nw-1b"
-                      ><span class="nw-voll" style="width: calc((100% - 280px) * 0.038)"></span
-                      ><span class="nw-schraffur" style="width: calc((100% - 280px) * 0.962)"></span
-                      ><span class="nw-dauer"
-                        >55 min <span class="nw-plus">+ 23 h 19 min</span></span
-                      ></span
-                    ><span class="nw-auftrag">1B Schritte 3–4</span
-                    ><span class="nw-spur nw-1b"
-                      ><span class="nw-voll" style="width: calc((100% - 280px) * 0.522)"></span
-                      ><span class="nw-schraffur" style="width: calc((100% - 280px) * 0.054)"></span
-                      ><span class="nw-dauer"
-                        >12 h 39 min <span class="nw-plus">+ 1 h 19 min</span></span
-                      ></span
-                    ><span class="nw-auftrag">1C Laborläufe</span
-                    ><span class="nw-spur nw-1c"
-                      ><span class="nw-voll" style="width: calc((100% - 280px) * 0.175)"></span
-                      ><span class="nw-schraffur" style="width: calc((100% - 280px) * 0.049)"></span
-                      ><span class="nw-dauer"
-                        >4 h 15 min <span class="nw-plus">+ 1 h 11 min</span></span
-                      ></span
-                    >
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">37 / 39</span> · Quelle: Weirauch, 2026, Ordner
-          docs/referat-thema-1, Datei nachweisumfang.md; Schneider, 2026, Ordner evidenz/1A und
-          evidenz/1B
+          <span class="fuss-nr">38 / 40</span> · Quelle: Weirauch, 2026, Ordner docs/referat-thema-1
         </div>
       </section>
       <!--/quellen-->
@@ -7088,28 +7386,21 @@
         class="folie"
         data-id="J16"
         data-teil="jonas"
-        aria-label="38 von 39: Literaturverzeichnis"
+        data-gemeinsam
+        aria-label="39 von 40: Literaturverzeichnis (1/2)"
       >
-        <h1 class="folie-titel">Literaturverzeichnis</h1>
+        <h1 class="folie-titel">Literaturverzeichnis (1/2)</h1>
         <div class="folie-flaeche">
           <div class="flaeche-inhalt">
             <!--quellen-->
             <ul
               data-literatur
-              style="
-                margin: 0;
-                padding: 0;
-                list-style: none;
-                columns: 2;
-                column-gap: 56px;
-                font-size: 17px;
-                line-height: 1.3;
-              "
+              style="margin: 0; padding: 0; list-style: none; font-size: 20px; line-height: 1.3"
             >
               <li
                 style="
                   break-inside: avoid;
-                  margin: 0 0 9px;
+                  margin: 0 0 12px;
                   padding-left: 28px;
                   text-indent: -28px;
                   overflow-wrap: anywhere;
@@ -7125,7 +7416,7 @@
               <li
                 style="
                   break-inside: avoid;
-                  margin: 0 0 9px;
+                  margin: 0 0 12px;
                   padding-left: 28px;
                   text-indent: -28px;
                   overflow-wrap: anywhere;
@@ -7138,7 +7429,7 @@
               <li
                 style="
                   break-inside: avoid;
-                  margin: 0 0 9px;
+                  margin: 0 0 12px;
                   padding-left: 28px;
                   text-indent: -28px;
                   overflow-wrap: anywhere;
@@ -7151,7 +7442,7 @@
               <li
                 style="
                   break-inside: avoid;
-                  margin: 0 0 9px;
+                  margin: 0 0 12px;
                   padding-left: 28px;
                   text-indent: -28px;
                   overflow-wrap: anywhere;
@@ -7164,7 +7455,19 @@
               <li
                 style="
                   break-inside: avoid;
-                  margin: 0 0 9px;
+                  margin: 0 0 12px;
+                  padding-left: 28px;
+                  text-indent: -28px;
+                  overflow-wrap: anywhere;
+                "
+              >
+                Heo, T. (2024). <i>Control Group v2</i> (Linux 6.12). The Linux Kernel
+                Documentation. https://www.kernel.org/doc/html/v6.12/admin-guide/cgroup-v2.html
+              </li>
+              <li
+                style="
+                  break-inside: avoid;
+                  margin: 0 0 12px;
                   padding-left: 28px;
                   text-indent: -28px;
                   overflow-wrap: anywhere;
@@ -7172,27 +7475,66 @@
               >
                 Kwon, W., Li, Z., Zhuang, S., Sheng, Y., Zheng, L., Yu, C. H., Gonzalez, J. E.,
                 Zhang, H. & Stoica, I. (2023). Efficient memory management for large language model
-                serving with PagedAttention.
-                <i>Proceedings of the 29th Symposium on Operating Systems Principles</i>, 611–626.
+                serving with PagedAttention. In
+                <i>Proceedings of the 29th Symposium on Operating Systems Principles</i> (S.
+                611–626). Association for Computing Machinery.
                 https://doi.org/10.1145/3600006.3613165
               </li>
               <li
                 style="
                   break-inside: avoid;
-                  margin: 0 0 9px;
+                  margin: 0 0 12px;
                   padding-left: 28px;
                   text-indent: -28px;
                   overflow-wrap: anywhere;
                 "
               >
                 Mell, P. & Grance, T. (2011). <i>The NIST definition of cloud computing</i> (NIST
-                Special Publication 800-145). National Institute of Standards and Technology.
+                Special Publication Nr. 800-145). National Institute of Standards and Technology.
                 https://doi.org/10.6028/NIST.SP.800-145
+              </li>
+            </ul>
+            <!--/quellen-->
+          </div>
+        </div>
+        <div class="folie-fuss">
+          <span class="fuss-nr">39 / 40</span> · Kurzbelege auf den Folien nach IU-Zitierleitfaden;
+          Einträge wie in den Handouts
+        </div>
+      </section>
+      <section
+        class="folie"
+        data-id="J16b"
+        data-teil="jonas"
+        data-gemeinsam
+        aria-label="40 von 40: Literaturverzeichnis (2/2)"
+      >
+        <h1 class="folie-titel">Literaturverzeichnis (2/2)</h1>
+        <div class="folie-flaeche">
+          <div class="flaeche-inhalt">
+            <!--quellen-->
+            <ul
+              data-literatur
+              style="margin: 0; padding: 0; list-style: none; font-size: 20px; line-height: 1.3"
+            >
+              <li
+                style="
+                  break-inside: avoid;
+                  margin: 0 0 12px;
+                  padding-left: 28px;
+                  text-indent: -28px;
+                  overflow-wrap: anywhere;
+                "
+              >
+                Nosek, B. A., Ebersole, C. R., DeHaven, A. C. & Mellor, D. T. (2018). The
+                preregistration revolution.
+                <i>Proceedings of the National Academy of Sciences, 115</i>(11), 2600–2606.
+                https://doi.org/10.1073/pnas.1708274114
               </li>
               <li
                 style="
                   break-inside: avoid;
-                  margin: 0 0 9px;
+                  margin: 0 0 12px;
                   padding-left: 28px;
                   text-indent: -28px;
                   overflow-wrap: anywhere;
@@ -7207,7 +7549,21 @@
               <li
                 style="
                   break-inside: avoid;
-                  margin: 0 0 9px;
+                  margin: 0 0 12px;
+                  padding-left: 28px;
+                  text-indent: -28px;
+                  overflow-wrap: anywhere;
+                "
+              >
+                Schneider, N. (2026).
+                <i>Referat Thema 1, Aufträge 1A und 1B</i> [Referatsausarbeitung: Versuchsvertrag,
+                Messreihen, Auswertung]. GitHub.
+                https://github.com/NiklasSkulll/arsnova.eu/tree/main/docs/referat-thema-1
+              </li>
+              <li
+                style="
+                  break-inside: avoid;
+                  margin: 0 0 12px;
                   padding-left: 28px;
                   text-indent: -28px;
                   overflow-wrap: anywhere;
@@ -7223,7 +7579,7 @@
               <li
                 style="
                   break-inside: avoid;
-                  margin: 0 0 9px;
+                  margin: 0 0 12px;
                   padding-left: 28px;
                   text-indent: -28px;
                   overflow-wrap: anywhere;
@@ -7237,7 +7593,7 @@
               <li
                 style="
                   break-inside: avoid;
-                  margin: 0 0 9px;
+                  margin: 0 0 12px;
                   padding-left: 28px;
                   text-indent: -28px;
                   overflow-wrap: anywhere;
@@ -7251,7 +7607,7 @@
               <li
                 style="
                   break-inside: avoid;
-                  margin: 0 0 9px;
+                  margin: 0 0 12px;
                   padding-left: 28px;
                   text-indent: -28px;
                   overflow-wrap: anywhere;
@@ -7267,164 +7623,8 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">38 / 39</span> · Kurzbelege auf den Folien nach IU-Zitierleitfaden;
-          Einträge wie im Handout
-        </div>
-      </section>
-      <section
-        class="folie"
-        data-id="NL"
-        data-teil="niklas"
-        aria-label="39 von 39: Literaturverzeichnis 1A"
-      >
-        <h1 class="folie-titel">Literaturverzeichnis 1A</h1>
-        <div class="folie-flaeche">
-          <div class="flaeche-inhalt">
-            <!--quellen-->
-            <ul
-              data-literatur
-              style="
-                margin: 0;
-                padding: 0;
-                list-style: none;
-                columns: 2;
-                column-gap: 56px;
-                font-size: 19px;
-                line-height: 1.3;
-              "
-            >
-              <li
-                style="
-                  break-inside: avoid;
-                  margin: 0 0 10px;
-                  padding-left: 28px;
-                  text-indent: -28px;
-                  overflow-wrap: anywhere;
-                "
-              >
-                arsnova.eu-Projektteam. (2026a, 17. Oktober).
-                <i
-                  ><span class="nowrap">ADR-0035</span>: Selbstgehosteter Open-Weight-LLM-Server:
-                  llama.cpp (llama-server) statt Ollama</i
-                >. GitHub.
-                https://github.com/kqc-real/arsnova.eu/blob/a19ca70f/docs/architecture/decisions/0035-self-hosted-llm-runtime-llama-cpp-over-ollama.md
-              </li>
-              <li
-                style="
-                  break-inside: avoid;
-                  margin: 0 0 10px;
-                  padding-left: 28px;
-                  text-indent: -28px;
-                  overflow-wrap: anywhere;
-                "
-              >
-                arsnova.eu-Projektteam. (2026b, 13. Oktober).
-                <i>Referatsprüfung Cloud Computing: Verbindliche Umsetzung</i>. GitHub.
-                https://github.com/kqc-real/arsnova.eu/blob/a19ca70f/docs/didaktik/CLOUD-COMPUTING-REFERAT-PRUEFUNG.md
-              </li>
-              <li
-                style="
-                  break-inside: avoid;
-                  margin: 0 0 10px;
-                  padding-left: 28px;
-                  text-indent: -28px;
-                  overflow-wrap: anywhere;
-                "
-              >
-                Dean, J. & Barroso, L. A. (2013). The tail at scale.
-                <i>Communications of the ACM, 56</i>(2), 74–80.
-                https://doi.org/10.1145/2408776.2408794
-              </li>
-              <li
-                style="
-                  break-inside: avoid;
-                  margin: 0 0 10px;
-                  padding-left: 28px;
-                  text-indent: -28px;
-                  overflow-wrap: anywhere;
-                "
-              >
-                Heo, T. (2024). <i>Control Group v2</i> (Linux 6.12). The Linux Kernel
-                Documentation. https://www.kernel.org/doc/html/v6.12/admin-guide/cgroup-v2.html
-              </li>
-              <li
-                style="
-                  break-inside: avoid;
-                  margin: 0 0 10px;
-                  padding-left: 28px;
-                  text-indent: -28px;
-                  overflow-wrap: anywhere;
-                "
-              >
-                Nosek, B. A., Ebersole, C. R., DeHaven, A. C. & Mellor, D. T. (2018). The
-                preregistration revolution.
-                <i>Proceedings of the National Academy of Sciences, 115</i>(11), 2600–2606.
-                https://doi.org/10.1073/pnas.1708274114
-              </li>
-              <li
-                style="
-                  break-inside: avoid;
-                  margin: 0 0 10px;
-                  padding-left: 28px;
-                  text-indent: -28px;
-                  overflow-wrap: anywhere;
-                "
-              >
-                Papadopoulos, A. V., Versluis, L., Bauer, A., Herbst, N., von Kistowski, J.,
-                Ali-Eldin, A., Abad, C. L., Amaral, J. N., Tůma, P. & Iosup, A. (2021).
-                Methodological principles for reproducible performance evaluation in cloud
-                computing. <i>IEEE Transactions on Software Engineering, 47</i>(8), 1528–1543.
-                https://doi.org/10.1109/TSE.2019.2927908
-              </li>
-              <li
-                style="
-                  break-inside: avoid;
-                  margin: 0 0 10px;
-                  padding-left: 28px;
-                  text-indent: -28px;
-                  overflow-wrap: anywhere;
-                "
-              >
-                Schneider, N. (2026).
-                <i>Referat Thema 1, Aufträge 1A und 1B</i> [Referatsausarbeitung: Versuchsvertrag,
-                Messreihen, Auswertung]. GitHub.
-                https://github.com/NiklasSkulll/arsnova.eu/tree/main/docs/referat-thema-1
-              </li>
-              <li
-                style="
-                  break-inside: avoid;
-                  margin: 0 0 10px;
-                  padding-left: 28px;
-                  text-indent: -28px;
-                  overflow-wrap: anywhere;
-                "
-              >
-                Ulrich, M. (2016). Addressing cascading failures. In B. Beyer, C. Jones, J. Petoff &
-                N. R. Murphy (Hrsg.),
-                <i>Site reliability engineering: How Google runs production systems</i>. O’Reilly
-                Media. https://sre.google/sre-book/addressing-cascading-failures/
-              </li>
-              <li
-                style="
-                  break-inside: avoid;
-                  margin: 0 0 10px;
-                  padding-left: 28px;
-                  text-indent: -28px;
-                  overflow-wrap: anywhere;
-                "
-              >
-                Weirauch, J. (2026).
-                <i>Referat Thema 1, Aufträge 1B und 1C</i> [Referatsausarbeitung: Entscheidungen,
-                Berichte, Messdaten]. GitHub.
-                https://github.com/NiklasSkulll/arsnova.eu/tree/main/docs/referat-thema-1
-              </li>
-            </ul>
-            <!--/quellen-->
-          </div>
-        </div>
-        <div class="folie-fuss">
-          <span class="fuss-nr">39 / 39</span> · Kurzbelege auf den Folien nach IU-Zitierleitfaden;
-          Einträge wie im Handout
+          <span class="fuss-nr">40 / 40</span> · Kurzbelege auf den Folien nach IU-Zitierleitfaden;
+          Einträge wie in den Handouts
         </div>
       </section>
       <section
@@ -7761,8 +7961,7 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">Reserve R9</span> · Quelle: Weirauch, 2026, 1C-ergebnis.md, Abschn.
-          3
+          <span class="fuss-nr">Reserve R9</span> · Quelle: Weirauch, 2026, 1C-ergebnis.md, Kap. 3
         </div>
       </section>
       <section
@@ -7846,8 +8045,8 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">Reserve R10</span> · Quelle: Weirauch, 2026, Aufbauprotokoll 1B;
-          arsnova.eu-Projektteam, 2026a
+          <span class="fuss-nr">Reserve R10</span> · Quelle: arsnova.eu-Projektteam, 2026a, Kap.
+          2.4; Weirauch, 2026, Aufbauprotokoll 1B
         </div>
       </section>
       <section
@@ -8023,8 +8222,7 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">Reserve R12</span> · Quelle: Weirauch, 2026, 1C-ergebnis.md, Abschn.
-          5
+          <span class="fuss-nr">Reserve R12</span> · Quelle: Weirauch, 2026, 1C-ergebnis.md, Kap. 5
         </div>
       </section>
       <section
@@ -8109,478 +8307,6 @@
         <div class="folie-fuss">
           <span class="fuss-nr">Reserve R16</span> · Quelle: Weirauch, 2026, Datei 1C-diagrams.md,
           Abb. 2
-        </div>
-      </section>
-      <section
-        class="folie"
-        data-id="R17"
-        data-teil="reserve"
-        aria-label="Reserve R17: Reserve: Was hinter den Belegen steht"
-      >
-        <h1 class="folie-titel">Reserve: Was hinter den Belegen steht</h1>
-        <p class="folie-frage">
-          <span class="etikett etikett-1a">1A</span><span class="etikett etikett-1b">1B</span
-          ><span class="etikett etikett-1c">1C</span>Wie viel Messung und Prüfung steckt in den
-          Belegen?
-        </p>
-        <div class="folie-flaeche">
-          <div class="flaeche-inhalt">
-            <div class="nw-reserve">
-              <div class="nw-tabelle">
-                <p class="nw-kopf">Rechnerzeit: gewertet + Aufbau, Tests, weitere Läufe</p>
-                <table
-                  class="eng"
-                  style="border-collapse: collapse; font-size: 22px; line-height: 1.3; width: 100%"
-                >
-                  <tr>
-                    <td
-                      style="
-                        padding: 7px 12px 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        vertical-align: top;
-                      "
-                    >
-                      1A Ressourcenisolation
-                    </td>
-                    <td
-                      style="
-                        padding: 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        text-align: right;
-                        font-variant-numeric: tabular-nums;
-                        vertical-align: top;
-                      "
-                    >
-                      <span style="white-space: nowrap">2 h 32 min + 3 h 26 min</span><br /><span
-                        class="nw-zusatz"
-                        >25 Läufe, 25 vollständig; Vorlauf; 43 gelöschte Läufe aus Git</span
-                      >
-                    </td>
-                  </tr>
-                  <tr>
-                    <td
-                      style="
-                        padding: 7px 12px 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        vertical-align: top;
-                      "
-                    >
-                      1B Schritte 1–2
-                    </td>
-                    <td
-                      style="
-                        padding: 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        text-align: right;
-                        font-variant-numeric: tabular-nums;
-                        vertical-align: top;
-                      "
-                    >
-                      <span style="white-space: nowrap">55 min + 23 h 19 min</span><br /><span
-                        class="nw-zusatz"
-                        >25 Aufträge; 29 VM-Starts, davon 11 Windows</span
-                      >
-                    </td>
-                  </tr>
-                  <tr>
-                    <td
-                      style="
-                        padding: 7px 12px 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        vertical-align: top;
-                      "
-                    >
-                      1B Schritte 3–4
-                    </td>
-                    <td
-                      style="
-                        padding: 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        text-align: right;
-                        font-variant-numeric: tabular-nums;
-                        vertical-align: top;
-                      "
-                    >
-                      <span style="white-space: nowrap">12 h 39 min + 1 h 19 min</span><br /><span
-                        class="nw-zusatz"
-                        >18 Läufe, 128 Aufträge; 14 Zeitfenster</span
-                      >
-                    </td>
-                  </tr>
-                  <tr>
-                    <td
-                      style="
-                        padding: 7px 12px 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        vertical-align: top;
-                      "
-                    >
-                      1C Laborläufe
-                    </td>
-                    <td
-                      style="
-                        padding: 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        text-align: right;
-                        font-variant-numeric: tabular-nums;
-                        vertical-align: top;
-                      "
-                    >
-                      <span style="white-space: nowrap">4 h 15 min + 1 h 11 min</span><br /><span
-                        class="nw-zusatz"
-                        >3 Läufe; 10 Zeitfenster</span
-                      >
-                    </td>
-                  </tr>
-                  <tr>
-                    <td
-                      style="
-                        padding: 7px 12px 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        vertical-align: top;
-                      "
-                    >
-                      Summe
-                    </td>
-                    <td
-                      style="
-                        padding: 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        text-align: right;
-                        font-variant-numeric: tabular-nums;
-                        vertical-align: top;
-                      "
-                    >
-                      <span style="white-space: nowrap">20,3 h + 29,3 h</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td
-                      style="
-                        padding: 7px 12px 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        vertical-align: top;
-                      "
-                    >
-                      Gewertete Läufe
-                    </td>
-                    <td
-                      style="
-                        padding: 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        text-align: right;
-                        font-variant-numeric: tabular-nums;
-                        vertical-align: top;
-                      "
-                    >
-                      <span style="white-space: nowrap">5.–16.11.2026</span>
-                    </td>
-                  </tr>
-                </table>
-                <p class="nw-notiz">
-                  Rechnerzeit, keine Arbeitszeit. Aufbau usw.: VM-Journal (1B 1–2), sonst Uhrzeiten
-                  in Protokollen.
-                </p>
-              </div>
-              <div class="nw-tabelle">
-                <p class="nw-kopf">Automatisierte Tests: 326</p>
-                <table
-                  class="eng"
-                  style="border-collapse: collapse; font-size: 22px; line-height: 1.3; width: 100%"
-                >
-                  <tr>
-                    <td
-                      style="
-                        padding: 7px 12px 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        vertical-align: top;
-                      "
-                    >
-                      1A Lastwerkzeuge
-                    </td>
-                    <td
-                      style="
-                        padding: 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        text-align: right;
-                        font-variant-numeric: tabular-nums;
-                        vertical-align: top;
-                      "
-                    >
-                      <span style="white-space: nowrap">108</span><br /><span class="nw-zusatz"
-                        >16 neue Dateien</span
-                      >
-                    </td>
-                  </tr>
-                  <tr>
-                    <td
-                      style="
-                        padding: 7px 12px 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        vertical-align: top;
-                      "
-                    >
-                      Messwerkzeuge 1B/1C
-                    </td>
-                    <td
-                      style="
-                        padding: 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        text-align: right;
-                        font-variant-numeric: tabular-nums;
-                        vertical-align: top;
-                      "
-                    >
-                      <span style="white-space: nowrap">126</span><br /><span class="nw-zusatz"
-                        >23 Dateien</span
-                      >
-                    </td>
-                  </tr>
-                  <tr>
-                    <td
-                      style="
-                        padding: 7px 12px 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        vertical-align: top;
-                      "
-                    >
-                      Pester 1B (Windows)
-                    </td>
-                    <td
-                      style="
-                        padding: 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        text-align: right;
-                        font-variant-numeric: tabular-nums;
-                        vertical-align: top;
-                      "
-                    >
-                      <span style="white-space: nowrap">57</span><br /><span class="nw-zusatz"
-                        >3 Dateien</span
-                      >
-                    </td>
-                  </tr>
-                  <tr>
-                    <td
-                      style="
-                        padding: 7px 12px 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        vertical-align: top;
-                      "
-                    >
-                      Backend 1C
-                    </td>
-                    <td
-                      style="
-                        padding: 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        text-align: right;
-                        font-variant-numeric: tabular-nums;
-                        vertical-align: top;
-                      "
-                    >
-                      <span style="white-space: nowrap">35</span><br /><span class="nw-zusatz"
-                        >4 neue Dateien, netto +1 in geänderten</span
-                      >
-                    </td>
-                  </tr>
-                </table>
-                <p class="nw-notiz">
-                  Statisch gezählt, ohne die Tests dieses Decks und der Handouts.
-                </p>
-              </div>
-              <div class="nw-tabelle">
-                <p class="nw-kopf">Vorab festgelegte Hypothesen: 50</p>
-                <table
-                  class="eng"
-                  style="border-collapse: collapse; font-size: 22px; line-height: 1.3; width: 100%"
-                >
-                  <tr>
-                    <td
-                      style="
-                        padding: 7px 12px 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        vertical-align: top;
-                      "
-                    >
-                      1A Experimentvertrag
-                    </td>
-                    <td
-                      style="
-                        padding: 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        text-align: right;
-                        font-variant-numeric: tabular-nums;
-                        vertical-align: top;
-                      "
-                    >
-                      <span style="white-space: nowrap">2</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td
-                      style="
-                        padding: 7px 12px 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        vertical-align: top;
-                      "
-                    >
-                      1B Schritte 1–2
-                    </td>
-                    <td
-                      style="
-                        padding: 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        text-align: right;
-                        font-variant-numeric: tabular-nums;
-                        vertical-align: top;
-                      "
-                    >
-                      <span style="white-space: nowrap">5</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td
-                      style="
-                        padding: 7px 12px 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        vertical-align: top;
-                      "
-                    >
-                      1B Schritte 3–4
-                    </td>
-                    <td
-                      style="
-                        padding: 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        text-align: right;
-                        font-variant-numeric: tabular-nums;
-                        vertical-align: top;
-                      "
-                    >
-                      <span style="white-space: nowrap">6</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td
-                      style="
-                        padding: 7px 12px 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        vertical-align: top;
-                      "
-                    >
-                      1C Einzeltests E
-                    </td>
-                    <td
-                      style="
-                        padding: 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        text-align: right;
-                        font-variant-numeric: tabular-nums;
-                        vertical-align: top;
-                      "
-                    >
-                      <span style="white-space: nowrap">16</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td
-                      style="
-                        padding: 7px 12px 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        vertical-align: top;
-                      "
-                    >
-                      1C Messungen M
-                    </td>
-                    <td
-                      style="
-                        padding: 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        text-align: right;
-                        font-variant-numeric: tabular-nums;
-                        vertical-align: top;
-                      "
-                    >
-                      <span style="white-space: nowrap">7</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td
-                      style="
-                        padding: 7px 12px 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        vertical-align: top;
-                      "
-                    >
-                      1C Labor L
-                    </td>
-                    <td
-                      style="
-                        padding: 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        text-align: right;
-                        font-variant-numeric: tabular-nums;
-                        vertical-align: top;
-                      "
-                    >
-                      <span style="white-space: nowrap">6</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td
-                      style="
-                        padding: 7px 12px 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        vertical-align: top;
-                      "
-                    >
-                      1C Nachlauf N
-                    </td>
-                    <td
-                      style="
-                        padding: 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        text-align: right;
-                        font-variant-numeric: tabular-nums;
-                        vertical-align: top;
-                      "
-                    >
-                      <span style="white-space: nowrap">6</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td
-                      style="
-                        padding: 7px 12px 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        vertical-align: top;
-                      "
-                    >
-                      1C Gate-Ablation H_A
-                    </td>
-                    <td
-                      style="
-                        padding: 7px 0;
-                        border-bottom: 1px solid var(--raster);
-                        text-align: right;
-                        font-variant-numeric: tabular-nums;
-                        vertical-align: top;
-                      "
-                    >
-                      <span style="white-space: nowrap">2</span>
-                    </td>
-                  </tr>
-                </table>
-                <p class="nw-notiz">ADRs: 35 (1B: 13, 1C: 22)</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="folie-fuss">
-          <span class="fuss-nr">Reserve R17</span> · Quelle: Weirauch, 2026, Ordner
-          docs/referat-thema-1, Datei nachweisumfang.md; Schneider, 2026, Ordner evidenz/1A und
-          evidenz/1B
         </div>
       </section>
       <section
@@ -8777,8 +8503,8 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">Reserve RN1</span> · Quelle: Schneider, 2026, Laufdateien; Nosek et
-          al., 2018, S. 2600
+          <span class="fuss-nr">Reserve RN1</span> · Quelle: Nosek et al., 2018, S. 2600; Schneider,
+          2026, Laufdateien
         </div>
       </section>
       <section
@@ -8836,8 +8562,8 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">Reserve RN2</span> · Quelle: Schneider, 2026, 1A-auswertung.md;
-          Papadopoulos et al., 2021, Kap. 2.3
+          <span class="fuss-nr">Reserve RN2</span> · Quelle: Papadopoulos et al., 2021, Kap. 2.3;
+          Schneider, 2026, 1A-auswertung.md
         </div>
       </section>
       <section
@@ -8929,8 +8655,8 @@
           </div>
         </div>
         <div class="folie-fuss">
-          <span class="fuss-nr">Reserve RN4</span> · Quelle: Schneider, 2026, auswertung.json; Heo,
-          2024, Abschn. „CPU Interface Files“
+          <span class="fuss-nr">Reserve RN4</span> · Quelle: Heo, 2024, Abschnitt CPU Interface
+          Files; Schneider, 2026, auswertung.json
         </div>
       </section>
       <div class="weg-mini weg-laeufer" data-weg="1a" role="img" aria-label="">
@@ -9441,23 +9167,18 @@
             </button>
           </li>
           <li>
-            <button type="button" data-ziel="R17">
-              <span class="mono">11</span> Was hinter den Belegen steht
-            </button>
-          </li>
-          <li>
             <button type="button" data-ziel="RN1">
-              <span class="mono">12</span> Die Regel schlägt auch ohne Wirkung an
+              <span class="mono">11</span> Die Regel schlägt auch ohne Wirkung an
             </button>
           </li>
           <li>
             <button type="button" data-ziel="RN2">
-              <span class="mono">13</span> Was die Messung nicht zeigt
+              <span class="mono">12</span> Was die Messung nicht zeigt
             </button>
           </li>
           <li>
             <button type="button" data-ziel="RN4">
-              <span class="mono">14</span> spaCy bleibt im Budget, bis CPU fehlt
+              <span class="mono">13</span> spaCy bleibt im Budget, bis CPU fehlt
             </button>
           </li>
         </ol>
