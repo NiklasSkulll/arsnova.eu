@@ -106,13 +106,39 @@ export const LITERATUR = [
 const NACH_SCHLUESSEL = new Map(LITERATUR.map((e) => [e.schluessel, e]));
 
 /**
+ * Ordnung zweier Kurzbelege „Autor, Jahr“: zuerst nach Erstautor, bei gleichem Erstautor das Werk allein vor zwei
+ * Autor:innen vor „et al.“, dann nach Jahr samt Buchstabe (ZL S. 14; APA 7, 9.44 „one-author entries … precede
+ * multiple-author entries“). Ein reiner Textvergleich stellte „Kwon & Li“ vor „Kwon, 2020“ (Review 2026-11-18).
+ */
+function teileKurz(kurz) {
+  const [, autor, jahr] = kurz.match(/^(.*), (\d{4}[a-z]?)$/) ?? [null, kurz, ''];
+  const etAl = autor.endsWith(' et al.');
+  const [erst, zweit] = autor.replace(/ et al\.$/, '').split(' & ');
+  return { erst, anzahl: etAl ? 3 : zweit ? 2 : 1, zweit: zweit ?? '', jahr };
+}
+function vergleicheKurz(a, b) {
+  const x = teileKurz(a);
+  const y = teileKurz(b);
+  return (
+    x.erst.localeCompare(y.erst, 'de') ||
+    x.anzahl - y.anzahl ||
+    x.zweit.localeCompare(y.zweit, 'de') ||
+    x.jahr.localeCompare(y.jahr, 'de')
+  );
+}
+/** Kurzbelege „Autor, Jahr“ in der Reihenfolge nach ZL; für Tests und Fußzeilen. */
+export function sortiereKurz(liste) {
+  return [...liste].sort(vergleicheKurz);
+}
+
+/**
  * Fußzeile „Quelle: …“ aus [Schlüssel, Stelle]-Paaren. Mehrere Werke alphabetisch nach Autor, gleiche Autorschaft
  * chronologisch (ZL S. 14), getrennt durch Semikolon; Reihenfolge der Tabellen ist damit egal (Prüfung 2026-11-18).
  */
 export function quellenzeile(zitate) {
   return `Quelle: ${zitate
     .map(([k, stelle]) => ({ e: NACH_SCHLUESSEL.get(k) ?? kurzbeleg(k), stelle }))
-    .sort((a, b) => a.e.kurz.localeCompare(b.e.kurz, 'de'))
+    .sort((a, b) => vergleicheKurz(a.e.kurz, b.e.kurz))
     .map(({ e, stelle }) => `${e.kurz}${stelle ? `, ${stelle}` : ''}`)
     .join('; ')}`;
 }

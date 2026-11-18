@@ -31,6 +31,22 @@ test('quellenzeile: mehrere Werke alphabetisch, gleiche Autorschaft chronologisc
   assert.throws(() => quellenzeile([['fehlt2020']]), /fehlt2020/);
 });
 
+test('Kurzbelege sortieren: Erstautor, dann Einzelautor vor zwei Autoren vor „et al.“, dann Jahr (APA 7, 9.44)', async () => {
+  const { sortiereKurz } = await import('./literatur.mjs');
+  assert.deepEqual(
+    sortiereKurz(['Kwon et al., 2019', 'Kwon, 2020', 'Kwon & Li, 2018', 'Dean & Barroso, 2013']),
+    ['Dean & Barroso, 2013', 'Kwon, 2020', 'Kwon & Li, 2018', 'Kwon et al., 2019'],
+  );
+  assert.deepEqual(
+    sortiereKurz([
+      'arsnova.eu-Projektteam, 2026b',
+      'arsnova.eu-Projektteam, 2026a',
+      'Weirauch, 2026',
+    ]),
+    ['arsnova.eu-Projektteam, 2026a', 'arsnova.eu-Projektteam, 2026b', 'Weirauch, 2026'],
+  );
+});
+
 test('Stellen nach ZL: „Kap.“ für Nummern, „Abschnitt Titel“ für Titel, kein „Abschn.“ in Fußzeilen', async () => {
   const { folien, ladeFolienDaten } = await import('./folien.mjs');
   const { niklasTeile } = await import('../niklas/teile.mjs');

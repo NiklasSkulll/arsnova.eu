@@ -177,7 +177,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/literatur.mjs",
-      "sha256": "106335ade5907c645c7a937dafa4359bc05e6e941c6f1a4a8c3d72b58ae36cc8"
+      "sha256": "1b50c295e44343b25da9f5bda93c753d037b90c7c5a4cac87bf2d19a425d1d41"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/nachweisumfang.mjs",
@@ -609,19 +609,19 @@
     {
       "datei": "gemeinsames-deck.pdf",
       "bytes": 1602290,
-      "sha256": "5bfbcf2f36fcfabd64dca1f99e30dde866908cebac082280cf2319f3b04cd233",
+      "sha256": "9956830cc63ed7aa55b70ed46618cafa0a496487b607cfac01310a62abd060b5",
       "seiten": 53
     },
     {
       "datei": "jonas-folien.pdf",
       "bytes": 1093661,
-      "sha256": "77438664f5c7ce775acfac24cda468449be97606d73beed11a66e7673346df0c",
+      "sha256": "f3cd62cd161b90f825d80087273ca828360cb77bed2adc4ac1ec690b8a87b6bb",
       "seiten": 33
     },
     {
       "datei": "niklas-folien.pdf",
       "bytes": 557485,
-      "sha256": "84dd1756ca4546c31f62aa2edbf60468c618724555bed48ef07209e3ae26c7f5",
+      "sha256": "67852b2348818b55b99a6a43d95a5b0761524658c7877d839e2f0d1cb85d01e7",
       "seiten": 20
     }
   ]
