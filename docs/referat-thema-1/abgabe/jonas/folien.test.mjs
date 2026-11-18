@@ -184,17 +184,19 @@ test('Jonas-Folien in Reihenfolge mit den geplanten Zeiten, 14:00–15:00 min; R
     Object.keys(PLAN),
   );
   for (const f of jonas) assert.equal(f.zeitS, PLAN[f.id], f.id);
-  const s = summe(jonas);
+  // Jonas spricht seit der Durchsicht 2026-11-18 auch GN (Nachweisumfang, 20 s); zusammen höchstens 15 min.
+  const s = summe(jonas) + nach('GN').zeitS;
   assert.ok(s >= 840 && s <= 900, `Summe ${s}`);
-  // Alle Rahmenfolien (Titel, Fahrplan, Fazit, Dank) spricht Niklas; sie zählen zu seiner Zeit.
+  // Die übrigen Rahmenfolien (Titel, Fahrplan, Fazit, Dank) spricht Niklas; sie zählen zu seiner Zeit.
   const rahmen = F.filter((f) => f.teil === 'rahmen');
   assert.deepEqual(
     rahmen.map((f) => f.id),
-    ['GT', 'G0', 'GK', 'G9', 'GD'],
+    ['GT', 'G0', 'GK', 'G9', 'GN', 'GD'],
   );
-  for (const f of rahmen) assert.equal(f.sprecher, 'niklas', f.id);
+  for (const f of rahmen) assert.equal(f.sprecher, f.id === 'GN' ? 'jonas' : 'niklas', f.id);
+  assert.equal(nach('GN').zeitS, 20);
   // Titel, Fahrplan und Dank zusammen kurz (etwa 25 s plus Leitfrage auf G0); GK (Systembild) 45–60 s
-  assert.ok(summe(rahmen.filter((f) => !['G9', 'GK'].includes(f.id))) <= 60);
+  assert.ok(summe(rahmen.filter((f) => !['G9', 'GK', 'GN'].includes(f.id))) <= 60);
   assert.ok(nach('GK').zeitS >= 45 && nach('GK').zeitS <= 60);
 });
 
@@ -267,6 +269,7 @@ test('Teile: Fahrplan auf G0 in Vortragsreihenfolge, teilVon ordnet jede Hauptfo
   );
   assert.equal(teilVon(nach('J5')), 'jonas');
   assert.equal(teilVon(nach('G9')), 'fazit');
+  assert.equal(teilVon(nach('GN')), 'fazit');
   assert.equal(teilVon(nach('J16')), null);
   assert.equal(teilVon(nach('R1')), null);
   assert.equal(teilVon({ teil: 'niklas', auftrag: '1A', id: 'N1' }), '1a');
@@ -333,8 +336,8 @@ test(
 );
 
 test('Rahmen: GT, G0, G9, GD ohne Entwurfsvermerk und Platzhalter; G9 zitiert Niklas', () => {
-  for (const id of ['GT', 'G0', 'GK', 'G9', 'GD']) assert.equal(nach(id)?.teil, 'rahmen', id);
-  for (const id of ['GT', 'G0', 'GK', 'G9', 'GD']) {
+  for (const id of ['GT', 'G0', 'GK', 'G9', 'GN', 'GD']) assert.equal(nach(id)?.teil, 'rahmen', id);
+  for (const id of ['GT', 'G0', 'GK', 'G9', 'GN', 'GD']) {
     assert.doesNotMatch(sichtbar(nach(id).inhalt) + nach(id).notiz, /Entwurf|\[Niklas|\[Satz/, id);
   }
   assert.match(nach('G9').fuss, /Schneider, 2026/);
@@ -345,7 +348,7 @@ test('Rahmen: GT, G0, G9, GD ohne Entwurfsvermerk und Platzhalter; G9 zitiert Ni
   assert.equal(F.at(-1).teil, 'reserve');
   // J16 (Literaturverzeichnis) folgt als Anhang nach Fazit und Dank, nicht zwischen J15 und Niklas.
   const haupt = F.filter((f) => f.teil !== 'reserve').map((f) => f.id);
-  assert.deepEqual(haupt.slice(-4), ['J15', 'G9', 'GD', 'J16']);
+  assert.deepEqual(haupt.slice(-5), ['J15', 'G9', 'GN', 'GD', 'J16']);
   assert.equal(nach('J16').anhang, true);
 });
 
@@ -470,11 +473,11 @@ test('Dankfolie: Einladung zu Fragen, Link und offline erzeugter QR-Code zum Bel
   assert.match(qrSvg('x', 100), /viewBox="0 0 29 29"/);
 });
 
-test('Reservefolien R1, R5–R7, R9–R12, R15–R17 (R2–R4, R8, R13, R14 seit 2026-11-16 im Hauptteil)', () => {
+test('Reservefolien R1, R5–R7, R9–R12, R15, R16 (R2–R4, R8, R13, R14 seit 2026-11-16 im Hauptteil, R17 seit 2026-11-18 GN)', () => {
   const r = F.filter((f) => f.teil === 'reserve');
   assert.deepEqual(
     r.map((f) => f.id),
-    ['R1', 'R5', 'R6', 'R7', 'R9', 'R10', 'R11', 'R12', 'R15', 'R16', 'R17'],
+    ['R1', 'R5', 'R6', 'R7', 'R9', 'R10', 'R11', 'R12', 'R15', 'R16'],
   );
   const text = r.map((f) => f.titel).join(' | ');
   for (const wort of [
@@ -1238,7 +1241,7 @@ test('J13b (bis 2026-11-16 R14): Einordnung Cloud Computing als Rechnung aus dem
 });
 
 test(
-  'GD: Nachweisumfang aus nachweisumfang.md, gleich der Neuberechnung, ohne Wertung',
+  'GN: Nachweisumfang aus nachweisumfang.md, gleich der Neuberechnung, ohne Wertung',
   { skip: OHNE_NOTIZEN },
   async () => {
     const { berechneNachweisumfang, kopfzahlen } = await import('./nachweisumfang.mjs');
@@ -1252,7 +1255,7 @@ test(
       },
       { laborzeit: k.laborzeitStunden, tests: k.tests, adrs: k.adrs, hypothesen: k.hypothesen },
     );
-    const gd = sichtbar(nach('GD').inhalt);
+    const gd = sichtbar(nach('GN').inhalt);
     for (const [wert, was] of [
       [k.laborzeitStunden, 'gewertete Laborzeit'],
       [k.vorarbeitStunden, 'Aufbau, Tests, weitere Läufe'],
@@ -1260,7 +1263,7 @@ test(
       [k.adrs, 'ADRs'],
       [k.hypothesen, 'vorab festgelegte Hypothesen'],
     ])
-      assert.ok(gd.replace(/\s+/g, ' ').includes(`${wert} ${was}`), `GD: „${wert} ${was}“ fehlt`);
+      assert.ok(gd.replace(/\s+/g, ' ').includes(`${wert} ${was}`), `GN: „${wert} ${was}“ fehlt`);
     assert.ok(gd.includes(`gewertete Läufe ${k.zeitraum}`));
     // Laborzeit je Auftrag: Dauer wie in nachweisumfang.md, Balkenlänge proportional, längster Balken voll
     const { laborzeit, dauer } = await import('./nachweisumfang.mjs');
@@ -1276,7 +1279,7 @@ test(
       Object.values(erwartet).map(dauer),
     );
     // je Auftrag zwei Balken: gewertet (voll) und Aufbau usw. (schraffiert), Länge proportional zur Summe
-    const anteile = [...nach('GD').inhalt.matchAll(/\* ([\d.]+)\)"/g)].map((m) => Number(m[1]));
+    const anteile = [...nach('GN').inhalt.matchAll(/\* ([\d.]+)\)"/g)].map((m) => Number(m[1]));
     const max = Math.max(...daten.nachweis.je.map((j) => j.min + j.vor.min));
     assert.deepEqual(
       anteile,
@@ -1290,28 +1293,44 @@ test(
     );
     // sachlich: keine Commit-Zahlen je Person, keine Wertung
     assert.doesNotMatch(
-      gd + nach('GD').notiz,
+      gd + nach('GN').notiz,
       /Commits|umfangreich|beeindruck|enorm|unverhältnis|aufwendig/,
     );
-    assert.match(nach('GD').notiz, /vom 5\. bis 16\. November/);
+    assert.match(nach('GN').notiz, /vom 5\. bis 16\. November/);
   },
 );
 
-test('R17: Nachweisumfang im Einzelnen, jede Zeile wie in nachweisumfang.md, ohne Wertung', async () => {
+test('GN: Tests je Werkzeug und Hypothesen je Auftrag wie in nachweisumfang.md, gerafft, ohne Wertung', async () => {
   const { tabellenwerte } = await import('./nachweisumfang.mjs');
-  const r = sichtbar(nach('R17').inhalt);
-  const ohneFett = (w) => w.replace(/\*\*/g, '');
-  for (const [name, wert] of Object.entries(tabellenwerte())) {
-    if (/^(Gewertete Laborzeit|Automatisierte Tests|Vorab festgelegte|Aufbau, Tests)/.test(name))
-      continue;
-    // Wert vor der Klammer steht auf der Folie, der Zusatz in der Klammer darunter
-    const [kopf, zusatz] = ohneFett(wert)
-      .match(/^([^(]+?)(?: \((.+)\))?$/)
-      .slice(1);
-    assert.ok(r.includes(kopf), `R17: ${name} → ${kopf} fehlt`);
-    if (zusatz && name !== 'ADRs') assert.ok(r.includes(zusatz), `R17: ${name} → ${zusatz} fehlt`);
-  }
+  const t = tabellenwerte();
+  const r = sichtbar(nach('GN').inhalt).replace(/\s+/g, ' ');
+  const wert = (name) => t[name].replace(/\*\*/g, '').replace(/ \(.+\)$/, '');
+  for (const [name, kurz] of [
+    ['1A Lastwerkzeuge'],
+    ['Messwerkzeuge 1B/1C'],
+    ['Pester 1B (Windows)'],
+    ['Backend 1C'],
+    ['1A (Experimentvertrag)', '1A Vertrag'],
+    ['1B Schritte 1–2', '1B 1–2'],
+    ['1B Schritte 3–4', '1B 3–4'],
+    ['1C Einzeltests E', '1C E'],
+    ['1C Messungen M', '1C M'],
+    ['1C Labor L', '1C L'],
+    ['1C Nachlauf N', '1C N'],
+    ['1C Gate-Ablation H_A', '1C H_A'],
+  ])
+    assert.ok(r.includes(`${kurz ?? name} ${wert(name)}`), `GN: ${kurz ?? name} ${wert(name)}`);
+  assert.ok(r.includes(`ADRs: ${t.ADRs.replace(/\*\*/g, '')}`));
   assert.match(r, /Rechnerzeit, keine Arbeitszeit/);
-  assert.doesNotMatch(r + nach('R17').notiz, /umfangreich|beeindruck|enorm|unverhältnis|aufwendig/);
-  assert.equal(nach('R17').teil, 'reserve');
+  assert.equal(nach('GN').titel, 'Nachweisumfang: Rechnerzeit, Tests, Hypothesen');
+  assert.ok(!F.some((f) => f.id === 'R17'), 'R17 ist in GN aufgegangen');
+});
+
+test('GD: schlank, ohne Nachweisband, mit dem Satz zum gemeinsamen Fork vor dem Link', () => {
+  const gd = nach('GD').inhalt;
+  assert.doesNotMatch(gd, /data-nachweis/);
+  const satz =
+    'Gemeinsam entwickelt im Fork von Niklas Schneider; der Fork von Jonas Weirauch ist auf denselben Stand synchronisiert.';
+  assert.ok(gd.includes(satz));
+  assert.ok(gd.indexOf(satz) < gd.indexOf(`href="${REPO_URL}"`), 'Satz vor dem Link');
 });

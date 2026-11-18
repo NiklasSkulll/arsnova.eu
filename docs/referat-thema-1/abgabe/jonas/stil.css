@@ -405,7 +405,8 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
-.folie[data-titelfolie] .folie-titel {
+.folie[data-titelfolie] .folie-titel,
+.folie[data-id='GD'] .folie-titel {
   max-width: 1100px;
   font-size: 96px;
   font-weight: 800;
@@ -554,6 +555,12 @@
   text-decoration-thickness: 2px;
   text-underline-offset: 4px;
 }
+.dank-fork {
+  margin: 20px 0 0;
+  color: var(--text-2);
+  font-size: var(--s-sek);
+  line-height: 1.35;
+}
 .dank-namen {
   margin: 28px 0 0;
   color: var(--gedaempft);
@@ -669,7 +676,54 @@
 .nw-plus {
   color: var(--gedaempft);
 }
-/* R17: Nachweisumfang im Einzelnen, drei Spalten */
+/* GN: Kennzahlen und Balken oben, darunter gerafft Tests je Werkzeug und Hypothesen je Auftrag */
+.folie[data-id='GN'] .dank-nachweis {
+  margin: 0;
+  padding: 0;
+  border-top: 0;
+}
+.nw-gerafft {
+  display: grid;
+  grid-template-columns: 640px minmax(0, 1fr);
+  column-gap: 56px;
+  margin: 26px 0 0;
+  padding: 18px 0 0;
+  border-top: 1px solid var(--linie);
+}
+.nw-kacheln .nw-kopf {
+  margin: 0 0 10px;
+  color: var(--tinte);
+  font-size: var(--s-sek);
+  font-weight: 700;
+}
+.nw-kacheln dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 28px;
+  margin: 0;
+}
+.nw-kacheln:last-child dl {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.nw-kacheln dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--raster);
+  font-size: var(--s-min);
+}
+.nw-kacheln dt {
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.nw-kacheln dd {
+  margin: 0;
+  color: var(--tinte);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+/* R17 (bis 2026-11-18): Nachweisumfang im Einzelnen, drei Spalten */
 .nw-reserve {
   display: grid;
   grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr) minmax(0, 1fr);

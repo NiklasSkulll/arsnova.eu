@@ -311,7 +311,9 @@ test(
   () => {
     const md = readFileSync(join(platzhalter, 'privat', 'sprechnotizen-niklas.md'), 'utf8');
     assert.match(md, /^# Sprechnotizen Niklas/);
-    const rahmen = F.filter((x) => x.teil === 'rahmen');
+    // Rahmen, den Niklas spricht (GN spricht Jonas, Durchsicht 2026-11-18)
+    const rahmen = F.filter((x) => x.teil === 'rahmen' && x.sprecher === 'niklas');
+    assert.ok(!md.includes('## GN '), 'GN steht in Jonas’ Notizen');
     for (const f of [...NIKLAS_ALLE.filter((x) => !x.anhang), ...rahmen]) {
       assert.ok(md.includes(`## ${f.id} `), f.id);
     }

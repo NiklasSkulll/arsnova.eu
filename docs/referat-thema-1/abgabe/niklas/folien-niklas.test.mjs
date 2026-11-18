@@ -79,13 +79,15 @@ test('1A: neun Folien im Vortrag (N6b, N8 seit 2026-11-17 wieder Reserve RN1, RN
 test('Zeit: Niklas 14:00–15:00 min samt Rahmen (Titel, Fahrplan, Systembild, Fazit, Dank); N2, N4, N7; Kurzfassung', () => {
   const s = summe(haupt1A);
   assert.ok(s >= 450 && s <= 490, `1A ${s} s`);
-  // Alle Rahmenfolien spricht Niklas (Absprache 2026-11-16); 1B 3–4 vier Folien, höchstens 240 s (2026-11-17)
-  const rahmen = alle.filter((f) => f.teil === 'rahmen');
+  // Rahmenfolien spricht Niklas (Absprache 2026-11-16) außer GN, den Nachweisumfang spricht Jonas (Durchsicht
+  // 2026-11-18); 1B 3–4 vier Folien, höchstens 240 s (2026-11-17)
+  const rahmen = alle.filter((f) => f.teil === 'rahmen' && f.id !== 'GN');
   assert.deepEqual(
     rahmen.map((f) => f.id),
     ['GT', 'G0', 'GK', 'G9', 'GD'],
   );
   for (const f of rahmen) assert.equal(f.sprecher, 'niklas', f.id);
+  assert.equal(alle.find((f) => f.id === 'GN').sprecher, 'jonas');
   assert.ok(n1b.length === 4 && summe(n1b) <= 240, `1B 3–4 ${summe(n1b)} s`);
   const gesamt = s + summe(n1b) + summe(rahmen);
   // Entscheidung der Autoren 2026-11-16: 15 min Redezeit je Person (ersetzt höchstens 10:30 min)
@@ -434,7 +436,7 @@ test('Kopfgrammatik im gemeinsamen Deck: Ort, Titel, Fragezeile im selben Abstan
   }
 });
 
-test('Reihenfolge: GT, G0, GK, Niklas 1A, Jonas, Niklas 1B 3–4, G9, GD, Anhang, Reserve', async () => {
+test('Reihenfolge: GT, G0, GK, Niklas 1A, Jonas, Niklas 1B 3–4, G9, GN, GD, Anhang, Reserve', async () => {
   const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
   await page.goto(pathToFileURL(deck).href);
   const ids = await page.evaluate(() =>
@@ -451,8 +453,8 @@ test('Reihenfolge: GT, G0, GK, Niklas 1A, Jonas, Niklas 1B 3–4, G9, GD, Anhang
   assert.equal(pos('M1'), pos('J15') + 1, '1B 3–4 folgt direkt auf J15');
   assert.ok(pos('M2') < pos('G9'));
   assert.deepEqual(
-    ids.slice(pos('G9') + 1, pos('G9') + 4).map(([x]) => x),
-    ['GD', 'J16', 'NL'],
+    ids.slice(pos('G9') + 1, pos('G9') + 5).map(([x]) => x),
+    ['GN', 'GD', 'J16', 'NL'],
   );
   assert.ok(pos('RN2') > pos('NL'));
   assert.equal(ids.find(([x]) => x === 'RN2')[1], 'reserve');

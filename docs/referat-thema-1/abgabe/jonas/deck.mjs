@@ -224,13 +224,13 @@ export function baueDeck(
   }
   const nach = (pred) => folien.filter(pred);
   const rahmen = (id) => nach((f) => f.id === id);
-  const [gt, g0, gk, g9, gd] = ['GT', 'G0', 'GK', 'G9', 'GD'].map(rahmen);
+  const [gt, g0, gk, g9, gn, gd] = ['GT', 'G0', 'GK', 'G9', 'GN', 'GD'].map(rahmen);
   // Anhang (J16, Literaturverzeichnis) steht nach dem Dank, damit er keine Übergabe unterbricht.
   const jonas = nach((f) => f.teil === 'jonas' && !f.anhang);
   const anhang = nach((f) => f.teil === 'jonas' && f.anhang);
   const reserve = nach((f) => f.teil === 'reserve');
-  if ([gt, g0, gk, g9, gd].some((r) => r.length !== 1)) {
-    throw new Error('Rahmenfolien GT, G0, GK, G9 und GD fehlen');
+  if ([gt, g0, gk, g9, gn, gd].some((r) => r.length !== 1)) {
+    throw new Error('Rahmenfolien GT, G0, GK, G9, GN und GD fehlen');
   }
   if (clip && !(clipInfo && standbild)) {
     throw new Error('Clip braucht clipInfo (Datum, Profil, Zeiten) und ein Standbild für das PDF.');
@@ -257,6 +257,7 @@ export function baueDeck(
     ...jonas.map((f) => ({ folie: f })),
     ...teilVonNiklas(niklas.teil2, '1B Schritte 3–4', 'N2', '1B Schritte 3–4: Störung und Aufwand'),
     ...g9.map((f) => ({ folie: f })),
+    ...gn.map((f) => ({ folie: f })),
     ...gd.map((f) => ({ folie: f })),
     ...anhang.map((f) => ({ folie: f })),
     ...niklasNativ.filter((f) => f.anhang && f.teil !== 'reserve').map((f) => ({ folie: f })),

@@ -139,7 +139,8 @@ test('Anzahl Folien = Rahmen + Niklas + Jonas, Reserve getrennt', async () => {
       JONAS.map((f) => f.id),
     );
     assert.equal(z.reserve, RESERVE.length);
-    assert.equal(z.nachG9, 'GD', 'Dank direkt nach dem Fazit');
+    // Nach dem Fazit der Nachweisumfang (GN, Jonas), dann der Dank (Durchsicht 2026-11-18)
+    assert.equal(z.nachG9, 'GN', 'Nachweisumfang direkt nach dem Fazit');
     // Reihenfolge (Design 2026-11-15, Abschnitt 3): GT und G0, Niklas 1A, Jonas, Niklas 1B 3–4,
     // G9 und GD, Anhang (J16), Reserve
     const block = z.reihenfolge.filter((t, i, a) => i === 0 || a[i - 1] !== t);

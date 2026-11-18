@@ -87,7 +87,7 @@ export const RAHMEN_OHNE_LEISTE = ['GT', 'G0', 'GK', 'GD'];
 /** Teil einer Folie für die Teilleiste; null für Titel, Fahrplan, Dank, Anhang und Reserve. */
 export function teilVon(f) {
   if (f.teil === 'reserve' || f.anhang || RAHMEN_OHNE_LEISTE.includes(f.id)) return null;
-  if (f.id === 'G9') return 'fazit';
+  if (f.id === 'G9' || f.id === 'GN') return 'fazit';
   if (f.teil === 'jonas') return 'jonas';
   if (f.teil === 'niklas') return f.auftrag === '1A' ? '1a' : '1b34';
   return null;
@@ -678,7 +678,7 @@ const W = 'weirauch2026c';
 const ZITATE = {
   GT: [['arsnova2026pruefung', 'Abschn. 4.3']],
   G0: [['arsnova2026pruefung', 'Abschn. 4.3']],
-  GD: [[W, 'Ordner docs/referat-thema-1, Datei nachweisumfang.md']],
+  GD: [[W, 'Ordner docs/referat-thema-1']],
   GK: [
     ['arsnova2026pruefung', 'Abschn. 4.1.1'],
     ['arsnova2026adr0035', 'Abschn. 2.1'],
@@ -746,7 +746,7 @@ const ZITATE = {
   R12: [[W, '1C-ergebnis.md, Abschn. 5']],
   R15: [[W, 'Datei 1C-diagrams.md, Abb. 1']],
   R16: [[W, 'Datei 1C-diagrams.md, Abb. 2']],
-  R17: [[W, 'Ordner docs/referat-thema-1, Datei nachweisumfang.md']],
+  GN: [[W, 'Ordner docs/referat-thema-1, Datei nachweisumfang.md']],
 };
 
 const flaeche = (inhalt) => `<div class="flaeche-inhalt">${inhalt}</div>`;
@@ -844,6 +844,7 @@ export const REIHENFOLGE = [
   'J13b',
   'J15',
   'G9',
+  'GN',
   'GD',
   'J16',
 ];
@@ -1633,8 +1634,57 @@ export function folien(daten) {
     station: null,
   });
 
+  // ------------------------------------------------------------ GN Nachweisumfang (spricht Jonas)
+  // Seit der Durchsicht 2026-11-18 vor dem Dank statt in der Reserve (R17) und statt des Bands auf GD: Kennzahlen
+  // und Rechnerzeit je Auftrag oben, darunter gerafft Tests je Werkzeug und Hypothesen je Auftrag. Alle Werte
+  // unverändert aus nachweisumfang.md (Zusätze in Klammern nur dort), keine Summen, keine Wertung.
+  const nwGN = daten.nachweis;
+  const nwKacheln = (kopf, namen) =>
+    `<div class="nw-kacheln"><p class="nw-kopf">${esc(kopf)}</p><dl>` +
+    namen
+      .map(([name, was = name]) => {
+        const wert = String(nwGN.zeilen[name]).replace(/ \(.+\)$/, '');
+        return `<div><dt>${esc(was)}</dt><dd>${esc(wert)}</dd></div>`;
+      })
+      .join('') +
+    `</dl></div>`;
+  F.push({
+    id: 'GN',
+    teil: 'rahmen',
+    auftrag: null,
+    titel: 'Nachweisumfang: Rechnerzeit, Tests, Hypothesen',
+    inhalt: flaeche(
+      frage('Wie viel Messung und Prüfung steckt in den Belegen?', ['1A', '1B', '1C']) +
+        nachweisLeiste(nwGN) +
+        `<div class="nw-gerafft">` +
+        nwKacheln('Automatisierte Tests je Werkzeug', [
+          ['1A Lastwerkzeuge'],
+          ['Messwerkzeuge 1B/1C'],
+          ['Pester 1B (Windows)'],
+          ['Backend 1C'],
+        ]) +
+        nwKacheln('Vorab festgelegte Hypothesen je Auftrag', [
+          ['1A (Experimentvertrag)', '1A Vertrag'],
+          ['1B Schritte 1–2', '1B 1–2'],
+          ['1B Schritte 3–4', '1B 3–4'],
+          ['1C Einzeltests E', '1C E'],
+          ['1C Messungen M', '1C M'],
+          ['1C Labor L', '1C L'],
+          ['1C Nachlauf N', '1C N'],
+          ['1C Gate-Ablation H_A', '1C H_A'],
+        ]) +
+        `</div>` +
+        `<p class="vermerk" style="margin-top:20px">Rechnerzeit, keine Arbeitszeit · Tests statisch gezählt, ohne die Tests dieses Decks · ADRs: ${esc(nwGN.zeilen.ADRs)}</p>`,
+    ),
+    notiz: privat('GN.notiz', { gesprochenDauer, nw: nwGN, gesprochenZeitraum }),
+    zeitS: 20,
+    kurzfassung: false,
+    sprecher: 'jonas',
+    quelle: `${NACHWEIS}, alle Tabellen, Stand ${daten.nachweis.commit} (nachgerechnet von abgabe/jonas/nachweisumfang.mjs auf dem Checkout); Rechner je Lauf: 1C Laptop (ThinkPad P50) und PC (i7-8700), 1B Schritte 1–2 Laptop, 1A und 1B Schritte 3–4 wie in den Protokollen unter evidenz/1A und evidenz/1B`,
+    station: null,
+  });
+
   // ------------------------------------------------------------ GD Dank und Fragen (spricht Niklas)
-  const nb12 = daten.nachweis.je.find((j) => j.was === '1B Schritte 1–2');
   // Bleibt während der Befragung stehen (Leitfaden E23); Link und QR-Code führen zu allen Belegen.
   const url = REPO_URL.replace(/^https:\/\//, '');
   F.push({
@@ -1647,21 +1697,19 @@ export function folien(daten) {
         `<div class="dank-text">` +
         `<p class="dank-kopf">Alle Belege zum Nachprüfen</p>` +
         `<p class="dank-was">Entscheidungen als ADR, Laufprotokolle, Messdaten und der Bau dieses Decks</p>` +
+        `<p class="dank-fork">Gemeinsam entwickelt im Fork von Niklas Schneider; der Fork von Jonas Weirauch ist auf denselben Stand synchronisiert.</p>` +
         `<p class="dank-url mono"><a href="${REPO_URL}">${url.replace('/tree/', '/<wbr>tree/').replace('/docs/', '/<wbr>docs/')}</a></p>` +
         `<p class="dank-namen">Niklas Schneider · Jonas Weirauch</p>` +
-        // Nachweisumfang sachlich, nur Zahl und Bezeichnung (nachweisumfang.md, Abschnitt Darstellung); bleibt
-        // während der Befragung stehen. Balken: gewertete Laborzeit je Auftrag, Länge proportional zur Dauer.
         `</div>` +
         `<figure class="dank-qr">${qrSvg(REPO_URL)}<figcaption class="vermerk">Repository, Ordner docs/referat-thema-1</figcaption></figure>` +
-        nachweisLeiste(daten.nachweis) +
         `</div>`,
     ),
-    notiz: privat('GD.notiz', { gesprochenDauer, daten, gesprochenZeitraum, nb12 }),
-    stichpunkte: privat('GD.stichpunkte', { daten, nb12 }),
+    notiz: privat('GD.notiz', {}),
+    stichpunkte: privat('GD.stichpunkte', {}),
     zeitS: 15,
     kurzfassung: true,
     sprecher: 'niklas',
-    quelle: `${REPO_URL} (Fork, main nach dem Merge); Eintrag weirauch2026c in literatur.mjs; Nachweisumfang: ${NACHWEIS} (Kopfzahlen, nachgerechnet von abgabe/jonas/nachweisumfang.mjs)`,
+    quelle: `${REPO_URL} (Fork, main nach dem Merge); Eintrag weirauch2026c in literatur.mjs; Nachweisumfang auf GN`,
     station: null,
     // Link als Text erlaubt wie im Literaturverzeichnis (deck.mjs setzt die Quellen-Marken).
     quellenverzeichnis: true,
@@ -2089,74 +2137,6 @@ export function folien(daten) {
     '1C-diagrams.md, Abb. 2 (diagrams/1c-context-path-overview-sequence.light.svg) · Code-Stand def56700 (v1.4.0-14, Branch f746ffba), gezeichnet am Laptop (ThinkPad P50)',
   );
 
-  // ------------------------------------------------------------ R17: Nachweisumfang im Einzelnen (zu GD)
-  // Alle Zeilen unverändert aus nachweisumfang.md; keine Summen, die dort nicht stehen.
-  const nw = daten.nachweis;
-  const nwSpalte = (kopf, zeilen, fuss = '') =>
-    `<div class="nw-tabelle"><p class="nw-kopf">${esc(kopf)}</p>` +
-    `<table class="eng" style="border-collapse:collapse;font-size:22px;line-height:1.3;width:100%">` +
-    zeilen
-      .map(([was, wert]) => {
-        // „108 (16 neue Dateien)“: Wert rechts, Zusatz klein darunter
-        const m = String(wert).match(/^([^(]+?)(?: \((.+)\))?$/);
-        return (
-          `<tr><td style="padding:7px 12px 7px 0;border-bottom:1px solid var(--raster);vertical-align:top">${esc(was)}</td>` +
-          `<td style="padding:7px 0;border-bottom:1px solid var(--raster);text-align:right;font-variant-numeric:tabular-nums;vertical-align:top">` +
-          `<span style="white-space:nowrap">${esc(m[1])}</span>` +
-          (m[2] ? `<br><span class="nw-zusatz">${esc(m[2])}</span>` : '') +
-          `</td></tr>`
-        );
-      })
-      .join('') +
-    `</table>${fuss}</div>`;
-  const nwZeile = (name, was = name) => [was, nw.zeilen[name]];
-  reserve(
-    'R17',
-    'beide',
-    'Reserve: Was hinter den Belegen steht',
-    frage('Wie viel Messung und Prüfung steckt in den Belegen?', ['1A', '1B', '1C']) +
-      `<div class="nw-reserve">` +
-      nwSpalte(
-        `Rechnerzeit: gewertet + Aufbau, Tests, weitere Läufe`,
-        [
-          ...nw.je.map((j) => [
-            j.was,
-            `${j.dauer} + ${j.vor.dauer} (${j.zusatz}; ${j.vor.zusatz})`,
-          ]),
-          ['Summe', `${nw.laborzeit} + ${nw.vorarbeit}`],
-          ['Gewertete Läufe', nw.zeitraum],
-        ],
-        `<p class="nw-notiz">Rechnerzeit, keine Arbeitszeit. Aufbau usw.: VM-Journal (1B 1–2), sonst Uhrzeiten in Protokollen.</p>`,
-      ) +
-      nwSpalte(
-        `Automatisierte Tests: ${nw.tests}`,
-        [
-          nwZeile('1A Lastwerkzeuge'),
-          nwZeile('Messwerkzeuge 1B/1C'),
-          nwZeile('Pester 1B (Windows)'),
-          nwZeile('Backend 1C'),
-        ],
-        `<p class="nw-notiz">Statisch gezählt, ohne die Tests dieses Decks und der Handouts.</p>`,
-      ) +
-      nwSpalte(
-        `Vorab festgelegte Hypothesen: ${nw.hypothesen}`,
-        [
-          nwZeile('1A (Experimentvertrag)', '1A Experimentvertrag'),
-          nwZeile('1B Schritte 1–2'),
-          nwZeile('1B Schritte 3–4'),
-          nwZeile('1C Einzeltests E'),
-          nwZeile('1C Messungen M'),
-          nwZeile('1C Labor L'),
-          nwZeile('1C Nachlauf N'),
-          nwZeile('1C Gate-Ablation H_A'),
-        ],
-        `<p class="nw-notiz">ADRs: ${esc(nw.zeilen.ADRs)}</p>`,
-      ) +
-      `</div>`,
-    privat('R17.notiz', { gesprochenDauer, nw, gesprochenZeitraum }),
-    `${NACHWEIS}, alle Tabellen, Stand ${daten.nachweis.commit} (nachgerechnet von abgabe/jonas/nachweisumfang.mjs auf dem Checkout); Rechner je Lauf: 1C Laptop (ThinkPad P50) und PC (i7-8700), 1B Schritte 1–2 Laptop, 1A und 1B Schritte 3–4 wie in den Protokollen unter evidenz/1A und evidenz/1B`,
-  );
-
   // ------------------------------------------------------------ J11 (bis 2026-11-16 R13): Betrieb
   // 2026-11-16 erst in die Reserve (R13), mit 15 min Redezeit wieder im Hauptteil. Inferenz am Laptop aus dem
   // Laborlauf (9f230abc); den Nachlaufwert (v1.4.0, mehr Ausgabetokens) nennt nur die Notiz.
@@ -2284,10 +2264,8 @@ export function folien(daten) {
     const f = F.find((x) => x.id === id);
     if (f && !f.station && !f.marke) f.marke = 'auftrag';
   }
-  const gd = F.find((f) => f.id === 'GD');
-  // Niklas' gewertete Läufe 1A und 1B 3–4 zählen in die Laborzeit
-  for (const f of [gd, F.find((x) => x.id === 'R17')])
-    f.fuss += '; Schneider, 2026, Ordner evidenz/1A und evidenz/1B';
+  // Niklas' gewertete Läufe 1A und 1B 3–4 zählen in die Laborzeit auf GN
+  F.find((x) => x.id === 'GN').fuss += '; Schneider, 2026, Ordner evidenz/1A und evidenz/1B';
   // Vortragsreihenfolge (Redezeit 15 min je Person, Absprache 2026-11-16): aus der Reserve geholte Folien an
   // ihre Station; Reserve danach in Erstellungsreihenfolge.
   const index = (f) => {
