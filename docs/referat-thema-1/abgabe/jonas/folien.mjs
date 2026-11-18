@@ -181,6 +181,12 @@ export const FESTWERTE = {
     quelle: 'adr/1B-008-kernaussagen-und-schwellen.md',
     beleg: 'im Median ≤ 50 ms, Maximum ≤ 200 ms',
   },
+  laborSpeicher1BGiB: {
+    wert: 8,
+    text: '1B-Labor: Speicherlimit der Runtime wie ab Werk v1.4.0, GiB',
+    quelle: 'specs/2026-11-12-1b-zwei-host-design.md',
+    beleg: '`mem_limit 8g` und `memswap_limit 10g` bleiben',
+  },
   laborTimeout1BS: {
     wert: 300,
     text: '1B: Timeout nach der Kalibrierungsregel (75 s < I ≤ 270 s), s',
@@ -1041,9 +1047,36 @@ export function folien(daten) {
   // ------------------------------------------------------------ J2
   // Host-Bild rechts in voller Höhe der Fläche (Audit: unteres Drittel war leer).
   const host = (name, ip, zeilen) =>
-    `<div style="flex:1 1 0;display:flex;flex-direction:column;justify-content:center;border:var(--linie-min) solid var(--bernstein);border-radius:12px;padding:18px 26px;background:var(--bernstein-hell)">` +
-    `<div style="font-weight:700;font-size:32px">${name} <span class="mono" style="font-weight:400;font-size:24px;color:var(--text-2)">${ip}</span></div>` +
-    `<div style="font-size:24px;color:var(--text-2);line-height:1.35;margin-top:6px">${zeilen}</div></div>`;
+    `<div style="flex:1 1 0;display:flex;flex-direction:column;justify-content:center;border:var(--linie-min) solid var(--bernstein);border-radius:12px;padding:16px 20px;background:var(--bernstein-hell)">` +
+    `<div style="font-weight:700;font-size:32px;line-height:1.2">${name}<br><span class="mono" style="font-weight:400;font-size:24px;color:var(--text-2)">${ip}</span></div>` +
+    `<div style="font-size:22px;color:var(--text-2);line-height:1.3;margin-top:6px">${zeilen}</div></div>`;
+  // Konfiguration je Stand (Durchsicht 2026-11-18): Release 1.3 zum Vergleich, v1.4.0 ab Werk ist der gemessene
+  // Code, dazu beide Labore. Fett ist, was vom gemessenen Code abweicht.
+  const konfigTabelle = (zeilen) => {
+    const th = (t) =>
+      `<th style="padding:0 0 8px 18px;font-weight:600;font-size:20px;line-height:1.2;color:var(--gedaempft);text-align:right;vertical-align:bottom">${t}</th>`;
+    return (
+      `<table data-konfig style="border-collapse:collapse;font-size:24px;width:100%">` +
+      `<tr><th></th>${['Release 1.3<br>(Tag v1.3.0)', 'v1.4.0 ab Werk<br>(gemessener Code)', 'Labor 1B<br>(zwei VMs)', 'Labor 1C<br>(ein Rechner)'].map(th).join('')}</tr>` +
+      zeilen
+        .map(([name, v13, werk, b, c, einheit]) => {
+          const zelle = (w, labor) => {
+            const t = `${w}${einheit}`;
+            return `<td class="mono" style="padding:8px 0 8px 18px;text-align:right;white-space:nowrap">${labor && w !== werk ? `<b>${t}</b>` : t}</td>`;
+          };
+          return (
+            `<tr style="border-top:var(--linie-min) solid var(--linie)"><td style="padding:8px 0;font-weight:600;white-space:nowrap">${name}</td>` +
+            zelle(v13, false) +
+            zelle(werk, false) +
+            zelle(b, true) +
+            zelle(c, true) +
+            `</tr>`
+          );
+        })
+        .join('') +
+      `</table>`
+    );
+  };
   F.push({
     id: 'J2',
     teil: 'jonas',
@@ -1051,31 +1084,43 @@ export function folien(daten) {
     titel: 'Zwei Hosts nachgebaut, Produktionscode unverändert',
     inhalt: flaeche(
       frage('Lässt sich das Zwei-Host-Release nachbauen, ohne Produktionscode zu ändern?', '1B') +
-        `<div style="flex:1 1 auto;min-height:0;display:grid;grid-template-columns:820px 1fr;column-gap:60px">` +
-        `<div style="display:flex;flex-direction:column"><p style="margin:0 0 22px;font-size:28px;line-height:1.38">Aufbau von null mit ${mono('labor.sh up')}, Prüfungen grün; privates Netz, Firewall, Token; Speicherlimits wie ab Werk v1.4.0, Modell per SHA-256 gepinnt</p>` +
-        kasten(
-          'Abweichungen und Grenzen',
+        `<div style="flex:1 1 auto;min-height:0;display:grid;grid-template-columns:1010px 1fr;column-gap:48px">` +
+        `<div style="display:flex;flex-direction:column"><p style="margin:0 0 18px;font-size:28px;line-height:1.38">Aufbau von null mit ${mono('labor.sh up')}, Prüfungen grün; privates Netz, Firewall, Token; Speicherlimits wie ab Werk v1.4.0, Modell per SHA-256 gepinnt</p>` +
+        konfigTabelle([
+          ['CPUs und Threads', fw.v13Cpus, fw.releaseCpus, fw.laborCpus, fw.laborCpus1C, ''],
           [
-            `${fw.laborCpus} statt ${fw.releaseCpus} CPUs, Timeout ${fw.laborTimeout1BS} s statt ${fw.releaseTimeoutS} s ab Werk v1.4.0 <span class="nowrap">(Kalibrierung I = ${fw.kalibrierung1BS}\u00a0s)</span>`,
-            `v1.3.0: ${fw.v13Cpus} CPUs, ${fw.v13SpeicherGiB} GiB, ${fw.v13TimeoutS} s; gemessen: aktueller Stand (Prüfer)`,
-            'Images selbst gebaut; Start ohne Wrapper (CPU-Override)',
-            'Summary-Schalter an; Hintergrunddienste von Hand aus',
+            'Speicher Runtime',
+            fw.v13SpeicherGiB,
+            fw.prodSpeicherGiB,
+            fw.laborSpeicher1BGiB,
+            fw.laborSpeicher1CGiB,
+            ' GiB',
           ],
-          'var(--bernstein)',
-          24,
-        ) +
+          [
+            'Summary-Timeout',
+            fw.v13TimeoutS,
+            fw.releaseTimeoutS,
+            fw.laborTimeout1BS,
+            fw.laborTimeoutS,
+            ' s',
+          ],
+        ]) +
+        `<ul style="margin:14px 0 12px;padding-left:24px;font-size:22px;line-height:1.35;color:var(--text-2)">` +
+        `<li><b>Fett</b> weicht vom gemessenen Stand ab; gemessen wurde der aktuelle Stand, auf Wunsch des Prüfers</li>` +
+        `<li>Timeout 300 s nach Kalibrierung (1B: I = ${fw.kalibrierung1BS}\u00a0s); 1C: ein Rechner, Loopback, Messproxy</li>` +
+        `<li>Images selbst gebaut; Start ohne Wrapper (CPU-Override); Summary-Schalter an, Hintergrunddienste von Hand aus</li></ul>` +
         `<p class="vermerk" style="margin-top:auto">${STAND}</p></div>` +
         `<div style="display:flex;flex-direction:column;min-height:0">` +
         host(
           'app-host',
           '192.168.150.10',
-          'App mit App-Adapter, PostgreSQL, Redis<br>Encoder nicht gestartet (ab Werk aus)',
+          'App, App-Adapter, PostgreSQL, Redis; Encoder nicht gestartet (ab Werk aus)',
         ) +
         `<div style="flex:none;text-align:center;font-size:24px;line-height:1.2;color:var(--bernstein-text);margin:8px 0"><span style="font-size:34px;font-weight:700">↓</span><br>privates Netz, nur app-host → llm-host, Token</div>` +
         host(
           'llm-host',
           '192.168.150.20',
-          'LLM-Server llama-server, ein Slot<br>Qwen3-4B-Instruct-2507 Q4_K_M (Manifest)',
+          'llama-server, ein Slot; Qwen3-4B-Instruct-2507 Q4_K_M (Manifest)',
         ) +
         `</div></div>`,
     ),
@@ -1140,17 +1185,9 @@ export function folien(daten) {
           'var(--blau)',
         ) +
         `</div>` +
-        `<div style="display:grid;grid-template-columns:1fr 1fr;column-gap:40px;align-items:start">` +
-        kasten(
-          `${etikett('1C')} Abweichungen und Grenzen im Labor`,
-          [
-            'ein Rechner, Loopback, kein zweiter Host',
-            `${fw.laborCpus1C} CPUs, ${fw.laborSpeicher1CGiB} GiB statt ${fw.releaseCpus} CPUs, ${fw.prodSpeicherGiB} GiB ab Werk v1.4.0`,
-            `Timeout ${fw.laborTimeoutS} s statt ${fw.releaseTimeoutS} s; Image lokal, Messproxy`,
-          ],
-          'var(--petrol)',
-        ) +
-        `<div><p style="margin:0 0 6px;font-weight:700;font-size:24px">${etikett('1B')} Hypothesen und Schwellen, vorab</p>` +
+        // Abweichungen der Labore stehen seit der Durchsicht 2026-11-18 in der Tabelle auf J2
+        `<div style="max-width:1000px">` +
+        `<p style="margin:0 0 6px;font-weight:700;font-size:24px">${etikett('1B')} Hypothesen und Schwellen, vorab</p>` +
         `<table style="border-collapse:collapse;font-size:22px;width:100%">` +
         `<tr style="color:var(--gedaempft);text-align:left"><th style="padding:4px 12px 6px 0;font-weight:600">Hypothese</th><th style="padding:4px 12px 6px 0;font-weight:600">Messgröße</th><th style="padding:4px 0 6px;font-weight:600">Schwelle</th></tr>` +
         hzeile(
@@ -1164,7 +1201,7 @@ export function folien(daten) {
           'Inferenzanteil <span style="color:var(--gedaempft)">(Konsistenzprüfung)</span>',
           mono(`Median ≥ ${fw.schwelleInferenzProzent} %`),
         ) +
-        `</table></div></div>` +
+        `</table></div>` +
         `<p class="beleg">Orientiert an Papadopoulos et al. (2021); es fehlen Konfidenzintervalle und Wiederholung über Instanzen (n = ${n} aus einem Lauf)</p>`,
     ),
     notiz: privat('J4.notiz', { fw }),

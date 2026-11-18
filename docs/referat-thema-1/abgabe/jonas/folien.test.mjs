@@ -396,6 +396,39 @@ test('GK: „arsnova.eu im Überblick“ mit dem Untertitel aus der Durchsicht',
   );
 });
 
+test('J2: Konfiguration in vier Spalten (Release 1.3, ab Werk, Labor 1B, Labor 1C), J4 ohne Abweichungskasten', () => {
+  const j2 = nach('J2').inhalt;
+  const tabelle = j2.match(/<table data-konfig[\s\S]*?<\/table>/)?.[0];
+  assert.ok(tabelle, 'Tabelle data-konfig auf J2');
+  const zellen = (tr) => [...tr.matchAll(/<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/g)].map((m) => m[1]);
+  const zeilen = [...tabelle.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/g)].map((m) => zellen(m[1]));
+  const ohne = (z) =>
+    z
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  assert.deepEqual(zeilen[0].slice(1).map(ohne), [
+    'Release 1.3 (Tag v1.3.0)',
+    'v1.4.0 ab Werk (gemessener Code)',
+    'Labor 1B (zwei VMs)',
+    'Labor 1C (ein Rechner)',
+  ]);
+  const werte = Object.fromEntries(zeilen.slice(1).map((z) => [ohne(z[0]), z.slice(1)]));
+  assert.deepEqual(Object.keys(werte), ['CPUs und Threads', 'Speicher Runtime', 'Summary-Timeout']);
+  assert.deepEqual(werte['CPUs und Threads'].map(ohne), ['4', '8', '4', '4']);
+  assert.deepEqual(werte['Speicher Runtime'].map(ohne), ['5 GiB', '8 GiB', '8 GiB', '5 GiB']);
+  assert.deepEqual(werte['Summary-Timeout'].map(ohne), ['8 s', '90 s', '300 s', '300 s']);
+  // Fett genau, was vom gemessenen Code (v1.4.0 ab Werk) abweicht, und nur in den Laborspalten
+  const fett = Object.values(werte).map((z) => z.map((c) => /<b>/.test(c)));
+  assert.deepEqual(fett, [
+    [false, false, true, true],
+    [false, false, false, true],
+    [false, false, true, true],
+  ]);
+  assert.doesNotMatch(sichtbar(j2), /Abweichungen und Grenzen/);
+  assert.doesNotMatch(sichtbar(nach('J4').inhalt), /Abweichungen und Grenzen/);
+});
+
 test('Titelfolie: großer Titel ohne „Thema 1:“, Oberzeile mit Thema und Kurs', () => {
   const gt = nach('GT');
   assert.equal(gt.titel, 'KI-Inferenz im Moderationskompass');
@@ -624,7 +657,8 @@ test(
     const j2 = nach('J2');
     const s = sichtbar(j2.inhalt);
     assert.ok(!/Limits wie im Release/.test(s), 'Limits wie im Release');
-    assert.match(s, /4 statt 8 CPUs/);
+    // CPUs: Labor 4 gegen 8 ab Werk steht seit 2026-11-18 in der Konfigurationstabelle (Test „J2: Konfiguration …“)
+    assert.match(s, /CPUs und Threads/);
     assert.match(s, /Speicherlimits wie ab Werk v1\.4\.0/);
     assert.match(j2.notiz, /4 statt 8/);
   },
@@ -762,27 +796,21 @@ test(
   },
 );
 
-test('W4/W5: Abweichungen und Grenzen je Auftrag offengelegt', () => {
+test('W4/W5: Abweichungen und Grenzen je Auftrag offengelegt (seit 2026-11-18 gesammelt auf J2)', () => {
   const j2 = sichtbar(nach('J2').inhalt);
-  assert.match(j2, /Abweichungen und Grenzen/);
+  // Zahlen der Abweichungen prüft „J2: Konfiguration …“; hier die übrigen Abweichungen und das 1C-Labor
   for (const re of [
-    /4 statt 8 CPUs/,
-    /Timeout 300 s statt 90 s/,
+    /Labor 1B/,
+    /Labor 1C/,
     /202\ss/,
     /selbst gebaut/,
     /ohne Wrapper/,
     /Schalter/,
     /von Hand/,
+    /ein Rechner/,
+    /Loopback/,
   ])
     assert.match(j2, re, `J2: ${re}`);
-  const c = F.filter(
-    (f) => f.auftrag !== '1B' && /Abweichungen und Grenzen/.test(sichtbar(f.inhalt)),
-  );
-  const c1 = c.find((f) => f.id !== 'J2');
-  assert.ok(c1, '1C-Block fehlt');
-  const s = sichtbar(c1.inhalt);
-  for (const re of [/ein Rechner/, /Loopback/, /4 CPUs/, /5 GiB/, /300 s/])
-    assert.match(s, re, `${c1.id}: ${re}`);
   const j11 = sichtbar(nach('J11').inhalt);
   assert.match(j11, /5 GiB/);
   assert.match(j11, /21\./);
@@ -945,7 +973,7 @@ test('R3-I1: Werte ab Werk mit Version; v1.3.0 und der Grund für den Messstand 
   const j2 = sichtbar(nach('J2').inhalt);
   assert.match(j2, /v1\.3\.0/);
   assert.match(j2, /Prüfer/);
-  assert.match(j2, /4 CPUs/);
+  assert.match(j2, /CPUs und Threads/);
   assert.match(j2, /5 GiB/);
   for (const f of F) {
     const t = alles(f);
@@ -954,7 +982,8 @@ test('R3-I1: Werte ab Werk mit Version; v1.3.0 und der Grund für den Messstand 
       `${f.id}: „Release“ ohne Version`,
     );
   }
-  assert.match(sichtbar(nach('J4').inhalt), /v1\.4\.0/);
+  // Werte ab Werk mit Version stehen seit 2026-11-18 nur noch in der Tabelle auf J2 (J4 ohne Kasten)
+  assert.match(j2, /v1\.4\.0 ab Werk/);
   assert.match(nach('J11').inhalt, /ab Werk v1\.4\.0/);
 });
 
