@@ -18,7 +18,7 @@ import { kopfBefunde, layoutBefunde } from '../jonas/layout-pruefung.mjs';
 import { baueEntwurf, notizenNiklas } from './bau-entwurf.mjs';
 import { ladeDaten1A } from './daten-1a.mjs';
 import { eingaben1B34, ladeDaten1B34 } from './daten-1b34.mjs';
-import { STUFE_1B34, folien1B34 } from './folien-1b34.mjs';
+import { STUFE_1B34, ersatzSvg, folien1B34 } from './folien-1b34.mjs';
 import { LITERATUR_1A, kurzbeleg1A } from './literatur-1a.mjs';
 import { mitNotizen } from '../jonas/notizen.mjs';
 
@@ -925,4 +925,37 @@ test('1B 3–4 liest .json.gz; liegen .json und .json.gz nebeneinander, zählt d
   } finally {
     rmSync(wurzel, { recursive: true, force: true });
   }
+});
+
+test('N4 schreibt H1 und H2 im Regelkasten aus und nennt den Versuchsvertrag als Quelle', () => {
+  const n4 = n1a.find((f) => f.id === 'N4');
+  const text = ohneTags(n4.inhalt);
+  assert.match(text, /H1:[^.]*V2[^.]*V1/);
+  assert.match(text, /H2:[^.]*V3[^.]*V4/);
+  assert.match(n4.quelle, /1A-experiment-contract\.md/);
+});
+
+test('M1 zeigt je Zeile die Zahl der Aufträge je Consumer und eine Lesehilfe', () => {
+  const d1b = ladeDaten1B34(ROOT);
+  const svg = ersatzSvg(d1b);
+  assert.match(svg, />Jeder Punkt ein Auftrag; gleiche Zeiten liegen übereinander</);
+  // n je Zeile und Consumer stammt aus zeitenMs.length; fehlt ein Consumer, steht ein Strich
+  const n = Object.fromEntries(
+    [...svg.matchAll(/<text data-n="(\w+)-(\w+)"[^>]*>([^<]*)<\/text>/g)].map((m) => [
+      `${m[1]}-${m[2]}`,
+      m[3],
+    ]),
+  );
+  assert.equal(n['normal-summary'], '10');
+  assert.equal(n['normal-label'], '30');
+  assert.equal(n['l2-label'], '3');
+  assert.equal(n['busy-label'], '–');
+  for (const v of ['normal', 'f1', 'busy', 'l1', 'l2', 'f2', 'l3'])
+    for (const [c, r] of [
+      ['summary', d1b.finde(v)],
+      ['label', d1b.finde(v, 'label')],
+    ])
+      if (`${v}-${c}` in n)
+        assert.equal(n[`${v}-${c}`], r ? String(r.zeitenMs.length) : '–', `${v}-${c}`);
+  assert.equal(Object.keys(n).length, 14);
 });

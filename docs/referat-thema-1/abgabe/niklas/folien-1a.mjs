@@ -248,8 +248,8 @@ export function folien1A(d) {
     titel: 'Die Regel stand eine Woche vorher fest',
     inhalt: flaeche(
       frage('Wann ist spaCy für die Live-Aktionen unschädlich?', '1A') +
-        `<p style="margin:0 0 22px;font-size:24px;line-height:1.35;color:var(--text-2)"><b style="color:var(--tinte)">Fünf Varianten, je Block gemischt:</b> V0 ohne Analyse · V1 lexikalisch (Basis) · V2 spaCy ${fmt(k.spacy.V2.cpu)}&nbsp;CPU · V3 ${fmt(k.spacy.V3.cpu, 2)}&nbsp;CPU · V4 Proxy +${proxyS}&nbsp;s, Timeout ${timeoutS}&nbsp;s</p>` +
-        `<div style="font-size:30px;line-height:1.35;padding:18px 26px;border-left:6px solid var(--blau);background:var(--raster);margin:0 0 30px">Je Aktion und Block steigt der p95 gegenüber V1 um höchstens <b>${rel} %</b> <b>und</b> höchstens <b>${abs} ms</b>. Alle fünf Blöcke müssen bestehen; kein Ausreißer wird entfernt.</div>` +
+        `<p style="margin:0 0 14px;font-size:24px;line-height:1.35;color:var(--text-2)"><b style="color:var(--tinte)">Fünf Varianten, je Block gemischt:</b> V0 ohne Analyse · V1 lexikalisch (Basis) · V2 spaCy ${fmt(k.spacy.V2.cpu)}&nbsp;CPU · V3 ${fmt(k.spacy.V3.cpu, 2)}&nbsp;CPU · V4 Proxy +${proxyS}&nbsp;s, Timeout ${timeoutS}&nbsp;s</p>` +
+        `<div style="font-size:30px;line-height:1.35;padding:14px 26px;border-left:6px solid var(--blau);background:var(--raster);margin:0 0 20px">Je Aktion und Block steigt der p95 gegenüber V1 um höchstens <b>${rel} %</b> <b>und</b> höchstens <b>${abs} ms</b>. Alle fünf Blöcke müssen bestehen; kein Ausreißer wird entfernt.<p style="margin:12px 0 0;font-size:24px;line-height:1.35;color:var(--text-2)"><b style="color:var(--tinte)">H1:</b> Normales spaCy (V2) hält gegenüber V1 die p95- und Fehlergrenzen für Live-Aktionen ein.</p><p style="margin:4px 0 0;font-size:24px;line-height:1.35;color:var(--text-2)"><b style="color:var(--tinte)">H2:</b> Auch unter CPU-Drosselung (V3) und bei verzögerten Antworten (V4).</p></div>` +
         // Zeitleiste der Vorab-Festlegung (Git)
         `<div style="display:grid;grid-template-columns:repeat(${kette.length},1fr);column-gap:24px">` +
         kette
@@ -271,7 +271,7 @@ export function folien1A(d) {
     stichpunkte: privat('N4.stichpunkte', { fmt, k, rel, abs, datum, d, vr }),
     zeitS: 50,
     kurzfassung: true,
-    quelle: `1A-Versuchsvertrag (Regeltabelle, „Alle fünf Blöcke“; SHA-256 ${d.vorab.vertragSha}… = contractSha256 aller ${d.live.laeufe} Laufmanifeste); Git: ${d.vorab.kette.map((x) => `${x.commit} ${x.datum}`).join(', ')}; erster Lauf ${d.vorab.ersterLauf} (lauf.json manifest.startAt); erste Reihe: Daten ${vr.commitDaten} (${vr.datumDaten}), Auswertung ${vr.commitAuswertung} (${vr.datumAuswertung}), Baseline ${vr.baseline}, gleicher Vertrag, Seed ${vr.gleicherSeed}, Fixture ${vr.fixtureSha}…, H1 ${vr.h1.fehl}/${vr.h1.gesamt}, H2 ${vr.h2.fehl}/${vr.h2.gesamt}, ${vr.absolutFehl} absolute Verletzungen; aus dem Arbeitsbaum entfernt in ab1619e7 · ${umgebung}`,
+    quelle: `1A-experiment-contract.md (Hypothesen H1, H2); 1A-Versuchsvertrag (Regeltabelle, „Alle fünf Blöcke“; SHA-256 ${d.vorab.vertragSha}… = contractSha256 aller ${d.live.laeufe} Laufmanifeste); Git: ${d.vorab.kette.map((x) => `${x.commit} ${x.datum}`).join(', ')}; erster Lauf ${d.vorab.ersterLauf} (lauf.json manifest.startAt); erste Reihe: Daten ${vr.commitDaten} (${vr.datumDaten}), Auswertung ${vr.commitAuswertung} (${vr.datumAuswertung}), Baseline ${vr.baseline}, gleicher Vertrag, Seed ${vr.gleicherSeed}, Fixture ${vr.fixtureSha}…, H1 ${vr.h1.fehl}/${vr.h1.gesamt}, H2 ${vr.h2.fehl}/${vr.h2.gesamt}, ${vr.absolutFehl} absolute Verletzungen; aus dem Arbeitsbaum entfernt in ab1619e7 · ${umgebung}`,
   });
 
   // ------------------------------------------------------------ N5 Live-Aktionen

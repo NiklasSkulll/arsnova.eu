@@ -86,11 +86,14 @@ export function ersatzSvg(d) {
   );
   const zeileH = 64;
   const y0 = 108;
-  const H = y0 + zeilen.length * zeileH + 60;
+  const H = y0 + zeilen.length * zeileH + 90;
   const x0 = 360;
-  const x1 = 1000;
-  const spalteS = 1150;
-  const spalteL = 1340;
+  const x1 = 900;
+  // Rechts je Consumer Median und n (Zahl der Aufträge), Durchsicht 2026-11-18
+  const spalteS = 1040;
+  const spalteSn = 1110;
+  const spalteLn = 1350;
+  const spalteL = 1270;
   const min = 0.01;
   const max = 1000;
   const sx = (s) =>
@@ -102,9 +105,15 @@ export function ersatzSvg(d) {
   t.push(text(x0 + 30, 34, 'Summary, Job-Zeit', { groesse: 22, farbe: FARBEN.text2 }));
   t.push(raute(x0 + 270, 26, 12, FARBEN.gedaempft));
   t.push(text(x0 + 292, 34, 'Label, Zeit beim Client', { groesse: 22, farbe: FARBEN.text2 }));
-  t.push(text(spalteS, 34, 'Summary', { groesse: 22, gewicht: 700, anker: 'end' }));
-  t.push(text(spalteL, 34, 'Label', { groesse: 22, gewicht: 700, anker: 'end' }));
-  t.push(text(spalteL, 60, 'Median', { groesse: 20, anker: 'end', farbe: FARBEN.gedaempft }));
+  t.push(text(spalteSn, 30, 'Summary', { groesse: 22, gewicht: 700, anker: 'end' }));
+  t.push(text(spalteLn, 30, 'Label', { groesse: 22, gewicht: 700, anker: 'end' }));
+  for (const [x, w] of [
+    [spalteS, 'Median'],
+    [spalteSn, 'n'],
+    [spalteL, 'Median'],
+    [spalteLn, 'n'],
+  ])
+    t.push(text(x, 54, w, { groesse: 20, anker: 'end', farbe: FARBEN.gedaempft }));
   for (const [s, l] of [
     [0.01, '10 ms'],
     [0.1, '0,1 s'],
@@ -152,6 +161,19 @@ export function ersatzSvg(d) {
     t.push(text(0, y + 28, esc(was), { groesse: 20, farbe: FARBEN.gedaempft }));
     const s = nur === 'label' ? null : d.finde(v);
     const l = nur === 'summary' ? null : d.finde(v, 'label');
+    // Zahl der Aufträge je Consumer (jeder Punkt ein Auftrag) neben dem Median
+    for (const [x, r, c] of [
+      [spalteSn, s, 'summary'],
+      [spalteLn, l, 'label'],
+    ])
+      t.push(
+        text(x, y + 2, r ? String(r.zeitenMs.length) : '–', {
+          groesse: 24,
+          mono: true,
+          anker: 'end',
+          farbe: FARBEN.gedaempft,
+        }).replace('<text ', `<text data-n="${v}-${c}" `),
+      );
     for (const ms of s?.zeitenMs ?? []) t.push(kreis(sx(ms / 1000), y - 6, 10, farbe));
     for (const ms of l?.zeitenMs ?? []) t.push(raute(sx(ms / 1000), y - 6, 12, farbe));
     t.push(
@@ -175,7 +197,13 @@ export function ersatzSvg(d) {
     if (stufe) t.push('</g>');
   });
   t.push(
-    text(x0, H - 6, 'Zeit bis Ersatz oder Antwort je Auftrag · Log-Achse, je Strich × 10', {
+    text(x0, H - 36, 'Zeit bis Ersatz oder Antwort je Auftrag · Log-Achse, je Strich × 10', {
+      groesse: 22,
+      farbe: FARBEN.gedaempft,
+    }),
+  );
+  t.push(
+    text(x0, H - 6, 'Jeder Punkt ein Auftrag; gleiche Zeiten liegen übereinander', {
       groesse: 22,
       farbe: FARBEN.gedaempft,
     }),
@@ -183,7 +211,7 @@ export function ersatzSvg(d) {
   const f1 = d.finde('f1');
   const f2 = d.finde('f2');
   return huelle(
-    `Zeit bis Ersatz oder Antwort je Auftrag: gestoppte Runtime Summary ${dauer(f1.zeitMedianMs)}, DROP Summary ${dauer(f2?.zeitMedianMs ?? 0)}, Label durch die Frist von ${fmt(fristL)} s begrenzt, Antwort nach der Frist ${fmt(fristS)} s.`,
+    `Zeit bis Ersatz oder Antwort je Auftrag: gestoppte Runtime Summary ${dauer(f1.zeitMedianMs)}, DROP Summary ${dauer(f2?.zeitMedianMs ?? 0)}, Label durch die Frist von ${fmt(fristL)} s begrenzt, Antwort nach der Frist ${fmt(fristS)} s. Jeder Punkt ist ein Auftrag, die Zahl der Aufträge (n) steht je Consumer neben dem Median.`,
     t.join(''),
     H,
   );
