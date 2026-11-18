@@ -376,6 +376,26 @@ test('1B mit Schritten ist ein Chip: Schritte stehen im Etikett, nicht daneben (
   }
 });
 
+test('G0: „Gemeinsam“ mit 1A, 1B, 1C ohne Schritte und „Fazit: Antwort auf die Leitfrage“', () => {
+  const g0 = nach('G0').inhalt;
+  const spalte = g0.split('<li>').at(-1);
+  assert.match(spalte, /Gemeinsam/);
+  for (const a of ['1a', '1b', '1c'])
+    assert.ok(spalte.includes(`etikett-${a}">${a.toUpperCase()}</span>`), a);
+  assert.doesNotMatch(spalte, /etikett-schritte|alle Aufträge/);
+  assert.match(spalte, /Fazit: Antwort auf die Leitfrage/);
+});
+
+test('GK: „arsnova.eu im Überblick“ mit dem Untertitel aus der Durchsicht', () => {
+  const gk = nach('GK');
+  assert.equal(gk.titel, 'arsnova.eu im Überblick');
+  assert.ok(
+    sichtbar(gk.inhalt).includes(
+      'Open-Source-Live-App (MIT) für den Hörsaal mit Live-Interaktion in der Lehre, ohne Pflichtkonten, KI nur als Zusatz.',
+    ),
+  );
+});
+
 test('Titelfolie: großer Titel ohne „Thema 1:“, Oberzeile mit Thema und Kurs', () => {
   const gt = nach('GT');
   assert.equal(gt.titel, 'KI-Inferenz im Moderationskompass');

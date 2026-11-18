@@ -959,7 +959,10 @@ export function fussballfeldSvg(b1, { zoom = 0 } = {}) {
 export const SYSTEM = Object.freeze({
   breite: 1380,
   hoehe: 470,
-  hoersaal: { x: 0, y: 90, w: 240, h: 260 },
+  // Hörsaal (mit Lehrperson) zeigt auf die Live-App, die Lehrperson allein auf den Kompass
+  // (Durchsicht 2026-11-18): zwei Kästen, je auf Höhe ihres Ziels.
+  hoersaal: { x: 0, y: 0, w: 240, h: 206 },
+  lehrperson: { x: 0, y: 218, w: 240, h: 82 },
   app: { x: 300, y: 0, w: 690, h: 440 },
   live: { x: 330, y: 64, w: 630, h: 104 },
   kompass: { x: 330, y: 186, w: 630, h: 96 },
@@ -998,21 +1001,37 @@ export function systemSvg({ clients }) {
   const S = SYSTEM;
   const t = [];
   const h = S.hoersaal;
-  t.push(kasten(h, { fuellung: FARBEN.raster }));
-  t.push(text(h.x + 20, h.y + 46, 'Hörsaal', { gewicht: 700 }));
-  t.push(text(h.x + 20, h.y + 96, `≥ ${fmt(clients)}`, { mono: true, groesse: 30, gewicht: 600 }));
-  t.push(text(h.x + 20, h.y + 128, 'Clients zugleich,', { groesse: 22, farbe: FARBEN.text2 }));
-  t.push(text(h.x + 20, h.y + 158, 'auch hinter einem', { groesse: 22, farbe: FARBEN.text2 }));
-  t.push(text(h.x + 20, h.y + 188, 'gemeinsamen NAT', { groesse: 22, farbe: FARBEN.text2 }));
-  t.push(text(h.x + 20, h.y + 236, 'Lehrperson', { groesse: 22, gewicht: 600 }));
-  // Pfeile Hörsaal → Live-App und Lehrperson → Kompass
-  const pfeil = (x1, y, x2) =>
-    `<line x1="${x1}" y1="${y}" x2="${x2 - 12}" y2="${y}" stroke="${FARBEN.text2}" stroke-width="3"/>` +
-    `<path d="M${x2},${y} l-14,-8 v16 z" fill="${FARBEN.text2}"/>`;
+  t.push(
+    `<g data-kasten="hoersaal">` +
+      kasten(h, { fuellung: FARBEN.raster }) +
+      text(h.x + 20, h.y + 40, 'Hörsaal', { gewicht: 700 }) +
+      text(h.x + 20, h.y + 68, '(+Lehrperson)', {
+        groesse: 22,
+        gewicht: 600,
+        farbe: FARBEN.text2,
+      }) +
+      text(h.x + 20, h.y + 112, `≥ ${fmt(clients)}`, { mono: true, groesse: 30, gewicht: 600 }) +
+      text(h.x + 20, h.y + 140, 'Clients zugleich,', { groesse: 22, farbe: FARBEN.text2 }) +
+      text(h.x + 20, h.y + 166, 'auch hinter einem', { groesse: 22, farbe: FARBEN.text2 }) +
+      text(h.x + 20, h.y + 192, 'gemeinsamen NAT', { groesse: 22, farbe: FARBEN.text2 }) +
+      `</g>`,
+  );
+  const lp = S.lehrperson;
+  t.push(
+    `<g data-kasten="lehrperson">` +
+      kasten(lp, { fuellung: FARBEN.raster }) +
+      text(lp.x + 20, lp.y + lp.h / 2 + 9, 'Lehrperson', { gewicht: 700 }) +
+      `</g>`,
+  );
+  // Pfeile Hörsaal → Live-App und Lehrperson → Kompass, je auf der gemeinsamen Höhe beider Kästen
+  const pfeil = (von, nach, y) =>
+    `<g data-pfeil="${von}-${nach}" data-y="${y}">` +
+    `<line x1="${S[von].x + S[von].w}" y1="${y}" x2="${S[nach].x - 12}" y2="${y}" stroke="${FARBEN.text2}" stroke-width="3"/>` +
+    `<path d="M${S[nach].x},${y} l-14,-8 v16 z" fill="${FARBEN.text2}"/></g>`;
   const a = S.app;
   t.push(kasten(a, { rx: 14 }));
-  t.push(pfeil(h.x + h.w, S.live.y + S.live.h / 2, S.live.x));
-  t.push(pfeil(h.x + h.w, S.kompass.y + S.kompass.h / 2 + 30, S.kompass.x));
+  t.push(pfeil('hoersaal', 'live', S.live.y + S.live.h / 2));
+  t.push(pfeil('lehrperson', 'kompass', lp.y + lp.h / 2));
   t.push(text(a.x + 24, a.y + 42, 'App-Host', { gewicht: 700 }));
   t.push(
     text(a.x + a.w - 24, a.y + 42, 'Live-Pfad wartet nie auf Analyse', {
@@ -1069,7 +1088,7 @@ export function systemSvg({ clients }) {
       `</g>`,
   );
   const label =
-    `Systembild: Hörsaal mit mindestens ${fmt(clients)} gleichzeitigen Clients, App-Host mit Live-App, Moderationskompass, ` +
+    `Systembild: Hörsaal mit Lehrperson und mindestens ${fmt(clients)} gleichzeitigen Clients zur Live-App, Lehrperson zum Moderationskompass, App-Host mit Live-App, Moderationskompass, ` +
     'spaCy-Sidecar (1A) und Kontextpfad (1C), über ein privates Netz der zweite Host mit der Inferenz (1B).';
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${S.breite} ${S.hoehe}" role="img" aria-label="${esc(label)}">` +

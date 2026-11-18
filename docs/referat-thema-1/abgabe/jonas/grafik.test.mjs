@@ -336,6 +336,43 @@ test('GK systemSvg: drei Stufen in Fahrplanfolge, Auslegung aus FESTWERTE, Baust
   assert.ok(drin(SYSTEM.inferenz, SYSTEM.llm));
 });
 
+test('GK systemSvg: Hörsaal (+Lehrperson) → Live-App, eigener Kasten Lehrperson → Kompass (Durchsicht 2026-11-18)', () => {
+  const svg = systemSvg({ clients: 500 });
+  const gruppe = (name) => {
+    const m = svg.match(new RegExp(`<g data-kasten="${name}">([\\s\\S]*?)</g>`));
+    assert.ok(m, `Kasten ${name}`);
+    return m[1];
+  };
+  const textVon = (g) => [...g.matchAll(/<text[^>]*>([^<]*)<\/text>/g)].map((m) => m[1]).join(' ');
+  const hoersaal = gruppe('hoersaal');
+  const lehrperson = gruppe('lehrperson');
+  assert.match(textVon(hoersaal), /^Hörsaal \(\+Lehrperson\) ≥ 500/);
+  assert.equal(textVon(lehrperson), 'Lehrperson');
+  assert.equal((hoersaal.match(/<rect/g) ?? []).length, 1);
+  assert.equal((lehrperson.match(/<rect/g) ?? []).length, 1);
+  // Kästen überlappen nicht, Lehrperson unter dem Hörsaal
+  const H = SYSTEM.hoersaal;
+  const L = SYSTEM.lehrperson;
+  assert.ok(L.y >= H.y + H.h + 8, 'Lehrperson unter dem Hörsaal');
+  // Pfeile: Hörsaal → Live-App, Lehrperson → Kompass, je auf Höhe beider Kästen
+  const pfeile = [...svg.matchAll(/<g data-pfeil="(\w+)-(\w+)" data-y="([\d.]+)">/g)].map((m) => [
+    m[1],
+    m[2],
+    Number(m[3]),
+  ]);
+  assert.deepEqual(
+    pfeile.map(([a, b]) => `${a}-${b}`),
+    ['hoersaal-live', 'lehrperson-kompass'],
+  );
+  for (const [von, nach, y] of pfeile) {
+    for (const b of [SYSTEM[von], SYSTEM[nach]])
+      assert.ok(
+        y > b.y + 10 && y < b.y + b.h - 10,
+        `${von}-${nach}: y=${y} trifft ${JSON.stringify(b)}`,
+      );
+  }
+});
+
 test('J12 abstimmungSvg: Zeiten des Auftrags, Stimme (Stufe 1) und Verwurf (Stufe 2)', () => {
   const svg = abstimmungSvg({ auftrag });
   pruefeFrei(svg);

@@ -60,9 +60,9 @@ export const TEILE = [
     id: 'fazit',
     kurz: 'Fazit',
     wer: 'Gemeinsam',
-    etiketten: [],
+    etiketten: [['1A'], ['1B'], ['1C']],
     farben: ['var(--text-2)'],
-    was: 'Antwort auf die Leitfrage',
+    was: 'Fazit: Antwort auf die Leitfrage',
   },
 ];
 
@@ -997,9 +997,9 @@ export function folien(daten) {
     id: 'GK',
     teil: 'rahmen',
     auftrag: null,
-    titel: 'Live-App für den Hörsaal, KI nur als Zusatz',
+    titel: 'arsnova.eu im Überblick',
     inhalt: flaeche(
-      `<p class="sekundaer" style="margin:0 0 var(--abstand-eng);color:var(--tinte)">arsnova.eu: Open-Source-App (MIT) für Live-Interaktion in der Lehre, ohne Pflichtkonten. Lehrende sehen im Moderationskompass Hinweiskarten aus den Live-Signalen.</p>` +
+      `<p class="sekundaer" style="margin:0 0 var(--abstand-eng);color:var(--tinte)">Open-Source-Live-App (MIT) für den Hörsaal mit Live-Interaktion in der Lehre, ohne Pflichtkonten, KI nur als Zusatz.</p>` +
         grafikBox(systemSvg({ clients: FESTWERTE.liveClients.wert })),
     ),
     notiz: privat('GK.notiz', { fw }),
