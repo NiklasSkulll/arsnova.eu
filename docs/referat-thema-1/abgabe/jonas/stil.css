@@ -391,9 +391,31 @@
   border-bottom-color: var(--blau);
 }
 
-/* Rahmenfolien (GT Titel, G0 Fahrplan, GD Dank): gleiche Ränder und Titelzeile wie alle Folien. */
+/* Rahmenfolien (GT Titel, G0 Fahrplan, GD Dank): gleiche Ränder wie alle Folien. Titel- und Dankfolie
+   tragen den großen Titel (96 px, Entwurf A der Durchsicht 2026-11-18). */
 .folie[data-id='GT'] .flaeche-inhalt::before {
   flex-grow: 1;
+}
+.titel-oberzeile {
+  flex: none;
+  margin: 0 0 10px;
+  color: var(--gedaempft);
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.folie[data-titelfolie] .folie-titel {
+  max-width: 1100px;
+  font-size: 96px;
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+}
+/* 1B mit Schritten als ein Chip: die Schritte stehen kleiner im selben Etikett. */
+.etikett-schritte {
+  font-size: 0.86em;
+  font-weight: 600;
 }
 .titel-unter {
   margin: 0;

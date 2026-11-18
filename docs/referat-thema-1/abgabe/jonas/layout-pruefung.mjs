@@ -46,9 +46,12 @@ export async function layoutBefunde(browser, pfad) {
         if (b.l < -1 || b.t < -1 || b.r > 1601 || b.b > 901)
           fehler.push(`${id}: ${name(el)} außerhalb der Bühne`);
       }
-      // 2. Titel einzeilig
+      // 2. Titel einzeilig; der große Titel der Titel- und Dankfolie (96 px) darf zwei Zeilen haben
+      // (Durchsicht 2026-11-18, Entwurf A), mehr nicht.
       const lh = parseFloat(getComputedStyle(titel).lineHeight);
-      if (titel.getBoundingClientRect().height > lh * 1.5) fehler.push(`${id}: Titel zweizeilig`);
+      const grosserTitel = folie.matches('[data-titelfolie], [data-id="GD"]');
+      if (titel.getBoundingClientRect().height > lh * (grosserTitel ? 2.5 : 1.5))
+        fehler.push(`${id}: Titel ${grosserTitel ? 'mehr als zweizeilig' : 'zweizeilig'}`);
       // 3. Kopf (Wegkarte, Teilleiste, Frage- und Autorzeile), Titel, Fläche, Fußzeile überlappen nicht
       const kopfZeilen = [
         ...folie.querySelectorAll(':scope > .folie-frage, :scope > .folie-autor'),

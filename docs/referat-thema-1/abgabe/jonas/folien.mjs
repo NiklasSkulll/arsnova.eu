@@ -44,7 +44,7 @@ export const TEILE = [
     id: 'jonas',
     kurz: '1C, 1B 1–2',
     wer: 'Jonas',
-    etiketten: [['1C'], ['1B', 'Schritte 1–2']],
+    etiketten: [['1C'], ['1B', '1–2']],
     farben: ['var(--petrol)', 'var(--bernstein)'],
     was: 'Ein Auftrag über zwei Hosts: Kontextpfad und Zeit',
   },
@@ -52,7 +52,7 @@ export const TEILE = [
     id: '1b34',
     kurz: '1B 3–4',
     wer: 'Niklas',
-    etiketten: [['1B', 'Schritte 3–4']],
+    etiketten: [['1B', '3–4']],
     farben: ['var(--bernstein)'],
     was: 'Zweiter Host gestört: Ersatz und Aufwand',
   },
@@ -598,7 +598,9 @@ export function qrSvg(text, px = 280) {
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-const etikett = (a) => `<span class="etikett etikett-${a.toLowerCase()}">${a}</span>`;
+// Auftragsetikett; 1B mit Schritten ist ein Chip („1B Schritte 1–2“), Durchsicht 2026-11-18.
+const etikett = (a, schritte) =>
+  `<span class="etikett etikett-${a.toLowerCase()}">${a}${schritte ? ` <span class="etikett-schritte">Schritte ${schritte}</span>` : ''}</span>`;
 
 const MONATE = [
   'Januar',
@@ -756,7 +758,7 @@ const frage = (text, auftrag, { status } = {}) => {
   const etiketten = auftrag === 'beide' ? ['1C', '1B'] : [auftrag].flat().filter(Boolean);
   if (!etiketten.length) throw new Error(`Fragezeile ohne Etikett: ${text}`);
   return (
-    `<p class="folie-frage">${etiketten.map(etikett).join('')}${text}` +
+    `<p class="folie-frage">${etiketten.map((a) => etikett(a)).join('')}${text}` +
     `${status ? `<span class="status">${esc(status)}</span>` : ''}</p>`
   );
 };
@@ -928,18 +930,13 @@ export function folien(daten) {
     id: 'GT',
     teil: 'rahmen',
     auftrag: null,
-    titel: 'Thema 1: KI-Inferenz im Moderationskompass',
+    oberzeile: 'Thema 1 · Cloud Computing',
+    titel: 'KI-Inferenz im Moderationskompass',
     inhalt: flaeche(
       `<p class="titel-unter">Release 1.3 im Labor: App-Host, zweiter Host und private Inferenz unter Last</p>` +
         `<div class="titel-personen">` +
-        titelPerson(
-          'Niklas Schneider',
-          `${etikett('1A')} ${etikett('1B')} <span class="zusatz">Schritte 3–4</span>`,
-        ) +
-        titelPerson(
-          'Jonas Weirauch',
-          `${etikett('1C')} ${etikett('1B')} <span class="zusatz">Schritte 1–2</span>`,
-        ) +
+        titelPerson('Niklas Schneider', `${etikett('1A')} ${etikett('1B', '3–4')}`) +
+        titelPerson('Jonas Weirauch', `${etikett('1C')} ${etikett('1B', '1–2')}`) +
         `</div>` +
         // Angaben in zwei Gruppen auf dem Raster der Namensspalten
         `<div class="titel-meta">` +
@@ -978,7 +975,7 @@ export function folien(daten) {
             `<li>` +
             `<div class="fahrplan-linie">${t.farben.map((f) => `<span style="background:${f}"></span>`).join('')}</div>` +
             `<p class="fahrplan-wer"><span class="mono">${i + 1}</span> ${t.wer}</p>` +
-            `<p class="fahrplan-etiketten">${t.etiketten.length ? t.etiketten.map(([a, zusatz]) => `${etikett(a)}${zusatz ? ` <span class="zusatz">${zusatz}</span>` : ''}`).join(' ') : '<span class="zusatz">alle Aufträge</span>'}</p>` +
+            `<p class="fahrplan-etiketten">${t.etiketten.length ? t.etiketten.map(([a, schritte]) => etikett(a, schritte)).join(' ') : '<span class="zusatz">alle Aufträge</span>'}</p>` +
             `<p class="fahrplan-was">${t.was}</p></li>`,
         ).join('') +
         `</ol>`,
@@ -1028,7 +1025,7 @@ export function folien(daten) {
         `<p class="sekundaer" style="margin:0 0 var(--abstand-gruppe);font-size:var(--s-text)">Ein echter Auftrag der Q&amp;A-Zusammenfassung mit synthetischen Daten, verfolgt vom Klick der Lehrperson bis zum Ergebnis. Labor auf einem Laptop, Inferenz auf der CPU, Code nach v1.4.0 (1B: v1.4.0-184, 1C: v1.4.0-14).</p>` +
         `<div style="display:grid;grid-template-columns:1fr 1fr;column-gap:60px;font-size:32px;line-height:1.35">` +
         `<div style="border-left:6px solid var(--petrol);padding-left:24px">${etikett('1C')}<p style="margin:14px 0 0">Hält der Kontextpfad seine Zusagen zu Vertrag, Konsistenz und Entkopplung ein?</p></div>` +
-        `<div style="border-left:6px solid var(--bernstein);padding-left:24px">${etikett('1B')} <span style="font-size:var(--s-min);color:var(--gedaempft)">Schritte 1–2</span><p style="margin:14px 0 0">Wo steckt die Zeit, wenn die Inferenz auf einem zweiten Host läuft?</p></div>` +
+        `<div style="border-left:6px solid var(--bernstein);padding-left:24px">${etikett('1B', '1–2')}<p style="margin:14px 0 0">Wo steckt die Zeit, wenn die Inferenz auf einem zweiten Host läuft?</p></div>` +
         `</div>` +
         `<p class="beleg">Auftrag Nr. ${au.nr}: Klick bis Ergebnis ${z.auWarte} s, Jobdauer T_job ${z.auJob} s · Median warm, n = ${nWarm}: ${z.jobWarm} s, Spanne ${z.warmMin}–${z.warmMax} s</p>`,
     ),
@@ -1576,11 +1573,11 @@ export function folien(daten) {
     inhalt: flaeche(
       `<p data-leitfrage class="sekundaer" style="margin:0 0 var(--abstand-gruppe)"><b>Leitfrage:</b> ${LEITFRAGE}</p>` +
         `<div style="display:grid;grid-template-columns:1fr 1fr;column-gap:56px;font-size:24px;line-height:1.38">` +
-        person('Jonas · 1C und 1B, Schritte 1–2', 'var(--petrol)', [
+        person(`Jonas ${etikett('1C')} ${etikett('1B', '1–2')}`, 'var(--petrol)', [
           `${etikett('1C')} Vertrag, Konsistenz und Entkopplung halten, mit benannten Ausnahmen (T2.3, T3.1). Nach v1.4.0 besteht keine der ${daten.abgeleitet.gateBeobachtet} geprüften Modellantworten das Gate (1B ${b.verworfen}, 1C ${c.gateAntwortenGesamt.wert}; ein Modell, eine Fixture); davor (${mono('9f230abc')}, Instruktion v2, ohne Gate) ${c.fullContextVorGate.wert}.`,
           `${etikett('1B')} Der zweite Host kostet keine relevante Zeit; die Zeit steckt in der Inferenz.`,
         ]) +
-        person('Niklas · 1A und 1B, Schritte 3–4', 'var(--blau)', [
+        person(`Niklas ${etikett('1A')} ${etikett('1B', '3–4')}`, 'var(--blau)', [
           `${etikett('1A')} Der App-Host trägt die Live-Last fehlerfrei. Die spaCy-Glättung bekommt keine Freigabe: Die vorab festgelegte Regel hält nicht, der Nutzen ist ungemessen.`,
           `${etikett('1B')} Fällt die Inferenz aus oder schweigt sie, kommt der Ersatz, und keine Live-Aktion scheitert. Latenzneutral ist das nicht, und Hänger dämpft der Breaker nicht; den zweiten Host empfiehlt ADR 1B-020 nur betrieblich zu begründen, nicht mit Tempo.`,
         ]) +

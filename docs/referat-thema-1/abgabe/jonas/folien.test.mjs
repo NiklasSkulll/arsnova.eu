@@ -349,6 +349,39 @@ test('Rahmen: GT, G0, G9, GD ohne Entwurfsvermerk und Platzhalter; G9 zitiert Ni
   assert.equal(nach('J16').anhang, true);
 });
 
+test('1B mit Schritten ist ein Chip: Schritte stehen im Etikett, nicht daneben (Durchsicht 2026-11-18)', async () => {
+  const { etikett } = await import('./folien.mjs');
+  assert.equal(etikett('1C'), '<span class="etikett etikett-1c">1C</span>');
+  assert.equal(
+    etikett('1B', '1–2'),
+    '<span class="etikett etikett-1b">1B <span class="etikett-schritte">Schritte 1–2</span></span>',
+  );
+  for (const f of F) {
+    assert.doesNotMatch(f.inhalt, /class="zusatz">Schritte/, `${f.id}: Schritte neben dem Chip`);
+    // Schritte als loser Zusatz hinter einem 1B-Etikett
+    assert.doesNotMatch(
+      f.inhalt,
+      /etikett-1b">1B<\/span>\s*<span[^>]*>Schritte/,
+      `${f.id}: Schritte neben dem Chip`,
+    );
+  }
+  // Fragezeilen tragen nur Auftragsetiketten, nie Schritte (map(etikett) reichte den Index weiter)
+  for (const f of F) {
+    const frage = f.inhalt.match(/<p class="folie-frage">[\s\S]*?<\/p>/)?.[0] ?? '';
+    assert.doesNotMatch(frage, /etikett-schritte/, `${f.id}: Schritte in der Fragezeile`);
+  }
+  for (const id of ['GT', 'G0', 'J1', 'G9']) {
+    const n = (nach(id).inhalt.match(/etikett-schritte/g) ?? []).length;
+    assert.ok(n >= (id === 'J1' ? 1 : 2), `${id}: 1B-Chips mit Schritten (${n})`);
+  }
+});
+
+test('Titelfolie: großer Titel ohne „Thema 1:“, Oberzeile mit Thema und Kurs', () => {
+  const gt = nach('GT');
+  assert.equal(gt.titel, 'KI-Inferenz im Moderationskompass');
+  assert.equal(gt.oberzeile, 'Thema 1 · Cloud Computing');
+});
+
 test('Titelfolie: beide Namen, Kurs, Hochschule, Prüfer, Datum; Platz für Matrikelnummern ohne Ziffern', () => {
   const gt = nach('GT');
   const text = sichtbar(gt.inhalt);

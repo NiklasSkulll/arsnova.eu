@@ -171,6 +171,7 @@ function jonasFolie(f, nr, gesamt, clipDaten) {
     `<section ${attrs}>` +
     ortsmarke(f, eigenerWeg) +
     teilleiste(f) +
+    (f.oberzeile ? `<p class="titel-oberzeile">${esc(f.oberzeile)}</p>` : '') +
     `<h1 class="folie-titel">${f.titel}</h1>` +
     kopf +
     `<div class="folie-flaeche">${inhalt}</div>` +
