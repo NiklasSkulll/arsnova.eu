@@ -28,7 +28,7 @@ import {
   vergleichsMatrixSvg,
 } from './grafik-1a.mjs';
 import { AKTIONEN, VARIANTEN } from './daten-1a.mjs';
-import { LITERATUR_1A, kurzbeleg1A } from './literatur-1a.mjs';
+import { quellenzeile } from './literatur-1a.mjs';
 import { privat } from '../jonas/notizen.mjs';
 
 const S = 'schneider2026';
@@ -41,13 +41,13 @@ export const LLM_MIN_WARM = Math.round(148.6 / 60 / 0.5) * 0.5;
 /** Kurzbelege je Folie (ZL Anhang B); die Fußzeile bleibt einzeilig. */
 const ZITATE = {
   N1: [
-    ['arsnova2026pruefung', 'Abschn. 4.3'],
+    ['arsnova2026pruefung', 'Kap. 4.3'],
     [S, 'Reihe 1A'],
   ],
   N2: [
     [S, 'Laufmanifeste'],
-    ['heo2024', 'Abschn. „CPU Interface Files“'],
-    ['arsnova2026adr0035', 'Abschn. 2.1'],
+    ['heo2024', 'Abschnitt CPU Interface Files'],
+    ['arsnova2026adr0035', 'Kap. 2.1'],
   ],
   N3: [
     [S, '1A-Versuchsvertrag'],
@@ -73,11 +73,11 @@ const ZITATE = {
   ],
   N8: [
     [S, 'auswertung.json'],
-    ['heo2024', 'Abschn. „CPU Interface Files“'],
+    ['heo2024', 'Abschnitt CPU Interface Files'],
   ],
   N9: [
     [S, 'auswertung.json'],
-    ['ulrich2016', 'Abschn. „Test Noncritical Backends“'],
+    ['ulrich2016', 'Abschnitt Test Noncritical Backends'],
   ],
   N10: [
     [S, '1A-auswertung.md'],
@@ -100,7 +100,7 @@ const kernsatz = (html, linie = 'var(--blau)', groesse = 32) =>
 /** Status der nachträglichen Auswertung: gedämpft in der Fragezeile nach der Frage (Kopfgrammatik). */
 const explorativ = { status: 'nachträglich ausgewertet' };
 
-/** Folien N1–N10 ohne N8 (Hauptteil), NL (Literatur, Anhang) und Reserve RN1 (bis 2026-11-16 N6b), RN2, RN4 (N8). */
+/** Folien N1–N10 ohne N8 (Hauptteil), ohne eigenes Literaturverzeichnis (gemeinsam: J16, J16b) und Reserve RN1 (bis 2026-11-16 N6b), RN2, RN4 (N8). */
 export function folien1A(d) {
   const H = d.herkunft;
   const sw = d.schwellen;
@@ -468,32 +468,10 @@ export function folien1A(d) {
   for (const f of F) {
     const z = ZITATE[f.id];
     if (!z) throw new Error(`${f.id}: keine Kurzbelege`);
-    f.fuss = `Quelle: ${z.map(([sl, st]) => kurzbeleg1A(sl, st).slice(1, -1)).join('; ')}`;
+    f.fuss = quellenzeile(z);
   }
 
-  // ------------------------------------------------------------ Anhang: Literatur 1A
-  F.push({
-    id: 'NL',
-    teil: 'niklas',
-    anhang: true,
-    auftrag: '1A',
-    titel: 'Literaturverzeichnis 1A',
-    inhalt: flaeche(
-      `<!--quellen--><ul data-literatur style="margin:0;padding:0;list-style:none;columns:2;column-gap:56px;font-size:19px;line-height:1.3">` +
-        LITERATUR_1A.map(
-          (x) =>
-            `<li style="break-inside:avoid;margin:0 0 10px;padding-left:28px;text-indent:-28px;overflow-wrap:anywhere">${x.voll}</li>`,
-        ).join('') +
-        `</ul><!--/quellen-->`,
-    ),
-    notiz: privat('NL.notiz', {}),
-    stichpunkte: privat('NL.stichpunkte', {}),
-    zeitS: 0,
-    kurzfassung: false,
-    quelle: 'abgabe/niklas/literatur-1a.mjs, Schlüssel wie in Niklas’ main.bib (PaperLab)',
-    fuss: 'Kurzbelege auf den Folien nach IU-Zitierleitfaden; Einträge wie im Handout',
-    station: null,
-  });
+  // Literatur: seit der Durchsicht 2026-11-18 im gemeinsamen Verzeichnis (J16, J16b in folien.mjs), kein NL mehr.
 
   // ------------------------------------------------------------ Reserve
   const reserve = (f) => {
@@ -507,7 +485,7 @@ export function folien1A(d) {
       station: null,
       ...f,
       inhalt: f.inhalt.startsWith('<div class="flaeche-inhalt">') ? f.inhalt : flaeche(f.inhalt),
-      fuss: `Quelle: ${z.map(([sl, st]) => kurzbeleg1A(sl, st).slice(1, -1)).join('; ')}`,
+      fuss: quellenzeile(z),
     });
   };
   const g = e.gepoolt;
@@ -529,7 +507,7 @@ export function folien1A(d) {
     // Wegmarke: Empfindlichkeit der Regel (Kontrolle ohne spaCy schlägt an): wie N4.
     marke: '1a-regel',
     zeitS: 45,
-    fuss: `Quelle: ${ZITATE.N6b.map(([sl, st]) => kurzbeleg1A(sl, st).slice(1, -1)).join('; ')}`,
+    fuss: quellenzeile(ZITATE.N6b),
     inhalt: flaeche(
       frage('Wie empfindlich ist die Regel?', '1A', explorativ) +
         zweiSpalten(

@@ -58,14 +58,14 @@ after(async () => {
 
 // ---------------------------------------------------------------- Aufbau und Zeit
 
-test('1A: neun Folien im Vortrag (N6b, N8 seit 2026-11-17 wieder Reserve RN1, RN4), Literatur NL im Anhang', () => {
+test('1A: neun Folien im Vortrag (N6b, N8 seit 2026-11-17 wieder Reserve RN1, RN4), Literatur gemeinsam (kein NL)', () => {
   assert.deepEqual(
     haupt1A.map((f) => f.id),
     ['N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'N7', 'N9', 'N10'],
   );
   assert.deepEqual(
     n1a.filter((f) => f.anhang).map((f) => f.id),
-    ['NL'],
+    [],
   );
   assert.deepEqual(
     reserve1A.map((f) => f.id),
@@ -275,8 +275,8 @@ test('ZL: jede Folie trägt Kurzbelege aus dem Verzeichnis, jeder Eintrag wird z
     'unzitierte Einträge',
   );
   assert.throws(() => kurzbeleg1A('fehlt2020'), /fehlt2020/);
-  const nl = n1a.find((f) => f.id === 'NL');
-  for (const e of LITERATUR_1A) assert.ok(nl.inhalt.includes(e.voll), e.schluessel);
+  // Niklas' Einträge stehen im gemeinsamen Verzeichnis (J16, J16b), kein eigenes NL mehr
+  assert.ok(!n1a.some((f) => f.id === 'NL'));
 });
 
 test('Literatur 1A alphabetisch, ohne „o. J.“ und Abrufdatum, DOI mit https', () => {
@@ -415,7 +415,7 @@ test('Kopfgrammatik im gemeinsamen Deck: Ort, Titel, Fragezeile im selben Abstan
   for (const f of [...haupt1A, ...n1b]) assert.ok(ids.includes(f.id), f.id);
   assert.ok(ids.includes('J1') && ids.includes('J15'));
   // Rahmen (GT, G0, GK, G9, GD), Anhang und Reserve folgen der Kopfgrammatik nicht (README Designregeln)
-  for (const id of ['GT', 'G0', 'GK', 'G9', 'GD', 'NL', 'J16', 'RN2'])
+  for (const id of ['GT', 'G0', 'GK', 'G9', 'GN', 'GD', 'J16', 'J16b', 'RN2'])
     assert.ok(!ids.includes(id), id);
   const werte = Object.values(abstand).sort((a, b) => a - b);
   const median = werte[Math.floor(werte.length / 2)];
@@ -436,7 +436,7 @@ test('Kopfgrammatik im gemeinsamen Deck: Ort, Titel, Fragezeile im selben Abstan
   }
 });
 
-test('Reihenfolge: GT, G0, GK, Niklas 1A, Jonas, Niklas 1B 3–4, G9, GN, GD, Anhang, Reserve', async () => {
+test('Reihenfolge: GT, G0, GK, Niklas 1A, Jonas, Niklas 1B 3–4, G9, GN, GD, Literatur (J16, J16b), Reserve', async () => {
   const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
   await page.goto(pathToFileURL(deck).href);
   const ids = await page.evaluate(() =>
@@ -454,9 +454,10 @@ test('Reihenfolge: GT, G0, GK, Niklas 1A, Jonas, Niklas 1B 3–4, G9, GN, GD, An
   assert.ok(pos('M2') < pos('G9'));
   assert.deepEqual(
     ids.slice(pos('G9') + 1, pos('G9') + 5).map(([x]) => x),
-    ['GN', 'GD', 'J16', 'NL'],
+    ['GN', 'GD', 'J16', 'J16b'],
   );
-  assert.ok(pos('RN2') > pos('NL'));
+  assert.ok(!ids.some(([x]) => x === 'NL'), 'kein eigenes Verzeichnis 1A mehr');
+  assert.ok(pos('RN2') > pos('J16b'));
   assert.equal(ids.find(([x]) => x === 'RN2')[1], 'reserve');
 });
 
@@ -474,17 +475,21 @@ async function druckAuszug(art) {
   return ids;
 }
 
-test('Druck ?druck=niklas: genau Niklas’ Folien samt Literatur und Reserve; Jonas ohne RN', async () => {
+test('Druck ?druck=niklas: genau Niklas’ Folien samt gemeinsamer Literatur und Reserve; Jonas ohne RN', async () => {
   // Titelfolie (beide Namen, lokal mit Matrikelnummern) steht in jedem Einzel-PDF.
   assert.deepEqual(await druckAuszug('niklas'), [
     'GT',
     ...haupt1A.map((f) => f.id),
     ...n1b.map((f) => f.id),
-    'NL',
+    // Nachweisumfang und gemeinsames Literaturverzeichnis in beiden Auszügen (Durchsicht 2026-11-18)
+    'GN',
+    'J16',
+    'J16b',
     ...reserve1A.map((f) => f.id),
   ]);
   const jonas = await druckAuszug('jonas');
   assert.equal(jonas[0], 'GT');
+  assert.ok(jonas.includes('J16') && jonas.includes('J16b'), 'Literatur im Jonas-PDF');
   assert.ok(!jonas.some((id) => /^(N|M|RN)/.test(id)), 'keine Niklas-Folie im Jonas-PDF');
 });
 

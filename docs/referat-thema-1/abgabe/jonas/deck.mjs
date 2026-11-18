@@ -161,6 +161,8 @@ function jonasFolie(f, nr, gesamt, clipDaten) {
     hauptfolie ? 'data-hauptfolie' : '',
     f.aufbau ? `data-aufbau="${Number(f.aufbau)}"` : '',
     f.autor ? `data-autor="${esc(f.autor)}"` : '',
+    // Gemeinsames Literaturverzeichnis steht in beiden Druckauszügen (Durchsicht 2026-11-18).
+    f.gemeinsam ? 'data-gemeinsam' : '',
     // Titelfolie mit beiden Namen (und lokal den Matrikelnummern) steht auch in jedem Einzel-PDF.
     f.id === 'GT' ? 'data-titelfolie' : '',
     `aria-label="${esc(`${fussNr.replace(' / ', ' von ')}: ${ohneTags(f.titel)}`)}"`,
@@ -205,7 +207,7 @@ function niklasFolien(pngs, teil, kennung, titel) {
 /**
  * Baut das gemeinsame Deck: GT (Titel) und G0 (Fahrplan), Niklas 1A (Übergabe auf N10), Jonas J1–J15
  * (Übergabe auf J15), Niklas 1B 3–4, G9 (gemeinsames Fazit) und GD (Dank, Fragen), alle Rahmenfolien
- * spricht Niklas; Anhang (J16, Literatur 1A); Reservefolien danach
+ * spricht Niklas; Anhang (J16, J16b: gemeinsames Literaturverzeichnis); Reservefolien danach
  * (nur über `r` erreichbar). Native Niklas-Folien mit `anhang` kommen in den Anhang, mit
  * `teil: 'reserve'` in die Reserve (data-autor="niklas" für den Druckauszug).
  * @param {ReturnType<import('./folien.mjs').folien>} folien

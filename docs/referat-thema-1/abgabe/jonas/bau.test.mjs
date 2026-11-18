@@ -135,22 +135,24 @@ test('Manifest: SHA-256 aller Eingaben und Ausgaben, Seitenzahlen', () => {
   }
   const seiten = (n) => m.ausgaben.find((a) => a.datei === n).seiten;
   // Einzel-PDFs: Titelfolie GT (beide Namen) plus die eigenen Folien
-  assert.equal(seiten('jonas-folien.pdf'), JONAS_UND_RESERVE.length + 1);
-  assert.equal(seiten('niklas-folien.pdf'), NIKLAS_ALLE.length + 1);
+  // Titel in beiden; GN und das gemeinsame Literaturverzeichnis (J16, J16b) stehen auch im Niklas-PDF,
+  // GN auch im Jonas-PDF (Durchsicht 2026-11-18)
+  assert.equal(seiten('jonas-folien.pdf'), JONAS_UND_RESERVE.length + 2);
+  assert.equal(seiten('niklas-folien.pdf'), NIKLAS_ALLE.length + 4);
   assert.ok(m.niklas.teil1.quelle && m.niklas.teil2.quelle, 'Herkunft von Niklas im Manifest');
   assert.doesNotMatch(JSON.stringify(m), /TEST-MATRIKEL|personen\.json/);
 });
 
 test('jonas-folien.pdf: Titel, J1–J16 plus Reserve, eine Seite je Folie, 1600 x 900', async () => {
   const { seiten, text } = await pdfInfo(join(platzhalter, 'jonas-folien.pdf'));
-  assert.equal(seiten, JONAS_UND_RESERVE.length + 1);
+  assert.equal(seiten, JONAS_UND_RESERVE.length + 2);
   assert.match(text, /Niklas Schneider/);
   assert.match(text, /Jonas Weirauch/);
   const gemeinsam = await pdfInfo(join(platzhalter, 'gemeinsames-deck.pdf'));
   // GT, G0, Niklas nativ (1A, 1B 3–4, Literatur, Reserve), Jonas, G9, GD, J16 und Jonas' Reserve
   assert.equal(gemeinsam.seiten, F.length + NIKLAS_ALLE.length);
   const niklas = await pdfInfo(join(platzhalter, 'niklas-folien.pdf'));
-  assert.equal(niklas.seiten, NIKLAS_ALLE.length + 1);
+  assert.equal(niklas.seiten, NIKLAS_ALLE.length + 4);
   assert.match(niklas.text, /Keine Freigabe für die spaCy-Glättung/);
   const roh = readFileSync(join(platzhalter, 'jonas-folien.pdf'), 'latin1');
   assert.match(roh, /\/MediaBox\s*\[\s*0\s+0\s+1200(\.\d+)?\s+675(\.\d+)?\s*\]/);
@@ -344,7 +346,7 @@ test(
     const md = readFileSync(join(platzhalter, 'privat', 'sprechnotizen.md'), 'utf8');
     assert.match(md, /ab der ersten Folie \(J1\) gezählt\. J13 beginnt im Plan/);
     assert.doesNotMatch(md, /\*\*Zeitbudget:\*\*/, 'Jonas bleibt im Budget von 15:00 min');
-    for (const f of F.filter((x) => x.sprecher !== 'niklas' && x.id !== 'J16')) {
+    for (const f of F.filter((x) => x.sprecher !== 'niklas' && !/^J16b?$/.test(x.id))) {
       const abschnitt = md.split(`## ${f.id} `)[1].split('\n## ')[0];
       assert.ok(abschnitt.indexOf('**Stichpunkte**') < abschnitt.indexOf('**Fließtext**'), f.id);
     }

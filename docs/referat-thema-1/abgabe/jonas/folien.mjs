@@ -21,7 +21,7 @@ import {
   wegSvg,
   zeitzerlegungSvg,
 } from './grafik.mjs';
-import { LITERATUR, kurzbeleg } from './literatur.mjs';
+import { LITERATUR, kurzbeleg, quellenzeile } from './literatur.mjs';
 import { fmt, ladeZahlen } from './zahlen.mjs';
 import { privat } from './notizen.mjs';
 
@@ -676,22 +676,24 @@ const grafikBox = (svg) => `<div class="grafik-box">${svg}</div>`;
 // Kurzbelege in einer Zeile; Rechner und Commit stehen in `quelle` (Sprechnotizen) und im Manifest.
 const W = 'weirauch2026c';
 const ZITATE = {
-  GT: [['arsnova2026pruefung', 'Abschn. 4.3']],
-  G0: [['arsnova2026pruefung', 'Abschn. 4.3']],
+  GT: [['arsnova2026pruefung', 'Kap. 4.3']],
+  G0: [['arsnova2026pruefung', 'Kap. 4.3']],
   GD: [[W, 'Ordner docs/referat-thema-1']],
   GK: [
-    ['arsnova2026pruefung', 'Abschn. 4.1.1'],
-    ['arsnova2026adr0035', 'Abschn. 2.1'],
+    ['arsnova2026pruefung', 'Kap. 4.1.1'],
+    ['arsnova2026adr0035', 'Kap. 2.1'],
   ],
   J1: [
-    ['arsnova2026pruefung', 'Abschn. 4.3'],
+    ['arsnova2026pruefung', 'Kap. 4.3'],
     [W, 'Ordner evidenz/1B, ADR 1B-011'],
   ],
   J2: [
-    [W, 'Ordner evidenz/1B, ADR 1B-005'],
-    ['arsnova2026adr0035'],
+    [W, 'ADR 1B-005'],
+    // ein Slot (Kap. 2.2), Threads und RAM je Topologie (Performance-Steckbrief), geprüft auf a19ca70f
+    ['arsnova2026adr0035', 'Kap. 2.2, Abschnitt Performance-Steckbrief'],
     ['yang2025', 'S. 3'],
-    ['ggml2026'],
+    // ggml2026 (Werk als Ganzes) fiel 2026-11-18 weg, damit die Fußzeile einzeilig bleibt; llama-server belegt
+    // hier ADR-0035, die Software selbst zitieren J8 und J11.
   ],
   J3: [[W, 'Ordner evidenz/1B, 1C-Nachlauf']],
   J4: [
@@ -704,7 +706,7 @@ const ZITATE = {
   J7: [[W, 'ADR 1C-014, Nachlauf N2']],
   J8: [
     [W, 'ADR 1B-006, 1B-011'],
-    ['ggml2026', 'Abschn. „Timings and context usage“'],
+    ['ggml2026', 'Abschnitt Timings and context usage'],
   ],
   J8b: [[W, 'evidenz/1B/2026-11-13-lauf.md, Nachtrag M2']],
   J9: [
@@ -719,7 +721,7 @@ const ZITATE = {
   J10b: [[W, 'evidenz/1B/2026-11-13-lauf.md, Nachtrag M3']],
   J11: [
     [W, 'ADR 1C-023, 1C-024'],
-    ['ggml2026', 'Abschn. „Server-specific params“'],
+    ['ggml2026', 'Abschnitt Server-specific params'],
   ],
   J12: [[W, 'ADR 1C-010, 1C-016, 1C-017, Tests E7, E8']],
   J13: [
@@ -732,21 +734,31 @@ const ZITATE = {
     [W, 'ADR 1C-018'],
   ],
   J15: [
-    [W, '1C-ergebnis.md, Abschn. 5'],
-    ['ulrich2016', 'Abschn. „Load Shedding and Graceful Degradation“'],
+    [W, '1C-ergebnis.md, Kap. 5'],
+    ['ulrich2016', 'Abschnitt Load Shedding and Graceful Degradation'],
   ],
-  G9: [[W, '1B-ergebnis.md, 1C-ergebnis.md']],
+  G9: [
+    [W, '1B-ergebnis.md, 1C-ergebnis.md'],
+    ['schneider2026', 'Ordner evidenz/1A und evidenz/1B'],
+  ],
   R1: [[W, 'ADR 1C-020, 1B-005']],
   R5: [[W, '1C-Nachlauf, Ordner evidenz/1B, ADR 1B-011']],
   R6: [[W, 'Dateien 1B-eigenanteil.md, 1C-eigenanteil.md']],
   R7: [[W, 'adr/README.md']],
-  R9: [[W, '1C-ergebnis.md, Abschn. 3']],
-  R10: [[W, 'Aufbauprotokoll 1B'], ['arsnova2026adr0035']],
+  R9: [[W, '1C-ergebnis.md, Kap. 3']],
+  R10: [
+    [W, 'Aufbauprotokoll 1B'],
+    ['arsnova2026adr0035', 'Kap. 2.4'],
+  ],
   R11: [[W, 'Laufprotokoll 1B, Befund C']],
-  R12: [[W, '1C-ergebnis.md, Abschn. 5']],
+  R12: [[W, '1C-ergebnis.md, Kap. 5']],
   R15: [[W, 'Datei 1C-diagrams.md, Abb. 1']],
   R16: [[W, 'Datei 1C-diagrams.md, Abb. 2']],
-  GN: [[W, 'Ordner docs/referat-thema-1, Datei nachweisumfang.md']],
+  // Niklas' gewertete Läufe 1A und 1B 3–4 zählen in die Laborzeit (gemeinsames Verzeichnis seit 2026-11-18)
+  GN: [
+    [W, 'Ordner docs/referat-thema-1, Datei nachweisumfang.md'],
+    ['schneider2026', 'Ordner evidenz/1A und evidenz/1B'],
+  ],
 };
 
 const flaeche = (inhalt) => `<div class="flaeche-inhalt">${inhalt}</div>`;
@@ -847,6 +859,7 @@ export const REIHENFOLGE = [
   'GN',
   'GD',
   'J16',
+  'J16b',
 ];
 
 /**
@@ -1651,6 +1664,8 @@ export function folien(daten) {
   F.push({
     id: 'GN',
     teil: 'rahmen',
+    // Belege beider Personen, gesprochen von Jonas: steht in beiden Druckauszügen
+    gemeinsam: true,
     auftrag: null,
     titel: 'Nachweisumfang: Rechnerzeit, Tests, Hypothesen',
     inhalt: flaeche(
@@ -1715,29 +1730,41 @@ export function folien(daten) {
     quellenverzeichnis: true,
   });
 
-  // ------------------------------------------------------------ J16 Literaturverzeichnis (ZL S. 2–3)
-  // Nach G9 als Anhang (deck.mjs: anhang), damit es die Übergabe J15 → Niklas nicht unterbricht.
-  F.push({
-    id: 'J16',
-    teil: 'jonas',
-    anhang: true,
-    auftrag: 'beide',
-    titel: 'Literaturverzeichnis',
-    inhalt: flaeche(
-      `<!--quellen--><ul data-literatur style="margin:0;padding:0;list-style:none;columns:2;column-gap:56px;font-size:17px;line-height:1.3">` +
-        LITERATUR.map(
-          (e) =>
-            `<li style="break-inside:avoid;margin:0 0 9px;padding-left:28px;text-indent:-28px;overflow-wrap:anywhere">${e.voll}</li>`,
-        ).join('') +
-        `</ul><!--/quellen-->`,
-    ),
-    notiz: privat('J16.notiz', {}),
-    zeitS: 5,
-    kurzfassung: false,
-    quelle: 'literatur.mjs, abgeglichen mit main.bib des Handouts (PaperLab)',
-    fuss: 'Kurzbelege auf den Folien nach IU-Zitierleitfaden; Einträge wie im Handout',
-    station: null,
-  });
+  // ------------------------------------------------------------ J16, J16b Literaturverzeichnis (ZL S. 2–3)
+  // Nach GD als Anhang (deck.mjs: anhang), damit es keine Übergabe unterbricht. Seit der Durchsicht 2026-11-18
+  // ein gemeinsames Verzeichnis für das ganze Deck auf zwei Folien, alphabetisch fortlaufend; `gemeinsam` hält
+  // beide Folien in beiden Druckauszügen (jonas-folien.pdf, niklas-folien.pdf).
+  const haelfte = Math.ceil(LITERATUR.length / 2);
+  [
+    ['J16', LITERATUR.slice(0, haelfte), 1],
+    ['J16b', LITERATUR.slice(haelfte), 2],
+  ].forEach(([id, eintraege, teilNr]) =>
+    F.push({
+      id,
+      teil: 'jonas',
+      anhang: true,
+      gemeinsam: true,
+      auftrag: 'beide',
+      titel: `Literaturverzeichnis (${teilNr}/2)`,
+      inhalt: flaeche(
+        `<!--quellen--><ul data-literatur style="margin:0;padding:0;list-style:none;font-size:20px;line-height:1.3">` +
+          eintraege
+            .map(
+              (e) =>
+                `<li style="break-inside:avoid;margin:0 0 12px;padding-left:28px;text-indent:-28px;overflow-wrap:anywhere">${e.voll}</li>`,
+            )
+            .join('') +
+          `</ul><!--/quellen-->`,
+      ),
+      notiz: privat(`${id}.notiz`, {}),
+      zeitS: teilNr === 1 ? 3 : 2,
+      kurzfassung: false,
+      quelle:
+        'literatur.mjs (gemeinsames Verzeichnis), abgeglichen mit main.bib beider Handouts (PaperLab)',
+      fuss: 'Kurzbelege auf den Folien nach IU-Zitierleitfaden; Einträge wie in den Handouts',
+      station: null,
+    }),
+  );
 
   // ------------------------------------------------------------ Reserve
   const reserve = (id, auftrag, titel, inhalt, notiz, quelle) =>
@@ -2240,7 +2267,7 @@ export function folien(daten) {
   const ab = daten.abgeleitet;
   const STICHPUNKTE = privat('J.stichpunkte', { z, au, fw, n, fmt, ab, b, c, daten });
   for (const f of STICHPUNKTE ? F : []) {
-    if (f.sprecher === 'niklas' || f.id === 'J16') continue;
+    if (f.sprecher === 'niklas' || f.id === 'J16' || f.id === 'J16b') continue;
     const s = STICHPUNKTE[f.id];
     if (!s) throw new Error(`${f.id}: keine Stichpunkte`);
     f.stichpunkte = s;
@@ -2249,23 +2276,17 @@ export function folien(daten) {
   // Kurzbelege je Folie (ZL Anhang B: „Quelle: …“ in der Fußzeile), eine Zeile; Rechner und Commit
   // stehen in `quelle` (Sprechnotizen) und im Manifest, nicht auf der Folie.
   for (const f of F) {
-    if (f.id === 'J16') continue;
+    if (f.id === 'J16' || f.id === 'J16b') continue;
     const z = ZITATE[f.id];
     if (!z) throw new Error(`${f.id}: keine Kurzbelege in ZITATE`);
-    const liste = z.map(([k, stelle]) => kurzbeleg(k, stelle).slice(1, -1)).join('; ');
-    f.fuss = `Quelle: ${liste}`;
+    f.fuss = quellenzeile(z);
   }
-  // G9 nennt auch Niklas' Ergebnisse (1A, 1B 3–4); sein Eintrag steht in seinem Verzeichnis (NL).
-  const g9 = F.find((f) => f.id === 'G9');
-  g9.fuss += '; Schneider, 2026, Ordner evidenz/1A und evidenz/1B';
   // Ruhiger Marker (Feinschliff 2026-11-16): Jonas' Hauptfolien ohne eigene Station zeigen den ganzen Weg
   // ohne Hervorhebung wie J1, damit der Platz oben links nicht zwischen Folien leer wird und wieder erscheint.
   for (const id of ['J2', 'J4', 'J13b', 'J15']) {
     const f = F.find((x) => x.id === id);
     if (f && !f.station && !f.marke) f.marke = 'auftrag';
   }
-  // Niklas' gewertete Läufe 1A und 1B 3–4 zählen in die Laborzeit auf GN
-  F.find((x) => x.id === 'GN').fuss += '; Schneider, 2026, Ordner evidenz/1A und evidenz/1B';
   // Vortragsreihenfolge (Redezeit 15 min je Person, Absprache 2026-11-16): aus der Reserve geholte Folien an
   // ihre Station; Reserve danach in Erstellungsreihenfolge.
   const index = (f) => {

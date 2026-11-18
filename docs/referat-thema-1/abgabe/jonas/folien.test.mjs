@@ -69,7 +69,8 @@ const PLAN = {
   J13: 70,
   J13b: 50,
   J15: 45,
-  J16: 5,
+  J16: 3,
+  J16b: 2,
 };
 
 const decode = (s) =>
@@ -204,7 +205,7 @@ test(
   'Stichpunkte: jede Jonas-Folie (außer J16) und Reserve 3–6, [Weiter] je Aufbaustufe',
   { skip: OHNE_NOTIZEN },
   () => {
-    for (const f of F.filter((x) => x.sprecher !== 'niklas' && x.id !== 'J16')) {
+    for (const f of F.filter((x) => x.sprecher !== 'niklas' && !/^J16b?$/.test(x.id))) {
       assert.ok(f.stichpunkte?.length >= 3 && f.stichpunkte.length <= 6, `${f.id}: Stichpunkte`);
       for (const p of f.stichpunkte)
         assert.ok(p.length <= 130, `${f.id}: Stichpunkt zu lang: ${p}`);
@@ -310,7 +311,7 @@ test(
       assert.ok(stationen.has(f.station), `${f.id} station ${f.station}`);
       assert.equal(typeof f.kurzfassung, 'boolean', f.id);
       // J16 ist das Literaturverzeichnis ohne eigene Messwerte (literatur.test.mjs prüft die Einträge).
-      if (f.teil === 'rahmen' || f.id === 'J16') continue;
+      if (f.teil === 'rahmen' || /^J16b?$/.test(f.id)) continue;
       assert.ok(f.quelle?.trim(), `${f.id} quelle`);
       assert.ok(f.notiz?.trim(), `${f.id} notiz`);
       assert.match(f.quelle, /\b[0-9a-f]{8}\b/, `${f.id}: Commit in der quelle`);
@@ -348,8 +349,8 @@ test('Rahmen: GT, G0, G9, GD ohne Entwurfsvermerk und Platzhalter; G9 zitiert Ni
   assert.equal(F.at(-1).teil, 'reserve');
   // J16 (Literaturverzeichnis) folgt als Anhang nach Fazit und Dank, nicht zwischen J15 und Niklas.
   const haupt = F.filter((f) => f.teil !== 'reserve').map((f) => f.id);
-  assert.deepEqual(haupt.slice(-5), ['J15', 'G9', 'GN', 'GD', 'J16']);
-  assert.equal(nach('J16').anhang, true);
+  assert.deepEqual(haupt.slice(-6), ['J15', 'G9', 'GN', 'GD', 'J16', 'J16b']);
+  for (const id of ['J16', 'J16b']) assert.equal(nach(id).anhang, true);
 });
 
 test('1B mit Schritten ist ein Chip: Schritte stehen im Etikett, nicht daneben (Durchsicht 2026-11-18)', async () => {
@@ -594,7 +595,7 @@ test('Festwerte (Schwellen, Release-Timeout) stehen wörtlich in ihrer Quelle', 
 test('Keine Zahl auf einer Folie, die nicht aus den Daten stammt', () => {
   const w = whitelist();
   // J16: Jahreszahlen, Seiten und DOIs des Literaturverzeichnisses prüft literatur.test.mjs.
-  for (const f of F.filter((x) => x.id !== 'J16')) {
+  for (const f of F.filter((x) => !/^J16b?$/.test(x.id))) {
     for (const [feld, wert] of [
       ['titel', f.titel],
       ['inhalt', f.inhalt],
@@ -714,7 +715,7 @@ test(
 
 test('Jede Jonas-Folie zeigt ihr Auftragsetikett im Inhalt', () => {
   const hat = (html, a) => html.includes(`etikett-${a.toLowerCase()}`) || html.includes(`>${a}<`);
-  for (const f of jonas.filter((x) => x.id !== 'J16')) {
+  for (const f of jonas.filter((x) => !/^J16b?$/.test(x.id))) {
     const noetig = f.auftrag === 'beide' ? ['1C', '1B'] : [f.auftrag];
     for (const a of noetig) assert.ok(hat(f.inhalt, a), `${f.id}: Etikett ${a} fehlt`);
   }
@@ -1107,7 +1108,7 @@ test(
 test('ZL: jede Folie von Jonas, Rahmen und Reserve trägt eine Quellenzeile mit Kurzbeleg', async () => {
   const { LITERATUR } = await import('./literatur.mjs');
   const kurz = LITERATUR.map((e) => e.kurz);
-  for (const f of F.filter((x) => x.id !== 'J16')) {
+  for (const f of F.filter((x) => !/^J16b?$/.test(x.id))) {
     assert.match(f.fuss, /^Quelle: /, `${f.id}: Fußzeile ohne „Quelle:“`);
     assert.ok(
       kurz.some((k) => f.fuss.includes(k)),
@@ -1116,32 +1117,52 @@ test('ZL: jede Folie von Jonas, Rahmen und Reserve trägt eine Quellenzeile mit 
   }
 });
 
-test('ZL: J16 zeigt das vollständige Literaturverzeichnis, jede Quelle ist auf einer Folie zitiert', async () => {
+test('ZL: ein gemeinsames Verzeichnis auf J16 und J16b, alphabetisch fortlaufend, jeder Eintrag im Deck zitiert', async () => {
   const { LITERATUR } = await import('./literatur.mjs');
-  const j16 = nach('J16');
-  assert.ok(j16, 'J16 fehlt');
-  assert.equal(j16.teil, 'jonas');
+  const { niklasTeile } = await import('../niklas/teile.mjs');
+  const { teil1, teil2 } = niklasTeile(ROOT);
+  const alle = [...F, ...teil1, ...teil2];
+  const [a, b] = ['J16', 'J16b'].map(nach);
+  assert.ok(a && b, 'J16 und J16b');
+  assert.deepEqual(
+    [a.titel, b.titel],
+    ['Literaturverzeichnis (1/2)', 'Literaturverzeichnis (2/2)'],
+  );
+  for (const f of [a, b]) assert.equal(f.gemeinsam, true, `${f.id} in beiden Druckauszügen`);
   assert.equal(
     F.filter((f) => f.teil === 'jonas').at(-1).id,
-    'J16',
-    'J16 ist die letzte Folie von Jonas',
+    'J16b',
+    'J16b ist die letzte Folie von Jonas',
   );
   const norm = (h) => decode(h.replace(/<[^>]+>/g, '')).replace(/\s+/g, ' ');
-  const text = norm(j16.inhalt);
-  for (const e of LITERATUR) {
-    assert.ok(text.includes(norm(e.voll)), `${e.schluessel} fehlt auf J16`);
-    assert.ok(
-      F.some((f) => f.id !== 'J16' && f.fuss.includes(e.kurz)),
-      `${e.schluessel} auf keiner Folie zitiert`,
-    );
+  // Reihenfolge der Einträge über beide Folien = LITERATUR (alphabetisch nach ZL)
+  const eintraege = [a, b].flatMap((f) =>
+    [...f.inhalt.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/g)].map((m) => norm(m[1])),
+  );
+  assert.deepEqual(
+    eintraege,
+    LITERATUR.map((e) => norm(e.voll)),
+  );
+  // jeder Kurzbeleg einer Fußzeile (Jonas, Rahmen, Niklas) hat genau einen Eintrag; jeder Eintrag wird zitiert
+  const zitiert = new Set();
+  for (const f of alle.filter((x) => !/^J16b?$/.test(x.id) && x.fuss?.startsWith('Quelle: '))) {
+    for (const beleg of f.fuss.slice('Quelle: '.length).split('; ')) {
+      const treffer = LITERATUR.filter((e) => beleg === e.kurz || beleg.startsWith(`${e.kurz}, `));
+      assert.equal(treffer.length, 1, `${f.id}: „${beleg}“`);
+      zitiert.add(treffer[0].schluessel);
+    }
   }
-  assert.match(j16.titel, /Literaturverzeichnis/);
+  assert.deepEqual(
+    LITERATUR.filter((e) => !zitiert.has(e.schluessel)).map((e) => e.schluessel),
+    [],
+    'unzitierte Einträge',
+  );
 });
 
 // ---------------------------------------------------------------- Audit 2026-11-16
 
 test('Fußzeile: eine Quellenzeile nur mit Kurzbelegen, ohne Commit und Rechner', () => {
-  for (const f of F.filter((x) => x.id !== 'J16')) {
+  for (const f of F.filter((x) => !/^J16b?$/.test(x.id))) {
     assert.ok(
       !/\b(?=[0-9a-f]*\d)(?=[0-9a-f]*[a-f])[0-9a-f]{8}\b/.test(f.fuss),
       `${f.id}: Commit in „${f.fuss}“`,

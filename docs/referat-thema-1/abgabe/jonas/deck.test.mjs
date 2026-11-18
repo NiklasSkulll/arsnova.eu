@@ -171,7 +171,7 @@ test('Fußzeile zeigt Seitenzahl im Vortrag und Quelle', async () => {
   assert.match(fuss.GK, new RegExp(`^3 / ${gesamt} · `));
   assert.match(fuss.J1, new RegExp(`^5 / ${gesamt} · `));
   assert.match(fuss.R1, /^Reserve R1 · /);
-  assert.match(fuss.J16, new RegExp(`^${gesamt} / ${gesamt} · `));
+  assert.match(fuss.J16b, new RegExp(`^${gesamt} / ${gesamt} · `));
   await context.close();
 });
 
@@ -528,7 +528,7 @@ test('Teilleiste oben rechts: aktueller Teil markiert, nicht auf Titel, Fahrplan
 test('Tasten: Home, End, Bild ab/auf, Leertaste; Reserve-Übersicht mit r', async () => {
   const { page, context } = await oeffne(deckOhneNiklas);
   await page.keyboard.press('End');
-  assert.equal(await aktuelleId(page), 'J16');
+  assert.equal(await aktuelleId(page), 'J16b');
   await page.keyboard.press('Home');
   assert.equal(await aktuelleId(page), 'GT');
   await page.keyboard.press('PageDown');
@@ -677,8 +677,8 @@ test('Druck: jede Folie eine Seite 1600 × 900, J10 im Endzustand, feste Wegkart
   await nurJonas.page.evaluate(() => (document.documentElement.dataset.druck = 'jonas'));
   await nurJonas.page.emulateMedia({ media: 'print' });
   const pdf2 = await nurJonas.page.pdf({ preferCSSPageSize: true, printBackground: true });
-  // plus Titelfolie GT mit beiden Namen
-  assert.equal(seiten(pdf2), 1 + JONAS.length + RESERVE.length);
+  // plus Titelfolie GT mit beiden Namen und GN (gemeinsam, Durchsicht 2026-11-18)
+  assert.equal(seiten(pdf2), 2 + JONAS.length + RESERVE.length);
   await nurJonas.context.close();
 });
 

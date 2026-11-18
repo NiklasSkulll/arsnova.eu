@@ -15,7 +15,7 @@ import { FARBEN, esc, text } from '../jonas/grafik.mjs';
 import { flaeche, frage, grafikBox, mono } from '../jonas/folien.mjs';
 import { fmt } from '../jonas/zahlen.mjs';
 import { huelle } from './grafik-1a.mjs';
-import { kurzbeleg1A } from './literatur-1a.mjs';
+import { kurzbeleg1A, quellenzeile } from './literatur-1a.mjs';
 import { VERZOEGERUNG_1B34_MS } from './daten-1b34.mjs';
 import { privat } from '../jonas/notizen.mjs';
 
@@ -426,7 +426,10 @@ export function folien1B34(
     // Wegmarke (jonas/wegkarte.mjs): Strecke über den zweiten Host in Bernstein; Zeichen folgen STUFE_1B34.
     marke: '1b-stoerung',
     quelle: `${reihenM1.map(zeile).join('; ')} · ${umgebung} · Summary Job-Zeit (experiment.jobs[].jobMs), Label Client-Zeit (clientWaitMs, die Label-API legt keine Job-Zeit offen); Summary-Normal: Median aller 10 Aufträge 67.572 ms (Protokoll: warm 67.532 ms, kalt 106.013 ms); L1: Median der 20 Aufträge beider Teile 3.672 ms (Protokolle: 3.703 bzw. 3.668,5 ms); Label-Frist OPEN_WEIGHT_LLM_LABEL_TIMEOUT_MS = ${fmt(f1l.timeoutMs)} ms laut settings · Faktor DROP/Stopp wie f2-summary.md (134.732 / 48) · Schwellen ${sw.datei}, Commit ${sw.commit} (${sw.datum ?? 'Datum aus Git'}); Label-Fristkriterium laut Planung nicht bewertbar · ${pruefung}`,
-    fuss: `Quelle: ${kb('schneider2026', 'Ordner evidenz/1B')}; ${kb('ulrich2016', 'Abschn. „Load Shedding and Graceful Degradation“')}`,
+    fuss: quellenzeile([
+      ['schneider2026', 'Ordner evidenz/1B'],
+      ['ulrich2016', 'Abschnitt Load Shedding and Graceful Degradation'],
+    ]),
   };
 
   // ------------------------------------------------------------ M2 Breaker gegen Queue
@@ -572,7 +575,10 @@ export function folien1B34(
     aufbau: 1,
     marke: '1b-s1',
     quelle: `${zeile(s1l)}; ${zeile(s1s)} · ${s1l.rechner}, ohne CPU-Pinning · S1 auf llm-host (${fmt(p.vmVcpu ?? 8)} vCPU, App-CPUs ${p.appCpuSet ?? '0,1'}, Encoder ${p.encoderCpus ?? 2} CPUs, ${p.protocol ?? 'http'}, Treiber auf llm-host) gegen Zwei-Host-Normal (Label ${zeile(nl)}; Summary ${zeile(ns)}), Kriterium nur beschreibend (1B-3u4-Planung.md, Nachtrag S1, Commit 4b135fe8); ${fmt(s1Fehler)} Fehler bei ${fmt(s1Geplant)} Aktionen · Entscheidung und Aufwand: adr/1B-020-zweite-rolle-betrieblich-begruenden.md (qualitativ, keine Stunden, Preise oder Energie) · ${pruefung}`,
-    fuss: `Quelle: ${kb('schneider2026', 'ADR 1B-020, S1-Protokolle')}; ${kb('arsnova2026adr0035', 'Abschn. 2.1')}`,
+    fuss: quellenzeile([
+      ['schneider2026', 'ADR 1B-020, S1-Protokolle'],
+      ['arsnova2026adr0035', 'Kap. 2.1'],
+    ]),
   };
   return [M1, M2, M3, M4];
 }

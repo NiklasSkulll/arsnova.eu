@@ -5,11 +5,31 @@
 // (Ordner, Datei, ADR) steht im Kurzbeleg. Projektdokumente von arsnova.eu als Permalink auf a19ca70f, eigene Arbeit
 // auf main des Forks (dort nach dem Merge, Wunsch des Autors 2026-11-15).
 // Kurzbelege auf den Folien: kurzbeleg(schluessel, stelle) → „(Autor, Jahr, Stelle)“ (ZL S. 2–3, Anhang B).
+//
+// Seit der Durchsicht 2026-11-18 ein gemeinsames Verzeichnis für das ganze Deck: Niklas' Einträge (heo2024,
+// nosek2018, schneider2026, Schlüssel wie in seinem main.bib) stehen hier; literatur-1a.mjs liest nur noch daraus.
+// Geprüft 2026-11-18 gegen IU_Source_of_Truth.md und das ZL-Original: kwon2023 als Sammelwerksbeitrag
+// („In <i>Proceedings …</i> (S. 611–626). Association for Computing Machinery.“, ZL S. 29–32, Institution nicht
+// abgekürzt, ZL S. 26); mell2011 „Nr. 800-145“ wie im Handout (Normen-Muster ZL S. 36). Datum der arsnova-Einträge
+// bleibt in der biblatex-Form „(2026a, 17. Oktober)“ wie im Handout (ZL Anhang C, S. 47, duldet das).
+// Aus literatur-1a.mjs übernommen:
+// Geprüft 2026-11-16:
+// - heo2024: Kernel-Doku in der Fassung von Linux 6.12 (2024), geprüft 2026-11-16 auf
+//   https://www.kernel.org/doc/html/v6.12/admin-guide/cgroup-v2.html: Titel „Control Group v2“, „Author: Tejun
+//   Heo“; Abschnitte „CPU Interface Files“ (cpu.max „The maximum bandwidth limit“, cpu.stat nr_throttled) und
+//   „Memory Interface Files“ (memory.peak). Früher heo2015 mit „Date: October, 2015“ aus dem Dokumentkopf: Der
+//   CPU-Controller kam erst mit Linux 4.15 (2018) in cgroup v2, die zitierten Stellen fehlen in der Fassung von
+//   2015. Deshalb die gelesene, versionierte Fassung.
+// - nosek2018: Crossref 10.1073/pnas.1708274114 (4 Autoren, PNAS 115(11), 2600–2606); Volltext PMC5856500,
+//   Abstract S. 2600: „Preregistration distinguishes analyses and outcomes that result from predictions from
+//   those that result from postdictions.“
+// - schneider2026: eigene Arbeit als ein Eintrag (wie weirauch2026c bei Jonas, ZL S. 31 Fn. 11); die
+//   Fundstelle (Vertrag, Reihe, Datei) steht im Kurzbeleg. URL gilt nach dem Merge auf main des Forks.
 
 const GH_FORK = 'https://github.com/NiklasSkulll/arsnova.eu/tree';
 const GH_UP = 'https://github.com/kqc-real/arsnova.eu/blob/a19ca70f';
 
-/** Alphabetisch wie im Handout. `kurz` ist die Autor-Jahr-Angabe des Kurzbelegs. */
+/** Alphabetisch nach ZL. `kurz` ist die Autor-Jahr-Angabe des Kurzbelegs. */
 export const LITERATUR = [
   {
     schluessel: 'arsnova2026adr0035',
@@ -32,19 +52,34 @@ export const LITERATUR = [
     voll: 'ggml-org. (2026). <i>llama.cpp: LLaMA.cpp HTTP server</i> (Version b10524) [Computer Software]. GitHub. https://github.com/ggml-org/llama.cpp/blob/b10524/tools/server/README.md',
   },
   {
+    schluessel: 'heo2024',
+    kurz: 'Heo, 2024',
+    voll: 'Heo, T. (2024). <i>Control Group v2</i> (Linux 6.12). The Linux Kernel Documentation. https://www.kernel.org/doc/html/v6.12/admin-guide/cgroup-v2.html',
+  },
+  {
     schluessel: 'kwon2023',
     kurz: 'Kwon et al., 2023',
-    voll: 'Kwon, W., Li, Z., Zhuang, S., Sheng, Y., Zheng, L., Yu, C. H., Gonzalez, J. E., Zhang, H. & Stoica, I. (2023). Efficient memory management for large language model serving with PagedAttention. <i>Proceedings of the 29th Symposium on Operating Systems Principles</i>, 611–626. https://doi.org/10.1145/3600006.3613165',
+    voll: 'Kwon, W., Li, Z., Zhuang, S., Sheng, Y., Zheng, L., Yu, C. H., Gonzalez, J. E., Zhang, H. & Stoica, I. (2023). Efficient memory management for large language model serving with PagedAttention. In <i>Proceedings of the 29th Symposium on Operating Systems Principles</i> (S. 611–626). Association for Computing Machinery. https://doi.org/10.1145/3600006.3613165',
   },
   {
     schluessel: 'mell2011',
     kurz: 'Mell & Grance, 2011',
-    voll: 'Mell, P. & Grance, T. (2011). <i>The NIST definition of cloud computing</i> (NIST Special Publication 800-145). National Institute of Standards and Technology. https://doi.org/10.6028/NIST.SP.800-145',
+    voll: 'Mell, P. & Grance, T. (2011). <i>The NIST definition of cloud computing</i> (NIST Special Publication Nr. 800-145). National Institute of Standards and Technology. https://doi.org/10.6028/NIST.SP.800-145',
+  },
+  {
+    schluessel: 'nosek2018',
+    kurz: 'Nosek et al., 2018',
+    voll: 'Nosek, B. A., Ebersole, C. R., DeHaven, A. C. & Mellor, D. T. (2018). The preregistration revolution. <i>Proceedings of the National Academy of Sciences, 115</i>(11), 2600–2606. https://doi.org/10.1073/pnas.1708274114',
   },
   {
     schluessel: 'papadopoulos2021',
     kurz: 'Papadopoulos et al., 2021',
     voll: 'Papadopoulos, A. V., Versluis, L., Bauer, A., Herbst, N., von Kistowski, J., Ali-Eldin, A., Abad, C. L., Amaral, J. N., Tůma, P. & Iosup, A. (2021). Methodological principles for reproducible performance evaluation in cloud computing. <i>IEEE Transactions on Software Engineering, 47</i>(8), 1528–1543. https://doi.org/10.1109/TSE.2019.2927908',
+  },
+  {
+    schluessel: 'schneider2026',
+    kurz: 'Schneider, 2026',
+    voll: `Schneider, N. (2026). <i>Referat Thema 1, Aufträge 1A und 1B</i> [Referatsausarbeitung: Versuchsvertrag, Messreihen, Auswertung]. GitHub. ${GH_FORK}/main/docs/referat-thema-1`,
   },
   {
     schluessel: 'shankar2024',
@@ -69,6 +104,18 @@ export const LITERATUR = [
 ];
 
 const NACH_SCHLUESSEL = new Map(LITERATUR.map((e) => [e.schluessel, e]));
+
+/**
+ * Fußzeile „Quelle: …“ aus [Schlüssel, Stelle]-Paaren. Mehrere Werke alphabetisch nach Autor, gleiche Autorschaft
+ * chronologisch (ZL S. 14), getrennt durch Semikolon; Reihenfolge der Tabellen ist damit egal (Prüfung 2026-11-18).
+ */
+export function quellenzeile(zitate) {
+  return `Quelle: ${zitate
+    .map(([k, stelle]) => ({ e: NACH_SCHLUESSEL.get(k) ?? kurzbeleg(k), stelle }))
+    .sort((a, b) => a.e.kurz.localeCompare(b.e.kurz, 'de'))
+    .map(({ e, stelle }) => `${e.kurz}${stelle ? `, ${stelle}` : ''}`)
+    .join('; ')}`;
+}
 
 /** Kurzbeleg „(Autor, Jahr, Stelle)“; ohne Stelle nur, wenn das Werk als Ganzes gemeint ist. */
 export function kurzbeleg(schluessel, stelle) {
