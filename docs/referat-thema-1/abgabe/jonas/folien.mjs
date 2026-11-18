@@ -183,9 +183,9 @@ export const FESTWERTE = {
   },
   laborSpeicher1BGiB: {
     wert: 8,
-    text: '1B-Labor: Speicherlimit der Runtime wie ab Werk v1.4.0, GiB',
-    quelle: 'specs/2026-11-12-1b-zwei-host-design.md',
-    beleg: '`mem_limit 8g` und `memswap_limit 10g` bleiben',
+    text: '1B-Labor: Speicherlimit der Runtime wie ab Werk v1.4.0, GiB (gewerteter Lauf)',
+    quelle: 'evidenz/1B/2026-11-13-lauf.md',
+    beleg: 'Runtime-Container mit Release-Limits (8 GiB, 4 CPUs)',
   },
   laborTimeout1BS: {
     wert: 300,
@@ -995,7 +995,7 @@ export function folien(daten) {
             `<li>` +
             `<div class="fahrplan-linie">${t.farben.map((f) => `<span style="background:${f}"></span>`).join('')}</div>` +
             `<p class="fahrplan-wer"><span class="mono">${i + 1}</span> ${t.wer}</p>` +
-            `<p class="fahrplan-etiketten">${t.etiketten.length ? t.etiketten.map(([a, schritte]) => etikett(a, schritte)).join(' ') : '<span class="zusatz">alle Aufträge</span>'}</p>` +
+            `<p class="fahrplan-etiketten">${t.etiketten.map(([a, schritte]) => etikett(a, schritte)).join(' ')}</p>` +
             `<p class="fahrplan-was">${t.was}</p></li>`,
         ).join('') +
         `</ol>`,
@@ -1071,7 +1071,7 @@ export function folien(daten) {
       `<th style="padding:0 0 8px 18px;font-weight:600;font-size:20px;line-height:1.2;color:var(--gedaempft);text-align:right;vertical-align:bottom">${t}</th>`;
     return (
       `<table data-konfig style="border-collapse:collapse;font-size:24px;width:100%">` +
-      `<tr><th></th>${['Release 1.3<br>(Tag v1.3.0)', 'v1.4.0 ab Werk<br>(gemessener Code)', 'Labor 1B<br>(zwei VMs)', 'Labor 1C<br>(ein Rechner)'].map(th).join('')}</tr>` +
+      `<tr><th></th>${['Release 1.3<br>(Tag v1.3.0)', 'v1.4.0 ab Werk<br>(gemessener Code)', 'Labor 1B<br>(zwei VMs)', 'Labor 1C<br>(Laptop)'].map(th).join('')}</tr>` +
       zeilen
         .map(([name, v13, werk, b, c, einheit]) => {
           const zelle = (w, labor) => {
@@ -1121,7 +1121,7 @@ export function folien(daten) {
         ]) +
         `<ul style="margin:14px 0 12px;padding-left:24px;font-size:22px;line-height:1.35;color:var(--text-2)">` +
         `<li><b>Fett</b> weicht vom gemessenen Stand ab; gemessen wurde der aktuelle Stand, auf Wunsch des Prüfers</li>` +
-        `<li>Timeout 300 s nach Kalibrierung (1B: I = ${fw.kalibrierung1BS}\u00a0s); 1C: ein Rechner, Loopback, Messproxy</li>` +
+        `<li>Timeout ${fw.laborTimeout1BS} s nach Kalibrierung (1B: I = ${fw.kalibrierung1BS}\u00a0s); 1C: ein Rechner, Loopback, Messproxy; PC-Zusatzlauf mit Werkslimits (ADR 1C-021)</li>` +
         `<li>Images selbst gebaut; Start ohne Wrapper (CPU-Override); Summary-Schalter an, Hintergrunddienste von Hand aus</li></ul>` +
         `<p class="vermerk" style="margin-top:auto">${STAND}</p></div>` +
         `<div style="display:flex;flex-direction:column;min-height:0">` +

@@ -54,7 +54,7 @@ test('Jede Folie des Decks hat eine Heftseite mit allen Abschnitten', { skip: oh
       `${id}: Abschnitte fehlen`,
     );
     assert.ok(s.verstehen.split(/\s+/).length >= 80, `${id}: Verstehen zu kurz`);
-    assert.ok(s.fragen.length >= (/^(J16|NL)$/.test(id) ? 2 : 3), `${id}: zu wenige Fragen`);
+    assert.ok(s.fragen.length >= (/^J16b?$/.test(id) ? 2 : 3), `${id}: zu wenige Fragen`);
     for (const q of s.fragen)
       assert.ok(q.antwort.length > 40, `${id}: Antwort zu „${q.frage}“ fehlt`);
   }

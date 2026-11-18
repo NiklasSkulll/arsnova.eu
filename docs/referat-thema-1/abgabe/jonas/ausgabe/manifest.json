@@ -108,10 +108,6 @@
       "sha256": "f35d4b02746839c9be2eac45a91b2fb697b507f3419e8c6116c7e3468ca06315"
     },
     {
-      "pfad": "docs/referat-thema-1/specs/2026-11-12-1b-zwei-host-design.md",
-      "sha256": "c22076aaabfdcb3755faf59981ab295e1b52e5a355594bbb3917129ff96ecb4f"
-    },
-    {
       "pfad": "docs/referat-thema-1/evidenz/1C/2026-11-09-labor-nachlauf.md",
       "sha256": "f0b92369384810a744fcb3ea5eb9aa35afb53dfdb055c0782d835768bace3e28"
     },
@@ -157,7 +153,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/folien.mjs",
-      "sha256": "976369f61eb89f57acd39d1d8995b47b3c6b1b56526d434ac462e4531826431f"
+      "sha256": "6eac15f094b8ba0764722674babb4f1b15d4f3bb120528e2995d9fd45761aae4"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/grafik.mjs",
@@ -201,7 +197,7 @@
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/stil.css",
-      "sha256": "71f6a3abfed5b42d50db2552aab7040738da40f0a9995789e9626f87e15f4b2a"
+      "sha256": "58f0f8e4c11dad94b7885771ddfad69a334fac8c8f416a8e27c4b7b7254b2dd7"
     },
     {
       "pfad": "docs/referat-thema-1/abgabe/jonas/wegkarte.mjs",
@@ -607,25 +603,25 @@
   "ausgaben": [
     {
       "datei": "jonas-deck.html",
-      "bytes": 2136922,
-      "sha256": "8a4cee4ce4b6ba85a7d14875437e2523ce3e51294baefcaf11689f6712d47783"
+      "bytes": 2136367,
+      "sha256": "62a39d1ebceece75bda1f1d62ca9751b714201d7b1ba24972151a662dc913ac8"
     },
     {
       "datei": "gemeinsames-deck.pdf",
-      "bytes": 1602194,
-      "sha256": "e3fddacc210d10401c7461dfa7f6aa710ce4afffed7ca2766464f5183f17c333",
+      "bytes": 1602290,
+      "sha256": "5bfbcf2f36fcfabd64dca1f99e30dde866908cebac082280cf2319f3b04cd233",
       "seiten": 53
     },
     {
       "datei": "jonas-folien.pdf",
-      "bytes": 1093535,
-      "sha256": "5275e83c06d145099a233eeb938a0286acc52cadbe09c3df993746c23fd276cc",
+      "bytes": 1093661,
+      "sha256": "77438664f5c7ce775acfac24cda468449be97606d73beed11a66e7673346df0c",
       "seiten": 33
     },
     {
       "datei": "niklas-folien.pdf",
       "bytes": 557485,
-      "sha256": "08ce093589c35607ae6d86af2f37fd077ae7d5433622b14024cfda2f10256dba",
+      "sha256": "84dd1756ca4546c31f62aa2edbf60468c618724555bed48ef07209e3ae26c7f5",
       "seiten": 20
     }
   ]

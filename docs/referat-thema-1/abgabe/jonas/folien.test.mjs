@@ -415,7 +415,7 @@ test('J2: Konfiguration in vier Spalten (Release 1.3, ab Werk, Labor 1B, Labor 1
     'Release 1.3 (Tag v1.3.0)',
     'v1.4.0 ab Werk (gemessener Code)',
     'Labor 1B (zwei VMs)',
-    'Labor 1C (ein Rechner)',
+    'Labor 1C (Laptop)',
   ]);
   const werte = Object.fromEntries(zeilen.slice(1).map((z) => [ohne(z[0]), z.slice(1)]));
   assert.deepEqual(Object.keys(werte), ['CPUs und Threads', 'Speicher Runtime', 'Summary-Timeout']);

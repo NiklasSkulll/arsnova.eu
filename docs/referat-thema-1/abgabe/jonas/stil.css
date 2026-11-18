@@ -723,29 +723,6 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
-/* R17 (bis 2026-11-18): Nachweisumfang im Einzelnen, drei Spalten */
-.nw-reserve {
-  display: grid;
-  grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr) minmax(0, 1fr);
-  column-gap: 48px;
-  align-items: start;
-}
-.nw-tabelle .nw-kopf {
-  margin: 0 0 10px;
-  color: var(--tinte);
-  font-size: var(--s-sek);
-  font-weight: 700;
-}
-.nw-notiz {
-  margin: 14px 0 0;
-  color: var(--gedaempft);
-  font-size: var(--s-min);
-  line-height: 1.35;
-}
-.nw-zusatz {
-  color: var(--gedaempft);
-  font-size: 18px;
-}
 .dank-qr {
   margin: 0;
   text-align: center;
