@@ -14,9 +14,9 @@ node docs/referat-thema-1/abgabe/jonas/bau.mjs [--niklas1 <pdf>] [--niklas2 <pdf
 
 Ohne Argumente landen die Ausgaben in `ausgabe/` neben dieser Datei. Niklas' Teile (1A, 1B 3–4) kommen
 standardmäßig nativ aus [`../niklas/`](../niklas/README.md); dazu entsteht `niklas-folien.pdf`. Reihenfolge im Deck (Design 2026-11-15, Abschnitt 3; ergänzt 2026-11-16): GT (Titel),
-G0 (Fahrplan), GK (Systembild „Was ist arsnova?“), Niklas 1A (N1–N10 ohne N8; _aktualisiert 2026-11-17_), Jonas J1–J15 (mit J5b, J8b, J10a,
-J10b, J11, J13b), Niklas 1B 3–4 (M1–M4), G9 (gemeinsames Fazit) und GD (Dank, Fragen, Nachweisumfang), Literatur
-(J16, NL), Reserve (R1, R5–R7, R9–R12, R15–R16 mit Abb. 1 und 2 aus `1C-diagrams.md`, R17 Nachweisumfang im Einzelnen; RN1, RN2, RN4). Alle Rahmenfolien spricht Niklas. `--niklas1`/`--niklas2` ersetzen einen
+G0 (Fahrplan), GK (Systembild „arsnova.eu im Überblick“), Niklas 1A (N1–N10 ohne N8; _aktualisiert 2026-11-17_), Jonas J1–J15 (mit J5b, J8b, J10a,
+J10b, J11, J13b), Niklas 1B 3–4 (M1–M4), G9 (gemeinsames Fazit), GN (Nachweisumfang, spricht Jonas; _ergänzt 2026-11-18_, ersetzt R17) und GD (Dank, Fragen), ein gemeinsames Literaturverzeichnis
+(J16, J16b), Reserve (R1, R5–R7, R9–R12, R15–R16 mit Abb. 1 und 2 aus `1C-diagrams.md`; RN1, RN2, RN4). Die Rahmenfolien außer GN spricht Niklas. `--niklas1`/`--niklas2` ersetzen einen
 Teil durch die Seiten eines PDFs (Rückfallweg); die `--niklasN-stand`-Texte landen dann im Manifest.
 
 Tests: `node --test docs/referat-thema-1/abgabe/jonas/*.test.mjs`.
@@ -34,9 +34,11 @@ PaperLab (`./paperlab check|final`); Name und Matrikelnummer stehen nur dort, ni
 ## Belege und Literatur
 
 Jede Folie trägt in der Fußzeile eine Quellenzeile mit Kurzbelegen nach dem IU-Zitierleitfaden, in einer
-Zeile; Rechner und Commit stehen in `quelle` (Sprechnotizen) und im Manifest. J16 zeigt das vollständige
-Literaturverzeichnis als Anhang nach G9. Die Einträge stehen in
-`literatur.mjs`; sie gleichen denen im Handout (`literatur.test.mjs` prüft das gegen dessen `main.bib`).
+Zeile; Rechner und Commit stehen in `quelle` (Sprechnotizen) und im Manifest. J16 und J16b zeigen das
+gemeinsame Literaturverzeichnis des ganzen Decks als Anhang nach GD, in beiden Einzel-PDFs. Die Einträge stehen in
+`literatur.mjs`; sie gleichen denen in den Handouts (`literatur.test.mjs` prüft das gegen beide `main.bib`).
+Mehrere Kurzbelege einer Fußzeile sortiert `quellenzeile()` alphabetisch (ZL S. 14); Stellen heißen „Kap.“ oder
+„Abschnitt Titel“.
 
 ## Clip für J13 (`medien/`)
 
@@ -111,7 +113,7 @@ Prüfbar in `layout-pruefung.mjs` (Druckmodus, alle Folien im Endbild) und `deck
   und 1B), dann die Frage, danach höchstens ein gedämpfter Status (`frage(…, { status })`, etwa
   „nachträglich ausgewertet“). `deck.mjs` setzt die Fragezeile in den Kopf, 18 px unter den Titel; zentriert
   wird nur der Inhalt darunter. Die Autorzeile (`autorZeile()`) steht nur auf N1 und J1, direkt unter der
-  Fragezeile. Rahmenfolien (GT, G0, GK, G9, GD), Anhang (J16, NL) und Reserve haben keine Wegkarte und keine
+  Fragezeile. Rahmenfolien (GT, G0, GK, G9, GN, GD), Anhang (J16, J16b) und Reserve haben keine Wegkarte und keine
   Pflicht zur Fragezeile; hat eine Reservefolie eine, steht sie ebenso im Kopf. Prüfung: `kopfBefunde` in
   `layout-pruefung.mjs` (Abstand Titel → Fragezeile auf allen Hauptfolien ±2 px, Etikett zuerst, Status nur
   am Ende der Fragezeile, Ort ohne Zusatz), Tests in `deck.test.mjs` und `../niklas/folien-niklas.test.mjs`.
@@ -131,7 +133,7 @@ die Herkunft von Niklas' Teilen.
 | ----------------------- | --------------------------------------------------------------------------------------------------------------- |
 | `jonas-deck.html`       | Gemeinsames Deck zum Vortragen, selbstständig (Schriften, Bilder, Clip)                                         |
 | `gemeinsames-deck.pdf`  | Druck des gemeinsamen Decks, eine Seite je Folie                                                                |
-| `jonas-folien.pdf`      | Titel GT, Jonas' Folien (J1–J10, J12, J13, J15, J16) und Reserve                                                |
+| `jonas-folien.pdf`      | Titel GT, Jonas' Folien (J1–J15), GN, Literatur J16, J16b und Reserve                                           |
 | `../../privat/ausgabe/` | Nicht im Repo (von Git ignoriert): Vortragsdeck mit Referentenansicht, Sprechnotizen, Sprechkarten, Sprechhefte |
 | `manifest.json`         | SHA-256 aller Ein- und Ausgaben, Seitenzahlen                                                                   |
 

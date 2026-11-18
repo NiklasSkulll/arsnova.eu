@@ -5,13 +5,14 @@ Niklas' Folien-PDF baut [`jonas/bau.mjs`](../jonas/README.md) nach
 `jonas/ausgabe/` (`niklas-folien.pdf`); der Rückfallweg mit eingebetteten
 PDF-Seiten bleibt `--niklas1 <pdf>`.
 
-- **1A (N1–N10 ohne N8; Literatur NL im Anhang; Reserve RN1 Regelempfindlichkeit, RN2 Grenzen, RN4 Ressourcen):**
+- **1A (N1–N10 ohne N8; Reserve RN1 Regelempfindlichkeit, RN2 Grenzen, RN4 Ressourcen; Literatur seit 2026-11-18 im gemeinsamen Verzeichnis J16, J16b):**
   [`folien-1a.mjs`](folien-1a.mjs). _Aktualisiert 2026-11-17:_ N6b und N8 sind wieder Reserve (RN1, RN4), damit
   1B Schritte 3–4 Zeit bekommen. Jede Zahl liest [`daten-1a.mjs`](daten-1a.mjs) aus der committeten Reihe vom
   15.11.2026 (Auswertung, Laufdateien, Ressourcenstichproben, Plan, Vertrag; Datum der Vorab-Festlegung aus Git).
   Nachträgliche Auswertungen stehen unter `explorativ` und tragen auf den Folien das Etikett „nachträglich
-  ausgewertet“. Diagramme in [`grafik-1a.mjs`](grafik-1a.mjs), Kurzbelege nach ZL aus
-  [`literatur-1a.mjs`](literatur-1a.mjs).
+  ausgewertet“. Diagramme in [`grafik-1a.mjs`](grafik-1a.mjs), Kurzbelege nach ZL aus dem
+  gemeinsamen Verzeichnis [`../jonas/literatur.mjs`](../jonas/literatur.mjs); [`literatur-1a.mjs`](literatur-1a.mjs)
+  nennt nur noch Niklas' Schlüssel für sein Handout.
 - **1B 3–4 (M1 Ersatz je Störung, M2 Breaker gegen Queue, M3 Live-Aktionen, M4 S1 und Entscheidung nach
   ADR 1B-020; _Aktualisiert 2026-11-17_ nach PR #26):** [`folien-1b34.mjs`](folien-1b34.mjs) mit
   [`daten-1b34.mjs`](daten-1b34.mjs). Quelle sind alle gewerteten Reihen unter `evidenz/1B/messung/`

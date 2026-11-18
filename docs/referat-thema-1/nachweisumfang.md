@@ -113,7 +113,9 @@ Nicht gezählt: die beschreibende S1-Prüfung aus den Nachträgen der Planung un
 
 Auf Folien und im Handout nur Zahl und Pfad, ohne Wertung wie „umfangreich“. _Ergänzt 2026-11-17:_ GD zeigt die
 vier Kopfzahlen, den Zeitraum und die Laborzeit je Auftrag als Balken; Reservefolie R17 zeigt alle Zeilen dieser
-Datei. Beide lesen die Werte aus dieser Datei (`ladeNachweis` in `abgabe/jonas/folien.mjs`).
+Datei. Beide lesen die Werte aus dieser Datei (`ladeNachweis` in `abgabe/jonas/folien.mjs`). _Aktualisiert
+2026-11-18:_ Kopfzahlen, Balken und gerafft Tests und Hypothesen je Auftrag stehen auf GN vor dem Dank; R17
+entfällt, GD zeigt keine Zahlen mehr.
 Verworfene und gestörte Läufe stehen mit Grund in den Protokollen unter
 `evidenz/`; wer die Laborzeit nennt, nennt sie als gewertete Zeit. Commit- und
 Zeilenzahlen sind kein Aufwandsmaß und gehören nicht hierher.
